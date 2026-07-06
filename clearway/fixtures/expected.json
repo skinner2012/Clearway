@@ -1,0 +1,40 @@
+{
+  "set_id": "m0-core",
+  "version": 1,
+  "eval_set_id": "m0-core@1",
+  "note": "Expected axe rule/SC/tag/target/impact values are believed, not yet confirmed. axe-core is NOT run at T1; these are confirmed by the scanner (T2) and oracle (T6). See ARCHITECTURE 4.8.",
+  "pages": [
+    {
+      "path": "pages/home.html",
+      "expected_findings": [
+        {
+          "rule_id": "image-alt",
+          "sc": "1.1.1",
+          "level": "A",
+          "axe_tag": "wcag111",
+          "target": "img",
+          "impact": "critical",
+          "planted": "img element with no alt attribute"
+        },
+        {
+          "rule_id": "html-has-lang",
+          "sc": "3.1.1",
+          "level": "A",
+          "axe_tag": "wcag311",
+          "target": "html",
+          "impact": "serious",
+          "planted": "html element with no lang attribute"
+        },
+        {
+          "rule_id": "label",
+          "sc": "4.1.2",
+          "level": "A",
+          "axe_tag": "wcag412",
+          "target": "#email",
+          "impact": "critical",
+          "planted": "input with no associated label"
+        }
+      ]
+    }
+  ]
+}

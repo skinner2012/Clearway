@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Clearway fixture — home</title>
+  </head>
+  <body>
+    <main>
+      <h1>Welcome to the Clearway fixture page</h1>
+
+      <!-- PLANTED #1: image-alt (WCAG 1.1.1) — this <img> has no alt attribute -->
+      <img src="logo.png" width="120" height="40" />
+
+      <!-- PLANTED #3: label (WCAG 4.1.2) — this <input> has no associated <label> (placeholder does not count) -->
+      <form action="/subscribe" method="post">
+        <input type="email" id="email" name="email" placeholder="you@example.com" />
+        <button type="submit">Subscribe</button>
+      </form>
+    </main>
+  </body>
+</html>
+<!-- PLANTED #2: html-has-lang (WCAG 3.1.1) — the <html> element above has no lang attribute.
+     Hygiene: <title>, <h1>, and the <main> landmark are present so axe does not also raise
+     incidental document-title / region / bypass findings — the intended set is exactly 3. -->

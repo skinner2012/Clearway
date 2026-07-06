@@ -16,6 +16,19 @@ The full rationale — the regulatory backdrop (FTC v. accessiBe), the two-oracl
 
 Early — currently building **M0 (walking skeleton)**, the thinnest end-to-end run that proves the measurement loop is real. See [`specs/M0-walking-skeleton.md`](specs/M0-walking-skeleton.md).
 
+## Development
+
+Requires [uv](https://docs.astral.sh/uv/), which manages the Python 3.13 toolchain and a project-local `.venv` — no system Python needed.
+
+```bash
+uv sync                 # create .venv + install deps (incl. dev tools)
+
+uv run pytest           # tests
+uv run ruff format .    # format
+uv run ruff check .     # lint
+uv run mypy clearway    # type-check
+```
+
 ## Documentation
 
 - [`DESIGN_NOTE.md`](DESIGN_NOTE.md) — full product scope, thesis, and rationale.

@@ -1,0 +1,43 @@
+"""Cross-module data contracts (CONTRACTS.md §3) — the single source of truth for shapes."""
+
+from clearway.schemas.models import (
+    AxeNode,
+    AxeViolation,
+    Citation,
+    CitationCheck,
+    CitationVerdict,
+    Conformance,
+    ConformanceLevel,
+    DraftRow,
+    EvalMetrics,
+    EvalReport,
+    Finding,
+    L1Status,
+    Oracle,
+    OracleRegime,
+    OracleVerdict,
+    ScanResult,
+    Severity,
+    Trace,
+)
+
+__all__ = [
+    "AxeNode",
+    "AxeViolation",
+    "Citation",
+    "CitationCheck",
+    "CitationVerdict",
+    "Conformance",
+    "ConformanceLevel",
+    "DraftRow",
+    "EvalMetrics",
+    "EvalReport",
+    "Finding",
+    "L1Status",
+    "Oracle",
+    "OracleRegime",
+    "OracleVerdict",
+    "ScanResult",
+    "Severity",
+    "Trace",
+]

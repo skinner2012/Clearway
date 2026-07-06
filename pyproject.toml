@@ -1,0 +1,46 @@
+[project]
+name = "clearway"
+version = "0.1.0"
+description = "An accessibility evidence pipeline that measures the trustworthiness of its own AI-generated conformance evidence."
+readme = "README.md"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+authors = [{ name = "FuYuan (Skinner) Cheng" }]
+dependencies = [
+    "pydantic>=2.10,<3",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14",
+    "mypy>=1.15",
+    "pytest>=8.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["clearway"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["pydantic.mypy"]
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+no_implicit_optional = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

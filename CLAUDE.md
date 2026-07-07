@@ -21,7 +21,7 @@ We use Claude Code's auto-memory (`MEMORY.md`) as the progress log — **`PROGRE
 ## Commands
 
 - Install: `uv sync`
-- Local stack (Postgres+pgvector, Redis, OTel Collector, Prometheus, Grafana, Ollama): `docker compose up -d` — *compose file is a setup prerequisite; create it before M0 observability work.*
+- Local stack: `docker compose up -d` — services + rationale live in `ARCHITECTURE.md` §4 (SSOT). *Compose file is a setup prerequisite; create it at M0 observability work.*
 - Test: `uv run pytest`
 - Lint / format: `uv run ruff check .` / `uv run ruff format .`
 - Types: `uv run mypy clearway`

@@ -29,6 +29,18 @@ uv run ruff check .     # lint
 uv run mypy clearway    # type-check
 ```
 
+### Local stack & configuration
+
+The observability stack (OTel Collector + Prometheus + Grafana) runs via Docker; see [`ARCHITECTURE.md`](ARCHITECTURE.md) §4 for the services and rationale.
+
+```bash
+cp env.example .env     # then edit .env; it is gitignored — never commit real secrets
+docker compose up -d    # start the stack (Grafana → http://localhost:3000)
+docker compose down     # stop it
+```
+
+**`env.example`** is the committed, non-secret **template** for your local `.env`. It documents the environment variables the stack and app read — the OTLP endpoint the app pushes metrics to, and the local Grafana credentials — with safe placeholder defaults. Copy it to `.env` and adjust; `.env` itself is gitignored, so real values never enter version control.
+
 ## Documentation
 
 - [`DESIGN_NOTE.md`](DESIGN_NOTE.md) — full product scope, thesis, and rationale.

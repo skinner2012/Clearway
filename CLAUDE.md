@@ -30,7 +30,7 @@ We use Claude Code's auto-memory (`MEMORY.md`) as the progress log — **`PROGRE
 
 - Do not add a dependency without asking first.
 - Do not edit `CONTRACTS.md` schemas without updating its §5 + §6 in the same change.
-- Never commit secrets. API keys / DB URL / Ollama endpoint come from `.env` (see `.env.example`).
+- Never commit secrets. API keys / DB URL / Ollama endpoint come from `.env` (see `env.example`).
 - Scraping: respect robots.txt, rate-limit, set an explicit User-Agent. Prefer fixture pages; live scanning is a demo feature only.
 - Prefer surgical edits over rewrites. Write a test for each new behavior.
 - Pin versions that affect reproducibility (axe-core, models).

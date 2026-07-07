@@ -1,0 +1,22 @@
+# OTel Collector — receive OTLP/HTTP metrics from the app, expose them for Prometheus.
+# This is the buffer that outlives the short-lived `clearway run` CLI: the app pushes
+# and exits; the collector holds the last values until Prometheus scrapes them.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  # Expose received metrics at :8889/metrics for Prometheus to scrape.
+  prometheus:
+    endpoint: 0.0.0.0:8889
+  # Echo to the collector log — handy when validating the pipeline hop-by-hop.
+  debug:
+    verbosity: normal
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheus, debug]

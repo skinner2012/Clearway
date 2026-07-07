@@ -1,0 +1,45 @@
+# Clearway local observability stack (M0 = the trust-metric trio only).
+# Other services (Postgres+pgvector, Redis, Ollama) are added at the milestone that
+# first needs them — see ARCHITECTURE.md §4 for the full intended stack + rationale.
+#
+# Flow: `clearway run` pushes OTLP/HTTP metrics -> otel-collector (long-running, so it
+# outlives the short-lived CLI) -> Prometheus scrapes the collector -> Grafana panel.
+name: clearway
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.156.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./stack/otel-collector/config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4318:4318"   # OTLP/HTTP receiver (the app pushes here)
+      - "8889:8889"   # Prometheus scrape endpoint (Prometheus pulls here)
+
+  prometheus:
+    image: prom/prometheus:v3.13.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./stack/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"   # UI + query API
+    depends_on:
+      - otel-collector
+
+  grafana:
+    image: grafana/grafana:12.3.8
+    environment:
+      # Local-only creds; real values come from .env (never committed). Anonymous
+      # viewing is on so the demo panel is visible without a login.
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - ./stack/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./stack/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"   # UI
+    depends_on:
+      - prometheus

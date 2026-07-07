@@ -14,7 +14,7 @@ The full rationale — the regulatory backdrop (FTC v. accessiBe), the two-oracl
 
 ## Status
 
-Early — currently building **M0 (walking skeleton)**, the thinnest end-to-end run that proves the measurement loop is real. See [`specs/M0-walking-skeleton.md`](specs/M0-walking-skeleton.md).
+Early — **M0 (walking skeleton) is complete**: the thinnest end-to-end run that proves the measurement loop is real, with one trust metric moving on a live Grafana panel. See [`specs/M0-walking-skeleton.md`](specs/M0-walking-skeleton.md) and [Running the pipeline](#running-the-pipeline). Next up is **M1** (real retriever + drafter).
 
 ## Development
 
@@ -40,6 +40,23 @@ docker compose down     # stop it
 ```
 
 **`env.example`** is the committed, non-secret **template** for your local `.env`. It documents the environment variables the stack and app read — the OTLP endpoint the app pushes metrics to, and the local Grafana credentials — with safe placeholder defaults. Copy it to `.env` and adjust; `.env` itself is gitignored, so real values never enter version control.
+
+## Running the pipeline
+
+`clearway run <fixture>` executes the M0 forward path over one page — scan (real Playwright + axe-core) → normalize → retrieve *(stub)* → draft *(stub)* → validate → eval — and reports `citation_hallucination_rate`, the M0 trust metric.
+
+```bash
+# compute + print the metric only — no stack needed:
+uv run clearway run clearway/fixtures/pages/home.html --no-emit
+
+# push the metric so the Grafana panel moves (needs `docker compose up -d` first):
+uv run clearway run clearway/fixtures/pages/home.html            # planted faults  → 0.667
+uv run clearway run clearway/fixtures/pages/home.html --clean    # correct citations → 0.000
+
+uv run clearway run --help
+```
+
+The fixture carries three planted findings and two intentional citation faults, so the honest rate is **2/3**. `--clean` drafts the correct citations instead (rate **0.0**); alternating runs draw a moving line on the **Clearway — M0 Trust Metric** panel at <http://localhost:3000>. When the stack is down, use `--no-emit` — emitting otherwise fails to reach the collector at `localhost:4318`.
 
 ## Documentation
 

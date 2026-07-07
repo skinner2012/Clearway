@@ -2,7 +2,7 @@
   "set_id": "m0-core",
   "version": 1,
   "eval_set_id": "m0-core@1",
-  "note": "Expected axe rule/SC/tag/target/impact values are believed, not yet confirmed. axe-core is NOT run at T1; these are confirmed by the scanner (T2) and oracle (T6). See ARCHITECTURE 4.8.",
+  "note": "rule/SC/tag/target/impact values CONFIRMED at T2 against axe-core 4.12.1 (the pinned scanner oracle). The <input> placeholder was removed in T2 so the planted `label` defect actually fires (a placeholder supplies a fallback accessible name). See ARCHITECTURE 4.8.",
   "pages": [
     {
       "path": "pages/home.html",

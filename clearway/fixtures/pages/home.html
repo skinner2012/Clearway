@@ -11,9 +11,12 @@
       <!-- PLANTED #1: image-alt (WCAG 1.1.1) — this <img> has no alt attribute -->
       <img src="logo.png" width="120" height="40" />
 
-      <!-- PLANTED #3: label (WCAG 4.1.2) — this <input> has no associated <label> (placeholder does not count) -->
+      <!-- PLANTED #3: label (WCAG 4.1.2) — this <input> has no associated <label>, and
+           deliberately no placeholder / aria-label / title either. A placeholder WOULD supply a
+           fallback accessible name (ARIA name computation), making axe's `label` rule pass — so it
+           is omitted to keep the planted defect real. Confirmed against axe-core 4.12.1 at T2. -->
       <form action="/subscribe" method="post">
-        <input type="email" id="email" name="email" placeholder="you@example.com" />
+        <input type="email" id="email" name="email" />
         <button type="submit">Subscribe</button>
       </form>
     </main>

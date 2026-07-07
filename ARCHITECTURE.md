@@ -176,26 +176,28 @@ Key behavioural contract: `verdict_for(finding)` returns ground truth, or `None`
 
 ## 6. Module boundaries & repo layout
 
-Monorepo. Each top-level module is an **independently implementable unit** once the shared schemas in `CONTRACTS.md` are locked, so subagents can work in parallel (one `git worktree` / branch per module) without colliding.
+Monorepo. Each top-level module is an **independently implementable unit** once the shared schemas in `CONTRACTS.md` are locked. All modules are flat sibling packages under `clearway/`.
 
-```
-clearway/
-  schemas/         # CONTRACTS: Finding, ScanResult, Citation, DraftRow, Trace, EvalReport, Oracle
-  scanner/         # Playwright + axe-core -> raw ScanResult              [independent]
-  normalizer/      # raw violations -> deduped canonical Finding list     [independent]
-  corpus/          # WCAG/ARIA ingestion -> chunk -> embed -> pgvector    [independent]
-  retriever/       # RAG: Finding -> SC + citation + technique            [dep: corpus]
-  mcp_server/      # real MCP server wrapping retriever                   [dep: retriever]
-  drafter/         # LLM structured output: Finding+context -> DraftRow   [independent]
-  validator/       # citation checks L0 (enum) + L1 (axe-core tag)        [independent]
-  oracle/          # AxeCoreOracle now; GoldLabelOracle later             [independent]
-  eval/            # harness + metric computation (citation_halluc_rate…) [dep: oracle, schemas]
-  orchestrator/    # hand-rolled state machine, checkpoint, retry, HITL   [dep: most]
-  llm/             # LiteLLM client + (later) frozen routing policy       [independent]
-  obs/             # OTel setup, exporters, Prometheus/Grafana wiring     [independent]
-  fixtures/        # versioned test pages (incl. planted-violation pages) [independent]
-  api/  |  cli/    # FastAPI surface (later) / CLI to drive the spine
-```
+The table lists each module's responsibility (with its I/O) and its build-order dependency. **`Depends on`** = *build*-order dependency — blank means independently implementable against `schemas/` alone — **not** runtime data-flow; everything imports `schemas/`.
+
+| Module | Responsibility (I/O) | Depends on |
+|---|---|---|
+| `schemas/` | Shared cross-module data contracts (`CONTRACTS.md`) — everything imports these | — |
+| `fixtures/` | Fixed, versioned eval corpus (planted-violation pages) | — |
+| `scanner/` | Playwright + axe-core → raw `ScanResult` | — |
+| `normalizer/` | Raw violations → deduped canonical `Finding[]` | — |
+| `retriever/` | RAG grounding: `Finding` → `Citation[]` | `corpus` |
+| `drafter/` | LLM structured output: `Finding` + `Citation[]` → `DraftRow` | — |
+| `oracle/` | Ground truth: `AxeCoreOracle` now, `GoldLabelOracle` @ M6 | — |
+| `validator/` | L0 (enum) + L1 (axe tag) citation checks → `CitationCheck[]` | — |
+| `eval/` | Harness + trust-metric computation (`citation_hallucination_rate`, …) | `oracle` |
+| `obs/` | OTel setup, exporters, Prometheus/Grafana wiring | — |
+| `orchestrator/` | Hand-rolled state machine · checkpoint · retry · HITL gate | most |
+| `cli/` | Drive the spine (`clearway run <fixture>`) | `orchestrator` |
+| `corpus/` | WCAG/ARIA ingest → chunk → embed → pgvector | — |
+| `llm/` | LiteLLM gateway + frozen routing (routing @ M4) | — |
+| `mcp_server/` | Real MCP server wrapping `retriever` | `retriever` |
+| `api/` | FastAPI surface | `orchestrator` |
 
 Dependency direction: everything depends on `schemas/`; nothing depends on `orchestrator/` or `api/`. Keep it acyclic.
 

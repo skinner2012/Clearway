@@ -20,9 +20,14 @@ _PLANTED_WRONG_SC: dict[str, str] = {
 }
 
 
-def draft(finding: Finding, citations: list[Citation]) -> DraftRow:
-    """STUB: canned `DraftRow`. For a planted rule the retrieved citation is replaced by a wrong SC."""
-    wrong_sc = _PLANTED_WRONG_SC.get(finding.rule_id)
+def draft(finding: Finding, citations: list[Citation], *, plant: bool = True) -> DraftRow:
+    """STUB: canned `DraftRow`. For a planted rule the retrieved citation is replaced by a wrong SC.
+
+    `plant=True` (default) injects the intentional citation faults so the hallucination rate
+    moves off zero. `plant=False` drafts the retrieved (correct) citations verbatim — the
+    orchestrator's `--clean` lever, used to draw a *moving* line on the panel across runs.
+    """
+    wrong_sc = _PLANTED_WRONG_SC.get(finding.rule_id) if plant else None
     if wrong_sc is not None:
         cited = [Citation(sc_id=wrong_sc, source="STUB-PLANTED")]
     else:

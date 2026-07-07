@@ -13,6 +13,9 @@ dependencies = [
     "pydantic>=2.10,<3",
 ]
 
+[project.scripts]
+clearway = "clearway.cli:main"
+
 [dependency-groups]
 dev = [
     "ruff>=0.14",

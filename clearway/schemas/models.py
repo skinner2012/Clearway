@@ -181,7 +181,7 @@ class CitationCheck(BaseModel):
 
 
 # ============================================================
-# Observability record  (orchestrator/ + obs/ -> eval/)
+# Observability record  (orchestrator/ + observability/ -> eval/)
 # ============================================================
 
 

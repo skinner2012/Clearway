@@ -86,7 +86,7 @@ Everything depends on **T0** (schemas). After T0, **T1 / T2 / T4 / T5 / T6 / T9 
 - **Depends on:** T0, T7
 
 ### T9 — observability
-- **Produces:** OTel setup in `obs/`; a Grafana panel for `citation_hallucination_rate`.
+- **Produces:** OTel setup in `observability/`; a Grafana panel for `citation_hallucination_rate`.
 - **Detail:** OTel GenAI semconv spans per step; export metrics via OTel Collector → Prometheus; Grafana panel. Set `OTEL_SEMCONV_STABILITY_OPT_IN`.
 - **Acceptance:** the metric is visible and updates on a Grafana panel after a run.
 - **Depends on:** T0 (local stack running)

@@ -191,7 +191,7 @@ The table lists each module's responsibility (with its I/O) and its build-order 
 | `oracle/` | Ground truth: `AxeCoreOracle` now, `GoldLabelOracle` @ M6 | — |
 | `validator/` | L0 (enum) + L1 (axe tag) citation checks → `CitationCheck[]` | — |
 | `eval/` | Harness + trust-metric computation (`citation_hallucination_rate`, …) | `oracle` |
-| `obs/` | OTel setup, exporters, Prometheus/Grafana wiring | — |
+| `observability/` | OTel setup, exporters, Prometheus/Grafana wiring | — |
 | `orchestrator/` | Hand-rolled state machine · checkpoint · retry · HITL gate | most |
 | `cli/` | Drive the spine (`clearway run <fixture>`) | `orchestrator` |
 | `corpus/` | WCAG/ARIA ingest → chunk → embed → pgvector | — |

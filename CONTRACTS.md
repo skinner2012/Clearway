@@ -216,7 +216,7 @@ class CitationCheck(BaseModel):
 
 
 # ============================================================
-# Observability record  (orchestrator/ + obs/ -> eval/)
+# Observability record  (orchestrator/ + observability/ -> eval/)
 # ============================================================
 
 class Trace(BaseModel):
@@ -316,7 +316,7 @@ class Oracle(Protocol):
 | draft *(stub)* | `drafter/` | `Finding`, `Citation[]` | `DraftRow` |
 | ground truth | `oracle/` (`AxeCoreOracle`) | `Finding` | `OracleVerdict` |
 | validate (L0 + L1) | `validator/` | `DraftRow`, `Finding`, `Oracle` | `CitationCheck[]` |
-| observe | `orchestrator/` + `obs/` | all of the above | `Trace` |
+| observe | `orchestrator/` + `observability/` | all of the above | `Trace` |
 | aggregate | `eval/` | `Trace[]` (each carries its `CitationCheck[]`) | `EvalReport` |
 
 The L1 check reads ground truth via the `Oracle` protocol, never by reaching into axe internals directly — that is what keeps M6 (Regime B) a swap of the `Oracle` implementation with no change to `validator/` or `eval/`.

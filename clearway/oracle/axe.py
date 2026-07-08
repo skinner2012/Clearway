@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 
 from clearway.oracle.wcag import VALID_SC_IDS
-from clearway.schemas.models import Finding, OracleRegime, OracleVerdict
+from clearway.schemas.models import AxeBucket, Finding, OracleRegime, OracleVerdict
 
 # Matches only pure success-criterion tags: wcag + principle + guideline + criterion digits.
 # `wcag2a`, `wcag21aa`, `cat.forms`, `best-practice` etc. deliberately do NOT match.
@@ -40,8 +40,10 @@ def tag_to_sc_ids(tags: list[str]) -> list[str]:
 class AxeCoreOracle:
     """Ground truth for Regime A — implements the `Oracle` Protocol (CONTRACTS §3).
 
-    Returns `None` for a finding whose tags carry no recognizable WCAG SC, so it falls
-    through to the LLM-judge / human review per the "prefer the hardest oracle" layering.
+    Returns `None` (falls through to LLM-judge / human review per the "prefer the hardest
+    oracle" layering) when it cannot ground-truth a finding — either because the finding
+    is not from the confirmed `violations` bucket, or because its tags carry no recognizable
+    WCAG SC.
     """
 
     @property
@@ -53,6 +55,11 @@ class AxeCoreOracle:
         return ORACLE_VERSION
 
     def verdict_for(self, finding: Finding) -> OracleVerdict | None:
+        # Allowlist: only confirmed violations carry hard ground truth. `incomplete`
+        # (needs-review) and any future bucket are UNVERIFIABLE by default, even though
+        # they carry WCAG tags — axe ran the rule but could not decide.
+        if finding.source_bucket is not AxeBucket.VIOLATIONS:
+            return None
         sc_ids = tag_to_sc_ids(finding.axe_tags)
         if not sc_ids:
             return None

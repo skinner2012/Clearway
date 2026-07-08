@@ -7,13 +7,20 @@ from pathlib import Path
 
 from clearway.oracle import VALID_SC_IDS, AxeCoreOracle, tag_to_sc_ids
 from clearway.oracle.wcag import SC_LEVELS
-from clearway.schemas.models import ConformanceLevel, Finding, Oracle, OracleRegime
+from clearway.schemas.models import AxeBucket, ConformanceLevel, Finding, Oracle, OracleRegime
 
 FIXTURES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures"
 
 
-def _finding(rule_id: str, tags: list[str]) -> Finding:
-    return Finding(id=f"h:{rule_id}", source_url="file://home.html", rule_id=rule_id, axe_tags=tags, target="x")
+def _finding(rule_id: str, tags: list[str], bucket: AxeBucket = AxeBucket.VIOLATIONS) -> Finding:
+    return Finding(
+        id=f"h:{rule_id}",
+        source_url="file://home.html",
+        rule_id=rule_id,
+        axe_tags=tags,
+        target="x",
+        source_bucket=bucket,
+    )
 
 
 # --- the WCAG 2.2 reference set (load-bearing for L0) ---
@@ -76,6 +83,16 @@ def test_verdict_none_when_no_sc_tag() -> None:
     oracle = AxeCoreOracle()
     assert oracle.verdict_for(_finding("region", ["cat.keyboard", "best-practice"])) is None
     assert oracle.verdict_for(_finding("x", [])) is None
+
+
+def test_incomplete_finding_gets_no_verdict_despite_a_valid_tag() -> None:
+    """Needs-review findings carry real WCAG tags, but axe could not decide — the oracle
+    allowlists VIOLATIONS, so an INCOMPLETE-sourced finding is UNVERIFIABLE, never verified."""
+    oracle = AxeCoreOracle()
+    verifiable = _finding("color-contrast", ["wcag143"], bucket=AxeBucket.VIOLATIONS)
+    unverifiable = _finding("color-contrast", ["wcag143"], bucket=AxeBucket.INCOMPLETE)
+    assert oracle.verdict_for(verifiable) is not None  # same tag, confirmed bucket -> grounded
+    assert oracle.verdict_for(unverifiable) is None  # same tag, needs-review bucket -> no verdict
 
 
 def test_fixture_tags_map_to_expected_scs() -> None:

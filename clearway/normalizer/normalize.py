@@ -1,16 +1,21 @@
 """Normalizer — raw `ScanResult` → canonical, deduplicated `Finding[]`.
 
-axe reports per *rule* (an `AxeViolation` that may span many DOM nodes). The rest
+axe reports per *rule* (an `AxeRuleResult` that may span many DOM nodes). The rest
 of the pipeline works per *place* — one issue at one element — so the normalizer
-explodes each violation's nodes into individual `Finding`s, assigns a deterministic
+explodes each rule result's nodes into individual `Finding`s, assigns a deterministic
 id, and drops duplicates (ARCHITECTURE §6: scanner → normalizer → everything).
+
+Two axe buckets become findings: confirmed `violations` and needs-review `incomplete`.
+They are structurally identical, so both flow through the same path; each finding
+records which bucket it came from in `source_bucket` so the oracle knows whether it
+carries hard ground truth (VIOLATIONS) or is oracle-poor (INCOMPLETE → unverifiable).
 """
 
 from __future__ import annotations
 
 import hashlib
 
-from clearway.schemas.models import AxeViolation, Finding, ScanResult
+from clearway.schemas.models import AxeBucket, AxeRuleResult, Finding, ScanResult
 
 # Delimiter joining the (source_url, rule_id, target) parts before hashing. Chosen
 # to be vanishingly unlikely inside a URL, an axe rule id, or a CSS selector, so the
@@ -53,22 +58,28 @@ def _finding_id(source_url: str, rule_id: str, target: str) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
-def _findings_from_violation(source_url: str, violation: AxeViolation) -> list[Finding]:
-    """One `Finding` per offending node; carry the tags the oracle needs downstream."""
+def _findings_from_rule(source_url: str, rule: AxeRuleResult, bucket: AxeBucket) -> list[Finding]:
+    """One `Finding` per offending node; carry the tags the oracle needs downstream and
+    the `bucket` provenance that tells the oracle whether this finding is ground-truthable.
+
+    Provenance is NOT folded into the id: the id is the *place* identity
+    (source_url, rule_id, target), and a place never appears in two buckets at once, so
+    the same element re-scans to the same id regardless of bucket."""
     findings: list[Finding] = []
-    for node in violation.nodes:
+    for node in rule.nodes:
         target = _flatten_target(node.target)
         findings.append(
             Finding(
-                id=_finding_id(source_url, violation.rule_id, target),
+                id=_finding_id(source_url, rule.rule_id, target),
                 source_url=source_url,
-                rule_id=violation.rule_id,
-                axe_tags=list(violation.tags),  # carried so AxeCoreOracle can derive SC ids
+                rule_id=rule.rule_id,
+                axe_tags=list(rule.tags),  # carried so AxeCoreOracle can derive SC ids
                 target=target,
                 html=node.html,
-                impact=violation.impact,
-                help=violation.help,
-                help_url=violation.help_url,
+                impact=rule.impact,
+                help=rule.help,
+                help_url=rule.help_url,
+                source_bucket=bucket,
             )
         )
     return findings
@@ -77,16 +88,23 @@ def _findings_from_violation(source_url: str, violation: AxeViolation) -> list[F
 def normalize(scan: ScanResult) -> list[Finding]:
     """Flatten a `ScanResult` into deduplicated `Finding[]`, in stable scan order.
 
-    Dedup is by `Finding.id` (the (source_url, rule_id, target) hash): if the same rule
-    hits the same place twice, we keep the first and drop the rest. Order is preserved
-    (first occurrence wins) so the output is deterministic given a deterministic scan.
+    Both axe buckets become findings — confirmed `violations` first, then needs-review
+    `incomplete` — each tagged with its `source_bucket`. Dedup is by `Finding.id` (the
+    (source_url, rule_id, target) hash): if the same rule hits the same place twice, we
+    keep the first and drop the rest. Order is preserved (first occurrence wins) so the
+    output is deterministic given a deterministic scan.
     """
     seen: set[str] = set()
     findings: list[Finding] = []
-    for violation in scan.violations:
-        for finding in _findings_from_violation(scan.url, violation):
-            if finding.id in seen:
-                continue
-            seen.add(finding.id)
-            findings.append(finding)
+    rules_by_bucket = (
+        (AxeBucket.VIOLATIONS, scan.violations),
+        (AxeBucket.INCOMPLETE, scan.incomplete),
+    )
+    for bucket, rules in rules_by_bucket:
+        for rule in rules:
+            for finding in _findings_from_rule(scan.url, rule, bucket):
+                if finding.id in seen:
+                    continue
+                seen.add(finding.id)
+                findings.append(finding)
     return findings

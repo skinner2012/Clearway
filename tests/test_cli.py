@@ -14,8 +14,21 @@ from pathlib import Path
 import pytest
 
 from clearway.cli import main
+from clearway.retriever import retrieve as stub_retrieve
 
 FIXTURE = str(Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages" / "home.html")
+
+
+@pytest.fixture
+def offline_retriever(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make `clearway run` use the canned stub instead of building the real RAG retriever, so the
+    `run` CLI tests exercise the CLI glue without needing the corpus stack (see run._default_retrieve).
+    Fetched via importlib because the re-exported `run` *function* shadows the submodule under
+    plain attribute/`import ... as` access — import_module returns the true module by full name."""
+    import importlib
+
+    run_module = importlib.import_module("clearway.orchestrator.run")
+    monkeypatch.setattr(run_module, "_default_retrieve", lambda: stub_retrieve)
 
 
 def _ollama_up() -> bool:
@@ -42,7 +55,7 @@ corpus_up = pytest.mark.skipif(
 )
 
 
-def test_cli_run_no_emit_exits_zero(capsys) -> None:  # type: ignore[no-untyped-def]
+def test_cli_run_no_emit_exits_zero(offline_retriever, capsys) -> None:  # type: ignore[no-untyped-def]
     code = main(["run", FIXTURE, "--no-emit"])
     assert code == 0
     out = capsys.readouterr().out
@@ -50,7 +63,7 @@ def test_cli_run_no_emit_exits_zero(capsys) -> None:  # type: ignore[no-untyped-
     assert "emitted" not in out  # --no-emit must not touch OTel
 
 
-def test_cli_clean_no_emit_reports_zero(capsys) -> None:  # type: ignore[no-untyped-def]
+def test_cli_clean_no_emit_reports_zero(offline_retriever, capsys) -> None:  # type: ignore[no-untyped-def]
     code = main(["run", FIXTURE, "--clean", "--no-emit"])
     assert code == 0
     out = capsys.readouterr().out

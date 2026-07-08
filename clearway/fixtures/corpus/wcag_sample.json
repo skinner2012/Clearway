@@ -1,0 +1,64 @@
+{
+  "principles": [
+    {
+      "id": "perceivable",
+      "num": "1",
+      "handle": "Perceivable",
+      "guidelines": [
+        {
+          "id": "text-alternatives",
+          "num": "1.1",
+          "handle": "Text Alternatives",
+          "successcriteria": [
+            {
+              "id": "non-text-content",
+              "num": "1.1.1",
+              "handle": "Non-text Content",
+              "level": "A",
+              "versions": ["2.0", "2.1", "2.2"],
+              "content": "<p>All <a href=\"#dfn-non-text-content\">non-text content</a> that is presented to the user has a <a href=\"#dfn-text-alternative\">text alternative</a> that serves the equivalent purpose.</p>"
+            }
+          ]
+        },
+        {
+          "id": "distinguishable",
+          "num": "1.4",
+          "handle": "Distinguishable",
+          "successcriteria": [
+            {
+              "id": "contrast-minimum",
+              "num": "1.4.3",
+              "handle": "Contrast (Minimum)",
+              "level": "AA",
+              "versions": ["2.0", "2.1", "2.2"],
+              "content": "<p>The visual presentation of text and images of text has a contrast ratio of at least 4.5:1, except for large text, incidental content, and logotypes.</p>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "robust",
+      "num": "4",
+      "handle": "Robust",
+      "guidelines": [
+        {
+          "id": "compatible",
+          "num": "4.1",
+          "handle": "Compatible",
+          "successcriteria": [
+            {
+              "id": "parsing",
+              "num": "4.1.1",
+              "handle": "Parsing (Obsolete and removed)",
+              "level": "A",
+              "versions": ["2.0", "2.1"],
+              "content": "<p>Obsolete and removed in WCAG 2.2.</p>"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "terms": []
+}

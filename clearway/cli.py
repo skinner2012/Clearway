@@ -16,6 +16,39 @@ from clearway.observability import record_eval_report, setup_metrics, shutdown
 from clearway.orchestrator import run
 
 
+def _corpus_ingest_cmd(args: argparse.Namespace) -> int:
+    from clearway.corpus import (
+        LiteLLMEmbedder,
+        PgCorpusStore,
+        build_corpus_version,
+        fetch_wcag_json,
+        ingest,
+        parse_wcag_json,
+    )
+
+    embedder = LiteLLMEmbedder()
+    store = PgCorpusStore()
+    corpus_version = build_corpus_version(embedder)
+    chunks = parse_wcag_json(fetch_wcag_json(), corpus_version=corpus_version)
+    if args.limit:
+        chunks = chunks[: args.limit]
+    stored = ingest(chunks, embedder, store)
+    print(f"ingested {stored} chunks  corpus_version={corpus_version}  total={store.count(corpus_version)}")
+    return 0
+
+
+def _corpus_query_cmd(args: argparse.Namespace) -> int:
+    from clearway.corpus import LiteLLMEmbedder, PgCorpusStore, build_corpus_version
+
+    embedder = LiteLLMEmbedder()
+    store = PgCorpusStore()
+    corpus_version = build_corpus_version(embedder)
+    hits = store.query(embedder.embed_query(args.text), k=args.k, corpus_version=corpus_version)
+    for hit in hits:
+        print(f"{','.join(hit.sc_ids):8} {hit.text[:90]}")
+    return 0
+
+
 def _run_cmd(args: argparse.Namespace) -> int:
     result = run(args.target, plant=not args.clean)
     report = result.report
@@ -55,6 +88,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="compute and print only; do not push the metric to OTel",
     )
     run_p.set_defaults(emit=True, func=_run_cmd)
+
+    ingest_p = sub.add_parser("corpus-ingest", help="fetch WCAG 2.2, chunk + embed, upsert into pgvector")
+    ingest_p.add_argument("--limit", type=int, default=0, help="ingest only the first N chunks (0 = all)")
+    ingest_p.set_defaults(func=_corpus_ingest_cmd)
+
+    query_p = sub.add_parser("corpus-query", help="embed a query and print the nearest corpus chunks")
+    query_p.add_argument("text", help="query text, e.g. 'images need a text alternative'")
+    query_p.add_argument("-k", type=int, default=5, help="how many results to return")
+    query_p.set_defaults(func=_corpus_query_cmd)
 
     args = parser.parse_args(argv)
     return int(args.func(args))

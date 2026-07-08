@@ -12,9 +12,9 @@ import urllib.request
 from pathlib import Path
 
 import pytest
+from stubs import canned_retrieve
 
 from clearway.cli import main
-from clearway.retriever import retrieve as stub_retrieve
 
 FIXTURE = str(Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages" / "home.html")
 
@@ -28,7 +28,7 @@ def offline_retriever(monkeypatch: pytest.MonkeyPatch) -> None:
     import importlib
 
     run_module = importlib.import_module("clearway.orchestrator.run")
-    monkeypatch.setattr(run_module, "_default_retrieve", lambda: stub_retrieve)
+    monkeypatch.setattr(run_module, "_default_retrieve", lambda: canned_retrieve)
 
 
 def _ollama_up() -> bool:

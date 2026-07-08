@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+from stubs import canned_retrieve
 
 from clearway.drafter import draft
 from clearway.eval import compute_metrics, evaluate
 from clearway.oracle import AxeCoreOracle
-from clearway.retriever import retrieve
 from clearway.schemas.models import (
     CitationCheck,
     CitationVerdict,
@@ -132,7 +132,7 @@ _FIXTURE_TAGS = {
 
 def _pipeline_trace(rule_id: str, axe_tags: list[str]) -> Trace:
     finding = Finding(id=f"h:{rule_id}", source_url="file://home.html", rule_id=rule_id, axe_tags=axe_tags, target="x")
-    row = draft(finding, retrieve(finding))
+    row = draft(finding, canned_retrieve(finding))
     return _trace(finding.id, validate(row, finding, ORACLE))
 
 

@@ -1,6 +1,7 @@
 """Cross-module data contracts (CONTRACTS.md §3) — the single source of truth for shapes."""
 
 from clearway.schemas.models import (
+    AxeBucket,
     AxeIncomplete,
     AxeNode,
     AxeRuleResult,
@@ -25,6 +26,7 @@ from clearway.schemas.models import (
 )
 
 __all__ = [
+    "AxeBucket",
     "AxeIncomplete",
     "AxeNode",
     "AxeRuleResult",

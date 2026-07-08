@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.4
+- **Version:** 0.5
 
 > **This file is the single source of truth for cross-module data shapes.** Any shape that crosses a module boundary is defined here and nowhere else — never redefined in `ARCHITECTURE.md`, in module code, or in an LLM prompt. `ARCHITECTURE.md §5` describes the `Oracle` seam's *role* and points back here for the definition. To add or change a shape: edit §3, then update the deferred list (§5) and the change log (§6) in the same change.
 
@@ -107,6 +107,17 @@ class OracleRegime(str, Enum):
     B_PHYSICAL = "B-physical"  # Regime B: expert gold — costly, sparse
 
 
+class AxeBucket(str, Enum):
+    """Which axe result array a Finding came from — its provenance. Only VIOLATIONS
+    carries hard ground truth (axe decided the element fails); INCOMPLETE means axe ran
+    the rule but could NOT decide, so it has no oracle verdict and feeds the eval
+    `unverifiable_share`. The oracle allowlists VIOLATIONS: any other bucket is
+    UNVERIFIABLE by default. Values match axe's payload keys. Extend when a new bucket
+    becomes a Finding source (e.g. `passes` -> supports-evidence)."""
+    VIOLATIONS = "violations"  # confirmed failure — oracle-backed
+    INCOMPLETE = "incomplete"  # needs review — no oracle verdict
+
+
 # ============================================================
 # Scanner output  (scanner/ -> normalizer/)
 # ============================================================
@@ -181,6 +192,11 @@ class Finding(BaseModel):
     impact: Optional[Severity] = None
     help: str = ""
     help_url: str = ""
+    source_bucket: AxeBucket = Field(
+        AxeBucket.VIOLATIONS,
+        description="axe provenance; the oracle only grounds VIOLATIONS. Not part of the id "
+        "(a place is never in two buckets at once).",
+    )
 
 
 # ============================================================
@@ -399,3 +415,4 @@ Added when their milestone arrives, not before:
 | 2026-07-06 | 0.2 | Typed `l1_status` / `oracle_regime` / `Oracle.regime` as enums (`L1Status`, `OracleRegime`); marked `Trace.checks` the authoritative check record; noted `impact`/`severity` share the `Severity` enum. Wire values unchanged. |
 | 2026-07-08 | 0.3 | M1 (T0): added `CorpusChunk` (corpus/ → retriever/) and stratified `EvalMetrics` fields (`citation_hallucination_rate_verifiable`, `unverifiable_share`, `citations_verifiable_total`, `citations_unverifiable_total`). `CorpusChunk.embedding` is optional and excluded from serialization (vector lives in pgvector). Additive — existing M0 shapes unchanged. |
 | 2026-07-08 | 0.4 | M1 (T4): scanner captures axe's `incomplete` (needs-review) bucket distinctly. Factored `AxeViolation`'s fields into a shared `AxeRuleResult` base; added `AxeIncomplete` (same shape, not confirmed) and `ScanResult.incomplete: list[AxeIncomplete]`. `incomplete` is the source of eval's `unverifiable_share`. Additive — `AxeViolation` wire shape unchanged. |
+| 2026-07-08 | 0.5 | M1 (T5): normalizer carries `incomplete` items through as `Finding`s. Added `AxeBucket` enum (provenance) and `Finding.source_bucket: AxeBucket` (default `VIOLATIONS`). The oracle allowlists `VIOLATIONS`, returning no verdict for any other bucket — incomplete-sourced findings become `UNVERIFIABLE`. `source_bucket` is not part of the finding id. Additive — existing findings default to `VIOLATIONS`, wire shape unchanged. |

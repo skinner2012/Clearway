@@ -8,6 +8,7 @@ from pydantic import BaseModel, ValidationError
 from clearway import schemas
 from clearway.schemas import models
 from clearway.schemas.models import (
+    AxeBucket,
     Conformance,
     CorpusChunk,
     EvalMetrics,
@@ -58,6 +59,15 @@ def test_enum_wire_values_are_stable() -> None:
     assert Conformance.DOES_NOT_SUPPORT.value == "does_not_support"
     assert L1Status.NO_ORACLE.value == "no_oracle"
     assert OracleRegime.A_DIGITAL.value == "A-digital"
+    # AxeBucket values must match axe's payload keys — the scanner reads results by these names.
+    assert AxeBucket.VIOLATIONS.value == "violations"
+    assert AxeBucket.INCOMPLETE.value == "incomplete"
+
+
+def test_finding_defaults_to_the_violations_bucket() -> None:
+    """Provenance is additive: an M0-style finding (no source_bucket) is a confirmed violation."""
+    finding = Finding(id="x", source_url="u", rule_id="image-alt", target="img")
+    assert finding.source_bucket is AxeBucket.VIOLATIONS
 
 
 def test_corpus_chunk_embedding_is_optional_and_excluded_from_serialization() -> None:

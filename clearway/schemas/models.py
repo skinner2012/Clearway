@@ -60,6 +60,18 @@ class OracleRegime(str, Enum):
     B_PHYSICAL = "B-physical"  # Regime B: expert gold — costly, sparse
 
 
+class AxeBucket(str, Enum):
+    """Which axe result array a Finding came from — its provenance. Only VIOLATIONS
+    carries hard ground truth (axe decided the element fails); INCOMPLETE means axe ran
+    the rule but could NOT decide, so it has no oracle verdict and feeds the eval
+    `unverifiable_share`. The oracle allowlists VIOLATIONS: any other bucket is
+    UNVERIFIABLE by default. Values match axe's payload keys. Extend when a new bucket
+    becomes a Finding source (e.g. `passes` -> supports-evidence)."""
+
+    VIOLATIONS = "violations"  # confirmed failure — oracle-backed
+    INCOMPLETE = "incomplete"  # needs review — no oracle verdict
+
+
 # ============================================================
 # Scanner output  (scanner/ -> normalizer/)
 # ============================================================
@@ -140,6 +152,11 @@ class Finding(BaseModel):
     impact: Optional[Severity] = None
     help: str = ""
     help_url: str = ""
+    source_bucket: AxeBucket = Field(
+        AxeBucket.VIOLATIONS,
+        description="axe provenance; the oracle only grounds VIOLATIONS. Not part of the id "
+        "(a place is never in two buckets at once).",
+    )
 
 
 # ============================================================

@@ -12,11 +12,14 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TypeVar
 from urllib.parse import urlparse
 
 from playwright.sync_api import sync_playwright
 
-from clearway.schemas.models import AxeNode, AxeViolation, ScanResult, Severity
+from clearway.schemas.models import AxeIncomplete, AxeNode, AxeRuleResult, AxeViolation, ScanResult, Severity
+
+_RuleResultT = TypeVar("_RuleResultT", bound=AxeRuleResult)
 
 # Pinned axe-core version — must match vendor/axe.min.js (`axe.version`).
 AXE_VERSION = "4.12.1"
@@ -34,9 +37,11 @@ def _to_url(target: str) -> str:
     return Path(target).resolve().as_uri()
 
 
-def _to_violation(raw: dict) -> AxeViolation:
+def _to_rule_result(raw: dict, cls: type[_RuleResultT]) -> _RuleResultT:
+    """Map one axe rule-result payload (from either the `violations` or `incomplete`
+    bucket — they share a shape) into the given typed model."""
     impact = raw.get("impact")
-    return AxeViolation(
+    return cls(
         rule_id=raw["id"],
         tags=list(raw.get("tags", [])),
         impact=Severity(impact) if impact else None,
@@ -68,6 +73,7 @@ def scan(target: str) -> ScanResult:
         scanned_at=datetime.now(timezone.utc),
         tool="axe-core",
         tool_version=AXE_VERSION,
-        violations=[_to_violation(v) for v in results.get("violations", [])],
+        violations=[_to_rule_result(v, AxeViolation) for v in results.get("violations", [])],
+        incomplete=[_to_rule_result(i, AxeIncomplete) for i in results.get("incomplete", [])],
         raw=results,
     )

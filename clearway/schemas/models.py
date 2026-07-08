@@ -74,8 +74,10 @@ class AxeNode(BaseModel):
     html: str = Field("", description="outer HTML snippet of the node")
 
 
-class AxeViolation(BaseModel):
-    """A single axe-core violation (may span multiple nodes)."""
+class AxeRuleResult(BaseModel):
+    """One axe rule result over a page (may span multiple nodes). Base for the buckets
+    we consume — `violations` (confirmed) and `incomplete` (needs review) — which are
+    structurally identical in the axe payload."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -90,6 +92,16 @@ class AxeViolation(BaseModel):
     nodes: list[AxeNode] = Field(default_factory=list)
 
 
+class AxeViolation(AxeRuleResult):
+    """A confirmed axe-core violation (axe's `violations` bucket)."""
+
+
+class AxeIncomplete(AxeRuleResult):
+    """An axe needs-review result (axe's `incomplete` bucket): the rule ran but axe could
+    not decide, so ground truth is unknown. These are the oracle-poor / judgment items —
+    the source of eval's `unverifiable_share`. Same shape as a violation, but NOT confirmed."""
+
+
 class ScanResult(BaseModel):
     """Output of scanner/ for one page scan. Consumed by normalizer/."""
 
@@ -100,6 +112,9 @@ class ScanResult(BaseModel):
     tool: str = "axe-core"
     tool_version: str = Field(..., description="pinned axe-core version, for reproducibility")
     violations: list[AxeViolation] = Field(default_factory=list)
+    incomplete: list[AxeIncomplete] = Field(
+        default_factory=list, description="axe needs-review items, kept distinct from violations"
+    )
     raw: dict = Field(default_factory=dict, description="full axe payload passthrough (untyped)")
 
 

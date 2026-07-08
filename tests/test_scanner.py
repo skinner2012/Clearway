@@ -34,6 +34,7 @@ def test_scan_returns_typed_result_with_pinned_version() -> None:
     assert result.tool_version == AXE_VERSION == "4.12.1"
     assert result.url.startswith("file://") and result.url.endswith("home.html")
     assert result.raw, "full axe payload should be passed through in .raw"
+    assert result.incomplete == [], "home.html has no needs-review items; incomplete stays distinct + empty"
 
 
 def test_scan_finds_exactly_the_planted_violations() -> None:

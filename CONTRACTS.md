@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.3
+- **Version:** 0.4
 
 > **This file is the single source of truth for cross-module data shapes.** Any shape that crosses a module boundary is defined here and nowhere else — never redefined in `ARCHITECTURE.md`, in module code, or in an LLM prompt. `ARCHITECTURE.md §5` describes the `Oracle` seam's *role* and points back here for the definition. To add or change a shape: edit §3, then update the deferred list (§5) and the change log (§6) in the same change.
 
@@ -119,8 +119,10 @@ class AxeNode(BaseModel):
     html: str = Field("", description="outer HTML snippet of the node")
 
 
-class AxeViolation(BaseModel):
-    """A single axe-core violation (may span multiple nodes)."""
+class AxeRuleResult(BaseModel):
+    """One axe rule result over a page (may span multiple nodes). Base for the buckets
+    we consume — `violations` (confirmed) and `incomplete` (needs review) — which are
+    structurally identical in the axe payload."""
     model_config = ConfigDict(extra="forbid")
 
     rule_id: str = Field(..., description="axe rule id, e.g. 'image-alt'")
@@ -134,6 +136,16 @@ class AxeViolation(BaseModel):
     nodes: list[AxeNode] = Field(default_factory=list)
 
 
+class AxeViolation(AxeRuleResult):
+    """A confirmed axe-core violation (axe's `violations` bucket)."""
+
+
+class AxeIncomplete(AxeRuleResult):
+    """An axe needs-review result (axe's `incomplete` bucket): the rule ran but axe could
+    not decide, so ground truth is unknown. These are the oracle-poor / judgment items —
+    the source of eval's `unverifiable_share`. Same shape as a violation, but NOT confirmed."""
+
+
 class ScanResult(BaseModel):
     """Output of scanner/ for one page scan. Consumed by normalizer/."""
     model_config = ConfigDict(extra="forbid")
@@ -143,6 +155,9 @@ class ScanResult(BaseModel):
     tool: str = "axe-core"
     tool_version: str = Field(..., description="pinned axe-core version, for reproducibility")
     violations: list[AxeViolation] = Field(default_factory=list)
+    incomplete: list[AxeIncomplete] = Field(
+        default_factory=list, description="axe needs-review items, kept distinct from violations"
+    )
     raw: dict = Field(default_factory=dict, description="full axe payload passthrough (untyped)")
 
 
@@ -383,3 +398,4 @@ Added when their milestone arrives, not before:
 | 2026-07-05 | 0.1 | Initial M0-scoped contracts. |
 | 2026-07-06 | 0.2 | Typed `l1_status` / `oracle_regime` / `Oracle.regime` as enums (`L1Status`, `OracleRegime`); marked `Trace.checks` the authoritative check record; noted `impact`/`severity` share the `Severity` enum. Wire values unchanged. |
 | 2026-07-08 | 0.3 | M1 (T0): added `CorpusChunk` (corpus/ → retriever/) and stratified `EvalMetrics` fields (`citation_hallucination_rate_verifiable`, `unverifiable_share`, `citations_verifiable_total`, `citations_unverifiable_total`). `CorpusChunk.embedding` is optional and excluded from serialization (vector lives in pgvector). Additive — existing M0 shapes unchanged. |
+| 2026-07-08 | 0.4 | M1 (T4): scanner captures axe's `incomplete` (needs-review) bucket distinctly. Factored `AxeViolation`'s fields into a shared `AxeRuleResult` base; added `AxeIncomplete` (same shape, not confirmed) and `ScanResult.incomplete: list[AxeIncomplete]`. `incomplete` is the source of eval's `unverifiable_share`. Additive — `AxeViolation` wire shape unchanged. |

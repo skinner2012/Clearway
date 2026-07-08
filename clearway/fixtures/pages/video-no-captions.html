@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Video without captions</title>
+</head>
+<body>
+  <main>
+    <h1>Video without captions</h1>
+    <!-- Planted needs-review item: a <video> with no <track kind="captions">. axe cannot
+         verify caption content, so `video-caption` lands in the `incomplete` bucket
+         (needs review), NOT `violations`. SC 1.2.2, tag wcag122. -->
+    <video controls width="320" src="movie.mp4"></video>
+  </main>
+</body>
+</html>

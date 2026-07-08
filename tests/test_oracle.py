@@ -79,9 +79,9 @@ def test_verdict_none_when_no_sc_tag() -> None:
 
 
 def test_fixture_tags_map_to_expected_scs() -> None:
-    """Each T1 planted finding's axe tag resolves to the SC documented in expected.json."""
+    """Each T1 planted finding's axe tag resolves to the SC documented in expected_m0.json."""
     oracle = AxeCoreOracle()
-    manifest = json.loads((FIXTURES / "expected.json").read_text())
+    manifest = json.loads((FIXTURES / "expected_m0.json").read_text())
     for finding in manifest["pages"][0]["expected_findings"]:
         verdict = oracle.verdict_for(_finding(finding["rule_id"], [finding["axe_tag"]]))
         assert verdict is not None

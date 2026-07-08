@@ -1,0 +1,71 @@
+{
+  "set_id": "m1-core",
+  "version": 1,
+  "eval_set_id": "m1-core@1",
+  "note": "M1 eval set: the M0 verifiable violations (home.html) plus two synthetic needs-review fixtures that populate the unverifiable bucket. rule/SC/tag/target/impact CONFIRMED against axe-core 4.12.1 (the pinned scanner oracle). The incomplete items carry wcag tags, yet axe could not decide -> the oracle returns NO_ORACLE for them (T5/T6), so they score UNVERIFIABLE and feed unverifiable_share (T7). m0-core@1 stays frozen as the M0 regression anchor.",
+  "pages": [
+    {
+      "path": "pages/home.html",
+      "expected_findings": [
+        {
+          "rule_id": "image-alt",
+          "sc": "1.1.1",
+          "level": "A",
+          "axe_tag": "wcag111",
+          "target": "img",
+          "impact": "critical",
+          "planted": "img element with no alt attribute"
+        },
+        {
+          "rule_id": "html-has-lang",
+          "sc": "3.1.1",
+          "level": "A",
+          "axe_tag": "wcag311",
+          "target": "html",
+          "impact": "serious",
+          "planted": "html element with no lang attribute"
+        },
+        {
+          "rule_id": "label",
+          "sc": "4.1.2",
+          "level": "A",
+          "axe_tag": "wcag412",
+          "target": "#email",
+          "impact": "critical",
+          "planted": "input with no associated label"
+        }
+      ],
+      "expected_incomplete": []
+    },
+    {
+      "path": "pages/contrast-gradient.html",
+      "expected_findings": [],
+      "expected_incomplete": [
+        {
+          "rule_id": "color-contrast",
+          "sc": "1.4.3",
+          "level": "AA",
+          "axe_tag": "wcag143",
+          "target": "p",
+          "impact": "serious",
+          "planted": "text over a background gradient; axe cannot determine the effective background colour"
+        }
+      ]
+    },
+    {
+      "path": "pages/video-no-captions.html",
+      "expected_findings": [],
+      "expected_incomplete": [
+        {
+          "rule_id": "video-caption",
+          "sc": "1.2.2",
+          "level": "A",
+          "axe_tag": "wcag122",
+          "target": "video",
+          "impact": "critical",
+          "planted": "video element with no captions track; axe cannot verify caption content"
+        }
+      ]
+    }
+  ]
+}

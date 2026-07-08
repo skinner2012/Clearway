@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Contrast over a gradient</title>
+</head>
+<body>
+  <main>
+    <h1>Contrast over a gradient</h1>
+    <!-- Planted needs-review item: text sits on a background gradient, so axe cannot
+         determine the effective background colour -> `color-contrast` lands in axe's
+         `incomplete` bucket (needs review), NOT `violations`. SC 1.4.3, tag wcag143. -->
+    <p style="background-image: linear-gradient(90deg, #000, #fff); color: #808080; padding: 1rem;">
+      This text sits on a gradient, so axe cannot determine the effective background colour.
+    </p>
+  </main>
+</body>
+</html>

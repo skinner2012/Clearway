@@ -29,7 +29,18 @@ class _TagCollector(HTMLParser):
 
 
 def _load_manifest() -> dict:
-    return json.loads((FIXTURES / "expected.json").read_text())
+    return json.loads((FIXTURES / "expected_m0.json").read_text())
+
+
+def _load_m1_manifest() -> dict:
+    return json.loads((FIXTURES / "expected_m1.json").read_text())
+
+
+# The two synthetic needs-review fixtures and the axe rule each is confirmed to raise as `incomplete`.
+M1_EXPECTED_INCOMPLETE = {
+    "pages/contrast-gradient.html": "color-contrast",
+    "pages/video-no-captions.html": "video-caption",
+}
 
 
 def _collect(path: Path) -> list[tuple[str, dict[str, str | None]]]:
@@ -70,3 +81,33 @@ def test_home_page_has_exactly_the_planted_violations() -> None:
 
     # hygiene — title/h1/main present so no incidental document-title/region/bypass findings
     assert {"title", "h1", "main"} <= names, "fixture must stay clean apart from the planted defects"
+
+
+def test_m1_manifest_valid_and_pages_exist() -> None:
+    manifest = _load_m1_manifest()
+    assert manifest["eval_set_id"] == "m1-core@1"
+    paths = {p["path"] for p in manifest["pages"]}
+    assert "pages/home.html" in paths, "the m1 set carries the verifiable home page too"
+    for page in manifest["pages"]:
+        assert (FIXTURES / page["path"]).is_file(), f"missing fixture page: {page['path']}"
+    # each synthetic fixture declares exactly its expected incomplete rule and no violations
+    for path, rule in M1_EXPECTED_INCOMPLETE.items():
+        page = next(p for p in manifest["pages"] if p["path"] == path)
+        assert page["expected_findings"] == [], f"{path} should carry only incomplete, no violations"
+        assert {i["rule_id"] for i in page["expected_incomplete"]} == {rule}
+
+
+def test_incomplete_fixtures_keep_their_planted_structure() -> None:
+    # contrast-gradient — a <p> carrying a background gradient (contrast undeterminable),
+    # inside a clean main/h1 document so nothing else fires.
+    cc = _collect(FIXTURES / "pages/contrast-gradient.html")
+    assert {"main", "h1"} <= {name for name, _ in cc}, "contrast fixture must stay clean apart from the planted item"
+    assert any(name == "p" and "background-image" in (attrs.get("style") or "") for name, attrs in cc), (
+        "expected a <p> with a background-image gradient"
+    )
+
+    # video-no-captions — a <video> with NO <track> element.
+    vid = _collect(FIXTURES / "pages/video-no-captions.html")
+    names_vid = {name for name, _ in vid}
+    assert {"main", "h1", "video"} <= names_vid, "video fixture must stay clean apart from the planted item"
+    assert "track" not in names_vid, "expected no <track> (captions absent)"

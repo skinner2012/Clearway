@@ -1,9 +1,9 @@
-"""`clearway` CLI — the M0 entrypoint that runs the forward path and moves the trust metric.
+"""`clearway` CLI — the entrypoint that runs the forward path and moves the trust metric.
 
 `clearway run <fixture>` scans one page end-to-end, prints the computed
-`citation_hallucination_rate`, and (unless `--no-emit`) pushes it via OTel so the Grafana
-panel updates — the M0 exit criterion. `--clean` drafts the correct citations (rate 0.0)
-instead of the planted faults, so alternating runs draw a moving line on the panel.
+`citation_hallucination_rate`, and (unless `--no-emit`) pushes it via OTel so the Grafana panel
+updates. The rate is now the real drafter's *emergent* value — the M0 `--clean`/planting demo
+lever was retired at T3, so the honest measurement is what the panel shows.
 """
 
 from __future__ import annotations
@@ -50,12 +50,11 @@ def _corpus_query_cmd(args: argparse.Namespace) -> int:
 
 
 def _run_cmd(args: argparse.Namespace) -> int:
-    result = run(args.target, plant=not args.clean)
+    result = run(args.target)
     report = result.report
     m = report.metrics
-    mode = "clean" if args.clean else "inject"
     print(
-        f"run {report.run_id} [{mode}]  "
+        f"run {report.run_id}  "
         f"findings={m.findings_total} citations={m.citations_total} "
         f"hallucinations={m.hallucinations_total}  "
         f"citation_hallucination_rate={m.citation_hallucination_rate:.3f}"
@@ -76,11 +75,6 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     run_p = sub.add_parser("run", help="run the forward path over one page and emit the trust metric")
     run_p.add_argument("target", help="fixture path or URL to scan")
-    run_p.add_argument(
-        "--clean",
-        action="store_true",
-        help="draft the correct retrieved citations (rate 0.0) instead of the planted faults",
-    )
     run_p.add_argument(
         "--no-emit",
         dest="emit",

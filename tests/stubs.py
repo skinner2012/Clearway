@@ -1,16 +1,15 @@
 """Shared test stubs — canned stand-ins for real components, kept out of `clearway/`.
 
-`canned_retrieve` is the retired canned retriever: canned, *correct* `Citation`s per fixture
-rule. It lives here (not in `clearway/`) because it is test-only — the production spine uses the
-real RAG `Retriever`. Two jobs across the suite:
-- the orchestrator/CLI spine tests inject it so the exit-criterion metrics run offline (they need
-  canned-correct citations, which a hash-based `FakeEmbedder` cannot produce);
-- the drafter/validator/eval unit tests use it as a convenient source of real-shaped citations.
+These are the retired M0 pipeline stubs; production now runs the real RAG `Retriever` + LLM
+`Drafter`. They live here (not in `clearway/`) because they are test-only. Two jobs across the
+suite: the orchestrator/CLI spine tests inject them so the exit-criterion metric runs offline and
+deterministically (which the real, network-bound components can't), and the drafter/validator/eval
+unit tests use them as a convenient source of real-shaped citations and rows.
 """
 
 from __future__ import annotations
 
-from clearway.schemas.models import Citation, ConformanceLevel, Finding
+from clearway.schemas.models import Citation, Conformance, ConformanceLevel, DraftRow, Finding
 
 # axe rule_id -> the correct citation(s) a real retriever should surface for the fixtures.
 _CANNED_CITATIONS: dict[str, list[Citation]] = {
@@ -19,7 +18,29 @@ _CANNED_CITATIONS: dict[str, list[Citation]] = {
     "label": [Citation(sc_id="4.1.2", title="Name, Role, Value", level=ConformanceLevel.A, source="WCAG-SC")],
 }
 
+# axe rule_id -> a deliberately WRONG sc_id the canned drafter cites, so eval has known citation
+# hallucinations to measure: html-has-lang -> a real-but-wrong SC (fails L1); label -> a
+# nonexistent SC (fails L0). The real drafter has no such planting — this is a test device only.
+_PLANTED_WRONG_SC: dict[str, str] = {"html-has-lang": "1.1.1", "label": "9.9.9"}
+_CANNED_CONFIDENCE = 0.9
+
 
 def canned_retrieve(finding: Finding) -> list[Citation]:
     """Return canned correct citations for a finding's axe rule (no retrieval). Unknown rules -> []."""
     return [c.model_copy() for c in _CANNED_CITATIONS.get(finding.rule_id, [])]
+
+
+def canned_draft(finding: Finding, citations: list[Citation]) -> DraftRow:
+    """Assemble a deterministic `DraftRow`: cite the retrieved citations, except for the two planted
+    fixture rules where it cites a known-wrong SC — giving the spine/eval/validator tests a fixed,
+    assertable citation_hallucination_rate offline."""
+    wrong_sc = _PLANTED_WRONG_SC.get(finding.rule_id)
+    cited = [Citation(sc_id=wrong_sc, source="STUB-PLANTED")] if wrong_sc else [c.model_copy() for c in citations]
+    return DraftRow(
+        finding_id=finding.id,
+        conformance=Conformance.DOES_NOT_SUPPORT,
+        citations=cited,
+        remediation=f"canned draft for rule '{finding.rule_id}'.",
+        severity=finding.impact,
+        confidence=_CANNED_CONFIDENCE,
+    )

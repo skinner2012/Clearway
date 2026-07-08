@@ -12,10 +12,9 @@ import urllib.request
 from pathlib import Path
 
 import pytest
-from stubs import canned_retrieve
+from stubs import canned_draft, canned_retrieve
 
 from clearway.cli import main
-from clearway.drafter import draft as stub_draft
 
 FIXTURE = str(Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages" / "home.html")
 
@@ -30,7 +29,7 @@ def offline_spine(monkeypatch: pytest.MonkeyPatch) -> None:
 
     run_module = importlib.import_module("clearway.orchestrator.run")
     monkeypatch.setattr(run_module, "_default_retrieve", lambda: canned_retrieve)
-    monkeypatch.setattr(run_module, "_default_draft", lambda: stub_draft)
+    monkeypatch.setattr(run_module, "_default_draft", lambda: canned_draft)
 
 
 def _ollama_up() -> bool:

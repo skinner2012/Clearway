@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from stubs import canned_retrieve
+from stubs import canned_draft, canned_retrieve
 
-from clearway.drafter import draft
 from clearway.oracle import AxeCoreOracle
 from clearway.schemas.models import (
     Citation,
@@ -114,7 +113,7 @@ def test_fixture_pipeline_yields_expected_verdicts() -> None:
     total = 0
     for rule_id, tags in _FIXTURE_TAGS.items():
         finding = _finding(rule_id, tags)
-        row = draft(finding, canned_retrieve(finding))
+        row = canned_draft(finding, canned_retrieve(finding))
         for check in validate(row, finding, ORACLE):
             total += 1
             if check.verdict is CitationVerdict.HALLUCINATED:

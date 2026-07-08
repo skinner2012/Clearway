@@ -15,9 +15,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from stubs import canned_retrieve
+from stubs import canned_draft, canned_retrieve
 
-from clearway.drafter import draft as stub_draft
 from clearway.orchestrator import RunResult, run
 from clearway.schemas.models import EvalReport, OracleRegime, Trace
 
@@ -25,7 +24,7 @@ FIXTURE = str(Path(__file__).resolve().parent.parent / "clearway" / "fixtures" /
 
 
 def test_run_end_to_end_hits_the_exit_criterion() -> None:
-    result = run(FIXTURE, retrieve=canned_retrieve, draft=stub_draft)
+    result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft)
     assert isinstance(result, RunResult)
     assert isinstance(result.report, EvalReport)
 
@@ -38,7 +37,7 @@ def test_run_end_to_end_hits_the_exit_criterion() -> None:
 
 
 def test_run_produces_one_trace_per_finding_sharing_a_run() -> None:
-    result = run(FIXTURE, retrieve=canned_retrieve, draft=stub_draft)
+    result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft)
     assert len(result.traces) == 3
     assert all(isinstance(t, Trace) for t in result.traces)
     # all traces of one run share run_id / config_id, and each carries its checks.
@@ -53,8 +52,8 @@ def test_run_produces_one_trace_per_finding_sharing_a_run() -> None:
 
 
 def test_run_is_idempotent_on_finding_ids_and_rate() -> None:
-    a = run(FIXTURE, retrieve=canned_retrieve, draft=stub_draft)
-    b = run(FIXTURE, retrieve=canned_retrieve, draft=stub_draft)
+    a = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft)
+    b = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft)
     # finding ids are a deterministic hash (T3) → identical across runs; only run_id differs.
     assert [t.finding_id for t in a.traces] == [t.finding_id for t in b.traces]
     assert a.report.metrics.citation_hallucination_rate == b.report.metrics.citation_hallucination_rate

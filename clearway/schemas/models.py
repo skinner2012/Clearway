@@ -128,7 +128,35 @@ class Finding(BaseModel):
 
 
 # ============================================================
-# Retrieval output  (retriever/ — STUB in M0)
+# Corpus / RAG grounding  (corpus/ -> retriever/, M1)
+# ============================================================
+
+
+class CorpusChunk(BaseModel):
+    """One embedded WCAG/ARIA corpus chunk: corpus/ produces these, retriever/ queries them.
+    `embedding` lives in pgvector, not in the transported contract — it is optional and
+    excluded from serialization; the field exists only so ingestion can carry it in-process."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    chunk_id: str = Field(..., description="stable id for this chunk within a corpus_version")
+    sc_ids: list[str] = Field(
+        default_factory=list, description="canonical WCAG 2.2 SC ids this chunk grounds, e.g. ['1.1.1']"
+    )
+    text: str = Field(..., description="the chunk's retrievable text")
+    source: str = Field("", description="corpus origin: 'WCAG-SC' | 'Understanding' | 'Technique' | 'ARIA-APG'")
+    url: str = ""
+    corpus_version: str = Field(..., description="frozen corpus build id; encodes the embedding model + dimension")
+    embedding: Optional[list[float]] = Field(
+        default=None,
+        exclude=True,
+        repr=False,
+        description="dense vector; lives in pgvector, excluded from serialization",
+    )
+
+
+# ============================================================
+# Retrieval output  (retriever/ — STUB in M0, real in M1)
 # ============================================================
 
 
@@ -212,14 +240,38 @@ class Trace(BaseModel):
 
 
 class EvalMetrics(BaseModel):
-    """M0 computes citation_hallucination_rate only; more metrics slot in later."""
+    """Trust metrics for one eval run. M1 stratifies the hallucination rate by whether an
+    automated oracle could verify the citation: the verifiable subset (axe-detectable, ~0 by
+    construction) vs the unverifiable share (judgment items with no oracle — the honest
+    headline, and exactly what M5's judge/gold must target)."""
 
     model_config = ConfigDict(extra="forbid")
 
-    citation_hallucination_rate: float = Field(..., ge=0.0, le=1.0)
+    citation_hallucination_rate: float = Field(
+        ..., ge=0.0, le=1.0, description="overall: hallucinations / all citations"
+    )
     findings_total: int = 0
     citations_total: int = 0
     hallucinations_total: int = 0
+
+    # M1 stratification. Invariant: citations_verifiable_total + citations_unverifiable_total == citations_total.
+    # UNVERIFIABLE is never a hallucination, so hallucinations_total is the numerator for BOTH rates.
+    citation_hallucination_rate_verifiable: float = Field(
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="hallucinations / oracle-verifiable citations (axe-detectable; ~0 by construction)",
+    )
+    unverifiable_share: float = Field(
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="unverifiable citations / all citations — the honest headline (no automated oracle)",
+    )
+    citations_verifiable_total: int = Field(
+        0, description="citations with a definitive oracle verdict (VERIFIED | HALLUCINATED)"
+    )
+    citations_unverifiable_total: int = Field(0, description="citations with no oracle verdict (UNVERIFIABLE)")
 
 
 class EvalReport(BaseModel):

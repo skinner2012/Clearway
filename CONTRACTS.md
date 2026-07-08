@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.2
+- **Version:** 0.3
 
 > **This file is the single source of truth for cross-module data shapes.** Any shape that crosses a module boundary is defined here and nowhere else — never redefined in `ARCHITECTURE.md`, in module code, or in an LLM prompt. `ARCHITECTURE.md §5` describes the `Oracle` seam's *role* and points back here for the definition. To add or change a shape: edit §3, then update the deferred list (§5) and the change log (§6) in the same change.
 
@@ -169,7 +169,31 @@ class Finding(BaseModel):
 
 
 # ============================================================
-# Retrieval output  (retriever/ — STUB in M0)
+# Corpus / RAG grounding  (corpus/ -> retriever/, M1)
+# ============================================================
+
+class CorpusChunk(BaseModel):
+    """One embedded WCAG/ARIA corpus chunk: corpus/ produces these, retriever/ queries them.
+    `embedding` lives in pgvector, not in the transported contract — it is optional and
+    excluded from serialization; the field exists only so ingestion can carry it in-process."""
+    model_config = ConfigDict(extra="forbid")
+
+    chunk_id: str = Field(..., description="stable id for this chunk within a corpus_version")
+    sc_ids: list[str] = Field(
+        default_factory=list, description="canonical WCAG 2.2 SC ids this chunk grounds, e.g. ['1.1.1']"
+    )
+    text: str = Field(..., description="the chunk's retrievable text")
+    source: str = Field("", description="corpus origin: 'WCAG-SC' | 'Understanding' | 'Technique' | 'ARIA-APG'")
+    url: str = ""
+    corpus_version: str = Field(..., description="frozen corpus build id; encodes the embedding model + dimension")
+    embedding: Optional[list[float]] = Field(
+        default=None, exclude=True, repr=False,
+        description="dense vector; lives in pgvector, excluded from serialization",
+    )
+
+
+# ============================================================
+# Retrieval output  (retriever/ — STUB in M0, real in M1)
 # ============================================================
 
 class Citation(BaseModel):
@@ -244,13 +268,27 @@ class Trace(BaseModel):
 # ============================================================
 
 class EvalMetrics(BaseModel):
-    """M0 computes citation_hallucination_rate only; more metrics slot in later."""
+    """Trust metrics for one eval run. M1 stratifies the hallucination rate by whether an
+    automated oracle could verify the citation: the verifiable subset (axe-detectable, ~0 by
+    construction) vs the unverifiable share (judgment items with no oracle — the honest
+    headline, and exactly what M5's judge/gold must target)."""
     model_config = ConfigDict(extra="forbid")
 
-    citation_hallucination_rate: float = Field(..., ge=0.0, le=1.0)
+    citation_hallucination_rate: float = Field(..., ge=0.0, le=1.0, description="overall: hallucinations / all citations")
     findings_total: int = 0
     citations_total: int = 0
     hallucinations_total: int = 0
+
+    # M1 stratification. Invariant: citations_verifiable_total + citations_unverifiable_total == citations_total.
+    # UNVERIFIABLE is never a hallucination, so hallucinations_total is the numerator for BOTH rates below.
+    citation_hallucination_rate_verifiable: float = Field(
+        0.0, ge=0.0, le=1.0, description="hallucinations / oracle-verifiable citations (axe-detectable; ~0 by construction)"
+    )
+    unverifiable_share: float = Field(
+        0.0, ge=0.0, le=1.0, description="unverifiable citations / all citations — the honest headline (no automated oracle)"
+    )
+    citations_verifiable_total: int = Field(0, description="citations with a definitive oracle verdict (VERIFIED | HALLUCINATED)")
+    citations_unverifiable_total: int = Field(0, description="citations with no oracle verdict (UNVERIFIABLE)")
 
 
 class EvalReport(BaseModel):
@@ -334,7 +372,7 @@ Added when their milestone arrives, not before:
 | `JudgeResult`, `CalibrationReport` (κ, confidence-vs-correctness) | M5 |
 | `GoldLabel` (expert-provided ground truth) | M6 |
 | Full ACR/VPAT document assembly schema (beyond per-finding `DraftRow`) | later |
-| L2 retrieval-faithfulness fields on `CitationCheck` | when RAG is real (M1+) |
+| L2 retrieval-faithfulness fields on `CitationCheck` | M5 (needs the judge; RAG goes real in M1 but L2 verification does not) |
 
 ---
 
@@ -344,3 +382,4 @@ Added when their milestone arrives, not before:
 |---|---|---|
 | 2026-07-05 | 0.1 | Initial M0-scoped contracts. |
 | 2026-07-06 | 0.2 | Typed `l1_status` / `oracle_regime` / `Oracle.regime` as enums (`L1Status`, `OracleRegime`); marked `Trace.checks` the authoritative check record; noted `impact`/`severity` share the `Severity` enum. Wire values unchanged. |
+| 2026-07-08 | 0.3 | M1 (T0): added `CorpusChunk` (corpus/ → retriever/) and stratified `EvalMetrics` fields (`citation_hallucination_rate_verifiable`, `unverifiable_share`, `citations_verifiable_total`, `citations_unverifiable_total`). `CorpusChunk.embedding` is optional and excluded from serialization (vector lives in pgvector). Additive — existing M0 shapes unchanged. |

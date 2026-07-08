@@ -9,6 +9,8 @@ from clearway import schemas
 from clearway.schemas import models
 from clearway.schemas.models import (
     Conformance,
+    CorpusChunk,
+    EvalMetrics,
     Finding,
     L1Status,
     Oracle,
@@ -56,6 +58,49 @@ def test_enum_wire_values_are_stable() -> None:
     assert Conformance.DOES_NOT_SUPPORT.value == "does_not_support"
     assert L1Status.NO_ORACLE.value == "no_oracle"
     assert OracleRegime.A_DIGITAL.value == "A-digital"
+
+
+def test_corpus_chunk_embedding_is_optional_and_excluded_from_serialization() -> None:
+    """The vector lives in pgvector, not the transported contract: it defaults to None and
+    is dropped from model_dump()/model_dump_json() even when set."""
+    chunk = CorpusChunk(chunk_id="c1", text="images need a text alternative", corpus_version="wcag22-nomic768@1")
+    assert chunk.embedding is None  # optional
+
+    with_vec = chunk.model_copy(update={"embedding": [0.1, 0.2, 0.3]})
+    assert with_vec.embedding == [0.1, 0.2, 0.3]  # carried in-process
+    dumped = with_vec.model_dump()
+    assert "embedding" not in dumped  # excluded from serialization
+    assert "embedding" not in with_vec.model_dump_json()
+    assert dumped["chunk_id"] == "c1" and dumped["corpus_version"] == "wcag22-nomic768@1"
+
+
+def test_corpus_chunk_is_strict() -> None:
+    """Contracts are strict: an unexpected field is a validation error."""
+    with pytest.raises(ValidationError):
+        CorpusChunk(chunk_id="c1", text="t", corpus_version="v1", bogus=1)
+
+
+def test_eval_metrics_has_stratified_fields_defaulting_safely() -> None:
+    """M1 stratification is additive: an M0-style construction still validates, the new
+    fields default, and the verifiable/unverifiable counts partition citations_total."""
+    m0_style = EvalMetrics(
+        citation_hallucination_rate=2 / 3, findings_total=3, citations_total=3, hallucinations_total=2
+    )
+    assert m0_style.citation_hallucination_rate_verifiable == 0.0
+    assert m0_style.unverifiable_share == 0.0
+    assert m0_style.citations_verifiable_total == 0
+    assert m0_style.citations_unverifiable_total == 0
+
+    stratified = EvalMetrics(
+        citation_hallucination_rate=0.0,
+        citations_total=5,
+        hallucinations_total=0,
+        citation_hallucination_rate_verifiable=0.0,
+        unverifiable_share=0.4,
+        citations_verifiable_total=3,
+        citations_unverifiable_total=2,
+    )
+    assert stratified.citations_verifiable_total + stratified.citations_unverifiable_total == stratified.citations_total
 
 
 def test_oracle_protocol_is_runtime_checkable() -> None:

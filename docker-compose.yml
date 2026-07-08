@@ -1,6 +1,6 @@
-# Clearway local observability stack (M0 = the trust-metric trio only).
-# Other services (Postgres+pgvector, Redis, Ollama) are added at the milestone that
-# first needs them — see ARCHITECTURE.md §4 for the full intended stack + rationale.
+# Clearway local stack. M0 stood up the trust-metric trio (otel-collector, prometheus,
+# grafana); M1 adds Postgres+pgvector as the corpus/vector store. Ollama runs on the host
+# (not in compose) — see ARCHITECTURE.md §4 for the full intended stack + rationale.
 #
 # Flow: `clearway run` pushes OTLP/HTTP metrics -> otel-collector (long-running, so it
 # outlives the short-lived CLI) -> Prometheus scrapes the collector -> Grafana panel.
@@ -43,3 +43,23 @@ services:
       - "3000:3000"   # UI
     depends_on:
       - prometheus
+
+  # The image ships the `vector` extension; the app runs CREATE EXTENSION + DDL at ingest.
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-clearway}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-clearway}
+      - POSTGRES_DB=${POSTGRES_DB:-clearway}
+    volumes:
+      - clearway-pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-clearway} -d ${POSTGRES_DB:-clearway}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  clearway-pgdata:

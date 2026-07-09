@@ -1,8 +1,9 @@
 """`clearway` CLI smoke tests — the user-facing entrypoint over the orchestrator.
 
-The `run` tests are offline (`--no-emit`), exercising argument parsing, the `--clean`
-lever, and the printed summary without touching OTel (emission is proven end-to-end by
-the stack-gated test_observability.py). The `corpus-*` test is stack-gated (real Ollama +
+The `run` and `eval` tests inject the canned spine (`offline_spine`) and pass `--no-emit`, so they
+exercise argument parsing and the printed stratified summary without the corpus stack, Ollama, or
+OTel (emission is proven end-to-end by the stack-gated test_observability.py). `eval` still scans
+the real fixture pages with headless Chromium. The `corpus-*` test is stack-gated (real Ollama +
 pgvector), since those subcommands construct the real embedder/store.
 """
 
@@ -61,6 +62,17 @@ def test_cli_run_no_emit_exits_zero(offline_spine, capsys) -> None:  # type: ign
     assert code == 0
     out = capsys.readouterr().out
     assert "citation_hallucination_rate=0.667" in out
+    assert "emitted" not in out  # --no-emit must not touch OTel
+
+
+def test_cli_eval_no_emit_reports_the_stratified_set(offline_spine, capsys) -> None:  # type: ignore[no-untyped-def]
+    """`clearway eval` runs the whole m1-core@1 set and prints the honest stratification: the two
+    incomplete fixtures give 2 UNVERIFIABLE of 5 citations → unverifiable_share = 0.400."""
+    code = main(["eval", "--no-emit"])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "m1-core@1" in out
+    assert "unverifiable_share=0.400" in out
     assert "emitted" not in out  # --no-emit must not touch OTel
 
 

@@ -1,19 +1,51 @@
 """`clearway` CLI — the entrypoint that runs the forward path and moves the trust metric.
 
-`clearway run <fixture>` scans one page end-to-end, prints the computed
-`citation_hallucination_rate`, and (unless `--no-emit`) pushes it via OTel so the Grafana panel
-updates. The rate is now the real drafter's *emergent* value — the M0 `--clean`/planting demo
-lever was retired at T3, so the honest measurement is what the panel shows.
+`clearway run <fixture>` scans one page end-to-end; `clearway eval` runs the whole `m1-core@1`
+fixture set. Both print the stratified trust metrics — the overall `citation_hallucination_rate`,
+the verifiable-subset rate, and the honest `unverifiable_share` — and (unless `--no-emit`) push
+them via OTel so the Grafana panel updates. The rates are the real drafter's *emergent* values —
+the M0 planting demo lever was retired at T3, so the honest measurement is what the panel shows.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 from clearway.observability import record_eval_report, setup_metrics, shutdown
-from clearway.orchestrator import run
+from clearway.orchestrator import run, run_set
+from clearway.schemas.models import EvalReport
+
+_FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def _print_metrics(report: EvalReport) -> None:
+    """Print the stratified trust metrics for one report: the overall hallucination rate plus its
+    split by oracle-verifiability (verifiable-subset rate + the honest `unverifiable_share`)."""
+    m = report.metrics
+    print(
+        f"{report.eval_set_id}  run {report.run_id}  "
+        f"findings={m.findings_total} citations={m.citations_total} hallucinations={m.hallucinations_total}"
+    )
+    print(
+        f"  citation_hallucination_rate={m.citation_hallucination_rate:.3f}  "
+        f"verifiable={m.citation_hallucination_rate_verifiable:.3f}  "
+        f"unverifiable_share={m.unverifiable_share:.3f} "
+        f"({m.citations_unverifiable_total}/{m.citations_total})"
+    )
+
+
+def _emit(report: EvalReport) -> None:
+    """Push the report's metrics via OTel, force-flushing before this short-lived process exits."""
+    setup_metrics()
+    try:
+        record_eval_report(report)
+    finally:
+        shutdown()  # force-flush before this short-lived process exits (T9)
+    print("emitted → OTel (the Grafana panel will update)")
 
 
 def _corpus_ingest_cmd(args: argparse.Namespace) -> int:
@@ -50,22 +82,23 @@ def _corpus_query_cmd(args: argparse.Namespace) -> int:
 
 
 def _run_cmd(args: argparse.Namespace) -> int:
-    result = run(args.target)
-    report = result.report
-    m = report.metrics
-    print(
-        f"run {report.run_id}  "
-        f"findings={m.findings_total} citations={m.citations_total} "
-        f"hallucinations={m.hallucinations_total}  "
-        f"citation_hallucination_rate={m.citation_hallucination_rate:.3f}"
-    )
+    report = run(args.target).report
+    _print_metrics(report)
     if args.emit:
-        setup_metrics()
-        try:
-            record_eval_report(report)
-        finally:
-            shutdown()  # force-flush before this short-lived process exits (T9)
-        print("emitted → OTel (the Grafana panel will update)")
+        _emit(report)
+    return 0
+
+
+def _eval_cmd(args: argparse.Namespace) -> int:
+    """Run the whole `m1-core@1` fixture set (the manifest's pages) and report the stratified
+    trust metrics. This is the M1 exit-criterion command — the set is where the two incomplete
+    fixtures make `unverifiable_share` non-trivial. Needs the real corpus stack + Ollama."""
+    manifest = json.loads((_FIXTURES / "expected_m1.json").read_text())
+    targets = [str(_FIXTURES / page["path"]) for page in manifest["pages"]]
+    report = run_set(targets, eval_set_id=manifest["eval_set_id"]).report
+    _print_metrics(report)
+    if args.emit:
+        _emit(report)
     return 0
 
 
@@ -83,13 +116,32 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     run_p.set_defaults(emit=True, func=_run_cmd)
 
+    eval_p = sub.add_parser("eval", help="run the m1-core@1 fixture set and emit the stratified trust metrics")
+    eval_p.add_argument(
+        "--no-emit",
+        dest="emit",
+        action="store_false",
+        help="compute and print only; do not push the metrics to OTel",
+    )
+    eval_p.set_defaults(emit=True, func=_eval_cmd)
+
     ingest_p = sub.add_parser("corpus-ingest", help="fetch WCAG 2.2, chunk + embed, upsert into pgvector")
-    ingest_p.add_argument("--limit", type=int, default=0, help="ingest only the first N chunks (0 = all)")
+    ingest_p.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="ingest only the first N chunks (0 = all)",
+    )
     ingest_p.set_defaults(func=_corpus_ingest_cmd)
 
     query_p = sub.add_parser("corpus-query", help="embed a query and print the nearest corpus chunks")
     query_p.add_argument("text", help="query text, e.g. 'images need a text alternative'")
-    query_p.add_argument("-k", type=int, default=5, help="how many results to return")
+    query_p.add_argument(
+        "-k",
+        type=int,
+        default=5,
+        help="how many results to return",
+    )
     query_p.set_defaults(func=_corpus_query_cmd)
 
     args = parser.parse_args(argv)

@@ -1,4 +1,4 @@
-"""T8 acceptance: eval folds trace checks into citation_hallucination_rate."""
+"""Eval folds trace checks into the trust metrics: overall rate + M1 stratification."""
 
 from __future__ import annotations
 
@@ -75,6 +75,47 @@ def test_multiple_citations_per_trace_are_all_counted() -> None:
     assert m.citation_hallucination_rate == pytest.approx(0.5)
 
 
+# --- M1 stratification: verifiable rate + unverifiable share ------------------
+
+
+def test_stratifies_citations_by_oracle_verifiability() -> None:
+    # 4 citations: 1 verified + 1 hallucinated (both verifiable) + 2 unverifiable.
+    traces = [
+        _trace("f1", [_check("1.1.1", CitationVerdict.VERIFIED)]),
+        _trace("f2", [_check("9.9.9", CitationVerdict.HALLUCINATED)]),
+        _trace("f3", [_check("1.4.3", CitationVerdict.UNVERIFIABLE)]),
+        _trace("f4", [_check("2.4.7", CitationVerdict.UNVERIFIABLE)]),
+    ]
+    m = compute_metrics(traces)
+    assert m.citations_total == 4
+    assert m.citations_verifiable_total == 2
+    assert m.citations_unverifiable_total == 2
+    assert m.citations_verifiable_total + m.citations_unverifiable_total == m.citations_total  # invariant
+    assert m.hallucinations_total == 1
+    # overall rate divides by all 4; the verifiable rate divides by only the 2 verifiable.
+    assert m.citation_hallucination_rate == pytest.approx(1 / 4)
+    assert m.citation_hallucination_rate_verifiable == pytest.approx(1 / 2)
+    assert m.unverifiable_share == pytest.approx(2 / 4)
+
+
+def test_all_unverifiable_gives_zero_verifiable_rate_no_division_error() -> None:
+    traces = [
+        _trace("f1", [_check("1.4.3", CitationVerdict.UNVERIFIABLE)]),
+        _trace("f2", [_check("1.2.2", CitationVerdict.UNVERIFIABLE)]),
+    ]
+    m = compute_metrics(traces)
+    assert m.citations_verifiable_total == 0
+    assert m.citation_hallucination_rate_verifiable == 0.0  # 0/0 guarded, not a crash
+    assert m.unverifiable_share == pytest.approx(1.0)
+
+
+def test_empty_traces_zero_all_stratified_fields() -> None:
+    m = compute_metrics([])
+    assert (m.citations_verifiable_total, m.citations_unverifiable_total) == (0, 0)
+    assert m.citation_hallucination_rate_verifiable == 0.0
+    assert m.unverifiable_share == 0.0
+
+
 # --- evaluate: report labels + provenance ------------------------------------
 
 
@@ -144,7 +185,15 @@ def test_fixture_pipeline_report_has_two_thirds_rate() -> None:
         oracle_version=ORACLE.version,
         created_at=_AT,
     )
-    assert report.metrics.findings_total == 3
-    assert report.metrics.citations_total == 3
-    assert report.metrics.hallucinations_total == 2
-    assert report.metrics.citation_hallucination_rate == pytest.approx(2 / 3)
+    m = report.metrics
+    assert m.findings_total == 3
+    assert m.citations_total == 3
+    assert m.hallucinations_total == 2
+    assert m.citation_hallucination_rate == pytest.approx(2 / 3)
+    # all three fixture rules are confirmed `violations` → every citation is oracle-verifiable, so
+    # the verifiable rate equals the overall rate and nothing is unverifiable. (The unverifiable
+    # share only becomes non-trivial once the `incomplete`-bucket fixtures enter, on the real run.)
+    assert m.citations_verifiable_total == 3
+    assert m.citations_unverifiable_total == 0
+    assert m.citation_hallucination_rate_verifiable == pytest.approx(2 / 3)
+    assert m.unverifiable_share == 0.0

@@ -1,8 +1,9 @@
-"""Eval aggregation — fold per-finding `CitationCheck`s into the M0 trust metric.
+"""Eval aggregation — fold per-finding `CitationCheck`s into the trust metrics.
 
-M0 computes exactly one quality metric, `citation_hallucination_rate`, and wraps
-it in a reproducible `EvalReport` (ARCHITECTURE §4.5). The checks are read from
-each `Trace.checks` (the authoritative per-finding record), not a side list.
+M1 wraps a stratified set of trust metrics in a reproducible `EvalReport` (ARCHITECTURE §4.5):
+the overall `citation_hallucination_rate` plus its split by oracle-verifiability — the verifiable
+rate (~0 by construction) and the `unverifiable_share` (the honest headline). The checks are read
+from each `Trace.checks` (the authoritative per-finding record), not a side list.
 
 `evaluate` reads `run_id` / `config_id` off the traces (they live there); the
 report labels — `eval_set_id`, `oracle_regime`, `oracle_version`, `created_at` —
@@ -24,15 +25,27 @@ from clearway.schemas.models import (
 
 
 def compute_metrics(traces: list[Trace]) -> EvalMetrics:
-    """Count citations and hallucinations across all traces → `EvalMetrics`."""
-    citations_total = sum(len(t.checks) for t in traces)
-    hallucinations_total = sum(1 for t in traces for c in t.checks if c.verdict is CitationVerdict.HALLUCINATED)
-    rate = hallucinations_total / citations_total if citations_total else 0.0
+    """Count citations and hallucinations across all traces → `EvalMetrics`.
+
+    The M1 stratification splits citations by whether an automated oracle could verify them:
+    UNVERIFIABLE (no oracle verdict) vs verifiable (VERIFIED | HALLUCINATED). `hallucinations_total`
+    is the numerator for BOTH rates — UNVERIFIABLE is never a hallucination, so all hallucinations
+    live in the verifiable subset. `unverifiable_share` is the honest headline (what M5 must target).
+    """
+    checks = [c for t in traces for c in t.checks]
+    citations_total = len(checks)
+    hallucinations_total = sum(1 for c in checks if c.verdict is CitationVerdict.HALLUCINATED)
+    unverifiable_total = sum(1 for c in checks if c.verdict is CitationVerdict.UNVERIFIABLE)
+    verifiable_total = citations_total - unverifiable_total
     return EvalMetrics(
-        citation_hallucination_rate=rate,
+        citation_hallucination_rate=hallucinations_total / citations_total if citations_total else 0.0,
         findings_total=len(traces),
         citations_total=citations_total,
         hallucinations_total=hallucinations_total,
+        citation_hallucination_rate_verifiable=(hallucinations_total / verifiable_total if verifiable_total else 0.0),
+        unverifiable_share=unverifiable_total / citations_total if citations_total else 0.0,
+        citations_verifiable_total=verifiable_total,
+        citations_unverifiable_total=unverifiable_total,
     )
 
 

@@ -14,7 +14,7 @@ The full rationale — the regulatory backdrop (FTC v. accessiBe), the two-oracl
 
 ## Status
 
-Early — **M0 (walking skeleton) is complete**: the thinnest end-to-end run that proves the measurement loop is real, with one trust metric moving on a live Grafana panel. See [`specs/M0-walking-skeleton.md`](specs/M0-walking-skeleton.md) and [Running the pipeline](#running-the-pipeline). Next up is **M1** (real retriever + drafter).
+Early — **M1 (forward path, real) is complete**: the M0 stubs are replaced by a real RAG retriever (embedder + pgvector) and a real LLM drafter (Ollama), and the trust metric is now stratified into a verifiable-subset rate and the honest `unverifiable_share` — the fraction of citations no automated oracle can check. See [`specs/M1-forward-path.md`](specs/M1-forward-path.md), the [first-pass weak spots](docs/M1-weak-spots.md), and [Running the pipeline](#running-the-pipeline). Next up is **M2**.
 
 ## Development
 
@@ -43,20 +43,26 @@ docker compose down     # stop it
 
 ## Running the pipeline
 
-`clearway run <fixture>` executes the M0 forward path over one page — scan (real Playwright + axe-core) → normalize → retrieve *(stub)* → draft *(stub)* → validate → eval — and reports `citation_hallucination_rate`, the M0 trust metric.
+The pipeline runs the real forward path — scan (Playwright + axe-core) → normalize → **retrieve** (real embedder + pgvector) → **draft** (real LLM via Ollama) → validate → eval — and reports the stratified trust metrics: the overall `citation_hallucination_rate`, the verifiable-subset rate, and the honest `unverifiable_share`. There is no offline/stub mode from the CLI (stubs are test-only), so each command hits the services it needs; `--no-emit` only skips the OTel push, not the model calls.
+
+First, ingest the WCAG corpus once so the retriever has something to search. This needs the Ollama **embedding** model + **pgvector** (started by `docker compose up -d`) — but *not* the chat model:
 
 ```bash
-# compute + print the metric only — no stack needed:
-uv run clearway run clearway/fixtures/pages/home.html --no-emit
-
-# push the metric so the Grafana panel moves (needs `docker compose up -d` first):
-uv run clearway run clearway/fixtures/pages/home.html            # planted faults  → 0.667
-uv run clearway run clearway/fixtures/pages/home.html --clean    # correct citations → 0.000
-
-uv run clearway run --help
+uv run clearway corpus-ingest                                    # fetch WCAG 2.2 → chunk + embed → upsert into pgvector
+uv run clearway corpus-query "images need a text alternative"    # sanity-check retrieval
 ```
 
-The fixture carries three planted findings and two intentional citation faults, so the honest rate is **2/3**. `--clean` drafts the correct citations instead (rate **0.0**); alternating runs draw a moving line on the **Clearway — M0 Trust Metric** panel at <http://localhost:3000>. When the stack is down, use `--no-emit` — emitting otherwise fails to reach the collector at `localhost:4318`.
+Then run the forward path — over one page, or the whole eval set. This needs the **full stack**: the Ollama **chat** *and* **embedding** models, **pgvector**, and a headless browser to scan:
+
+```bash
+uv run clearway run clearway/fixtures/pages/home.html   # one page
+uv run clearway eval                                     # the m1-core@1 fixture set (3 pages, 5 findings)
+
+# --no-emit computes + prints only; without it, the metrics push to OTel and the Grafana panel moves:
+uv run clearway eval --no-emit
+```
+
+Emitted metrics land on the **Clearway — M1 Trust Metric** dashboard at <http://localhost:3000> — see [`stack/grafana/README.md`](stack/grafana/README.md) for how to read the three panels.
 
 ## Documentation
 
@@ -65,6 +71,7 @@ The fixture carries three planted findings and two intentional citation faults, 
 - [`CONTRACTS.md`](CONTRACTS.md) — the shared data schemas (single source of truth).
 - [`CLAUDE.md`](CLAUDE.md) — working conventions and rules of engagement for Claude Code and contributors.
 - [`specs/`](specs/) — per-milestone task tickets.
+- [`docs/`](docs/) — milestone notes and analysis (e.g. the [M1 weak spots](docs/M1-weak-spots.md)).
 
 ## License & authorship
 

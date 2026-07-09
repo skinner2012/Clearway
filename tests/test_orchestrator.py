@@ -7,10 +7,11 @@ the honest stratified aggregate (5 findings, 2 UNVERIFIABLE → `unverifiable_sh
 runners are pure — emission (OTel) lives in the CLI and is proven by the stack-gated
 test_observability.py.
 
-Both model-facing steps are injected with canned stubs, so the spine runs offline (no corpus
-stack, no Ollama): `canned_retrieve` returns the correct SC per fixture rule, and the drafter
-stub plants known citation faults — together they make the exit-criterion metric deterministic
-and assertable. The real retriever/drafter are proven in their own modules' gated tests.
+Both model-facing steps are injected with canned stubs, and the durable checkpoint store is an
+in-memory stand-in, so the spine runs offline (no corpus stack, no Ollama, no Postgres):
+`canned_retrieve` returns the correct SC per fixture rule, and the drafter stub plants known
+citation faults — together they make the exit-criterion metric deterministic and assertable. The
+real retriever/drafter/store are proven in their own modules' gated tests.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ from pathlib import Path
 import pytest
 from stubs import canned_draft, canned_retrieve
 
-from clearway.orchestrator import RunResult, run, run_set
+from clearway.orchestrator import InMemoryOrchestratorStore, RunResult, run, run_set
 from clearway.schemas.models import EvalReport, OracleRegime, Trace
 
 PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
@@ -30,7 +31,7 @@ M1_SET = [str(PAGES / p) for p in ("home.html", "contrast-gradient.html", "video
 
 
 def test_run_end_to_end_hits_the_exit_criterion() -> None:
-    result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft)
+    result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore())
     assert isinstance(result, RunResult)
     assert isinstance(result.report, EvalReport)
 
@@ -43,7 +44,7 @@ def test_run_end_to_end_hits_the_exit_criterion() -> None:
 
 
 def test_run_produces_one_trace_per_finding_sharing_a_run() -> None:
-    result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft)
+    result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore())
     assert len(result.traces) == 3
     assert all(isinstance(t, Trace) for t in result.traces)
     # all traces of one run share run_id / config_id, and each carries its checks.
@@ -58,8 +59,9 @@ def test_run_produces_one_trace_per_finding_sharing_a_run() -> None:
 
 
 def test_run_is_idempotent_on_finding_ids_and_rate() -> None:
-    a = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft)
-    b = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft)
+    store = InMemoryOrchestratorStore()
+    a = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=store)
+    b = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=store)
     # finding ids are a deterministic hash (T3) → identical across runs; only run_id differs.
     assert [t.finding_id for t in a.traces] == [t.finding_id for t in b.traces]
     assert a.report.metrics.citation_hallucination_rate == b.report.metrics.citation_hallucination_rate
@@ -70,7 +72,9 @@ def test_run_is_idempotent_on_finding_ids_and_rate() -> None:
 
 
 def test_run_set_folds_the_m1_page_set_into_one_report() -> None:
-    result = run_set(M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft)
+    result = run_set(
+        M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore()
+    )
     assert isinstance(result, RunResult)
     # 5 findings across 3 pages: home's 3 verifiable violations + 2 incomplete needs-review items.
     assert len(result.traces) == 5
@@ -82,7 +86,9 @@ def test_run_set_folds_the_m1_page_set_into_one_report() -> None:
 
 
 def test_run_set_stratifies_the_honest_unverifiable_share() -> None:
-    m = run_set(M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft).report.metrics
+    m = run_set(
+        M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore()
+    ).report.metrics
     assert m.findings_total == 5
     assert m.citations_total == 5
     # the 2 incomplete-bucket citations (1.4.3, 1.2.2) have no oracle → UNVERIFIABLE.
@@ -97,4 +103,6 @@ def test_run_set_stratifies_the_honest_unverifiable_share() -> None:
 
 def test_run_set_rejects_empty_targets() -> None:
     with pytest.raises(ValueError, match="at least one target"):
-        run_set([], eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft)
+        run_set(
+            [], eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore()
+        )

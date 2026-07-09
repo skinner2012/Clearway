@@ -1,32 +1,30 @@
-"""Orchestrator — wire the forward path over one page into a trust-metric report.
+"""Orchestrator — wire the forward path over one page (or a whole eval set) into a trust-metric
+report.
 
-This is the spine T2–T9 were built for: scan → normalize → retrieve → draft → validate → eval.
-It assembles one `Trace` per finding and aggregates them into an `EvalReport`. It is deliberately
-**pure** — no OTel emission here; the CLI owns that side effect (so the whole pipeline is testable
-offline, without the stack running).
+`run()` / `run_set()` are thin wrappers: scan → normalize, then hand the findings to the durable
+state machine (`orchestrator/machine.py`'s `execute()`) for the checkpointed, resumable
+retrieve → draft → validate pass (ARCHITECTURE §4.6), then aggregate the resulting traces into an
+`EvalReport`. They are deliberately **pure** — no OTel emission here; the CLI owns that side effect
+(so the whole pipeline is testable offline, without the stack running).
 
-Orchestration is intentionally thin: a straight pass over findings with one retry on the scan.
-Durable primitives (checkpoint, idempotent resume, HITL) are M2 (ARCHITECTURE §4.6).
+The scan keeps its own minimal retry (the headless-browser step is the only external/flaky part
+upstream of the durable machine); everything from `normalize()` onward is checkpointed, retried,
+and resumable via `execute()`.
 """
 
 from __future__ import annotations
 
 import uuid
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from clearway.eval import evaluate
 from clearway.normalizer import normalize
 from clearway.oracle import AxeCoreOracle
+from clearway.orchestrator.machine import Draft, Retrieve, execute
+from clearway.orchestrator.store import OrchestratorStore
 from clearway.scanner import scan
-from clearway.schemas.models import Citation, DraftRow, EvalReport, Finding, Oracle, ScanResult, Trace
-from clearway.validator import validate
-
-# The retrieve/draft steps are seams. Production builds the real implementations (which need the
-# corpus stack / Ollama); offline spine tests inject canned stubs instead.
-Retrieve = Callable[[Finding], list[Citation]]
-Draft = Callable[[Finding, list[Citation]], DraftRow]
+from clearway.schemas.models import EvalReport, Oracle, ScanResult, Trace
 
 # Frozen run identity for M1. config_id/eval_set_id are METRIC LABELS, so they are stable and
 # low-cardinality by design (the T9 discipline); run_id is per-invocation and is NOT a label (it
@@ -67,6 +65,18 @@ def _default_draft() -> Draft:
     return Drafter(LiteLLMClient()).draft
 
 
+def _default_store() -> OrchestratorStore:
+    """Build the real Postgres checkpoint store (schema created if absent — cheap, idempotent
+    DDL, so `clearway run`/`clearway eval` work against a fresh database with no separate setup
+    step). Constructed lazily so Postgres is required only when a run actually checkpoints —
+    offline tests inject `InMemoryOrchestratorStore` instead."""
+    from clearway.orchestrator.store import PgOrchestratorStore
+
+    store = PgOrchestratorStore()
+    store.ensure_schema()
+    return store
+
+
 def _scan_with_retry(target: str) -> ScanResult:
     """Scan with one retry. The headless-browser scan is the only external/flaky step;
     everything downstream is deterministic local code, so this is the whole 'minimal retry'."""
@@ -87,47 +97,58 @@ def _trace_page(
     do_retrieve: Retrieve,
     do_draft: Draft,
     oracle: Oracle,
+    store: OrchestratorStore,
 ) -> list[Trace]:
-    """Scan one page and produce one `Trace` per finding (scan → normalize → retrieve → draft →
-    validate). Shared by the single-page `run` and the set-level `run_set`, so both stamp identical
-    trace provenance; the caller owns `run_id`/`created_at` so a whole set lands under one run."""
+    """Scan one page and produce one `Trace` per finding via the durable state machine —
+    checkpointed retrieve → draft → validate, replayed (not recomputed) if this `run_id` was
+    already partway through. Shared by the single-page `run` and the set-level `run_set`, so both
+    stamp identical trace provenance; the caller owns `run_id`/`created_at` so a whole set lands
+    under one run."""
     scan_result = _scan_with_retry(target)
     findings = normalize(scan_result)
-    traces: list[Trace] = []
-    for finding in findings:
-        citations = do_retrieve(finding)
-        draft_row = do_draft(finding, citations)
-        checks = validate(draft_row, finding, oracle)
-        traces.append(
-            Trace(
-                run_id=run_id,
-                finding_id=finding.id,
-                config_id=_CONFIG_ID,
-                model=_MODEL,
-                retrieved_sc_ids=[c.sc_id for c in citations],
-                confidence=draft_row.confidence,
-                checks=checks,
-                created_at=created_at,
-            )
-        )
-    return traces
+    return execute(
+        findings,
+        run_id=run_id,
+        config_id=_CONFIG_ID,
+        model=_MODEL,
+        created_at=created_at,
+        do_retrieve=do_retrieve,
+        do_draft=do_draft,
+        oracle=oracle,
+        store=store,
+    )
 
 
-def run(target: str, *, retrieve: Retrieve | None = None, draft: Draft | None = None) -> RunResult:
+def run(
+    target: str,
+    *,
+    retrieve: Retrieve | None = None,
+    draft: Draft | None = None,
+    store: OrchestratorStore | None = None,
+) -> RunResult:
     """Run the forward path over one page and aggregate a trust-metric report.
 
     `retrieve` and `draft` are the two model-facing seams: `None` (production) builds the real
     implementations — retrieval needs the corpus stack, drafting needs Ollama — so the reported
     `citation_hallucination_rate` is the *honest, emergent* rate. Tests inject canned stubs to
     exercise the spine offline (there is no planting lever — that M0 scaffold was retired at T3).
+    `store` is the durable-checkpoint seam (`None` → real Postgres; tests inject
+    `InMemoryOrchestratorStore`).
     """
     do_retrieve = retrieve if retrieve is not None else _default_retrieve()
     do_draft = draft if draft is not None else _default_draft()
+    do_store = store if store is not None else _default_store()
     oracle: Oracle = AxeCoreOracle()
     run_id = uuid.uuid4().hex
     now = datetime.now(UTC)
     traces = _trace_page(
-        target, run_id=run_id, created_at=now, do_retrieve=do_retrieve, do_draft=do_draft, oracle=oracle
+        target,
+        run_id=run_id,
+        created_at=now,
+        do_retrieve=do_retrieve,
+        do_draft=do_draft,
+        oracle=oracle,
+        store=do_store,
     )
     report = evaluate(
         traces,
@@ -145,6 +166,7 @@ def run_set(
     eval_set_id: str,
     retrieve: Retrieve | None = None,
     draft: Draft | None = None,
+    store: OrchestratorStore | None = None,
 ) -> RunResult:
     """Run the forward path over every page in an eval set and aggregate ONE report.
 
@@ -152,11 +174,13 @@ def run_set(
     fold into one `EvalReport` labelled with the caller's `eval_set_id` (e.g. `m1-core@1`). The two
     incomplete-bucket fixtures contribute the UNVERIFIABLE citations that make `unverifiable_share`
     non-trivial — the honest headline the single-page `run` can't show on the verifiable-only home
-    page. The real retriever/drafter are built once and reused across every page (not per page)."""
+    page. The real retriever/drafter/store are built once and reused across every page (not per
+    page)."""
     if not targets:
         raise ValueError("run_set() needs at least one target")
     do_retrieve = retrieve if retrieve is not None else _default_retrieve()
     do_draft = draft if draft is not None else _default_draft()
+    do_store = store if store is not None else _default_store()
     oracle: Oracle = AxeCoreOracle()
     run_id = uuid.uuid4().hex
     now = datetime.now(UTC)
@@ -164,7 +188,13 @@ def run_set(
     for target in targets:
         traces.extend(
             _trace_page(
-                target, run_id=run_id, created_at=now, do_retrieve=do_retrieve, do_draft=do_draft, oracle=oracle
+                target,
+                run_id=run_id,
+                created_at=now,
+                do_retrieve=do_retrieve,
+                do_draft=do_draft,
+                oracle=oracle,
+                store=do_store,
             )
         )
     report = evaluate(

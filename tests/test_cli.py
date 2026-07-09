@@ -22,15 +22,20 @@ FIXTURE = str(Path(__file__).resolve().parent.parent / "clearway" / "fixtures" /
 
 @pytest.fixture
 def offline_spine(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Make `clearway run` use the canned retriever + drafter stubs instead of building the real
-    RAG retriever and LLM drafter, so the `run` CLI tests exercise the CLI glue without needing the
-    corpus stack or Ollama (see run._default_retrieve / _default_draft). Patched via importlib
-    because the re-exported `run` *function* shadows the submodule under plain attribute access."""
+    """Make `clearway run`/`clearway eval` use the canned retriever + drafter stubs and an
+    in-memory checkpoint store instead of building the real RAG retriever, LLM drafter, and
+    Postgres store, so the CLI tests exercise the CLI glue without needing the corpus stack,
+    Ollama, or Postgres (see run._default_retrieve / _default_draft / _default_store). Patched via
+    importlib because the re-exported `run` *function* shadows the submodule under plain attribute
+    access."""
     import importlib
+
+    from clearway.orchestrator import InMemoryOrchestratorStore
 
     run_module = importlib.import_module("clearway.orchestrator.run")
     monkeypatch.setattr(run_module, "_default_retrieve", lambda: canned_retrieve)
     monkeypatch.setattr(run_module, "_default_draft", lambda: canned_draft)
+    monkeypatch.setattr(run_module, "_default_store", lambda: InMemoryOrchestratorStore())
 
 
 def _ollama_up() -> bool:

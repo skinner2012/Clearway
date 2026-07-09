@@ -63,8 +63,14 @@ def execute(
     finding's pipeline stops there — the run continues with the next finding, it never crashes."""
     existing = {(s.finding_id, s.step): s for s in store.load_steps(run_id)}
     if existing and on_resume is not None:
+        # Scoped to THIS call's findings, not every id ever checkpointed under run_id — run_set()
+        # calls execute() once per page under one shared run_id, so an unscoped count would leak
+        # earlier pages' done-counts into a later page's notice.
+        batch_ids = {f.id for f in findings}
         done_ids = {
-            fid for (fid, step), s in existing.items() if step is PipelineStep.VALIDATE and s.status is StepStatus.DONE
+            fid
+            for (fid, step), s in existing.items()
+            if step is PipelineStep.VALIDATE and s.status is StepStatus.DONE and fid in batch_ids
         }
         next_finding_id = next((f.id for f in findings if f.id not in done_ids), None)
         on_resume(run_id, len(done_ids), len(findings), next_finding_id)

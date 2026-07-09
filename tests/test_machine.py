@@ -180,3 +180,16 @@ def test_on_resume_hook_is_not_called_for_a_fresh_run() -> None:
     seen = []
     _run([_finding("f1")], store, on_resume=lambda *args: seen.append(args))
     assert seen == []
+
+
+def test_on_resume_hook_scopes_counts_to_the_current_batch_not_the_whole_run() -> None:
+    """execute() may be called more than once under one run_id — run_set() does this, once per
+    page. A later call's on_resume count must reflect only its OWN findings, not every finding
+    ever checkpointed under this run_id (a page-2 call must not see page-1's done-count)."""
+    store = InMemoryOrchestratorStore()
+    _run([_finding("a1"), _finding("a2")], store, run_id="r1")  # "page 1" completes fully
+
+    seen = []
+    _run([_finding("b1")], store, run_id="r1", on_resume=lambda *args: seen.append(args))
+
+    assert seen == [("r1", 0, 1, "b1")]  # scoped to b1 alone, not inflated by a1/a2's done count

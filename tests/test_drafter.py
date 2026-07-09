@@ -14,7 +14,7 @@ import urllib.request
 
 import pytest
 
-from clearway.drafter import Drafter, FakeLLMClient, LiteLLMClient
+from clearway.drafter import Drafter, FakeLLMClient, LiteLLMClient, LLMUsage
 from clearway.schemas.models import Citation, Conformance, Finding, Severity
 
 _GOOD = '{"conformance":"does_not_support","cited_sc_ids":["1.1.1"],"remediation":"Add alt text.","confidence":0.9}'
@@ -96,6 +96,31 @@ def test_empty_retrieval_degrades_gracefully() -> None:
     assert row.citations == []
     assert row.conformance == Conformance.NOT_APPLICABLE
     assert row.confidence == 0.2  # low, but a real row — not a crash
+
+
+# --- Usage seam (T2: complete_json returns content + usage) -------------------
+
+
+def test_draft_with_usage_returns_row_and_the_calls_usage() -> None:
+    usage = LLMUsage(tokens_in=120, tokens_out=34, cost_usd=0.0, latency_ms=42.0)
+    result = Drafter(FakeLLMClient(_GOOD, usage=usage)).draft_with_usage(
+        _finding(), [_cite("1.1.1", "https://example/1.1.1")]
+    )
+    assert result.row.confidence == 0.9  # the same row draft() would return
+    assert result.usage == usage  # the successful call's usage, threaded out for the Trace
+
+
+def test_fallback_draft_carries_empty_usage() -> None:
+    # never-parses → fallback row, and no usage attributed to a row we're discarding.
+    spent = LLMUsage(tokens_in=99, tokens_out=99, cost_usd=0.0, latency_ms=5.0)
+    result = Drafter(FakeLLMClient(_BAD, _BAD, usage=spent)).draft_with_usage(_finding(), [_cite("1.1.1")])
+    assert result.row.confidence == 0.0  # fallback
+    assert result.usage == LLMUsage()  # empty, not the spent-on-failure usage
+
+
+def test_draft_is_a_thin_row_only_view_of_draft_with_usage() -> None:
+    client = FakeLLMClient(_GOOD, usage=LLMUsage(tokens_in=1, tokens_out=1))
+    assert Drafter(client).draft(_finding(), [_cite("1.1.1")]).finding_id == "h:image-alt"
 
 
 # --- gated integration: real Ollama ------------------------------------------

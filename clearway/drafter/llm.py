@@ -21,7 +21,9 @@ from its own knowledge. Passing the SC text into the prompt for stronger groundi
 from __future__ import annotations
 
 import os
-from typing import Protocol, runtime_checkable
+import time
+from dataclasses import dataclass
+from typing import NamedTuple, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -30,6 +32,37 @@ from clearway.schemas.models import AxeBucket, Citation, Conformance, DraftRow, 
 _DEFAULT_MODEL = "gemma4:31b"
 _DEFAULT_BASE_URL = "http://localhost:11434"
 _FALLBACK_CONFIDENCE = 0.0  # a draft we could not parse is worth nothing — say so, don't crash
+
+
+@dataclass(frozen=True)
+class LLMUsage:
+    """Operational telemetry from one LLM call — captured once at the call site (T2) and used to
+    fill both the OTel spans/metrics and the (until now dormant) `Trace` operational fields. Every
+    field is optional: a fake/offline client that makes no real call reports all-`None`, which is
+    the honest value (no call happened). `cost_usd` is ~0 for local Ollama but captured anyway so
+    the future cloud-vs-local comparison (M4) is data-ready."""
+
+    tokens_in: int | None = None
+    tokens_out: int | None = None
+    cost_usd: float | None = None
+    latency_ms: float | None = None
+
+
+class Completion(NamedTuple):
+    """What `complete_json` now returns: the raw JSON content **plus** its usage. (Was a bare
+    `str` through M1 — T2 widened the seam so token/cost/latency stop being discarded.)"""
+
+    content: str
+    usage: LLMUsage
+
+
+class DraftResult(NamedTuple):
+    """A drafted row **plus** the usage of the LLM call that produced it. The orchestrator seam
+    (`do_draft`) returns this so `execute()` can fill the `Trace` quartet; `Drafter.draft()` stays
+    a thin `.row`-only convenience for callers that don't care about telemetry."""
+
+    row: DraftRow
+    usage: LLMUsage
 
 
 class _LLMDraft(BaseModel):
@@ -51,8 +84,9 @@ class LLMClient(Protocol):
     @property
     def model(self) -> str: ...
 
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> str:
-        """Return the model's raw JSON content for a system+user prompt under a response schema."""
+    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
+        """Return the model's raw JSON content **and its usage** for a system+user prompt under a
+        response schema."""
         ...
 
 
@@ -67,9 +101,10 @@ class LiteLLMClient:
     def model(self) -> str:
         return self._model
 
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> str:
+    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
         import litellm
 
+        start = time.perf_counter()
         response = litellm.completion(
             model=f"ollama_chat/{self._model}",  # ollama_chat/, NOT ollama/ — see module docstring
             api_base=self._base_url,
@@ -77,8 +112,25 @@ class LiteLLMClient:
             response_format=schema,
             temperature=0.0,
         )
+        latency_ms = (time.perf_counter() - start) * 1000.0
         content: str = response.choices[0].message.content or ""
-        return content
+        return Completion(content, _usage_from(response, latency_ms))
+
+
+def _usage_from(response: object, latency_ms: float) -> LLMUsage:
+    """Pull tokens + cost off a LiteLLM `ModelResponse`, defensively — usage is best-effort
+    telemetry, never worth crashing a run over. `completion_cost` is ~0 for local Ollama and may
+    raise for models it can't price; we swallow that to 0.0 (the call did happen)."""
+    usage = getattr(response, "usage", None)
+    tokens_in = getattr(usage, "prompt_tokens", None)
+    tokens_out = getattr(usage, "completion_tokens", None)
+    try:
+        import litellm
+
+        cost_usd: float | None = litellm.completion_cost(completion_response=response)
+    except Exception:  # noqa: BLE001 — pricing is best-effort; a local model reports ~0 anyway
+        cost_usd = 0.0
+    return LLMUsage(tokens_in=tokens_in, tokens_out=tokens_out, cost_usd=cost_usd, latency_ms=latency_ms)
 
 
 class FakeLLMClient:
@@ -89,19 +141,22 @@ class FakeLLMClient:
 
     _DEFAULT_RESPONSE = '{"conformance":"does_not_support","cited_sc_ids":[],"remediation":"","confidence":0.5}'
 
-    def __init__(self, *responses: str, model: str = "fake-llm") -> None:
+    def __init__(self, *responses: str, model: str = "fake-llm", usage: LLMUsage | None = None) -> None:
         self._responses = list(responses) or [self._DEFAULT_RESPONSE]
         self._model = model
+        # Default all-`None`: a fake makes no real call, so it has no honest usage to report. Tests
+        # that exercise the usage seam pass an explicit `usage=`.
+        self._usage = usage if usage is not None else LLMUsage()
         self._i = 0
 
     @property
     def model(self) -> str:
         return self._model
 
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> str:
+    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
         response = self._responses[min(self._i, len(self._responses) - 1)]
         self._i += 1
-        return response
+        return Completion(response, self._usage)
 
 
 class Drafter:
@@ -115,16 +170,25 @@ class Drafter:
         self._retries = retries
 
     def draft(self, finding: Finding, citations: list[Citation]) -> DraftRow:
+        """Convenience for callers that only want the row (offline mechanics tests, the gated
+        real-model tests). The durable orchestrator uses `draft_with_usage` to also thread usage
+        into the `Trace`."""
+        return self.draft_with_usage(finding, citations).row
+
+    def draft_with_usage(self, finding: Finding, citations: list[Citation]) -> DraftResult:
+        """Draft the row **and** return the usage of the LLM call that produced it. Usage is the
+        successful call's; a fallback (model never parsed) carries empty usage — the tokens the
+        failed attempts spent are not attributed to a row we're discarding."""
         system = _system_prompt()
         user = _user_prompt(finding, citations)
         for _ in range(self._retries + 1):
-            raw = self._client.complete_json(system, user, _LLMDraft)
+            completion = self._client.complete_json(system, user, _LLMDraft)
             try:
-                out = _LLMDraft.model_validate_json(raw)
+                out = _LLMDraft.model_validate_json(completion.content)
             except ValidationError:
                 continue  # model drifted off-schema; try again, then fall back
-            return _assemble(finding, citations, out)
-        return _fallback(finding)
+            return DraftResult(_assemble(finding, citations, out), completion.usage)
+        return DraftResult(_fallback(finding), LLMUsage())
 
 
 def _system_prompt() -> str:

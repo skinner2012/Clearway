@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from clearway.drafter import DraftResult, LLMUsage
 from clearway.oracle import AxeCoreOracle
 from clearway.orchestrator.machine import execute
 from clearway.orchestrator.store import InMemoryOrchestratorStore
@@ -77,6 +78,42 @@ def test_execute_handles_empty_findings() -> None:
     assert _run([], store) == []
     run = store.load_run("r1")
     assert run is not None and run.status.value == "done"
+
+
+# --- usage quartet (T2: draft usage threads into the Trace) ----------------------
+
+
+def _draft_with_usage(usage: LLMUsage):  # type: ignore[no-untyped-def]
+    def draft(finding, citations):  # type: ignore[no-untyped-def]
+        return DraftResult(_draft_ok(finding, citations), usage)
+
+    return draft
+
+
+def test_draftresult_usage_populates_the_trace_operational_quartet() -> None:
+    store = InMemoryOrchestratorStore()
+    usage = LLMUsage(tokens_in=200, tokens_out=50, cost_usd=0.0, latency_ms=87.5)
+    (trace,) = _run([_finding("f1")], store, draft=_draft_with_usage(usage))
+    assert trace.tokens_in == 200
+    assert trace.tokens_out == 50
+    assert trace.cost_usd == 0.0
+    assert trace.latency_ms == 87.5
+
+
+def test_bare_draftrow_stub_leaves_the_quartet_none() -> None:
+    # a draft seam that returns a plain DraftRow (no LLM call) has no usage — honestly None.
+    (trace,) = _run([_finding("f1")], InMemoryOrchestratorStore())  # default _draft_ok returns DraftRow
+    assert (trace.tokens_in, trace.tokens_out, trace.cost_usd, trace.latency_ms) == (None, None, None, None)
+
+
+def test_replayed_draft_reports_no_fresh_usage() -> None:
+    # first pass records usage; a replay makes no fresh LLM call, so the replayed Trace's quartet
+    # is None — the honest value (we didn't pay for it again).
+    store = InMemoryOrchestratorStore()
+    usage = LLMUsage(tokens_in=200, tokens_out=50, cost_usd=0.0, latency_ms=87.5)
+    _run([_finding("f1")], store, draft=_draft_with_usage(usage))
+    (replayed,) = _run([_finding("f1")], store, draft=_draft_with_usage(usage))
+    assert replayed.tokens_in is None and replayed.latency_ms is None
 
 
 # --- retry / backoff -------------------------------------------------------------

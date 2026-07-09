@@ -18,6 +18,7 @@ from typing import Any, Optional, get_origin
 
 from pydantic import BaseModel, TypeAdapter
 
+from clearway.drafter import DraftResult, LLMUsage
 from clearway.orchestrator.store import OrchestratorStore
 from clearway.schemas.models import (
     Citation,
@@ -37,7 +38,9 @@ from clearway.validator import validate
 # The retrieve/draft steps are seams. Production builds the real implementations; offline tests
 # inject canned stubs instead. Mirrors the M0/M1 seam already established in run.py.
 Retrieve = Callable[[Finding], list[Citation]]
-Draft = Callable[[Finding, list[Citation]], DraftRow]
+# The draft seam may return a bare `DraftRow` (offline stubs — no LLM call, so no usage) or a
+# `DraftResult` carrying the real call's usage; `execute()` normalizes both (see `_run_draft`).
+Draft = Callable[[Finding, list[Citation]], "DraftRow | DraftResult"]
 # Called once, only when resuming: (run_id, done_count, total_count, next_finding_id | None).
 OnResume = Callable[[str, int, int, Optional[str]], None]
 
@@ -96,13 +99,25 @@ def execute(
         if citations is None:
             continue
 
+        # Capture the draft call's usage out-of-band: `_step` checkpoints only the `DraftRow`
+        # (usage is live telemetry, not durable state), and the box stays empty on replay — an
+        # honest `None` quartet, since a replayed step makes no fresh LLM call.
+        usage_box: list[LLMUsage] = []
+
+        def _run_draft() -> DraftRow:
+            out = do_draft(finding, citations)
+            if isinstance(out, DraftResult):
+                usage_box.append(out.usage)
+                return out.row
+            return out  # bare DraftRow: an offline stub with no LLM call, so no usage
+
         draft_row = _step(
             store,
             existing,
             run_id,
             finding.id,
             PipelineStep.DRAFT,
-            lambda: do_draft(finding, citations),
+            _run_draft,
             DraftRow,
             max_attempts,
             backoff_seconds,
@@ -110,6 +125,7 @@ def execute(
         )
         if draft_row is None:
             continue
+        usage = usage_box[0] if usage_box else None
 
         checks = _step(
             store,
@@ -134,6 +150,10 @@ def execute(
                 model=model,
                 retrieved_sc_ids=[c.sc_id for c in citations],
                 confidence=draft_row.confidence,
+                cost_usd=usage.cost_usd if usage else None,
+                tokens_in=usage.tokens_in if usage else None,
+                tokens_out=usage.tokens_out if usage else None,
+                latency_ms=usage.latency_ms if usage else None,
                 checks=checks,
                 created_at=created_at,
             )

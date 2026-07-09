@@ -4,6 +4,22 @@
 retired to a test double (`tests/stubs.py`) once real drafting landed.
 """
 
-from clearway.drafter.llm import Drafter, FakeLLMClient, LiteLLMClient, LLMClient
+from clearway.drafter.llm import (
+    Completion,
+    Drafter,
+    DraftResult,
+    FakeLLMClient,
+    LiteLLMClient,
+    LLMClient,
+    LLMUsage,
+)
 
-__all__ = ["Drafter", "FakeLLMClient", "LLMClient", "LiteLLMClient"]
+__all__ = [
+    "Completion",
+    "DraftResult",
+    "Drafter",
+    "FakeLLMClient",
+    "LLMClient",
+    "LLMUsage",
+    "LiteLLMClient",
+]

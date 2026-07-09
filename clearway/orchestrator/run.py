@@ -62,7 +62,7 @@ def _default_draft() -> Draft:
     inject their own drafter and never reach this."""
     from clearway.drafter import Drafter, LiteLLMClient
 
-    return Drafter(LiteLLMClient()).draft
+    return Drafter(LiteLLMClient()).draft_with_usage
 
 
 def _default_store() -> OrchestratorStore:

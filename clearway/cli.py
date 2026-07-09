@@ -19,8 +19,10 @@ from pathlib import Path
 from clearway.observability import (
     record_eval_report,
     setup_metrics,
+    setup_operational_metrics,
     setup_tracing,
     shutdown,
+    shutdown_operational_metrics,
     shutdown_tracing,
 )
 from clearway.orchestrator import run, run_set
@@ -46,27 +48,23 @@ def _print_metrics(report: EvalReport) -> None:
 
 
 @contextmanager
-def _tracing(emit: bool) -> Iterator[None]:
-    """Bracket the run with OTel tracing when emitting: spans are produced *during* `execute()`, so
-    unlike metrics (recorded from the finished report) tracing must be set up before the run and
-    flushed after. `--no-emit` skips it entirely — spans then fall back to inert no-op API calls."""
+def _telemetry(emit: bool) -> Iterator[None]:
+    """Bracket the whole run with OTel telemetry when emitting. Spans AND the operational LLM/
+    pipeline metrics are produced *during* `execute()`, so — unlike the trust gauges, set from the
+    finished report — they must be set up before the run and flushed after. `--no-emit` skips all of
+    it; spans/metrics then fall back to inert no-op API calls, so an offline run needs no stack."""
     if emit:
+        setup_metrics()  # installs the global MeterProvider the operational metrics export through
+        setup_operational_metrics()
         setup_tracing()
     try:
         yield
     finally:
         if emit:
-            shutdown_tracing()  # force-flush spans before this short-lived process exits
-
-
-def _emit(report: EvalReport) -> None:
-    """Push the report's metrics via OTel, force-flushing before this short-lived process exits."""
-    setup_metrics()
-    try:
-        record_eval_report(report)
-    finally:
-        shutdown()  # force-flush before this short-lived process exits (T9)
-    print("emitted → OTel (the Grafana panel will update)")
+            # force-flush before this short-lived process exits (T9)
+            shutdown_tracing()
+            shutdown_operational_metrics()
+            shutdown()
 
 
 def _print_resume_notice(run_id: str, done_count: int, total_count: int, next_finding_id: str | None) -> None:
@@ -111,11 +109,13 @@ def _corpus_query_cmd(args: argparse.Namespace) -> int:
 
 
 def _run_cmd(args: argparse.Namespace) -> int:
-    with _tracing(args.emit):
+    with _telemetry(args.emit):
         report = run(args.target, run_id=args.run_id, on_resume=_print_resume_notice).report
+        if args.emit:
+            record_eval_report(report)
     _print_metrics(report)
     if args.emit:
-        _emit(report)
+        print("emitted → OTel (the Grafana panel will update)")
     return 0
 
 
@@ -125,13 +125,15 @@ def _eval_cmd(args: argparse.Namespace) -> int:
     fixtures make `unverifiable_share` non-trivial. Needs the real corpus stack + Ollama."""
     manifest = json.loads((_FIXTURES / "expected_m1.json").read_text())
     targets = [str(_FIXTURES / page["path"]) for page in manifest["pages"]]
-    with _tracing(args.emit):
+    with _telemetry(args.emit):
         report = run_set(
             targets, eval_set_id=manifest["eval_set_id"], run_id=args.run_id, on_resume=_print_resume_notice
         ).report
+        if args.emit:
+            record_eval_report(report)
     _print_metrics(report)
     if args.emit:
-        _emit(report)
+        print("emitted → OTel (the Grafana panel will update)")
     return 0
 
 

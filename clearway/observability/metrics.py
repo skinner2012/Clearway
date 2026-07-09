@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 
+from opentelemetry import metrics
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.metrics import _Gauge as Gauge
 from opentelemetry.sdk.metrics import MeterProvider
@@ -51,6 +52,9 @@ def setup_metrics(endpoint: str | None = None) -> None:
         # never show one line moving. A stable id keeps runs on the same series.
         resource=Resource.create({"service.name": "clearway", "service.instance.id": "clearway-cli"}),
     )
+    # Also install as the global provider so operational.py's LLM/pipeline metrics (recorded from
+    # the orchestrator during the run) export through this same OTLP reader.
+    metrics.set_meter_provider(_provider)
     meter = _provider.get_meter("clearway.eval")
     # No unit on purpose: unit "1" makes the Prometheus exporter suffix the name
     # `..._ratio`, diverging from the documented metric name. The name + description

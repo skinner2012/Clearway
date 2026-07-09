@@ -25,6 +25,7 @@ from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel, TypeAdapter
 
 from clearway.drafter import DraftResult, LLMUsage
+from clearway.observability.operational import record_llm_call, record_step
 from clearway.orchestrator.store import OrchestratorStore
 from clearway.schemas.models import (
     Citation,
@@ -182,6 +183,8 @@ def _process_finding(
         if draft_row is None:
             return None
         usage = usage_box[0] if usage_box else None
+        if usage is not None:  # a real LLM call happened (not a replay or a bare-row stub)
+            record_llm_call(model=model, usage=usage)
 
         checks = _step(
             store,
@@ -242,6 +245,7 @@ def _step(
                 return _deserialize(result_json, result_type)
             # DONE but no cached result (shouldn't happen in practice) — recompute below, don't crash.
 
+        step_start = time.perf_counter()
         attempts = 0
         last_exc: Exception | None = None
         while attempts < max_attempts:
@@ -258,6 +262,7 @@ def _step(
                     time.sleep(backoff_seconds * (2 ** (attempts - 1)))
                 continue
             span.set_attribute("clearway.attempts", attempts)
+            record_step(step=step.value, attempts=attempts, failed=False, duration_s=time.perf_counter() - step_start)
             store.save_step(
                 StepState(
                     run_id=run_id,
@@ -272,6 +277,7 @@ def _step(
             return result
 
         span.set_attribute("clearway.attempts", attempts)
+        record_step(step=step.value, attempts=attempts, failed=True, duration_s=time.perf_counter() - step_start)
         if last_exc is not None:
             span.record_exception(last_exc)
         span.set_status(Status(StatusCode.ERROR, f"{step.value} failed after {attempts} attempts"))

@@ -12,9 +12,14 @@ from clearway.oracle import AxeCoreOracle
 from clearway.schemas.models import (
     CitationCheck,
     CitationVerdict,
+    Conformance,
+    DraftRow,
     Finding,
     L1Status,
+    NeedsReview,
     OracleRegime,
+    ReviewReason,
+    ReviewStatus,
     Trace,
 )
 from clearway.validator import validate
@@ -197,3 +202,48 @@ def test_fixture_pipeline_report_has_two_thirds_rate() -> None:
     assert m.citations_unverifiable_total == 0
     assert m.citation_hallucination_rate_verifiable == pytest.approx(2 / 3)
     assert m.unverifiable_share == 0.0
+
+
+# --- expert_edit_distance plumbing (M2 T4) ------------------------------------
+
+
+def _edited_review(finding_id: str, original: str, edited: str) -> NeedsReview:
+    draft = DraftRow(
+        finding_id=finding_id, conformance=Conformance.PARTIALLY_SUPPORTS, remediation=original, confidence=1.0
+    )
+    return NeedsReview(
+        finding_id=finding_id,
+        run_id="run-1",
+        draft=draft,
+        reason=ReviewReason.UNVERIFIABLE_JUDGMENT,
+        status=ReviewStatus.EDITED,
+        edited_draft=draft.model_copy(update={"remediation": edited}),
+        created_at=_AT,
+        updated_at=_AT,
+    )
+
+
+def test_reviews_populate_expert_edit_distance() -> None:
+    traces = [_trace("f1", [_check("1.1.1", CitationVerdict.VERIFIED)])]
+    reviews = [_edited_review("f1", "aaaaaa", "ZZZZZZ")]  # disjoint text → distance 1.0
+    report = evaluate(
+        traces,
+        eval_set_id="m0-core@1",
+        oracle_regime=ORACLE.regime,
+        oracle_version=ORACLE.version,
+        created_at=_AT,
+        reviews=reviews,
+    )
+    assert report.metrics.expert_edit_distance == pytest.approx(1.0)
+
+
+def test_no_reviews_leaves_expert_edit_distance_zero() -> None:
+    traces = [_trace("f1", [_check("1.1.1", CitationVerdict.VERIFIED)])]
+    report = evaluate(
+        traces,
+        eval_set_id="m0-core@1",
+        oracle_regime=ORACLE.regime,
+        oracle_version=ORACLE.version,
+        created_at=_AT,
+    )
+    assert report.metrics.expert_edit_distance == 0.0

@@ -126,6 +126,38 @@ def test_run_set_gates_then_after_approval_restores_the_honest_unverifiable_shar
     assert m.citation_hallucination_rate_verifiable == pytest.approx(2 / 3)
 
 
+def test_run_set_edit_reflow_populates_expert_edit_distance() -> None:
+    """A human edit to a queued draft flows into the report's `expert_edit_distance` (M2 T4): a
+    fresh run has no edits (distance 0); after one queued item is edited and the run resumes, the
+    report's run-mean distance is the SequenceMatcher complement over that item's remediation."""
+    from clearway.eval import expert_edit_distance
+
+    store = InMemoryOrchestratorStore()
+    run_id = "hitl-edit"
+    fresh = run_set(
+        M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store, run_id=run_id
+    ).report.metrics
+    assert fresh.expert_edit_distance == 0.0  # nothing edited yet
+
+    # A human edits one queued item's remediation and approves the other unchanged.
+    pending = store.load_reviews(status=ReviewStatus.PENDING)
+    assert len(pending) == 2
+    edited, approved = pending
+    edited_draft = edited.draft.model_copy(
+        update={"remediation": edited.draft.remediation + " Provide a visible text alternative."}
+    )
+    store.save_review(edited.model_copy(update={"status": ReviewStatus.EDITED, "edited_draft": edited_draft}))
+    store.save_review(approved.model_copy(update={"status": ReviewStatus.APPROVED}))
+
+    m = run_set(
+        M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store, run_id=run_id
+    ).report.metrics
+    # mean over the single EDITED review (the APPROVED one contributes nothing).
+    expected = expert_edit_distance(edited.draft, edited_draft)
+    assert expected > 0.0
+    assert m.expert_edit_distance == pytest.approx(expected)
+
+
 def test_run_set_rejects_empty_targets() -> None:
     with pytest.raises(ValueError, match="at least one target"):
         run_set(

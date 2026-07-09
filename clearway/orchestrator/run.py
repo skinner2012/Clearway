@@ -163,6 +163,7 @@ def run(
         oracle_regime=oracle.regime,
         oracle_version=oracle.version,
         created_at=now,
+        reviews=[r for r in do_store.load_reviews() if r.run_id == run_id],
     )
     return RunResult(report=report, traces=traces)
 
@@ -214,5 +215,6 @@ def run_set(
         oracle_regime=oracle.regime,
         oracle_version=oracle.version,
         created_at=now,
+        reviews=[r for r in do_store.load_reviews() if r.run_id == run_id],
     )
     return RunResult(report=report, traces=traces)

@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 from clearway.eval import evaluate
 from clearway.normalizer import normalize
 from clearway.oracle import AxeCoreOracle
-from clearway.orchestrator.machine import Draft, Retrieve, execute
+from clearway.orchestrator.machine import Draft, OnResume, Retrieve, execute
 from clearway.orchestrator.store import OrchestratorStore
 from clearway.scanner import scan
 from clearway.schemas.models import EvalReport, Oracle, ScanResult, Trace
@@ -98,6 +98,7 @@ def _trace_page(
     do_draft: Draft,
     oracle: Oracle,
     store: OrchestratorStore,
+    on_resume: OnResume | None = None,
 ) -> list[Trace]:
     """Scan one page and produce one `Trace` per finding via the durable state machine —
     checkpointed retrieve → draft → validate, replayed (not recomputed) if this `run_id` was
@@ -116,6 +117,7 @@ def _trace_page(
         do_draft=do_draft,
         oracle=oracle,
         store=store,
+        on_resume=on_resume,
     )
 
 
@@ -125,6 +127,8 @@ def run(
     retrieve: Retrieve | None = None,
     draft: Draft | None = None,
     store: OrchestratorStore | None = None,
+    run_id: str | None = None,
+    on_resume: OnResume | None = None,
 ) -> RunResult:
     """Run the forward path over one page and aggregate a trust-metric report.
 
@@ -133,13 +137,15 @@ def run(
     `citation_hallucination_rate` is the *honest, emergent* rate. Tests inject canned stubs to
     exercise the spine offline (there is no planting lever — that M0 scaffold was retired at T3).
     `store` is the durable-checkpoint seam (`None` → real Postgres; tests inject
-    `InMemoryOrchestratorStore`).
+    `InMemoryOrchestratorStore`). `run_id` is `None` for a fresh run (today's behavior) or an
+    existing id to resume — the caller re-supplies the same `target`; `on_resume` fires once, before
+    the run proceeds, if this `run_id` already has checkpointed progress.
     """
     do_retrieve = retrieve if retrieve is not None else _default_retrieve()
     do_draft = draft if draft is not None else _default_draft()
     do_store = store if store is not None else _default_store()
     oracle: Oracle = AxeCoreOracle()
-    run_id = uuid.uuid4().hex
+    run_id = run_id if run_id is not None else uuid.uuid4().hex
     now = datetime.now(UTC)
     traces = _trace_page(
         target,
@@ -149,6 +155,7 @@ def run(
         do_draft=do_draft,
         oracle=oracle,
         store=do_store,
+        on_resume=on_resume,
     )
     report = evaluate(
         traces,
@@ -167,6 +174,8 @@ def run_set(
     retrieve: Retrieve | None = None,
     draft: Draft | None = None,
     store: OrchestratorStore | None = None,
+    run_id: str | None = None,
+    on_resume: OnResume | None = None,
 ) -> RunResult:
     """Run the forward path over every page in an eval set and aggregate ONE report.
 
@@ -175,14 +184,15 @@ def run_set(
     incomplete-bucket fixtures contribute the UNVERIFIABLE citations that make `unverifiable_share`
     non-trivial — the honest headline the single-page `run` can't show on the verifiable-only home
     page. The real retriever/drafter/store are built once and reused across every page (not per
-    page)."""
+    page). `run_id`/`on_resume` behave as in `run()`, except `on_resume` may fire once per page
+    (each page's checkpoint state is behind one shared `run_id`)."""
     if not targets:
         raise ValueError("run_set() needs at least one target")
     do_retrieve = retrieve if retrieve is not None else _default_retrieve()
     do_draft = draft if draft is not None else _default_draft()
     do_store = store if store is not None else _default_store()
     oracle: Oracle = AxeCoreOracle()
-    run_id = uuid.uuid4().hex
+    run_id = run_id if run_id is not None else uuid.uuid4().hex
     now = datetime.now(UTC)
     traces: list[Trace] = []
     for target in targets:
@@ -195,6 +205,7 @@ def run_set(
                 do_draft=do_draft,
                 oracle=oracle,
                 store=do_store,
+                on_resume=on_resume,
             )
         )
     report = evaluate(

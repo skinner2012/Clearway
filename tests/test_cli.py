@@ -81,6 +81,29 @@ def test_cli_eval_no_emit_reports_the_stratified_set(offline_spine, capsys) -> N
     assert "emitted" not in out  # --no-emit must not touch OTel
 
 
+def test_cli_run_with_run_id_resumes_and_prints_a_notice(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]
+    """--run-id resumes a prior run: the second invocation must print a resume notice before its
+    metrics, proving the CLI wires on_resume through to a real print (run()/run_set() accepting the
+    parameter is proven directly in test_orchestrator.py). Needs one store shared across both
+    `main()` calls, unlike `offline_spine`, which hands out a fresh store per call."""
+    import importlib
+
+    from clearway.orchestrator import InMemoryOrchestratorStore
+
+    run_module = importlib.import_module("clearway.orchestrator.run")
+    shared_store = InMemoryOrchestratorStore()
+    monkeypatch.setattr(run_module, "_default_retrieve", lambda: canned_retrieve)
+    monkeypatch.setattr(run_module, "_default_draft", lambda: canned_draft)
+    monkeypatch.setattr(run_module, "_default_store", lambda: shared_store)
+
+    assert main(["run", FIXTURE, "--no-emit", "--run-id", "cli-resume-test"]) == 0
+    capsys.readouterr()  # discard the first call's output
+
+    assert main(["run", FIXTURE, "--no-emit", "--run-id", "cli-resume-test"]) == 0
+    out = capsys.readouterr().out
+    assert "resuming run cli-resume-test: 3/3 findings already complete, nothing left to do" in out
+
+
 @corpus_up
 def test_cli_corpus_ingest_then_query_smoke(capsys) -> None:  # type: ignore[no-untyped-def]
     """Both corpus subcommands run end-to-end through the real embedder/store. `--limit`

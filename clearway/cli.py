@@ -48,6 +48,14 @@ def _emit(report: EvalReport) -> None:
     print("emitted → OTel (the Grafana panel will update)")
 
 
+def _print_resume_notice(run_id: str, done_count: int, total_count: int, next_finding_id: str | None) -> None:
+    """`execute()`'s `on_resume` hook, wired to a real print — fires before the run proceeds, so a
+    resumed `run`/`eval` confirms it's actually skipping finished work before real drafts take
+    35-50s each."""
+    where = f"continuing from {next_finding_id}" if next_finding_id is not None else "nothing left to do"
+    print(f"resuming run {run_id}: {done_count}/{total_count} findings already complete, {where}")
+
+
 def _corpus_ingest_cmd(args: argparse.Namespace) -> int:
     from clearway.corpus import (
         LiteLLMEmbedder,
@@ -82,7 +90,7 @@ def _corpus_query_cmd(args: argparse.Namespace) -> int:
 
 
 def _run_cmd(args: argparse.Namespace) -> int:
-    report = run(args.target).report
+    report = run(args.target, run_id=args.run_id, on_resume=_print_resume_notice).report
     _print_metrics(report)
     if args.emit:
         _emit(report)
@@ -95,7 +103,9 @@ def _eval_cmd(args: argparse.Namespace) -> int:
     fixtures make `unverifiable_share` non-trivial. Needs the real corpus stack + Ollama."""
     manifest = json.loads((_FIXTURES / "expected_m1.json").read_text())
     targets = [str(_FIXTURES / page["path"]) for page in manifest["pages"]]
-    report = run_set(targets, eval_set_id=manifest["eval_set_id"]).report
+    report = run_set(
+        targets, eval_set_id=manifest["eval_set_id"], run_id=args.run_id, on_resume=_print_resume_notice
+    ).report
     _print_metrics(report)
     if args.emit:
         _emit(report)
@@ -114,6 +124,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_false",
         help="compute and print only; do not push the metric to OTel",
     )
+    run_p.add_argument(
+        "--run-id",
+        default=None,
+        help="resume an existing run id instead of starting a fresh one (target must be the same page)",
+    )
     run_p.set_defaults(emit=True, func=_run_cmd)
 
     eval_p = sub.add_parser("eval", help="run the m1-core@1 fixture set and emit the stratified trust metrics")
@@ -122,6 +137,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         dest="emit",
         action="store_false",
         help="compute and print only; do not push the metrics to OTel",
+    )
+    eval_p.add_argument(
+        "--run-id",
+        default=None,
+        help="resume an existing run id instead of starting a fresh one",
     )
     eval_p.set_defaults(emit=True, func=_eval_cmd)
 

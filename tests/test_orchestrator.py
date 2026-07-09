@@ -16,12 +16,16 @@ real retriever/drafter/store are proven in their own modules' gated tests.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from stubs import canned_draft, canned_retrieve
 
-from clearway.orchestrator import InMemoryOrchestratorStore, RunResult, run, run_set
+from clearway.normalizer import normalize
+from clearway.oracle import AxeCoreOracle
+from clearway.orchestrator import InMemoryOrchestratorStore, RunResult, execute, run, run_set
+from clearway.scanner import scan
 from clearway.schemas.models import EvalReport, OracleRegime, Trace
 
 PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
@@ -106,3 +110,86 @@ def test_run_set_rejects_empty_targets() -> None:
         run_set(
             [], eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore()
         )
+
+
+# --- resume: proves the run_id/on_resume plumbing added to run()/run_set(), distinct from
+# execute()'s own replay mechanics (already proven directly in test_machine.py) ------------------
+
+
+def test_run_resumes_a_partially_completed_run_via_an_explicit_run_id() -> None:
+    """Simulate a kill mid-run: `execute()` directly completes only the first finding (as if the
+    process died before reaching the rest), then `run()` — called fresh, with the same run_id and
+    store — must replay that finding instead of recomputing it and process only what's left."""
+    findings = normalize(scan(FIXTURE))
+    store = InMemoryOrchestratorStore()
+    run_id = "partial-kill-test"
+    calls: list[str] = []
+
+    def counting_retrieve(finding):  # type: ignore[no-untyped-def]
+        calls.append(finding.id)
+        return canned_retrieve(finding)
+
+    # "Prior process" completes only the first finding before being killed.
+    execute(
+        findings[:1],
+        run_id=run_id,
+        config_id="m1-single@1",
+        model="gemma4:31b",
+        created_at=datetime.now(UTC),
+        do_retrieve=counting_retrieve,
+        do_draft=canned_draft,
+        oracle=AxeCoreOracle(),
+        store=store,
+    )
+    assert calls == [findings[0].id]
+    calls.clear()
+
+    resume_notices = []
+    result = run(
+        FIXTURE,
+        retrieve=counting_retrieve,
+        draft=canned_draft,
+        store=store,
+        run_id=run_id,
+        on_resume=lambda *a: resume_notices.append(a),
+    )
+
+    assert findings[0].id not in calls  # replayed, not recomputed
+    assert len(result.traces) == 3  # all 3 findings present in the final result
+    assert resume_notices == [(run_id, 1, 3, findings[1].id)]
+
+
+def test_run_set_resumes_across_pages_without_recomputing_completed_pages() -> None:
+    """A resumed run_set() must replay every page's findings, not just the first, and each page's
+    resume notice must report counts scoped to that page — proving done_ids is scoped to the
+    current batch rather than leaking counts across pages that share one run_id."""
+    store = InMemoryOrchestratorStore()
+    run_id = "set-resume-test"
+    calls: list[str] = []
+
+    def counting_retrieve(finding):  # type: ignore[no-untyped-def]
+        calls.append(finding.id)
+        return canned_retrieve(finding)
+
+    run_set(M1_SET, eval_set_id="m1-core@1", retrieve=counting_retrieve, draft=canned_draft, store=store, run_id=run_id)
+    assert len(calls) == 5
+    calls.clear()
+
+    resume_notices = []
+    result = run_set(
+        M1_SET,
+        eval_set_id="m1-core@1",
+        retrieve=counting_retrieve,
+        draft=canned_draft,
+        store=store,
+        run_id=run_id,
+        on_resume=lambda *a: resume_notices.append(a),
+    )
+
+    assert calls == []  # every finding replayed, nothing recomputed
+    assert len(result.traces) == 5
+    assert [(done, total, next_id) for _, done, total, next_id in resume_notices] == [
+        (3, 3, None),
+        (1, 1, None),
+        (1, 1, None),
+    ]

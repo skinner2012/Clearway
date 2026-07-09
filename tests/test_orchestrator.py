@@ -1,9 +1,11 @@
-"""T10 acceptance: the orchestrator runs the whole spine end-to-end (the exit criterion).
+"""The orchestrator runs the whole spine end-to-end — one page (`run`) or the M1 eval set (`run_set`).
 
-Real-browser integration test — `run()` scans the fixture with headless Chromium + axe-core,
-then normalizes → retrieves → drafts → validates → evals. Requires `playwright install chromium`.
-Asserts the exit-criterion value: one fixture in → `citation_hallucination_rate == 2/3`. `run()`
-is pure — emission (OTel) lives in the CLI and is proven by the stack-gated test_observability.py.
+Real-browser integration test — the runners scan fixtures with headless Chromium + axe-core, then
+normalize → retrieve → draft → validate → eval. Requires `playwright install chromium`. `run` over
+home.html asserts `citation_hallucination_rate == 2/3`; `run_set` over the m1-core@1 pages asserts
+the honest stratified aggregate (5 findings, 2 UNVERIFIABLE → `unverifiable_share == 2/5`). The
+runners are pure — emission (OTel) lives in the CLI and is proven by the stack-gated
+test_observability.py.
 
 Both model-facing steps are injected with canned stubs, so the spine runs offline (no corpus
 stack, no Ollama): `canned_retrieve` returns the correct SC per fixture rule, and the drafter
@@ -15,12 +17,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from stubs import canned_draft, canned_retrieve
 
-from clearway.orchestrator import RunResult, run
+from clearway.orchestrator import RunResult, run, run_set
 from clearway.schemas.models import EvalReport, OracleRegime, Trace
 
-FIXTURE = str(Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages" / "home.html")
+PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
+FIXTURE = str(PAGES / "home.html")
+# The m1-core@1 set: the 3 verifiable violations (home) + the 2 needs-review pages (incomplete).
+M1_SET = [str(PAGES / p) for p in ("home.html", "contrast-gradient.html", "video-no-captions.html")]
 
 
 def test_run_end_to_end_hits_the_exit_criterion() -> None:
@@ -58,3 +64,37 @@ def test_run_is_idempotent_on_finding_ids_and_rate() -> None:
     assert [t.finding_id for t in a.traces] == [t.finding_id for t in b.traces]
     assert a.report.metrics.citation_hallucination_rate == b.report.metrics.citation_hallucination_rate
     assert a.report.run_id != b.report.run_id
+
+
+# --- run_set: the M1 exit-criterion set runner -------------------------------
+
+
+def test_run_set_folds_the_m1_page_set_into_one_report() -> None:
+    result = run_set(M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft)
+    assert isinstance(result, RunResult)
+    # 5 findings across 3 pages: home's 3 verifiable violations + 2 incomplete needs-review items.
+    assert len(result.traces) == 5
+    # the whole set scores under ONE run so it aggregates into a single report.
+    assert len({t.run_id for t in result.traces}) == 1
+    assert result.report.run_id == result.traces[0].run_id
+    assert result.report.eval_set_id == "m1-core@1"
+    assert result.report.trace_ids == [t.finding_id for t in result.traces]
+
+
+def test_run_set_stratifies_the_honest_unverifiable_share() -> None:
+    m = run_set(M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft).report.metrics
+    assert m.findings_total == 5
+    assert m.citations_total == 5
+    # the 2 incomplete-bucket citations (1.4.3, 1.2.2) have no oracle → UNVERIFIABLE.
+    assert m.citations_unverifiable_total == 2
+    assert m.citations_verifiable_total == 3
+    assert m.unverifiable_share == pytest.approx(2 / 5)
+    # hallucinations only live in the verifiable subset (home's 2 planted faults).
+    assert m.hallucinations_total == 2
+    assert m.citation_hallucination_rate == pytest.approx(2 / 5)
+    assert m.citation_hallucination_rate_verifiable == pytest.approx(2 / 3)
+
+
+def test_run_set_rejects_empty_targets() -> None:
+    with pytest.raises(ValueError, match="at least one target"):
+        run_set([], eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft)

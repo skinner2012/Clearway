@@ -79,22 +79,20 @@ def _scan_with_retry(target: str) -> ScanResult:
     raise AssertionError("unreachable")  # the loop always returns or raises
 
 
-def run(target: str, *, retrieve: Retrieve | None = None, draft: Draft | None = None) -> RunResult:
-    """Run the forward path over one page and aggregate a trust-metric report.
-
-    `retrieve` and `draft` are the two model-facing seams: `None` (production) builds the real
-    implementations — retrieval needs the corpus stack, drafting needs Ollama — so the reported
-    `citation_hallucination_rate` is the *honest, emergent* rate. Tests inject canned stubs to
-    exercise the spine offline (there is no planting lever — that M0 scaffold was retired at T3).
-    """
-    do_retrieve = retrieve if retrieve is not None else _default_retrieve()
-    do_draft = draft if draft is not None else _default_draft()
-    oracle: Oracle = AxeCoreOracle()
+def _trace_page(
+    target: str,
+    *,
+    run_id: str,
+    created_at: datetime,
+    do_retrieve: Retrieve,
+    do_draft: Draft,
+    oracle: Oracle,
+) -> list[Trace]:
+    """Scan one page and produce one `Trace` per finding (scan → normalize → retrieve → draft →
+    validate). Shared by the single-page `run` and the set-level `run_set`, so both stamp identical
+    trace provenance; the caller owns `run_id`/`created_at` so a whole set lands under one run."""
     scan_result = _scan_with_retry(target)
     findings = normalize(scan_result)
-
-    run_id = uuid.uuid4().hex
-    now = datetime.now(UTC)
     traces: list[Trace] = []
     for finding in findings:
         citations = do_retrieve(finding)
@@ -109,13 +107,69 @@ def run(target: str, *, retrieve: Retrieve | None = None, draft: Draft | None = 
                 retrieved_sc_ids=[c.sc_id for c in citations],
                 confidence=draft_row.confidence,
                 checks=checks,
-                created_at=now,
+                created_at=created_at,
             )
         )
+    return traces
 
+
+def run(target: str, *, retrieve: Retrieve | None = None, draft: Draft | None = None) -> RunResult:
+    """Run the forward path over one page and aggregate a trust-metric report.
+
+    `retrieve` and `draft` are the two model-facing seams: `None` (production) builds the real
+    implementations — retrieval needs the corpus stack, drafting needs Ollama — so the reported
+    `citation_hallucination_rate` is the *honest, emergent* rate. Tests inject canned stubs to
+    exercise the spine offline (there is no planting lever — that M0 scaffold was retired at T3).
+    """
+    do_retrieve = retrieve if retrieve is not None else _default_retrieve()
+    do_draft = draft if draft is not None else _default_draft()
+    oracle: Oracle = AxeCoreOracle()
+    run_id = uuid.uuid4().hex
+    now = datetime.now(UTC)
+    traces = _trace_page(
+        target, run_id=run_id, created_at=now, do_retrieve=do_retrieve, do_draft=do_draft, oracle=oracle
+    )
     report = evaluate(
         traces,
         eval_set_id=_EVAL_SET_ID,
+        oracle_regime=oracle.regime,
+        oracle_version=oracle.version,
+        created_at=now,
+    )
+    return RunResult(report=report, traces=traces)
+
+
+def run_set(
+    targets: list[str],
+    *,
+    eval_set_id: str,
+    retrieve: Retrieve | None = None,
+    draft: Draft | None = None,
+) -> RunResult:
+    """Run the forward path over every page in an eval set and aggregate ONE report.
+
+    This is the M1 exit-criterion runner: all pages score under a single `run_id`, so their traces
+    fold into one `EvalReport` labelled with the caller's `eval_set_id` (e.g. `m1-core@1`). The two
+    incomplete-bucket fixtures contribute the UNVERIFIABLE citations that make `unverifiable_share`
+    non-trivial — the honest headline the single-page `run` can't show on the verifiable-only home
+    page. The real retriever/drafter are built once and reused across every page (not per page)."""
+    if not targets:
+        raise ValueError("run_set() needs at least one target")
+    do_retrieve = retrieve if retrieve is not None else _default_retrieve()
+    do_draft = draft if draft is not None else _default_draft()
+    oracle: Oracle = AxeCoreOracle()
+    run_id = uuid.uuid4().hex
+    now = datetime.now(UTC)
+    traces: list[Trace] = []
+    for target in targets:
+        traces.extend(
+            _trace_page(
+                target, run_id=run_id, created_at=now, do_retrieve=do_retrieve, do_draft=do_draft, oracle=oracle
+            )
+        )
+    report = evaluate(
+        traces,
+        eval_set_id=eval_set_id,
         oracle_regime=oracle.regime,
         oracle_version=oracle.version,
         created_at=now,

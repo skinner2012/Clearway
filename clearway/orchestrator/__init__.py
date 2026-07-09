@@ -1,5 +1,6 @@
-"""Orchestrator: wire the M0 forward path over one page into a trust-metric report (ARCHITECTURE §4.6)."""
+"""Orchestrator: wire the forward path into a trust-metric report — one page (`run`) or a whole
+eval set (`run_set`), the M1 exit-criterion runner (ARCHITECTURE §4.6)."""
 
-from clearway.orchestrator.run import RunResult, run
+from clearway.orchestrator.run import RunResult, run, run_set
 
-__all__ = ["RunResult", "run"]
+__all__ = ["RunResult", "run", "run_set"]

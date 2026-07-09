@@ -12,10 +12,19 @@ from __future__ import annotations
 from clearway.schemas.models import Citation, Conformance, ConformanceLevel, DraftRow, Finding
 
 # axe rule_id -> the correct citation(s) a real retriever should surface for the fixtures.
+# The first three are the verifiable `violations` (m0-core@1); the last two are the M1
+# `incomplete`-bucket rules — canned here so the offline set run can exercise the UNVERIFIABLE
+# path (a real retriever would surface these too; the oracle then returns NO_ORACLE for them).
 _CANNED_CITATIONS: dict[str, list[Citation]] = {
     "image-alt": [Citation(sc_id="1.1.1", title="Non-text Content", level=ConformanceLevel.A, source="WCAG-SC")],
     "html-has-lang": [Citation(sc_id="3.1.1", title="Language of Page", level=ConformanceLevel.A, source="WCAG-SC")],
     "label": [Citation(sc_id="4.1.2", title="Name, Role, Value", level=ConformanceLevel.A, source="WCAG-SC")],
+    "color-contrast": [
+        Citation(sc_id="1.4.3", title="Contrast (Minimum)", level=ConformanceLevel.AA, source="WCAG-SC")
+    ],
+    "video-caption": [
+        Citation(sc_id="1.2.2", title="Captions (Prerecorded)", level=ConformanceLevel.A, source="WCAG-SC")
+    ],
 }
 
 # axe rule_id -> a deliberately WRONG sc_id the canned drafter cites, so eval has known citation

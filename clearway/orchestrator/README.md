@@ -79,5 +79,10 @@ uv run clearway eval --run-id <existing-id>           # resume: the approved/edi
 
 On resume the gate reads the `NeedsReview` status back: `approved` assembles the original draft,
 `edited` re-validates the human's `edited_draft` and assembles that, `pending` / `rejected` stay
-withheld. The `edited_draft` is also what M2's T4 `expert_edit_distance` metric measures against the
-original.
+withheld.
+
+An `edited` review is also the raw material for the **`expert_edit_distance`** metric
+(`eval/edit_distance.py`): a normalized `[0, 1]` `difflib` ratio over how far the human moved the
+draft's `remediation` text (`0` = an unedited approval). The run mean folds onto
+`EvalMetrics.expert_edit_distance` (`CONTRACTS.md` §3) and exports as a Prometheus gauge alongside the
+hallucination rates — the human-correction signal the trust dashboard tracks over time.

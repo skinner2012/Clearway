@@ -11,7 +11,8 @@ so an offline / `--no-emit` run (and the whole test suite) needs no collector.
 ## Layout
 
 - [`metrics.py`](metrics.py) — the **quality** trust gauges, set from a finished `EvalReport`:
-  `citation_hallucination_rate`, `citation_hallucination_rate_verifiable`, `unverifiable_share`.
+  `citation_hallucination_rate`, `citation_hallucination_rate_verifiable`, `unverifiable_share`,
+  `expert_edit_distance` (M2 HITL human-correction signal).
   Low-cardinality labels only (no `run_id`), so one series *moves* across runs. Owns the
   `MeterProvider` (and installs it globally so `operational.py` exports through the same reader).
 - [`operational.py`](operational.py) — the **operational** metrics, recorded from
@@ -35,6 +36,7 @@ status; a replayed step is tagged `clearway.replayed=true`. Model is a span attr
 | `citation_hallucination_rate` | gauge | `metrics.py` | overall quality (M1) |
 | `citation_hallucination_rate_verifiable` | gauge | `metrics.py` | oracle-verifiable subset |
 | `unverifiable_share` | gauge | `metrics.py` | the honest headline |
+| `expert_edit_distance` | gauge | `metrics.py` | run-mean human-edit distance over reviewed drafts (M2 HITL) |
 | `gen_ai_client_operation_duration_seconds` | histogram | `operational.py` | LLM latency, GenAI semconv |
 | `gen_ai_client_token_usage` | histogram | `operational.py` | tokens, split by `gen_ai_token_type=input\|output` |
 | `pipeline_step_retries_total` | counter | `operational.py` | retries beyond the first, by `step` |

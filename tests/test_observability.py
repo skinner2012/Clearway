@@ -1,9 +1,9 @@
-"""T9 acceptance: the trust metric actually lands in Prometheus (stack-gated).
+"""The trust metrics actually land in Prometheus (stack-gated).
 
-This is an integration test against the real observability stack. It skips cleanly
-when the stack isn't up (`docker compose up -d`), so the normal offline suite stays
-green. It's the machine-checkable form of "the metric is visible on the panel":
-emit → Prometheus scrapes the collector → query the Prometheus API → assert the value.
+Integration tests against the real observability stack. They skip cleanly when the stack
+isn't up (`docker compose up -d`), so the normal offline suite stays green. This is the
+machine-checkable form of "the metric is visible on the panel": emit → Prometheus scrapes
+the collector → query the Prometheus API → assert the value.
 """
 
 from __future__ import annotations
@@ -12,10 +12,12 @@ import json
 import time
 import urllib.parse
 import urllib.request
+from datetime import datetime
 
 import pytest
 
-from clearway.observability import record_rate, shutdown
+from clearway.observability import record_eval_report, record_rate, shutdown
+from clearway.schemas.models import EvalMetrics, EvalReport, OracleRegime
 
 _PROM = "http://localhost:9090"
 
@@ -56,3 +58,48 @@ def test_emitted_rate_reaches_prometheus() -> None:
 
     assert result, "metric never appeared in Prometheus"
     assert float(result[0]["value"][1]) == pytest.approx(value)
+
+
+def _poll(expr: str, want: float) -> list[dict]:
+    result: list[dict] = []
+    for _ in range(20):  # Prometheus scrapes every 5s; allow ~20s
+        result = _query(expr)
+        if result and abs(float(result[0]["value"][1]) - want) < 1e-9:
+            break
+        time.sleep(1)
+    return result
+
+
+@stack_up
+def test_eval_report_emits_all_stratified_metrics() -> None:
+    # A report where the verifiable rate and unverifiable share differ from the overall rate,
+    # so a mixed-up gauge assignment would be caught.
+    report = EvalReport(
+        run_id="pytest-strat",
+        config_id="pytest-strat",
+        eval_set_id="pytest-strat",
+        oracle_regime=OracleRegime.A_DIGITAL,
+        oracle_version="wcag2.2-sc@1",
+        created_at=datetime(2026, 7, 8, 12, 0, 0),
+        metrics=EvalMetrics(
+            citation_hallucination_rate=0.25,
+            findings_total=4,
+            citations_total=4,
+            hallucinations_total=1,
+            citation_hallucination_rate_verifiable=0.5,
+            unverifiable_share=0.5,
+            citations_verifiable_total=2,
+            citations_unverifiable_total=2,
+        ),
+    )
+    record_eval_report(report)
+    shutdown()  # force-flush
+
+    labels = '{config_id="pytest-strat",eval_set_id="pytest-strat"}'
+    overall = _poll("citation_hallucination_rate" + labels, 0.25)
+    verifiable = _poll("citation_hallucination_rate_verifiable" + labels, 0.5)
+    share = _poll("unverifiable_share" + labels, 0.5)
+
+    assert overall and float(overall[0]["value"][1]) == pytest.approx(0.25)
+    assert verifiable and float(verifiable[0]["value"][1]) == pytest.approx(0.5)
+    assert share and float(share[0]["value"][1]) == pytest.approx(0.5)

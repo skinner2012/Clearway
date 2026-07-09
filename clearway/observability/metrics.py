@@ -1,7 +1,8 @@
-"""Observability — emit the M0 trust metric via OTel (ARCHITECTURE §4.5).
+"""Observability — emit the trust metrics via OTel (ARCHITECTURE §4.5).
 
-M0's observability deliverable is a single *metric*, `citation_hallucination_rate`,
-pushed OTLP/HTTP → OTel Collector → Prometheus → Grafana. (Rich tracing / GenAI
+M1 emits the overall `citation_hallucination_rate` plus its oracle-verifiability stratification —
+`citation_hallucination_rate_verifiable` (~0 by construction) and `unverifiable_share` (the honest
+headline) — pushed OTLP/HTTP → OTel Collector → Prometheus → Grafana. (Rich tracing / GenAI
 semconv is deferred to M2, where the drafter is a real LLM and a trace backend exists.)
 
 The app is a short-lived CLI, so we must force-flush before exit or the metric never
@@ -24,14 +25,18 @@ from clearway.schemas.models import EvalReport
 
 _DEFAULT_ENDPOINT = "http://localhost:4318"
 _METRIC_NAME = "citation_hallucination_rate"
+_METRIC_VERIFIABLE = "citation_hallucination_rate_verifiable"
+_METRIC_UNVERIFIABLE_SHARE = "unverifiable_share"
 
 _provider: MeterProvider | None = None
 _rate_gauge: Gauge | None = None
+_rate_verifiable_gauge: Gauge | None = None
+_unverifiable_share_gauge: Gauge | None = None
 
 
 def setup_metrics(endpoint: str | None = None) -> None:
     """Wire an OTLP/HTTP MeterProvider and create the trust-metric gauge (idempotent)."""
-    global _provider, _rate_gauge
+    global _provider, _rate_gauge, _rate_verifiable_gauge, _unverifiable_share_gauge
     if _provider is not None:
         return
     base = endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or _DEFAULT_ENDPOINT
@@ -54,6 +59,14 @@ def setup_metrics(endpoint: str | None = None) -> None:
         _METRIC_NAME,
         description="Fraction of drafted citations that fail L0/L1 validation.",
     )
+    _rate_verifiable_gauge = meter.create_gauge(
+        _METRIC_VERIFIABLE,
+        description="Hallucination rate over the oracle-verifiable citation subset (~0 by construction).",
+    )
+    _unverifiable_share_gauge = meter.create_gauge(
+        _METRIC_UNVERIFIABLE_SHARE,
+        description="Fraction of citations with no automated oracle to check against (the honest headline).",
+    )
 
 
 def record_rate(rate: float, *, eval_set_id: str, config_id: str, oracle_regime: str) -> None:
@@ -68,20 +81,35 @@ def record_rate(rate: float, *, eval_set_id: str, config_id: str, oracle_regime:
 
 
 def record_eval_report(report: EvalReport) -> None:
-    """Emit `citation_hallucination_rate` from a computed `EvalReport`."""
+    """Emit all M1 trust metrics from a computed `EvalReport`: the overall hallucination rate plus
+    its oracle-verifiability stratification (verifiable rate + unverifiable share). All three share
+    the same low-cardinality label set, so they move together on one panel per (eval_set, config)."""
+    if _rate_gauge is None:
+        setup_metrics()
+    assert _rate_verifiable_gauge is not None and _unverifiable_share_gauge is not None  # set by setup_metrics
+    labels = {
+        "eval_set_id": report.eval_set_id,
+        "config_id": report.config_id,
+        "oracle_regime": report.oracle_regime.value,
+    }
+    m = report.metrics
     record_rate(
-        report.metrics.citation_hallucination_rate,
+        m.citation_hallucination_rate,
         eval_set_id=report.eval_set_id,
         config_id=report.config_id,
         oracle_regime=report.oracle_regime.value,
     )
+    _rate_verifiable_gauge.set(m.citation_hallucination_rate_verifiable, labels)
+    _unverifiable_share_gauge.set(m.unverifiable_share, labels)
 
 
 def shutdown() -> None:
     """Flush pending metrics and tear down. MUST run before a short-lived process exits."""
-    global _provider, _rate_gauge
+    global _provider, _rate_gauge, _rate_verifiable_gauge, _unverifiable_share_gauge
     if _provider is not None:
         _provider.force_flush()
         _provider.shutdown()
         _provider = None
         _rate_gauge = None
+        _rate_verifiable_gauge = None
+        _unverifiable_share_gauge = None

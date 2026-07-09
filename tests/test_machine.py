@@ -11,9 +11,22 @@ from datetime import datetime, timezone
 
 from clearway.drafter import DraftResult, LLMUsage
 from clearway.oracle import AxeCoreOracle
-from clearway.orchestrator.machine import execute
+from clearway.orchestrator.machine import _review_reason, execute
 from clearway.orchestrator.store import InMemoryOrchestratorStore
-from clearway.schemas.models import Citation, Conformance, DraftRow, Finding, PipelineStep, StepStatus
+from clearway.schemas.models import (
+    AxeBucket,
+    Citation,
+    CitationCheck,
+    CitationVerdict,
+    Conformance,
+    DraftRow,
+    Finding,
+    L1Status,
+    PipelineStep,
+    ReviewReason,
+    ReviewStatus,
+    StepStatus,
+)
 
 ORACLE = AxeCoreOracle()
 _AT = datetime(2026, 7, 9, 12, 0, 0, tzinfo=timezone.utc)
@@ -24,6 +37,19 @@ _MODEL = "pytest-model"
 def _finding(finding_id: str) -> Finding:
     return Finding(
         id=finding_id, source_url="file://test.html", rule_id="image-alt", axe_tags=["wcag2a", "wcag111"], target="img"
+    )
+
+
+def _incomplete_finding(finding_id: str) -> Finding:
+    """A finding from axe's INCOMPLETE bucket — the oracle grounds only VIOLATIONS, so its citation
+    comes back UNVERIFIABLE and the HITL gate flags it `axe_incomplete`."""
+    return Finding(
+        id=finding_id,
+        source_url="file://test.html",
+        rule_id="color-contrast",
+        axe_tags=["wcag2aa", "wcag143"],
+        target="p",
+        source_bucket=AxeBucket.INCOMPLETE,
     )
 
 
@@ -230,3 +256,103 @@ def test_on_resume_hook_scopes_counts_to_the_current_batch_not_the_whole_run() -
     _run([_finding("b1")], store, run_id="r1", on_resume=lambda *args: seen.append(args))
 
     assert seen == [("r1", 0, 1, "b1")]  # scoped to b1 alone, not inflated by a1/a2's done count
+
+
+# --- HITL gate: reason precedence (pure function) --------------------------------
+
+
+def _check(verdict: CitationVerdict) -> CitationCheck:
+    l1 = L1Status.NO_ORACLE if verdict is CitationVerdict.UNVERIFIABLE else L1Status.MATCH
+    return CitationCheck(sc_id="1.1.1", l0_valid=True, l1_status=l1, verdict=verdict)
+
+
+def test_review_reason_low_confidence_wins_over_every_other_trigger() -> None:
+    # low confidence on an axe-incomplete finding with an unverifiable citation → still low_confidence.
+    draft = _draft_ok(_incomplete_finding("f1"), [])
+    draft = draft.model_copy(update={"confidence": 0.4})
+    reason = _review_reason(_incomplete_finding("f1"), draft, [_check(CitationVerdict.UNVERIFIABLE)])
+    assert reason is ReviewReason.LOW_CONFIDENCE
+
+
+def test_review_reason_axe_incomplete_wins_over_unverifiable_judgment() -> None:
+    # confident draft, incomplete bucket, unverifiable citation → axe_incomplete (the broader cause).
+    draft = _draft_ok(_incomplete_finding("f1"), [])  # confidence 0.9
+    reason = _review_reason(_incomplete_finding("f1"), draft, [_check(CitationVerdict.UNVERIFIABLE)])
+    assert reason is ReviewReason.AXE_INCOMPLETE
+
+
+def test_review_reason_unverifiable_judgment_for_a_violations_finding() -> None:
+    # confident, VIOLATIONS bucket, but a citation with no oracle verdict → unverifiable_judgment.
+    draft = _draft_ok(_finding("f1"), [])  # _finding defaults to the VIOLATIONS bucket
+    reason = _review_reason(_finding("f1"), draft, [_check(CitationVerdict.UNVERIFIABLE)])
+    assert reason is ReviewReason.UNVERIFIABLE_JUDGMENT
+
+
+def test_review_reason_is_none_for_a_clean_verified_finding() -> None:
+    draft = _draft_ok(_finding("f1"), [])
+    assert _review_reason(_finding("f1"), draft, [_check(CitationVerdict.VERIFIED)]) is None
+
+
+# --- HITL gate: interrupt + durable queue + resume-reflow ------------------------
+
+
+def test_execute_gates_a_flagged_finding_queues_it_and_continues_the_run() -> None:
+    """The flagged (incomplete) finding is withheld from the traces but persisted as a pending
+    NeedsReview; the clean sibling finding still produces its trace — the run continues."""
+    store = InMemoryOrchestratorStore()
+    traces = _run([_incomplete_finding("gated"), _finding("clean")], store)
+
+    assert [t.finding_id for t in traces] == ["clean"]  # gated finding withheld from the report
+
+    review = store.load_review("r1", "gated")
+    assert review is not None
+    assert review.status is ReviewStatus.PENDING
+    assert review.reason is ReviewReason.AXE_INCOMPLETE
+    assert review.draft.finding_id == "gated"  # the record carries the drafted row
+    assert store.load_review("r1", "clean") is None  # the clean finding was never queued
+
+
+def test_a_pending_review_stays_withheld_and_is_not_re_queued_on_resume() -> None:
+    store = InMemoryOrchestratorStore()
+    _run([_incomplete_finding("gated")], store)
+    first = store.load_review("r1", "gated")
+
+    resumed = _run([_incomplete_finding("gated")], store)  # resume with no human action yet
+    assert resumed == []  # still withheld
+    assert store.load_review("r1", "gated") == first  # untouched — not re-saved / re-timestamped
+
+
+def test_approving_a_review_reflows_the_original_draft_on_resume() -> None:
+    store = InMemoryOrchestratorStore()
+    _run([_incomplete_finding("gated")], store)
+    review = store.load_review("r1", "gated")
+    assert review is not None
+    store.save_review(review.model_copy(update={"status": ReviewStatus.APPROVED}))
+
+    (trace,) = _run([_incomplete_finding("gated")], store)  # resume after approval
+    assert trace.finding_id == "gated"  # the approved finding now assembles into the report
+    assert trace.confidence == review.draft.confidence
+
+
+def test_editing_a_review_reflows_the_edited_draft_with_revalidated_checks() -> None:
+    store = InMemoryOrchestratorStore()
+    _run([_incomplete_finding("gated")], store)
+    review = store.load_review("r1", "gated")
+    assert review is not None
+    # the human rewrites the remediation and drops confidence — the edit is what must ship.
+    edited = review.draft.model_copy(update={"remediation": "human-reviewed fix", "confidence": 0.6})
+    store.save_review(review.model_copy(update={"status": ReviewStatus.EDITED, "edited_draft": edited}))
+
+    (trace,) = _run([_incomplete_finding("gated")], store)  # resume after edit
+    assert trace.finding_id == "gated"
+    assert trace.confidence == 0.6  # the Trace reflects the EDITED draft, not the original
+
+
+def test_rejecting_a_review_keeps_the_finding_out_of_the_report() -> None:
+    store = InMemoryOrchestratorStore()
+    _run([_incomplete_finding("gated")], store)
+    review = store.load_review("r1", "gated")
+    assert review is not None
+    store.save_review(review.model_copy(update={"status": ReviewStatus.REJECTED}))
+
+    assert _run([_incomplete_finding("gated")], store) == []  # rejected → never enters the output

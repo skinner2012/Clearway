@@ -71,13 +71,15 @@ def test_cli_run_no_emit_exits_zero(offline_spine, capsys) -> None:  # type: ign
 
 
 def test_cli_eval_no_emit_reports_the_stratified_set(offline_spine, capsys) -> None:  # type: ignore[no-untyped-def]
-    """`clearway eval` runs the whole m1-core@1 set and prints the honest stratification: the two
-    incomplete fixtures give 2 UNVERIFIABLE of 5 citations → unverifiable_share = 0.400."""
+    """`clearway eval` runs the whole m1-core@1 set. With the T3 HITL gate, the two incomplete
+    fixtures are withheld for review, so a fresh eval scores only home's 3 verifiable citations →
+    unverifiable_share = 0.000; they rejoin the score once a reviewer approves them (proven in
+    test_orchestrator.py's reflow test)."""
     code = main(["eval", "--no-emit"])
     assert code == 0
     out = capsys.readouterr().out
     assert "m1-core@1" in out
-    assert "unverifiable_share=0.400" in out
+    assert "unverifiable_share=0.000" in out
     assert "emitted" not in out  # --no-emit must not touch OTel
 
 

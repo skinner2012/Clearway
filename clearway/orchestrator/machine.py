@@ -28,12 +28,17 @@ from clearway.drafter import DraftResult, LLMUsage
 from clearway.observability.operational import record_llm_call, record_step
 from clearway.orchestrator.store import OrchestratorStore
 from clearway.schemas.models import (
+    AxeBucket,
     Citation,
     CitationCheck,
+    CitationVerdict,
     DraftRow,
     Finding,
+    NeedsReview,
     Oracle,
     PipelineStep,
+    ReviewReason,
+    ReviewStatus,
     RunState,
     RunStatus,
     StepState,
@@ -43,6 +48,11 @@ from clearway.schemas.models import (
 from clearway.validator import validate
 
 _tracer = trace.get_tracer("clearway.orchestrator")
+
+# Placeholder confidence floor for the HITL gate (decision #8). DORMANT until M5 calibration: per
+# the M1 weak-spots read, real drafter confidence sits at 0.9–1.0 regardless of correctness, so
+# `axe_incomplete` / `unverifiable_judgment` are the effective M2 triggers, not this one.
+_LOW_CONFIDENCE_THRESHOLD = 0.5
 
 # The retrieve/draft steps are seams. Production builds the real implementations; offline tests
 # inject canned stubs instead. Mirrors the M0/M1 seam already established in run.py.
@@ -201,6 +211,27 @@ def _process_finding(
         if checks is None:
             return None
 
+        # HITL gate (T3): evaluated post-validation, once the DraftRow + checks exist. A flagged
+        # finding's assembly is interrupted (return None) until a human resolves its NeedsReview
+        # record — the rest of the run continues. On a resume that carries a human outcome, the
+        # approved/edited row is assembled instead. See ARCHITECTURE §4.6 + decisions #5/#6/#8.
+        reason = _review_reason(finding, draft_row, checks)
+        if reason is not None:
+            gated = _gate(
+                finding,
+                store=store,
+                run_id=run_id,
+                draft_row=draft_row,
+                checks=checks,
+                reason=reason,
+                oracle=oracle,
+                created_at=created_at,
+                span=span,
+            )
+            if gated is None:
+                return None  # still pending / rejected — withheld from the report
+            draft_row, checks = gated  # approved (original) or edited row flows into assembly
+
         return Trace(
             run_id=run_id,
             finding_id=finding.id,
@@ -215,6 +246,68 @@ def _process_finding(
             checks=checks,
             created_at=created_at,
         )
+
+
+def _review_reason(finding: Finding, draft_row: DraftRow, checks: list[CitationCheck]) -> Optional[ReviewReason]:
+    """Which single review trigger fires for this finding, by precedence `low_confidence` >
+    `axe_incomplete` > `unverifiable_judgment` (decision #5) — or None if none apply. The triggers
+    overlap (an axe-incomplete finding also yields UNVERIFIABLE citations), so precedence collapses
+    them to one stored reason."""
+    if draft_row.confidence < _LOW_CONFIDENCE_THRESHOLD:
+        return ReviewReason.LOW_CONFIDENCE
+    if finding.source_bucket is AxeBucket.INCOMPLETE:
+        return ReviewReason.AXE_INCOMPLETE
+    if any(c.verdict is CitationVerdict.UNVERIFIABLE for c in checks):
+        return ReviewReason.UNVERIFIABLE_JUDGMENT
+    return None
+
+
+def _gate(
+    finding: Finding,
+    *,
+    store: OrchestratorStore,
+    run_id: str,
+    draft_row: DraftRow,
+    checks: list[CitationCheck],
+    reason: ReviewReason,
+    oracle: Oracle,
+    created_at: datetime,
+    span: trace.Span,
+) -> Optional[tuple[DraftRow, list[CitationCheck]]]:
+    """Resolve the HITL gate for one flagged finding. Returns None if the finding is withheld from
+    the report (no human outcome yet, or rejected); otherwise the `(draft, checks)` to assemble —
+    the original draft on approval, or the human's `edited_draft` (re-validated, since it is new
+    input) on an edit. Idempotent across resumes: a still-pending record is left untouched."""
+    span.set_attribute("clearway.needs_review", True)
+    span.set_attribute("clearway.review_reason", reason.value)
+
+    review = store.load_review(run_id, finding.id)
+    if review is None:
+        # Fresh flag: persist the durable interrupt and withhold the finding.
+        store.save_review(
+            NeedsReview(
+                run_id=run_id,
+                finding_id=finding.id,
+                draft=draft_row,
+                reason=reason,
+                status=ReviewStatus.PENDING,
+                created_at=created_at,
+                updated_at=created_at,
+            )
+        )
+        span.set_attribute("clearway.review_status", ReviewStatus.PENDING.value)
+        return None
+
+    span.set_attribute("clearway.review_status", review.status.value)
+    if review.status in (ReviewStatus.PENDING, ReviewStatus.REJECTED):
+        # Awaiting a human, or the human rejected the draft — either way it never enters the output.
+        return None
+
+    # Approved or edited: the human-approved row assembles. An edit is fresh input, so re-validate
+    # it (cheap, no LLM) to produce checks that match what actually ships, not the original draft's.
+    approved = review.edited_draft if review.status is ReviewStatus.EDITED and review.edited_draft else review.draft
+    approved_checks = validate(approved, finding, oracle) if review.status is ReviewStatus.EDITED else checks
+    return approved, approved_checks
 
 
 def _step(

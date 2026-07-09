@@ -26,7 +26,7 @@ from clearway.normalizer import normalize
 from clearway.oracle import AxeCoreOracle
 from clearway.orchestrator import InMemoryOrchestratorStore, RunResult, execute, run, run_set
 from clearway.scanner import scan
-from clearway.schemas.models import EvalReport, OracleRegime, Trace
+from clearway.schemas.models import EvalReport, OracleRegime, ReviewReason, ReviewStatus, Trace
 
 PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
 FIXTURE = str(PAGES / "home.html")
@@ -75,13 +75,16 @@ def test_run_is_idempotent_on_finding_ids_and_rate() -> None:
 # --- run_set: the M1 exit-criterion set runner -------------------------------
 
 
-def test_run_set_folds_the_m1_page_set_into_one_report() -> None:
-    result = run_set(
-        M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore()
-    )
+def test_run_set_folds_the_verifiable_findings_and_queues_the_incomplete_ones() -> None:
+    """T3: the HITL gate withholds the 2 incomplete-bucket findings for review, so a fresh run
+    assembles only home's 3 verifiable violations and queues the rest — the run does not stall."""
+    store = InMemoryOrchestratorStore()
+    result = run_set(M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store)
     assert isinstance(result, RunResult)
-    # 5 findings across 3 pages: home's 3 verifiable violations + 2 incomplete needs-review items.
-    assert len(result.traces) == 5
+    # 3 verifiable violations assemble; the 2 incomplete items are gated into the queue.
+    assert len(result.traces) == 3
+    assert len(store.load_reviews(status=ReviewStatus.PENDING)) == 2
+    assert {r.reason for r in store.load_reviews()} == {ReviewReason.AXE_INCOMPLETE}
     # the whole set scores under ONE run so it aggregates into a single report.
     assert len({t.run_id for t in result.traces}) == 1
     assert result.report.run_id == result.traces[0].run_id
@@ -89,10 +92,28 @@ def test_run_set_folds_the_m1_page_set_into_one_report() -> None:
     assert result.report.trace_ids == [t.finding_id for t in result.traces]
 
 
-def test_run_set_stratifies_the_honest_unverifiable_share() -> None:
-    m = run_set(
-        M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore()
+def test_run_set_gates_then_after_approval_restores_the_honest_unverifiable_share() -> None:
+    """The M1 stratified headline (2/5 unverifiable) is now reached through the M2 HITL path: a
+    fresh run withholds the 2 incomplete items (unverifiable_share drops to 0); once a human
+    approves them, a resume folds them back in and the honest 2/5 share reappears."""
+    store = InMemoryOrchestratorStore()
+    run_id = "hitl-reflow"
+    fresh = run_set(
+        M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store, run_id=run_id
     ).report.metrics
+    # Fresh run: only home's 3 verifiable violations are scored — the incomplete items are queued.
+    assert fresh.findings_total == 3
+    assert fresh.citations_unverifiable_total == 0
+    assert fresh.unverifiable_share == pytest.approx(0.0)
+    assert fresh.citation_hallucination_rate_verifiable == pytest.approx(2 / 3)
+
+    # A human approves the 2 queued items, then the run resumes (same run_id).
+    for review in store.load_reviews(status=ReviewStatus.PENDING):
+        store.save_review(review.model_copy(update={"status": ReviewStatus.APPROVED}))
+    m = run_set(
+        M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store, run_id=run_id
+    ).report.metrics
+
     assert m.findings_total == 5
     assert m.citations_total == 5
     # the 2 incomplete-bucket citations (1.4.3, 1.2.2) have no oracle → UNVERIFIABLE.
@@ -187,7 +208,9 @@ def test_run_set_resumes_across_pages_without_recomputing_completed_pages() -> N
     )
 
     assert calls == []  # every finding replayed, nothing recomputed
-    assert len(result.traces) == 5
+    # 3 verifiable traces assemble; the 2 incomplete items stay gated in the queue. The resume
+    # notices still count all findings — the gate is post-validate, so every VALIDATE step is DONE.
+    assert len(result.traces) == 3
     assert [(done, total, next_id) for _, done, total, next_id in resume_notices] == [
         (3, 3, None),
         (1, 1, None),

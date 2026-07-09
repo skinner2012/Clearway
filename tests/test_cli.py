@@ -106,6 +106,97 @@ def test_cli_run_with_run_id_resumes_and_prints_a_notice(monkeypatch, capsys) ->
     assert "resuming run cli-resume-test: 3/3 findings already complete, nothing left to do" in out
 
 
+# --- HITL review queue (T3) ---------------------------------------------------
+
+
+@pytest.fixture
+def shared_spine(monkeypatch: pytest.MonkeyPatch):  # type: ignore[no-untyped-def]
+    """Like `offline_spine`, but hands out ONE shared in-memory store across every `main()` call so
+    a `review` command sees the queue a prior `eval` populated (and a resume sees the review's
+    outcome). Yields the store so tests can read the queue directly."""
+    import importlib
+
+    from clearway.orchestrator import InMemoryOrchestratorStore
+
+    run_module = importlib.import_module("clearway.orchestrator.run")
+    store = InMemoryOrchestratorStore()
+    monkeypatch.setattr(run_module, "_default_retrieve", lambda: canned_retrieve)
+    monkeypatch.setattr(run_module, "_default_draft", lambda: canned_draft)
+    monkeypatch.setattr(run_module, "_default_store", lambda: store)
+    return store
+
+
+def test_cli_review_list_and_show_surface_the_queue(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]
+    """A fresh eval gates the 2 incomplete fixtures; `review list` shows them pending and `review
+    show` prints the flagged draft + reason."""
+    assert main(["eval", "--no-emit", "--run-id", "cli-review"]) == 0
+    capsys.readouterr()
+
+    assert main(["review", "list", "--status", "pending"]) == 0
+    listed = capsys.readouterr().out
+    assert listed.count("axe_incomplete") == 2
+
+    finding_id = shared_spine.load_reviews()[0].finding_id
+    assert main(["review", "show", finding_id]) == 0
+    shown = capsys.readouterr().out
+    assert finding_id in shown
+    assert "reason=axe_incomplete" in shown
+    assert '"remediation"' in shown  # the DraftRow JSON is printed
+
+
+def test_cli_review_approve_then_resume_restores_the_unverifiable_share(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]
+    """Approving the 2 gated items and resuming the run folds them back into the report — the honest
+    2/5 unverifiable share returns."""
+    assert main(["eval", "--no-emit", "--run-id", "cli-approve"]) == 0
+    capsys.readouterr()
+
+    for review in shared_spine.load_reviews():
+        assert main(["review", "approve", review.finding_id]) == 0
+    capsys.readouterr()
+
+    assert main(["eval", "--no-emit", "--run-id", "cli-approve"]) == 0
+    out = capsys.readouterr().out
+    assert "unverifiable_share=0.400" in out
+
+
+def test_cli_review_edit_with_remediation_persists_and_flows_into_the_report(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]
+    """`review edit --remediation` re-drafts a queued row without the editor; it persists as an
+    edit and, on resume, the finding assembles into the report (findings_total climbs back to 5)."""
+    assert main(["eval", "--no-emit", "--run-id", "cli-edit"]) == 0
+    capsys.readouterr()
+
+    for review in shared_spine.load_reviews():
+        assert main(["review", "edit", review.finding_id, "--remediation", "human-reviewed fix"]) == 0
+    capsys.readouterr()
+
+    # the edit is persisted on the record...
+    edited = shared_spine.load_reviews()[0]
+    assert edited.status.value == "edited"
+    assert edited.edited_draft is not None
+    assert edited.edited_draft.remediation == "human-reviewed fix"
+
+    # ...and flows into the assembled output on resume (all 5 findings scored again).
+    assert main(["eval", "--no-emit", "--run-id", "cli-edit"]) == 0
+    assert "findings=5" in capsys.readouterr().out
+
+
+def test_cli_review_reject_keeps_the_finding_out_of_the_report(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]
+    assert main(["eval", "--no-emit", "--run-id", "cli-reject"]) == 0
+    capsys.readouterr()
+
+    for review in shared_spine.load_reviews():
+        assert main(["review", "reject", review.finding_id]) == 0
+    capsys.readouterr()
+
+    assert main(["eval", "--no-emit", "--run-id", "cli-reject"]) == 0
+    assert "findings=3" in capsys.readouterr().out  # rejected items never rejoin the report
+
+
+def test_cli_review_show_unknown_finding_errors(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]
+    assert main(["review", "show", "does-not-exist"]) == 1
+    assert "no review found" in capsys.readouterr().err
+
+
 @corpus_up
 def test_cli_corpus_ingest_then_query_smoke(capsys) -> None:  # type: ignore[no-untyped-def]
     """Both corpus subcommands run end-to-end through the real embedder/store. `--limit`

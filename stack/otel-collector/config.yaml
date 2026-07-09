@@ -1,6 +1,8 @@
-# OTel Collector — receive OTLP/HTTP metrics from the app, expose them for Prometheus.
+# OTel Collector — receive OTLP/HTTP metrics + traces from the app.
 # This is the buffer that outlives the short-lived `clearway run` CLI: the app pushes
-# and exits; the collector holds the last values until Prometheus scrapes them.
+# and exits; the collector holds the last metric values until Prometheus scrapes them, and
+# echoes spans to its own log (a real trace backend like Grafana Tempo is deferred — ARCHITECTURE
+# §4.5; the `traces` pipeline exports to `debug` so the run/finding/step tree is still observable).
 receivers:
   otlp:
     protocols:
@@ -20,3 +22,7 @@ service:
     metrics:
       receivers: [otlp]
       exporters: [prometheus, debug]
+    # Spans land here → echoed to the collector log (no trace backend yet — see the header note).
+    traces:
+      receivers: [otlp]
+      exporters: [debug]

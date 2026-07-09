@@ -12,10 +12,17 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 
-from clearway.observability import record_eval_report, setup_metrics, shutdown
+from clearway.observability import (
+    record_eval_report,
+    setup_metrics,
+    setup_tracing,
+    shutdown,
+    shutdown_tracing,
+)
 from clearway.orchestrator import run, run_set
 from clearway.schemas.models import EvalReport
 
@@ -36,6 +43,20 @@ def _print_metrics(report: EvalReport) -> None:
         f"unverifiable_share={m.unverifiable_share:.3f} "
         f"({m.citations_unverifiable_total}/{m.citations_total})"
     )
+
+
+@contextmanager
+def _tracing(emit: bool) -> Iterator[None]:
+    """Bracket the run with OTel tracing when emitting: spans are produced *during* `execute()`, so
+    unlike metrics (recorded from the finished report) tracing must be set up before the run and
+    flushed after. `--no-emit` skips it entirely — spans then fall back to inert no-op API calls."""
+    if emit:
+        setup_tracing()
+    try:
+        yield
+    finally:
+        if emit:
+            shutdown_tracing()  # force-flush spans before this short-lived process exits
 
 
 def _emit(report: EvalReport) -> None:
@@ -90,7 +111,8 @@ def _corpus_query_cmd(args: argparse.Namespace) -> int:
 
 
 def _run_cmd(args: argparse.Namespace) -> int:
-    report = run(args.target, run_id=args.run_id, on_resume=_print_resume_notice).report
+    with _tracing(args.emit):
+        report = run(args.target, run_id=args.run_id, on_resume=_print_resume_notice).report
     _print_metrics(report)
     if args.emit:
         _emit(report)
@@ -103,9 +125,10 @@ def _eval_cmd(args: argparse.Namespace) -> int:
     fixtures make `unverifiable_share` non-trivial. Needs the real corpus stack + Ollama."""
     manifest = json.loads((_FIXTURES / "expected_m1.json").read_text())
     targets = [str(_FIXTURES / page["path"]) for page in manifest["pages"]]
-    report = run_set(
-        targets, eval_set_id=manifest["eval_set_id"], run_id=args.run_id, on_resume=_print_resume_notice
-    ).report
+    with _tracing(args.emit):
+        report = run_set(
+            targets, eval_set_id=manifest["eval_set_id"], run_id=args.run_id, on_resume=_print_resume_notice
+        ).report
     _print_metrics(report)
     if args.emit:
         _emit(report)

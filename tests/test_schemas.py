@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import pytest
 from pydantic import BaseModel, ValidationError
 
@@ -11,12 +13,21 @@ from clearway.schemas.models import (
     AxeBucket,
     Conformance,
     CorpusChunk,
+    DraftRow,
     EvalMetrics,
     Finding,
     L1Status,
+    NeedsReview,
     Oracle,
     OracleRegime,
     OracleVerdict,
+    PipelineStep,
+    ReviewReason,
+    ReviewStatus,
+    RunState,
+    RunStatus,
+    StepState,
+    StepStatus,
 )
 
 # Every concrete BaseModel defined in the contract (Oracle is a Protocol, excluded).
@@ -62,6 +73,12 @@ def test_enum_wire_values_are_stable() -> None:
     # AxeBucket values must match axe's payload keys — the scanner reads results by these names.
     assert AxeBucket.VIOLATIONS.value == "violations"
     assert AxeBucket.INCOMPLETE.value == "incomplete"
+    # M2: durable orchestration + HITL wire values.
+    assert PipelineStep.RETRIEVE.value == "retrieve"
+    assert RunStatus.PAUSED.value == "paused"
+    assert StepStatus.NEEDS_REVIEW.value == "needs_review"
+    assert ReviewReason.UNVERIFIABLE_JUDGMENT.value == "unverifiable_judgment"
+    assert ReviewStatus.EDITED.value == "edited"
 
 
 def test_finding_defaults_to_the_violations_bucket() -> None:
@@ -111,6 +128,59 @@ def test_eval_metrics_has_stratified_fields_defaulting_safely() -> None:
         citations_unverifiable_total=2,
     )
     assert stratified.citations_verifiable_total + stratified.citations_unverifiable_total == stratified.citations_total
+
+
+def test_eval_metrics_expert_edit_distance_defaults_to_zero() -> None:
+    """M2 addition is additive: an M1-style construction still validates and the new field defaults."""
+    m1_style = EvalMetrics(
+        citation_hallucination_rate=0.2,
+        citations_total=5,
+        hallucinations_total=1,
+        citation_hallucination_rate_verifiable=0.2,
+        citations_verifiable_total=5,
+    )
+    assert m1_style.expert_edit_distance == 0.0
+
+
+_AT = datetime(2026, 7, 9, 12, 0, 0)
+
+
+def test_needs_review_defaults_to_pending_with_no_edit() -> None:
+    """A freshly flagged finding is pending review with no edit yet."""
+    draft = DraftRow(finding_id="f1", conformance=Conformance.DOES_NOT_SUPPORT, confidence=0.5)
+    review = NeedsReview(
+        finding_id="f1", run_id="r1", draft=draft, reason=ReviewReason.AXE_INCOMPLETE, created_at=_AT, updated_at=_AT
+    )
+    assert review.status is ReviewStatus.PENDING
+    assert review.edited_draft is None
+
+
+def test_needs_review_is_strict() -> None:
+    """Contracts are strict: an unexpected field is a validation error."""
+    draft = DraftRow(finding_id="f1", conformance=Conformance.DOES_NOT_SUPPORT, confidence=0.5)
+    with pytest.raises(ValidationError):
+        NeedsReview(
+            finding_id="f1",
+            run_id="r1",
+            draft=draft,
+            reason=ReviewReason.LOW_CONFIDENCE,
+            created_at=_AT,
+            updated_at=_AT,
+            bogus=1,
+        )
+
+
+def test_run_state_defaults_to_running() -> None:
+    """A freshly created run starts in the running state."""
+    state = RunState(run_id="r1", config_id="m2-single@1", created_at=_AT)
+    assert state.status is RunStatus.RUNNING
+
+
+def test_step_state_defaults_to_pending_with_zero_attempts() -> None:
+    """A freshly created step checkpoint has made no attempts yet."""
+    step = StepState(run_id="r1", finding_id="f1", step=PipelineStep.RETRIEVE, updated_at=_AT)
+    assert step.status is StepStatus.PENDING
+    assert step.attempts == 0
 
 
 def test_oracle_protocol_is_runtime_checkable() -> None:

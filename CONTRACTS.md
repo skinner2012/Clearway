@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.5
+- **Version:** 0.6
 
 > **This file is the single source of truth for cross-module data shapes.** Any shape that crosses a module boundary is defined here and nowhere else — never redefined in `ARCHITECTURE.md`, in module code, or in an LLM prompt. `ARCHITECTURE.md §5` describes the `Oracle` seam's *role* and points back here for the definition. To add or change a shape: edit §3, then update the deferred list (§5) and the change log (§6) in the same change.
 
@@ -295,6 +295,92 @@ class Trace(BaseModel):
 
 
 # ============================================================
+# Durable orchestration + HITL  (orchestrator/, M2 — ARCHITECTURE §4.6)
+# ============================================================
+
+class PipelineStep(str, Enum):
+    """The three per-finding steps the durable orchestrator checkpoints (M1's real modules)."""
+    RETRIEVE = "retrieve"
+    DRAFT = "draft"
+    VALIDATE = "validate"
+
+
+class RunStatus(str, Enum):
+    """Lifecycle of one orchestrator run — the `RunState` checkpoint."""
+    RUNNING = "running"
+    PAUSED = "paused"
+    DONE = "done"
+    FAILED = "failed"
+
+
+class StepStatus(str, Enum):
+    """Lifecycle of one finding's one step — the `StepState` checkpoint / resume unit."""
+    PENDING = "pending"
+    DONE = "done"
+    FAILED = "failed"
+    NEEDS_REVIEW = "needs_review"
+
+
+class RunState(BaseModel):
+    """Durable run-level checkpoint: persisted so a killed run can be found and resumed."""
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str
+    config_id: str
+    status: RunStatus = RunStatus.RUNNING
+    created_at: datetime
+
+
+class StepState(BaseModel):
+    """Durable per-(finding, step) checkpoint — the resume unit. Idempotency key is
+    `(run_id, finding_id, step)`: a completed step re-runs as a no-op on resume. Distinct
+    from `Finding.id`'s cross-run content-hash dedup — a fresh run of the same page still
+    re-processes every step."""
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str
+    finding_id: str
+    step: PipelineStep
+    status: StepStatus = StepStatus.PENDING
+    attempts: int = Field(0, description="retry attempts made on this step so far")
+    updated_at: datetime = Field(..., description="last transition time — the checkpoint clock")
+
+
+class ReviewReason(str, Enum):
+    """Why a finding was flagged for human review. When more than one applies, precedence is
+    LOW_CONFIDENCE > AXE_INCOMPLETE > UNVERIFIABLE_JUDGMENT (orchestrator/, T3) — a single
+    reason is stored, not a set."""
+    LOW_CONFIDENCE = "low_confidence"
+    AXE_INCOMPLETE = "axe_incomplete"
+    UNVERIFIABLE_JUDGMENT = "unverifiable_judgment"
+
+
+class ReviewStatus(str, Enum):
+    """Lifecycle of one `NeedsReview` record, driven by the human reviewer."""
+    PENDING = "pending"
+    APPROVED = "approved"
+    EDITED = "edited"
+    REJECTED = "rejected"
+
+
+class NeedsReview(BaseModel):
+    """A finding flagged for human review — the HITL durable-interrupt record (ARCHITECTURE
+    §4.6). Written post-validation (it carries the drafted+checked `DraftRow`), so a human can
+    approve, edit, or reject it from a separate entrypoint (`clearway review`); an edit's
+    `edited_draft` is what T4's `expert_edit_distance` measures against `draft`."""
+    model_config = ConfigDict(extra="forbid")
+
+    finding_id: str
+    run_id: str
+    draft: DraftRow
+    reason: ReviewReason
+    status: ReviewStatus = ReviewStatus.PENDING
+    edited_draft: Optional[DraftRow] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
 # Eval output  (eval/)
 # ============================================================
 
@@ -302,7 +388,8 @@ class EvalMetrics(BaseModel):
     """Trust metrics for one eval run. M1 stratifies the hallucination rate by whether an
     automated oracle could verify the citation: the verifiable subset (axe-detectable, ~0 by
     construction) vs the unverifiable share (judgment items with no oracle — the honest
-    headline, and exactly what M5's judge/gold must target)."""
+    headline, and exactly what M5's judge/gold must target). M2 adds `expert_edit_distance`,
+    the human-correction signal from the HITL gate."""
     model_config = ConfigDict(extra="forbid")
 
     citation_hallucination_rate: float = Field(..., ge=0.0, le=1.0, description="overall: hallucinations / all citations")
@@ -320,6 +407,13 @@ class EvalMetrics(BaseModel):
     )
     citations_verifiable_total: int = Field(0, description="citations with a definitive oracle verdict (VERIFIED | HALLUCINATED)")
     citations_unverifiable_total: int = Field(0, description="citations with no oracle verdict (UNVERIFIABLE)")
+
+    # M2: human-correction signal from the HITL gate (needs a NeedsReview.edited_draft to exist).
+    expert_edit_distance: float = Field(
+        0.0, ge=0.0, description="mean human-edit distance over reviewed drafts this run (0 = no edits "
+        "needed); unbounded above — M2 uses a normalized [0,1] text ratio, type stays open for a future "
+        "distance function"
+    )
 
 
 class EvalReport(BaseModel):
@@ -398,7 +492,6 @@ Added when their milestone arrives, not before:
 
 | Schema / concern | Milestone |
 |---|---|
-| `NeedsReview` / HITL approve-edit record | M2 |
 | `RoutingConfig` (frozen, versioned model/config artifact) | M4 |
 | `JudgeResult`, `CalibrationReport` (κ, confidence-vs-correctness) | M5 |
 | `GoldLabel` (expert-provided ground truth) | M6 |
@@ -416,3 +509,4 @@ Added when their milestone arrives, not before:
 | 2026-07-08 | 0.3 | M1 (T0): added `CorpusChunk` (corpus/ → retriever/) and stratified `EvalMetrics` fields (`citation_hallucination_rate_verifiable`, `unverifiable_share`, `citations_verifiable_total`, `citations_unverifiable_total`). `CorpusChunk.embedding` is optional and excluded from serialization (vector lives in pgvector). Additive — existing M0 shapes unchanged. |
 | 2026-07-08 | 0.4 | M1 (T4): scanner captures axe's `incomplete` (needs-review) bucket distinctly. Factored `AxeViolation`'s fields into a shared `AxeRuleResult` base; added `AxeIncomplete` (same shape, not confirmed) and `ScanResult.incomplete: list[AxeIncomplete]`. `incomplete` is the source of eval's `unverifiable_share`. Additive — `AxeViolation` wire shape unchanged. |
 | 2026-07-08 | 0.5 | M1 (T5): normalizer carries `incomplete` items through as `Finding`s. Added `AxeBucket` enum (provenance) and `Finding.source_bucket: AxeBucket` (default `VIOLATIONS`). The oracle allowlists `VIOLATIONS`, returning no verdict for any other bucket — incomplete-sourced findings become `UNVERIFIABLE`. `source_bucket` is not part of the finding id. Additive — existing findings default to `VIOLATIONS`, wire shape unchanged. |
+| 2026-07-09 | 0.6 | M2 (T0): added durable-orchestration + HITL schemas — `RunState`, `StepState` (checkpoint/resume, keyed `(run_id, finding_id, step)` via the new `PipelineStep` enum) and `NeedsReview` (HITL approve/edit record, `ReviewReason` + `ReviewStatus` enums; written post-validation, carries the drafted `DraftRow`). Added `EvalMetrics.expert_edit_distance` (unbounded `float ≥ 0`, normalization left to T4). `NeedsReview` removed from §5 (no longer deferred). Additive — existing shapes unchanged. |

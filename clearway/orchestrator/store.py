@@ -19,11 +19,22 @@ from __future__ import annotations
 import os
 from typing import Optional, Protocol, runtime_checkable
 
-from clearway.schemas.models import PipelineStep, RunState, RunStatus, StepState, StepStatus
+from clearway.schemas.models import (
+    DraftRow,
+    NeedsReview,
+    PipelineStep,
+    ReviewReason,
+    ReviewStatus,
+    RunState,
+    RunStatus,
+    StepState,
+    StepStatus,
+)
 
 _DEFAULT_DB_URL = "postgresql://clearway:clearway@localhost:5432/clearway"
 _RUN_TABLE = "run_state"
 _STEP_TABLE = "step_state"
+_REVIEW_TABLE = "needs_review"
 
 
 @runtime_checkable
@@ -55,6 +66,21 @@ class OrchestratorStore(Protocol):
         """The cached result for one completed step, or None if there isn't one."""
         ...
 
+    def save_review(self, review: NeedsReview) -> None:
+        """Insert/update one HITL `NeedsReview` record (by `(run_id, finding_id)` — its natural
+        key). The durable interrupt: written pending on flag, updated on approve/edit/reject."""
+        ...
+
+    def load_review(self, run_id: str, finding_id: str) -> Optional[NeedsReview]:
+        """One review record, or None — what the resume gate consults to decide whether a
+        `NEEDS_REVIEW` step is still blocked or now has a human outcome."""
+        ...
+
+    def load_reviews(self, status: Optional[ReviewStatus] = None) -> list[NeedsReview]:
+        """The review queue across all runs, optionally filtered by status — what
+        `clearway review list` shows."""
+        ...
+
 
 class InMemoryOrchestratorStore:
     """Offline stand-in for `PgOrchestratorStore`: dicts keyed by run_id / (run_id, finding_id,
@@ -64,6 +90,7 @@ class InMemoryOrchestratorStore:
         self._runs: dict[str, RunState] = {}
         self._steps: dict[tuple[str, str, PipelineStep], StepState] = {}
         self._results: dict[tuple[str, str, PipelineStep], str] = {}
+        self._reviews: dict[tuple[str, str], NeedsReview] = {}
 
     def ensure_schema(self) -> None:
         return None  # nothing to create in memory; kept for seam parity with PgOrchestratorStore
@@ -85,6 +112,15 @@ class InMemoryOrchestratorStore:
 
     def load_step_result(self, run_id: str, finding_id: str, step: PipelineStep) -> Optional[str]:
         return self._results.get((run_id, finding_id, step))
+
+    def save_review(self, review: NeedsReview) -> None:
+        self._reviews[(review.run_id, review.finding_id)] = review
+
+    def load_review(self, run_id: str, finding_id: str) -> Optional[NeedsReview]:
+        return self._reviews.get((run_id, finding_id))
+
+    def load_reviews(self, status: Optional[ReviewStatus] = None) -> list[NeedsReview]:
+        return [r for r in self._reviews.values() if status is None or r.status == status]
 
 
 class PgOrchestratorStore:
@@ -119,6 +155,19 @@ class PgOrchestratorStore:
                 "  updated_at  timestamptz NOT NULL,"
                 "  result_json text,"
                 "  PRIMARY KEY (run_id, finding_id, step)"
+                ")"
+            )
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {_REVIEW_TABLE} ("
+                "  run_id            text NOT NULL,"
+                "  finding_id        text NOT NULL,"
+                "  draft_json        text NOT NULL,"
+                "  reason            text NOT NULL,"
+                "  status            text NOT NULL,"
+                "  edited_draft_json text,"
+                "  created_at        timestamptz NOT NULL,"
+                "  updated_at        timestamptz NOT NULL,"
+                "  PRIMARY KEY (run_id, finding_id)"
                 ")"
             )
 
@@ -186,3 +235,61 @@ class PgOrchestratorStore:
                 (run_id, finding_id, step.value),
             ).fetchone()
             return row[0] if row else None
+
+    def save_review(self, review: NeedsReview) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                f"INSERT INTO {_REVIEW_TABLE} "
+                "(run_id, finding_id, draft_json, reason, status, edited_draft_json, created_at, updated_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
+                "ON CONFLICT (run_id, finding_id) DO UPDATE SET "
+                "status = EXCLUDED.status, edited_draft_json = EXCLUDED.edited_draft_json, "
+                "updated_at = EXCLUDED.updated_at",
+                (
+                    review.run_id,
+                    review.finding_id,
+                    review.draft.model_dump_json(),
+                    review.reason.value,
+                    review.status.value,
+                    review.edited_draft.model_dump_json() if review.edited_draft else None,
+                    review.created_at,
+                    review.updated_at,
+                ),
+            )
+
+    def load_review(self, run_id: str, finding_id: str) -> Optional[NeedsReview]:
+        with self._connect() as conn:
+            row = conn.execute(
+                f"SELECT run_id, finding_id, draft_json, reason, status, edited_draft_json, "
+                f"created_at, updated_at FROM {_REVIEW_TABLE} WHERE run_id = %s AND finding_id = %s",
+                (run_id, finding_id),
+            ).fetchone()
+            return _review_from_row(row) if row else None
+
+    def load_reviews(self, status: Optional[ReviewStatus] = None) -> list[NeedsReview]:
+        with self._connect() as conn:
+            sql = (
+                f"SELECT run_id, finding_id, draft_json, reason, status, edited_draft_json, "
+                f"created_at, updated_at FROM {_REVIEW_TABLE}"
+            )
+            params: tuple[str, ...] = ()
+            if status is not None:
+                sql += " WHERE status = %s"
+                params = (status.value,)
+            sql += " ORDER BY created_at"
+            rows = conn.execute(sql, params).fetchall()
+            return [_review_from_row(r) for r in rows]
+
+
+def _review_from_row(row: tuple) -> NeedsReview:
+    """Rehydrate a `NeedsReview` from a `needs_review` row — the `DraftRow`s are stored as JSON."""
+    return NeedsReview(
+        run_id=row[0],
+        finding_id=row[1],
+        draft=DraftRow.model_validate_json(row[2]),
+        reason=ReviewReason(row[3]),
+        status=ReviewStatus(row[4]),
+        edited_draft=DraftRow.model_validate_json(row[5]) if row[5] else None,
+        created_at=row[6],
+        updated_at=row[7],
+    )

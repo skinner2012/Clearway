@@ -1,18 +1,18 @@
 {
   "uid": "clearway-m0-trust",
-  "title": "Clearway — M0 Trust Metric",
-  "tags": ["clearway", "m0"],
+  "title": "Clearway — M1 Trust Metric",
+  "tags": ["clearway", "trust", "m1"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "5s",
   "time": { "from": "now-15m", "to": "now" },
   "panels": [
     {
       "id": 1,
       "type": "timeseries",
-      "title": "citation_hallucination_rate",
-      "description": "Fraction of drafted citations that fail L0/L1 validation. The M0 exit-criterion metric.",
+      "title": "citation_hallucination_rate (overall)",
+      "description": "Fraction of ALL drafted citations that fail L0/L1 validation — verifiable and unverifiable pooled. M1 stratifies this by oracle-verifiability in the row below.",
       "gridPos": { "h": 10, "w": 18, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
@@ -37,7 +37,7 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "current rate",
+      "title": "current rate (overall)",
       "gridPos": { "h": 10, "w": 6, "x": 18, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
@@ -54,6 +54,86 @@
           "min": 0,
           "max": 1,
           "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.34 }, { "color": "red", "value": 0.67 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "unverifiable_share (the honest headline)",
+      "description": "Fraction of citations with NO automated oracle to check against — axe `incomplete` items → NO_ORACLE → UNVERIFIABLE. Not an error rate: it is the coverage gap the pipeline is honest about, and the number M5 calibration must shrink.",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "unverifiable_share",
+          "legendFormat": "{{eval_set_id}} / {{config_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "pointSize": 6, "showPoints": "always", "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "current unverifiable_share",
+      "description": "Share of citations with no automated oracle (higher = more of the answer rests on un-checked judgment). Coloured neutrally: it is a coverage measure, not a pass/fail gauge.",
+      "gridPos": { "h": 10, "w": 6, "x": 12, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "unverifiable_share",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "current rate (verifiable subset)",
+      "description": "Hallucination rate over ONLY the oracle-verifiable citations (axe `violations`). ~0 by construction — anything above it is a genuine citation fault where an oracle exists to catch it.",
+      "gridPos": { "h": 10, "w": 6, "x": 18, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "citation_hallucination_rate_verifiable",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.05 }, { "color": "red", "value": 0.2 } ] }
         },
         "overrides": []
       },

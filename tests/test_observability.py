@@ -90,6 +90,7 @@ def test_eval_report_emits_all_stratified_metrics() -> None:
             unverifiable_share=0.5,
             citations_verifiable_total=2,
             citations_unverifiable_total=2,
+            expert_edit_distance=0.42,
         ),
     )
     record_eval_report(report)
@@ -99,7 +100,9 @@ def test_eval_report_emits_all_stratified_metrics() -> None:
     overall = _poll("citation_hallucination_rate" + labels, 0.25)
     verifiable = _poll("citation_hallucination_rate_verifiable" + labels, 0.5)
     share = _poll("unverifiable_share" + labels, 0.5)
+    edit_distance = _poll("expert_edit_distance" + labels, 0.42)
 
     assert overall and float(overall[0]["value"][1]) == pytest.approx(0.25)
     assert verifiable and float(verifiable[0]["value"][1]) == pytest.approx(0.5)
     assert share and float(share[0]["value"][1]) == pytest.approx(0.5)
+    assert edit_distance and float(edit_distance[0]["value"][1]) == pytest.approx(0.42)

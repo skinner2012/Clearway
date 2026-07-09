@@ -28,16 +28,19 @@ _DEFAULT_ENDPOINT = "http://localhost:4318"
 _METRIC_NAME = "citation_hallucination_rate"
 _METRIC_VERIFIABLE = "citation_hallucination_rate_verifiable"
 _METRIC_UNVERIFIABLE_SHARE = "unverifiable_share"
+_METRIC_EXPERT_EDIT_DISTANCE = "expert_edit_distance"
 
 _provider: MeterProvider | None = None
 _rate_gauge: Gauge | None = None
 _rate_verifiable_gauge: Gauge | None = None
 _unverifiable_share_gauge: Gauge | None = None
+_expert_edit_distance_gauge: Gauge | None = None
 
 
 def setup_metrics(endpoint: str | None = None) -> None:
     """Wire an OTLP/HTTP MeterProvider and create the trust-metric gauge (idempotent)."""
     global _provider, _rate_gauge, _rate_verifiable_gauge, _unverifiable_share_gauge
+    global _expert_edit_distance_gauge
     if _provider is not None:
         return
     base = endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or _DEFAULT_ENDPOINT
@@ -71,6 +74,10 @@ def setup_metrics(endpoint: str | None = None) -> None:
         _METRIC_UNVERIFIABLE_SHARE,
         description="Fraction of citations with no automated oracle to check against (the honest headline).",
     )
+    _expert_edit_distance_gauge = meter.create_gauge(
+        _METRIC_EXPERT_EDIT_DISTANCE,
+        description="Mean normalized text distance a human moved this run's edited drafts (0 = no edits).",
+    )
 
 
 def record_rate(rate: float, *, eval_set_id: str, config_id: str, oracle_regime: str) -> None:
@@ -85,12 +92,14 @@ def record_rate(rate: float, *, eval_set_id: str, config_id: str, oracle_regime:
 
 
 def record_eval_report(report: EvalReport) -> None:
-    """Emit all M1 trust metrics from a computed `EvalReport`: the overall hallucination rate plus
-    its oracle-verifiability stratification (verifiable rate + unverifiable share). All three share
-    the same low-cardinality label set, so they move together on one panel per (eval_set, config)."""
+    """Emit the trust metrics from a computed `EvalReport`: the overall hallucination rate plus its
+    oracle-verifiability stratification (verifiable rate + unverifiable share), and the M2 HITL
+    `expert_edit_distance` (run-mean human-edit distance). All share the same low-cardinality label
+    set, so they move together on one panel per (eval_set, config)."""
     if _rate_gauge is None:
         setup_metrics()
     assert _rate_verifiable_gauge is not None and _unverifiable_share_gauge is not None  # set by setup_metrics
+    assert _expert_edit_distance_gauge is not None  # set by setup_metrics
     labels = {
         "eval_set_id": report.eval_set_id,
         "config_id": report.config_id,
@@ -105,11 +114,13 @@ def record_eval_report(report: EvalReport) -> None:
     )
     _rate_verifiable_gauge.set(m.citation_hallucination_rate_verifiable, labels)
     _unverifiable_share_gauge.set(m.unverifiable_share, labels)
+    _expert_edit_distance_gauge.set(m.expert_edit_distance, labels)
 
 
 def shutdown() -> None:
     """Flush pending metrics and tear down. MUST run before a short-lived process exits."""
     global _provider, _rate_gauge, _rate_verifiable_gauge, _unverifiable_share_gauge
+    global _expert_edit_distance_gauge
     if _provider is not None:
         _provider.force_flush()
         _provider.shutdown()
@@ -117,3 +128,4 @@ def shutdown() -> None:
         _rate_gauge = None
         _rate_verifiable_gauge = None
         _unverifiable_share_gauge = None
+        _expert_edit_distance_gauge = None

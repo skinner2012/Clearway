@@ -14,7 +14,7 @@ exporters:
   prometheus:
     endpoint: 0.0.0.0:8889
   # Forward spans to Tempo over OTLP/gRPC so they're queryable as a trace tree.
-  otlp/tempo:
+  otlp_grpc/tempo:
     endpoint: tempo:4317
     tls:
       insecure: true
@@ -30,4 +30,4 @@ service:
     # Spans fan out to Tempo (queryable trace tree) and the debug log (hop-by-hop validation).
     traces:
       receivers: [otlp]
-      exporters: [otlp/tempo, debug]
+      exporters: [otlp_grpc/tempo, debug]

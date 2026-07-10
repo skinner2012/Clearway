@@ -22,6 +22,10 @@ import pytest
 from mcp.server.fastmcp import FastMCP
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 from mcp.types import CallToolResult, ListToolsResult
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.trace import SpanKind
 
 from clearway.corpus import (
     FakeEmbedder,
@@ -35,6 +39,7 @@ from clearway.corpus import (
     parse_wcag_json,
 )
 from clearway.mcp_server import TOOL_NAME, build_server
+from clearway.mcp_server import server as server_mod
 from clearway.retriever import Retriever
 from clearway.schemas.models import Citation, ConformanceLevel, CorpusChunk, EvidenceQuery, Finding
 
@@ -114,6 +119,56 @@ def test_tool_returns_same_citations_as_in_process_retriever() -> None:
     assert over_mcp == in_process
     assert over_mcp[0].title == "Non-text Content"
     assert over_mcp[0].level == ConformanceLevel.A
+
+
+# --- observability: server-side child span from the caller's traceparent ---------
+
+
+@pytest.fixture
+def server_spans(monkeypatch: pytest.MonkeyPatch) -> InMemorySpanExporter:
+    """Route the server module's tracer into an in-memory exporter (no global provider → order-
+    independent) so the tool's SERVER span can be read back."""
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    monkeypatch.setattr(server_mod, "_tracer", provider.get_tracer("test.mcp.server"))
+    return exporter
+
+
+def _call_with_meta(server: FastMCP, query: dict[str, str], meta: dict[str, str]) -> CallToolResult:
+    async def _run() -> CallToolResult:
+        async with connect(server._mcp_server) as client:
+            return await client.call_tool(TOOL_NAME, {"query": query}, meta=meta)
+
+    return anyio.run(_run)
+
+
+def test_tool_span_is_a_child_of_the_incoming_traceparent(server_spans: InMemorySpanExporter) -> None:
+    # The linchpin of the milestone: an incoming W3C traceparent makes the tool span a SERVER child in
+    # the caller's trace (same trace_id, parented on the caller's span) — not a disconnected RPC span.
+    server = build_server(_seeded_retriever(None, _chunk("sc:1.1.1", ["1.1.1"])))
+    trace_id, caller_span = "0af7651916cd43dd8448eb211c80319c", "b7ad6b7169203331"
+    _call_with_meta(
+        server, {"rule_id": "image-alt", "description": "x"}, {"traceparent": f"00-{trace_id}-{caller_span}-01"}
+    )
+
+    (span,) = server_spans.get_finished_spans()
+    assert span.name == "tools/call retrieve_wcag_evidence"
+    assert span.kind is SpanKind.SERVER
+    assert format(span.context.trace_id, "032x") == trace_id  # same trace as the caller
+    assert span.parent is not None and format(span.parent.span_id, "016x") == caller_span  # child of it
+    assert span.attributes is not None
+    assert span.attributes["mcp.method.name"] == "tools/call"
+    assert span.attributes["gen_ai.tool.name"] == "retrieve_wcag_evidence"
+
+
+def test_tool_span_is_root_without_a_traceparent(server_spans: InMemorySpanExporter) -> None:
+    # A caller that does not propagate → the tool span degrades to a normal root, never an error.
+    server = build_server(_seeded_retriever(None, _chunk("sc:1.1.1", ["1.1.1"])))
+    anyio.run(_call_tool, server, {"rule_id": "image-alt", "description": "x"})
+
+    (span,) = server_spans.get_finished_spans()
+    assert span.parent is None
 
 
 # --- gated integration: real Ollama + real pgvector --------------------------

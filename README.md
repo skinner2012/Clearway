@@ -14,7 +14,7 @@ The full rationale — the regulatory backdrop (FTC v. accessiBe), the two-oracl
 
 ## Status
 
-Early — **M1 (forward path, real) is complete**: the M0 stubs are replaced by a real RAG retriever (embedder + pgvector) and a real LLM drafter (Ollama), and the trust metric is now stratified into a verifiable-subset rate and the honest `unverifiable_share` — the fraction of citations no automated oracle can check. See [`specs/M1-forward-path.md`](specs/M1-forward-path.md), the [first-pass weak spots](docs/M1-weak-spots.md), and [Running the pipeline](#running-the-pipeline). Next up is **M2**.
+Early — **M2 (control loop + observability) is complete**: the forward path now runs on a durable, checkpointed orchestrator with full OTel tracing and LLM/pipeline metrics, a human-in-the-loop review gate that routes unverifiable findings to a specialist queue, an `expert_edit_distance` correction metric, per-run eval-report persistence, and a Grafana trust dashboard that puts the quality metrics on the same board as latency and cost. The trust metric remains stratified into a verifiable-subset rate and the honest `unverifiable_share` — the fraction of citations no automated oracle can check. See [`specs/M2-control-loop.md`](specs/M2-control-loop.md), the [M2 failure analysis](docs/M2-failure-analysis.md) (which continues the [M1 weak spots](docs/M1-weak-spots.md)), and [Running the pipeline](#running-the-pipeline). Next up is **M3**.
 
 ## Development
 
@@ -62,7 +62,7 @@ uv run clearway eval                                     # the m1-core@1 fixture
 uv run clearway eval --no-emit
 ```
 
-Emitted metrics land on the **Clearway — M1 Trust Metric** dashboard at <http://localhost:3000> — see [`stack/grafana/README.md`](stack/grafana/README.md) for how to read the three panels.
+Emitted metrics land on the **Clearway — Trust Dashboard** at <http://localhost:3000> — see [`stack/grafana/README.md`](stack/grafana/README.md) for how to read its panels.
 
 ## Documentation
 
@@ -71,7 +71,7 @@ Emitted metrics land on the **Clearway — M1 Trust Metric** dashboard at <http:
 - [`CONTRACTS.md`](CONTRACTS.md) — the shared data schemas (single source of truth).
 - [`CLAUDE.md`](CLAUDE.md) — working conventions and rules of engagement for Claude Code and contributors.
 - [`specs/`](specs/) — per-milestone task tickets.
-- [`docs/`](docs/) — milestone notes and analysis (e.g. the [M1 weak spots](docs/M1-weak-spots.md)).
+- [`docs/`](docs/) — milestone notes and analysis.
 
 ## License & authorship
 

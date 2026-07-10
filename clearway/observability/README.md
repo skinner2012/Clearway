@@ -66,10 +66,12 @@ docker compose up -d
 uv run clearway eval          # --no-emit to skip all telemetry
 ```
 
-Metrics reach Prometheus via the Collector; query them ad-hoc in **Grafana → Explore** now, e.g.
-`rate(pipeline_step_retries_total[5m])` or `gen_ai_client_token_usage_sum`. Provisioned **dashboard
-panels** for these land in **T6** (the trust dashboard extends
-[`stack/grafana`](../../stack/grafana/README.md), uid `clearway-m0-trust`, kept stable).
+Metrics reach Prometheus via the Collector; query them ad-hoc in **Grafana → Explore**, e.g.
+`rate(pipeline_step_retries_total[5m])` or `gen_ai_client_token_usage_sum`. As of **T6** these
+metrics are also on the **provisioned trust dashboard** (uid `clearway-m0-trust`) — its operational
+row surfaces LLM latency, token usage and per-step duration beside the quality gauges, and a
+Postgres-backed panel plots the persisted `eval_report` history over time. See
+[`stack/grafana`](../../stack/grafana/README.md).
 
 **Traces have no viewer yet:** the collector's `traces` pipeline echoes spans to its own log
 (`docker compose logs otel-collector`). A real trace backend (**Grafana Tempo**) is deferred —

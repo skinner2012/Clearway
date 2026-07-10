@@ -1,19 +1,27 @@
 {
   "uid": "clearway-m0-trust",
-  "title": "Clearway — M1 Trust Metric",
-  "tags": ["clearway", "trust", "m1"],
+  "title": "Clearway — Trust Dashboard",
+  "tags": ["clearway", "trust"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "5s",
-  "time": { "from": "now-15m", "to": "now" },
+  "time": { "from": "now-6h", "to": "now" },
   "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "Quality — trust metrics (eval/ + T4)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "panels": []
+    },
     {
       "id": 1,
       "type": "timeseries",
       "title": "citation_hallucination_rate (overall)",
       "description": "Fraction of ALL drafted citations that fail L0/L1 validation — verifiable and unverifiable pooled. M1 stratifies this by oracle-verifiability in the row below.",
-      "gridPos": { "h": 10, "w": 18, "x": 0, "y": 0 },
+      "gridPos": { "h": 9, "w": 18, "x": 0, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -38,7 +46,7 @@
       "id": 2,
       "type": "stat",
       "title": "current rate (overall)",
-      "gridPos": { "h": 10, "w": 6, "x": 18, "y": 0 },
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -64,7 +72,7 @@
       "type": "timeseries",
       "title": "unverifiable_share (the honest headline)",
       "description": "Fraction of citations with NO automated oracle to check against — axe `incomplete` items → NO_ORACLE → UNVERIFIABLE. Not an error rate: it is the coverage gap the pipeline is honest about, and the number M5 calibration must shrink.",
-      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 10 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -91,7 +99,7 @@
       "type": "stat",
       "title": "current unverifiable_share",
       "description": "Share of citations with no automated oracle (higher = more of the answer rests on un-checked judgment). Coloured neutrally: it is a coverage measure, not a pass/fail gauge.",
-      "gridPos": { "h": 10, "w": 6, "x": 12, "y": 10 },
+      "gridPos": { "h": 9, "w": 6, "x": 12, "y": 10 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -118,7 +126,7 @@
       "type": "stat",
       "title": "current rate (verifiable subset)",
       "description": "Hallucination rate over ONLY the oracle-verifiable citations (axe `violations`). ~0 by construction — anything above it is a genuine citation fault where an oracle exists to catch it.",
-      "gridPos": { "h": 10, "w": 6, "x": 18, "y": 10 },
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 10 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -138,6 +146,246 @@
         "overrides": []
       },
       "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "expert_edit_distance (human-correction signal)",
+      "description": "Mean normalized text-edit distance between the drafted remediation and the human-edited one, over drafts a reviewer edited through the HITL gate (T4). 0 = drafts shipped unedited; higher = the model's judgment drifted from the expert's. Only edited reviews contribute.",
+      "gridPos": { "h": 9, "w": 18, "x": 0, "y": 19 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "expert_edit_distance",
+          "legendFormat": "{{eval_set_id}} / {{config_id}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "fixed", "fixedColor": "purple" },
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "pointSize": 6, "showPoints": "always", "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "current expert_edit_distance",
+      "description": "Latest mean human-edit distance over edited drafts (0 = no edits needed).",
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 19 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "expert_edit_distance",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "fixed", "fixedColor": "purple" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "purple", "value": null } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Accuracy over time — persisted eval_report history (T5, Postgres)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 28 },
+      "panels": []
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "accuracy over time (per persisted run)",
+      "description": "Read from the persisted `eval_report` rows (one per run, keyed by run_id) via the Postgres datasource — the true per-run history Prometheus can't give (its quality gauges carry no run_id, so runs blur together). Each point is one completed run's stored metrics.",
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 29 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "postgres", "uid": "postgres" },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT created_at AS \"time\", (report_json::jsonb -> 'metrics' ->> 'citation_hallucination_rate')::float AS \"hallucination_rate\", (report_json::jsonb -> 'metrics' ->> 'unverifiable_share')::float AS \"unverifiable_share\", (report_json::jsonb -> 'metrics' ->> 'expert_edit_distance')::float AS \"expert_edit_distance\" FROM eval_report ORDER BY created_at"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "pointSize": 8, "showPoints": "always", "spanNulls": true }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "Operational — the cost of producing the measurement (T2)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 38 },
+      "panels": []
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "LLM call latency (mean, s)",
+      "description": "Cumulative mean of gen_ai.client.operation.duration — sum/count of the histogram, split by model. Tagged by model so the cloud-vs-local comparison (M4) is data-ready.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 39 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "gen_ai_client_operation_duration_seconds_sum / gen_ai_client_operation_duration_seconds_count",
+          "legendFormat": "{{gen_ai_request_model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "min": 0, "custom": { "drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "LLM tokens (cumulative, by type)",
+      "description": "gen_ai.client.token.usage histogram sum, split by gen_ai.token.type (input/output) and model.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 39 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "gen_ai_client_token_usage_sum",
+          "legendFormat": "{{gen_ai_token_type}} · {{gen_ai_request_model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "pipeline step retries (by step)",
+      "description": "pipeline_step_retries_total — retry attempts beyond the first, per pipeline step (retrieve/draft/validate).",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 47 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "pipeline_step_retries_total",
+          "legendFormat": "{{step}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "showPoints": "always", "pointSize": 6 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "pipeline failures (by step)",
+      "description": "pipeline_failures_total — steps that exhausted their retries and failed, per step.",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 47 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "pipeline_failures_total",
+          "legendFormat": "{{step}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "showPoints": "always", "pointSize": 6 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "pipeline step duration (mean, s by step)",
+      "description": "Cumulative mean of pipeline_step_duration — sum/count of the histogram, per step (includes retries).",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 47 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "pipeline_step_duration_sum / pipeline_step_duration_count",
+          "legendFormat": "{{step}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "min": 0, "custom": { "drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 14,
+      "type": "text",
+      "title": "LLM cost",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 55 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Cost per call is captured on every trace** (`Trace.cost_usd`, priced at the call site in T2) but is **≈ 0 for the local Ollama** models M2 runs against, so there is no live Prometheus cost series to chart yet. It lights up as a real number when cloud LLMs enter the comparison (**M4** routing). The token-usage panel above is the M2 proxy for spend."
+      }
+    },
+    {
+      "id": 103,
+      "type": "row",
+      "title": "Coming in M5 — judge calibration",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 61 },
+      "panels": []
+    },
+    {
+      "id": 15,
+      "type": "text",
+      "title": "judge κ (M5)",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 62 },
+      "options": {
+        "mode": "markdown",
+        "content": "### 🚧 M5\n**Judge–gold agreement (Cohen's κ).** How well the LLM judge agrees with the human gold labels on the *unverifiable* citations — the number that decides whether the judge can shrink `unverifiable_share` without lying. No data source until M5 builds the gold set + judge."
+      }
+    },
+    {
+      "id": 16,
+      "type": "text",
+      "title": "confidence calibration (M5)",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 62 },
+      "options": {
+        "mode": "markdown",
+        "content": "### 🚧 M5\n**Confidence calibration.** Reliability of the drafter's self-reported confidence against actual correctness. M1 found confidence sits 0.9–1.0 regardless of correctness (why the `low_confidence` gate is dormant) — M5 recalibrates it. Placeholder until then."
+      }
     }
   ]
 }

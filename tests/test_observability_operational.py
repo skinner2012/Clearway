@@ -14,7 +14,12 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
 from clearway.drafter import DraftResult, LLMUsage
-from clearway.observability.operational import setup_operational_metrics, shutdown_operational_metrics
+from clearway.observability.operational import (
+    mcp_span_attributes,
+    record_mcp_call,
+    setup_operational_metrics,
+    shutdown_operational_metrics,
+)
 from clearway.oracle import AxeCoreOracle
 from clearway.orchestrator.machine import execute
 from clearway.orchestrator.store import InMemoryOrchestratorStore
@@ -143,3 +148,41 @@ def test_retries_and_failures_counters(reader: InMemoryMetricReader) -> None:
     assert retries.get("retrieve") == 1  # exhausted retrieve: one retry (attempt 2)
     assert failures.get("retrieve") == 1  # and it ultimately failed
     assert "draft" not in failures  # draft recovered, no failure counted
+
+
+def test_mcp_call_duration_recorded_under_semconv_name(reader: InMemoryMetricReader) -> None:
+    record_mcp_call(tool="retrieve_wcag_evidence", duration_s=0.25)
+    points = _points(reader)
+    assert "mcp.client.operation.duration" in points
+    dp = points["mcp.client.operation.duration"].data_points[0]
+    assert dp.sum == pytest.approx(0.25)
+    assert dp.attributes["mcp.method.name"] == "tools/call"
+    assert dp.attributes["gen_ai.tool.name"] == "retrieve_wcag_evidence"
+    assert "error.type" not in dp.attributes  # success path → no error tag
+
+
+def test_mcp_call_failure_tags_error_type(reader: InMemoryMetricReader) -> None:
+    record_mcp_call(tool="retrieve_wcag_evidence", duration_s=0.1, error_type="TimeoutError")
+    dp = _points(reader)["mcp.client.operation.duration"].data_points[0]
+    assert dp.attributes["error.type"] == "TimeoutError"  # error rate derives from this
+
+
+def test_record_mcp_call_is_noop_before_setup() -> None:
+    # No MeterProvider installed → the recorder must be a silent no-op, never raising (offline path).
+    shutdown_operational_metrics()  # force the singletons to None, independent of test order
+    record_mcp_call(tool="retrieve_wcag_evidence", duration_s=0.1)
+
+
+def test_mcp_span_attributes_carry_semconv_names() -> None:
+    attrs = mcp_span_attributes(tool="retrieve_wcag_evidence", session_id="sess-123")
+    assert attrs == {
+        "mcp.method.name": "tools/call",
+        "gen_ai.tool.name": "retrieve_wcag_evidence",
+        "network.transport": "tcp",
+        "network.protocol.name": "http",
+        "mcp.session.id": "sess-123",
+    }
+
+
+def test_mcp_span_attributes_omit_session_when_unknown() -> None:
+    assert "mcp.session.id" not in mcp_span_attributes(tool="retrieve_wcag_evidence")

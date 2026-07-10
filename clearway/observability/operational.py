@@ -12,6 +12,11 @@ Two families, recorded from `orchestrator/machine.py` *during* the run (unlike t
 - **Custom pipeline metrics** — `pipeline_step_retries` / `pipeline_failures` (counters; the
   Prometheus exporter suffixes monotonic counters `_total`) and `pipeline_step_duration`
   (histogram, seconds), each tagged by pipeline `step`.
+- **MCP client-call metric** — `mcp.client.operation.duration` (seconds) for the opt-in over-MCP
+  retrieval path, tagged `mcp.method.name` + `gen_ai.tool.name` and, on failure, `error.type` (so
+  the dashboard derives an error rate from the same series). The matching span-attribute vocabulary
+  (`mcp_span_attributes`) lives here too, so every MCP/GenAI semconv name is defined in one module;
+  names were verified against the installed SDK, same as the GenAI ones.
 
 Like the trust gauges, every instrument is a module singleton created in
 `setup_operational_metrics()`; a recording call before setup is a cheap no-op, so offline tests
@@ -29,13 +34,25 @@ from opentelemetry.semconv._incubating.attributes.gen_ai_attributes import (
     GEN_AI_OPERATION_NAME,
     GEN_AI_REQUEST_MODEL,
     GEN_AI_TOKEN_TYPE,
+    GEN_AI_TOOL_NAME,
     GenAiOperationNameValues,
     GenAiTokenTypeValues,
+)
+from opentelemetry.semconv._incubating.attributes.mcp_attributes import (
+    MCP_METHOD_NAME,
+    MCP_SESSION_ID,
+)
+from opentelemetry.semconv._incubating.attributes.network_attributes import (
+    NETWORK_PROTOCOL_NAME,
+    NETWORK_TRANSPORT,
+    NetworkTransportValues,
 )
 from opentelemetry.semconv._incubating.metrics.gen_ai_metrics import (
     GEN_AI_CLIENT_OPERATION_DURATION,
     GEN_AI_CLIENT_TOKEN_USAGE,
 )
+from opentelemetry.semconv._incubating.metrics.mcp_metrics import MCP_CLIENT_OPERATION_DURATION
+from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
 
 from clearway.drafter import LLMUsage
 
@@ -44,12 +61,13 @@ _llm_tokens: Histogram | None = None
 _step_retries: Counter | None = None
 _step_failures: Counter | None = None
 _step_duration: Histogram | None = None
+_mcp_duration: Histogram | None = None
 
 
 def setup_operational_metrics(provider: MeterProvider | None = None) -> None:
     """Create the operational instruments (idempotent). `provider=None` uses the global MeterProvider
     (production, installed by `setup_metrics()`); tests pass their own to read the data back."""
-    global _llm_duration, _llm_tokens, _step_retries, _step_failures, _step_duration
+    global _llm_duration, _llm_tokens, _step_retries, _step_failures, _step_duration, _mcp_duration
     if _llm_duration is not None:
         return
     # Development-stage semconv: opt in so any auto-instrumentation agrees with our hand-rolled names.
@@ -71,6 +89,9 @@ def setup_operational_metrics(provider: MeterProvider | None = None) -> None:
     # No unit on purpose (repo convention: a unit would suffix the Prometheus series name).
     _step_duration = meter.create_histogram(
         "pipeline_step_duration", description="Wall-clock seconds for one pipeline step (including retries)."
+    )
+    _mcp_duration = meter.create_histogram(
+        MCP_CLIENT_OPERATION_DURATION, unit="s", description="Duration of one MCP tool call, client side."
     )
 
 
@@ -101,8 +122,40 @@ def record_step(*, step: str, attempts: int, failed: bool, duration_s: float) ->
         _step_failures.add(1, labels)
 
 
+# The one MCP method we invoke: a streamable-HTTP tool call. Constant, so it lives beside the metric.
+_MCP_TOOLS_CALL = "tools/call"
+
+
+def mcp_span_attributes(*, tool: str, session_id: str | None = None) -> dict[str, str]:
+    """The MCP-semconv attribute set for a `tools/call` span, set on both the client span and the
+    server child span so the cross-boundary call is self-describing. Names verified against the
+    installed semconv (`mcp.*`, `gen_ai.tool.name`, `network.*`); `mcp.session.id` is included only
+    when known (the client learns it after `initialize`)."""
+    attrs = {
+        MCP_METHOD_NAME: _MCP_TOOLS_CALL,
+        GEN_AI_TOOL_NAME: tool,
+        NETWORK_TRANSPORT: NetworkTransportValues.TCP.value,
+        NETWORK_PROTOCOL_NAME: "http",
+    }
+    if session_id is not None:
+        attrs[MCP_SESSION_ID] = session_id
+    return attrs
+
+
+def record_mcp_call(*, tool: str, duration_s: float, error_type: str | None = None) -> None:
+    """Emit the MCP client-call duration metric (`mcp.client.operation.duration`). No-op before setup.
+    `error_type` (the exception class name) is stamped on failure so the dashboard derives an error
+    rate from the same series (semconv `error.type`)."""
+    if _mcp_duration is None:
+        return
+    attrs = {MCP_METHOD_NAME: _MCP_TOOLS_CALL, GEN_AI_TOOL_NAME: tool}
+    if error_type is not None:
+        attrs[ERROR_TYPE] = error_type
+    _mcp_duration.record(duration_s, attrs)
+
+
 def shutdown_operational_metrics() -> None:
     """Drop the instrument singletons so a later setup rebuilds them (mirrors `metrics.shutdown()`;
     the underlying MeterProvider is flushed/torn down by `metrics.shutdown()`, which owns it)."""
-    global _llm_duration, _llm_tokens, _step_retries, _step_failures, _step_duration
-    _llm_duration = _llm_tokens = _step_retries = _step_failures = _step_duration = None
+    global _llm_duration, _llm_tokens, _step_retries, _step_failures, _step_duration, _mcp_duration
+    _llm_duration = _llm_tokens = _step_retries = _step_failures = _step_duration = _mcp_duration = None

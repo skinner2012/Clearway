@@ -64,12 +64,26 @@ uv run clearway eval --no-emit
 
 Emitted metrics land on the **Clearway — Trust Dashboard** at <http://localhost:3000> — see [`stack/grafana/README.md`](stack/grafana/README.md) for how to read its panels.
 
+## Retrieval as an MCP service
+
+Retrieval is also exposed as a standalone **MCP server** so tools *other than* the Clearway pipeline can reuse it: given a described accessibility problem, it returns the applicable WCAG success criteria as complete, cited evidence. This is the one component with genuine production reuse value — see [`ARCHITECTURE.md`](ARCHITECTURE.md) §4.7.
+
+Ingest the corpus first (`uv run clearway corpus-ingest`, above), then start the server and, in another terminal, run the external reference client:
+
+```bash
+uv run clearway mcp-serve                        # long-lived host process; mounts /mcp
+uv run python scripts/mcp_retrieval_client.py    # external client: sends an EvidenceQuery, prints cited evidence
+```
+
+The full interface — endpoint, transport, the `EvidenceQuery` / `Citation` schemas, error semantics, and a sample request/response — is documented in [`docs/mcp-retrieval-interface.md`](docs/mcp-retrieval-interface.md).
+
 ## Documentation
 
 - [`DESIGN_NOTE.md`](DESIGN_NOTE.md) — full product scope, thesis, and rationale.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — decisions of record: stack, module boundaries, milestones.
 - [`CONTRACTS.md`](CONTRACTS.md) — the shared data schemas (single source of truth).
 - [`CLAUDE.md`](CLAUDE.md) — working conventions and rules of engagement for Claude Code and contributors.
+- [`docs/mcp-retrieval-interface.md`](docs/mcp-retrieval-interface.md) — integration reference for the retrieval MCP service.
 - [`specs/`](specs/) — per-milestone task tickets.
 - [`docs/`](docs/) — milestone notes and analysis.
 

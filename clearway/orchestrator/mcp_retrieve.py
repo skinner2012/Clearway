@@ -15,7 +15,9 @@ as the T2 tests are) without a real socket:
   finding, call the tool, and parse the result back into `Citation`s. A tool-level error
   (`isError`) or a missing structured payload is **raised**, not returned — so a server-side
   failure propagates as an exception and the durable `_step()` retries/fails it cleanly rather than
-  silently yielding garbage (the SDK's `call_tool` does *not* raise on `isError` itself).
+  silently yielding garbage (the SDK's `call_tool` does *not* raise on `isError` itself). It also
+  opens the CLIENT span, injects the W3C `traceparent` into the call's `_meta` so the server's tool
+  span is a child of it, and records `mcp.client.operation.duration`.
 - `build_mcp_retrieve` — the production factory: a **connect-per-call** closure (fresh
   streamable-HTTP session per retrieve, run via `asyncio.run`). Retrieve is once-per-finding, so
   the connection cost is minor; and keeping each call self-contained and synchronous avoids
@@ -29,14 +31,21 @@ or retrieval errors, which the M2 orchestrator already knows how to retry and ch
 from __future__ import annotations
 
 import asyncio
+from time import perf_counter
 
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from mcp.types import CallToolResult
+from opentelemetry import trace
+from opentelemetry.propagate import inject
+from opentelemetry.trace import SpanKind, Status, StatusCode
 
 from clearway.mcp_server import TOOL_NAME
+from clearway.observability.operational import mcp_span_attributes, record_mcp_call
 from clearway.orchestrator.machine import Retrieve
 from clearway.schemas.models import Citation, EvidenceQuery, Finding
+
+_tracer = trace.get_tracer("clearway.mcp.client")
 
 
 def _finding_to_query(finding: Finding) -> EvidenceQuery:
@@ -62,9 +71,30 @@ def _parse_citations(result: CallToolResult) -> list[Citation]:
 async def retrieve_over_session(session: ClientSession, finding: Finding) -> list[Citation]:
     """Map -> call -> parse over an already-connected session. Transport-agnostic, so the same
     logic runs against the SDK's in-memory session (tests) and a real streamable-HTTP session
-    (production)."""
-    result = await session.call_tool(TOOL_NAME, {"query": _finding_to_query(finding).model_dump()})
-    return _parse_citations(result)
+    (production).
+
+    Wrapped in a CLIENT span whose W3C `traceparent` is injected into the tool call's `_meta`, so the
+    server starts its tool span as a child (one `trace_id` across the boundary). Latency and outcome
+    land on `mcp.client.operation.duration`, tagged `error.type` on failure."""
+    with _tracer.start_as_current_span(
+        f"tools/call {TOOL_NAME}", kind=SpanKind.CLIENT, attributes=mcp_span_attributes(tool=TOOL_NAME)
+    ) as span:
+        carrier: dict[str, str] = {}
+        inject(carrier)  # W3C traceparent for this span -> rides in _meta to the server
+        started = perf_counter()
+        error_type: str | None = None
+        try:
+            result = await session.call_tool(
+                TOOL_NAME, {"query": _finding_to_query(finding).model_dump()}, meta=carrier
+            )
+            return _parse_citations(result)
+        except Exception as exc:
+            error_type = type(exc).__name__
+            span.set_status(Status(StatusCode.ERROR, error_type))
+            span.record_exception(exc)
+            raise
+        finally:
+            record_mcp_call(tool=TOOL_NAME, duration_s=perf_counter() - started, error_type=error_type)
 
 
 def build_mcp_retrieve(url: str) -> Retrieve:

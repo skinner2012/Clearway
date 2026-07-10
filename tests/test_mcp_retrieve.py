@@ -22,12 +22,18 @@ from datetime import datetime, timezone
 
 import anyio
 import pytest
+from mcp.server.fastmcp import Context, FastMCP
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 from mcp.types import CallToolResult, TextContent
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.trace import SpanKind, StatusCode
 
 from clearway.corpus import FakeEmbedder, InMemoryCorpusStore, ScMeta, ingest
-from clearway.mcp_server import build_server
+from clearway.mcp_server import TOOL_NAME, build_server
 from clearway.oracle import AxeCoreOracle
+from clearway.orchestrator import mcp_retrieve as mcp_retrieve_mod
 from clearway.orchestrator.machine import execute
 from clearway.orchestrator.mcp_retrieve import (
     _finding_to_query,
@@ -238,3 +244,97 @@ def test_execute_via_mcp_replays_a_completed_step_without_recalling_the_server()
 
     _execute([_finding("f1")], store, retrieve=seam)  # resume
     assert calls["n"] == 1  # replayed from checkpoint — no second round-trip
+
+
+# --- observability: client span + cross-boundary traceparent ---------------------
+
+
+@pytest.fixture
+def span_exporter(monkeypatch: pytest.MonkeyPatch) -> InMemorySpanExporter:
+    """Route the client module's tracer into an in-memory exporter (no global provider, so the test
+    is order-independent) and hand back the exporter to read finished spans from."""
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    monkeypatch.setattr(mcp_retrieve_mod, "_tracer", provider.get_tracer("test.mcp.client"))
+    return exporter
+
+
+def _probe_capturing_meta(captured: dict[str, str | None]) -> FastMCP:
+    """A stand-in server exposing the same tool name; its handler reads the incoming request `_meta`
+    so we can assert what the client injected. Returns `[]` so the client parser is satisfied."""
+    mcp = FastMCP("probe")
+
+    @mcp.tool(name=TOOL_NAME)
+    def tool(query: EvidenceQuery, ctx: Context) -> list[Citation]:  # type: ignore[no-untyped-def]
+        meta = ctx.request_context.meta
+        captured["traceparent"] = getattr(meta, "traceparent", None) if meta else None
+        return []
+
+    return mcp
+
+
+def _run_over_session(server: FastMCP) -> list[Citation]:
+    async def _call() -> list[Citation]:
+        async with connect(server._mcp_server) as session:
+            return await retrieve_over_session(session, _finding())
+
+    return anyio.run(_call)
+
+
+def test_client_span_carries_semconv_attributes(span_exporter: InMemorySpanExporter) -> None:
+    result = _run_over_session(build_server(_enriched_retriever()))
+    assert result[0].sc_id == "1.1.1"  # real retrieval still works under the span
+
+    span = span_exporter.get_finished_spans()[0]
+    assert span.name == "tools/call retrieve_wcag_evidence"
+    assert span.kind is SpanKind.CLIENT
+    assert span.attributes is not None
+    assert span.attributes["mcp.method.name"] == "tools/call"
+    assert span.attributes["gen_ai.tool.name"] == "retrieve_wcag_evidence"
+    assert span.attributes["network.transport"] == "tcp"
+    assert span.attributes["network.protocol.name"] == "http"
+
+
+def test_client_injects_traceparent_carrying_its_trace_id(span_exporter: InMemorySpanExporter) -> None:
+    # The linchpin: the client injects the W3C traceparent into `_meta`, and its trace-id is this
+    # client span's — so the server (which extracts it) lands in the same trace.
+    captured: dict[str, str | None] = {}
+    _run_over_session(_probe_capturing_meta(captured))
+
+    client_span = span_exporter.get_finished_spans()[0]
+    traceparent = captured["traceparent"]
+    assert traceparent is not None  # something was injected
+    # traceparent = "00-<32hex trace-id>-<16hex span-id>-<flags>"
+    assert traceparent.split("-")[1] == format(client_span.context.trace_id, "032x")
+
+
+def test_client_failure_marks_span_error_and_records_error_type(
+    span_exporter: InMemorySpanExporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    recorded: list[dict[str, object]] = []
+    monkeypatch.setattr(mcp_retrieve_mod, "record_mcp_call", lambda **kw: recorded.append(kw))
+    retriever = _seeded_retriever(None, _chunk("sc:1.1.1", ["1.1.1"]))
+    monkeypatch.setattr(retriever, "retrieve_query", lambda _q: (_ for _ in ()).throw(RuntimeError("boom")))
+
+    # The RuntimeError is caught inside the span (marking it ERROR) then re-raised; the session's
+    # TaskGroup re-wraps it as an ExceptionGroup on the way out — so match the broad `Exception`.
+    with pytest.raises(Exception):
+        _run_over_session(build_server(retriever))
+
+    span = span_exporter.get_finished_spans()[0]
+    assert span.status.status_code is StatusCode.ERROR
+    assert len(recorded) == 1
+    assert recorded[0]["tool"] == "retrieve_wcag_evidence"
+    assert recorded[0]["error_type"] == "RuntimeError"  # error rate derives from this tag
+
+
+def test_client_records_metric_on_success(span_exporter: InMemorySpanExporter, monkeypatch: pytest.MonkeyPatch) -> None:
+    recorded: list[dict[str, object]] = []
+    monkeypatch.setattr(mcp_retrieve_mod, "record_mcp_call", lambda **kw: recorded.append(kw))
+
+    _run_over_session(build_server(_enriched_retriever()))
+
+    assert len(recorded) == 1
+    assert recorded[0]["tool"] == "retrieve_wcag_evidence"
+    assert recorded[0]["error_type"] is None  # success → untagged

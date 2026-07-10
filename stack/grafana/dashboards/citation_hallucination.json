@@ -350,10 +350,52 @@
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
     },
     {
+      "id": 17,
+      "type": "timeseries",
+      "title": "MCP retrieval call latency (mean, s)",
+      "description": "Cumulative mean of mcp.client.operation.duration — sum/count of the histogram — for the opt-in over-MCP retrieval path: the cross-boundary tool call's client-observed latency.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 55 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "mcp_client_operation_duration_seconds_sum / mcp_client_operation_duration_seconds_count",
+          "legendFormat": "{{gen_ai_tool_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s", "min": 0, "custom": { "drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "MCP retrieval error rate",
+      "description": "Fraction of MCP retrieval calls that failed — mcp.client.operation.duration count tagged error.type over the total. 0 while all calls succeed.",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 55 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "(sum(mcp_client_operation_duration_seconds_count{error_type!=\"\"}) or vector(0)) / sum(mcp_client_operation_duration_seconds_count)",
+          "legendFormat": "error rate"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "showPoints": "always", "pointSize": 6 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
       "id": 14,
       "type": "text",
       "title": "LLM cost",
-      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 55 },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 63 },
       "options": {
         "mode": "markdown",
         "content": "**Cost per call is captured on every trace** (`Trace.cost_usd`, priced at the call site in T2) but is **≈ 0 for the local Ollama** models M2 runs against, so there is no live Prometheus cost series to chart yet. It lights up as a real number when cloud LLMs enter the comparison (**M4** routing). The token-usage panel above is the M2 proxy for spend."
@@ -364,14 +406,14 @@
       "type": "row",
       "title": "Coming in M5 — judge calibration",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 61 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 69 },
       "panels": []
     },
     {
       "id": 15,
       "type": "text",
       "title": "judge κ (M5)",
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 62 },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 70 },
       "options": {
         "mode": "markdown",
         "content": "### 🚧 M5\n**Judge–gold agreement (Cohen's κ).** How well the LLM judge agrees with the human gold labels on the *unverifiable* citations — the number that decides whether the judge can shrink `unverifiable_share` without lying. No data source until M5 builds the gold set + judge."
@@ -381,7 +423,7 @@
       "id": 16,
       "type": "text",
       "title": "confidence calibration (M5)",
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 62 },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 70 },
       "options": {
         "mode": "markdown",
         "content": "### 🚧 M5\n**Confidence calibration.** Reliability of the drafter's self-reported confidence against actual correctness. M1 found confidence sits 0.9–1.0 regardless of correctness (why the `low_confidence` gate is dormant) — M5 recalibrates it. Placeholder until then."

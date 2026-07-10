@@ -17,7 +17,10 @@ from clearway.orchestrator.store import InMemoryOrchestratorStore, OrchestratorS
 from clearway.schemas.models import (
     Conformance,
     DraftRow,
+    EvalMetrics,
+    EvalReport,
     NeedsReview,
+    OracleRegime,
     PipelineStep,
     ReviewReason,
     ReviewStatus,
@@ -36,6 +39,18 @@ def _draft(finding_id: str = "f1", remediation: str = "add alt text") -> DraftRo
         conformance=Conformance.DOES_NOT_SUPPORT,
         remediation=remediation,
         confidence=0.9,
+    )
+
+
+def _report(run_id: str = "r1", *, rate: float = 0.2, created_at: datetime = _AT) -> EvalReport:
+    return EvalReport(
+        run_id=run_id,
+        config_id="m2-single@1",
+        eval_set_id="m1-core@1",
+        oracle_regime=OracleRegime.A_DIGITAL,
+        oracle_version="axe-core@4.9.1",
+        created_at=created_at,
+        metrics=EvalMetrics(citation_hallucination_rate=rate),
     )
 
 
@@ -178,6 +193,47 @@ def test_load_reviews_filters_by_status() -> None:
     assert store.load_reviews(status=ReviewStatus.PENDING)[0].finding_id == "f1"
 
 
+# --- EvalReport persistence (offline) -----------------------------------------
+
+
+def test_save_and_load_report() -> None:
+    store = InMemoryOrchestratorStore()
+    report = _report("r1")
+    store.save_report(report)
+    assert store.load_report("r1") == report
+
+
+def test_load_report_returns_none_for_unknown_run_id() -> None:
+    assert InMemoryOrchestratorStore().load_report("nope") is None
+
+
+def test_a_second_run_adds_a_second_report_row() -> None:
+    store = InMemoryOrchestratorStore()
+    store.save_report(_report("r1"))
+    store.save_report(_report("r2"))
+    assert len(store.load_reports()) == 2
+
+
+def test_save_report_is_idempotent_on_run_id() -> None:
+    """A resumed run (post-approval reflow) writes its own row again with the newer report —
+    `run_id` is the PK, so it overwrites in place, never duplicates. The reflowed metrics win."""
+    store = InMemoryOrchestratorStore()
+    store.save_report(_report("r1", rate=0.2))
+    store.save_report(_report("r1", rate=0.4))  # same run resumes with different numbers
+
+    reports = store.load_reports()
+    assert len(reports) == 1
+    assert reports[0].metrics.citation_hallucination_rate == 0.4
+
+
+def test_load_reports_orders_by_created_at() -> None:
+    store = InMemoryOrchestratorStore()
+    later = datetime(2026, 7, 9, 13, 0, 0, tzinfo=timezone.utc)
+    store.save_report(_report("r2", created_at=later))
+    store.save_report(_report("r1", created_at=_AT))
+    assert [r.run_id for r in store.load_reports()] == ["r1", "r2"]
+
+
 # --- PgOrchestratorStore (gated: real Postgres) -------------------------------
 
 
@@ -249,3 +305,26 @@ def test_real_pg_store_roundtrips_a_review_with_an_edit() -> None:
 
         with psycopg.connect("postgresql://clearway:clearway@localhost:5432/clearway", autocommit=True) as conn:
             conn.execute("DELETE FROM needs_review WHERE run_id = %s", (run_id,))
+
+
+@postgres_up
+def test_real_pg_store_roundtrips_a_report_idempotently() -> None:
+    store = PgOrchestratorStore()
+    store.ensure_schema()
+    run_id = "pytest-t5-report"
+    try:
+        store.save_report(_report(run_id, rate=0.2))
+        loaded = store.load_report(run_id)
+        assert loaded is not None
+        assert loaded.metrics.citation_hallucination_rate == 0.2
+
+        store.save_report(_report(run_id, rate=0.4))  # resume overwrites, not duplicates
+        again = store.load_report(run_id)
+        assert again is not None
+        assert again.metrics.citation_hallucination_rate == 0.4
+        assert len([r for r in store.load_reports() if r.run_id == run_id]) == 1
+    finally:
+        import psycopg
+
+        with psycopg.connect("postgresql://clearway:clearway@localhost:5432/clearway", autocommit=True) as conn:
+            conn.execute("DELETE FROM eval_report WHERE run_id = %s", (run_id,))

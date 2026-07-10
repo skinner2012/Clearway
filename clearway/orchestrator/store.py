@@ -21,6 +21,7 @@ from typing import Optional, Protocol, runtime_checkable
 
 from clearway.schemas.models import (
     DraftRow,
+    EvalReport,
     NeedsReview,
     PipelineStep,
     ReviewReason,
@@ -35,6 +36,7 @@ _DEFAULT_DB_URL = "postgresql://clearway:clearway@localhost:5432/clearway"
 _RUN_TABLE = "run_state"
 _STEP_TABLE = "step_state"
 _REVIEW_TABLE = "needs_review"
+_REPORT_TABLE = "eval_report"
 
 
 @runtime_checkable
@@ -81,6 +83,21 @@ class OrchestratorStore(Protocol):
         `clearway review list` shows."""
         ...
 
+    def save_report(self, report: EvalReport) -> None:
+        """Persist one run's `EvalReport` (by `run_id` — its PK). Written once at run completion;
+        a resumed run (post-approval reflow) overwrites its own row with the newer report. This is
+        the accuracy-over-time history the trust dashboard (T6) trends — M1's Prometheus gauges
+        carry no `run_id`, so they blur runs together; these rows don't."""
+        ...
+
+    def load_report(self, run_id: str) -> Optional[EvalReport]:
+        """One run's persisted report, or None if this run_id hasn't completed a report."""
+        ...
+
+    def load_reports(self) -> list[EvalReport]:
+        """Every persisted report, oldest first — the accuracy-over-time series."""
+        ...
+
 
 class InMemoryOrchestratorStore:
     """Offline stand-in for `PgOrchestratorStore`: dicts keyed by run_id / (run_id, finding_id,
@@ -91,6 +108,7 @@ class InMemoryOrchestratorStore:
         self._steps: dict[tuple[str, str, PipelineStep], StepState] = {}
         self._results: dict[tuple[str, str, PipelineStep], str] = {}
         self._reviews: dict[tuple[str, str], NeedsReview] = {}
+        self._reports: dict[str, EvalReport] = {}
 
     def ensure_schema(self) -> None:
         return None  # nothing to create in memory; kept for seam parity with PgOrchestratorStore
@@ -121,6 +139,15 @@ class InMemoryOrchestratorStore:
 
     def load_reviews(self, status: Optional[ReviewStatus] = None) -> list[NeedsReview]:
         return [r for r in self._reviews.values() if status is None or r.status == status]
+
+    def save_report(self, report: EvalReport) -> None:
+        self._reports[report.run_id] = report
+
+    def load_report(self, run_id: str) -> Optional[EvalReport]:
+        return self._reports.get(run_id)
+
+    def load_reports(self) -> list[EvalReport]:
+        return sorted(self._reports.values(), key=lambda r: r.created_at)
 
 
 class PgOrchestratorStore:
@@ -168,6 +195,13 @@ class PgOrchestratorStore:
                 "  created_at        timestamptz NOT NULL,"
                 "  updated_at        timestamptz NOT NULL,"
                 "  PRIMARY KEY (run_id, finding_id)"
+                ")"
+            )
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {_REPORT_TABLE} ("
+                "  run_id      text PRIMARY KEY,"
+                "  created_at  timestamptz NOT NULL,"
+                "  report_json text NOT NULL"
                 ")"
             )
 
@@ -279,6 +313,29 @@ class PgOrchestratorStore:
             sql += " ORDER BY created_at"
             rows = conn.execute(sql, params).fetchall()
             return [_review_from_row(r) for r in rows]
+
+    def save_report(self, report: EvalReport) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                f"INSERT INTO {_REPORT_TABLE} (run_id, created_at, report_json) "
+                "VALUES (%s, %s, %s) "
+                "ON CONFLICT (run_id) DO UPDATE SET "
+                "created_at = EXCLUDED.created_at, report_json = EXCLUDED.report_json",
+                (report.run_id, report.created_at, report.model_dump_json()),
+            )
+
+    def load_report(self, run_id: str) -> Optional[EvalReport]:
+        with self._connect() as conn:
+            row = conn.execute(
+                f"SELECT report_json FROM {_REPORT_TABLE} WHERE run_id = %s",
+                (run_id,),
+            ).fetchone()
+            return EvalReport.model_validate_json(row[0]) if row else None
+
+    def load_reports(self) -> list[EvalReport]:
+        with self._connect() as conn:
+            rows = conn.execute(f"SELECT report_json FROM {_REPORT_TABLE} ORDER BY created_at").fetchall()
+            return [EvalReport.model_validate_json(r[0]) for r in rows]
 
 
 def _review_from_row(row: tuple) -> NeedsReview:

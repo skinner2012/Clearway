@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from clearway.corpus.embed import Embedder
 from clearway.corpus.store import CorpusStore, ScMeta
-from clearway.schemas.models import Citation, CorpusChunk, Finding
+from clearway.schemas.models import Citation, CorpusChunk, EvidenceQuery, Finding
 
 # Top-k nearest chunks to pull per finding. Small enough to stay tight, large enough that the
 # axe-tag-implied SC lands in the set (the acceptance sanity-check). Overridable per Retriever.
@@ -34,9 +34,26 @@ class Retriever:
         self._k = k
         self._sc_meta: dict[str, ScMeta] | None = None  # loaded once, lazily (below)
 
+    @property
+    def corpus_version(self) -> str:
+        """The frozen corpus this retriever serves — the MCP server pins/reports it."""
+        return self._corpus_version
+
     def retrieve(self, finding: Finding) -> list[Citation]:
         """Retrieve the top-k grounding SCs for a finding, nearest-first, as `Citation`s."""
-        embedding = self._embedder.embed_query(self._query_text(finding))
+        return self._retrieve_text(self._query_text(finding))
+
+    def retrieve_query(self, query: EvidenceQuery) -> list[Citation]:
+        """Retrieve grounding SCs for a reuse-shaped `EvidenceQuery` — the entry point the MCP
+        tool calls. Composes the same query text as `retrieve(finding)` (rule_id + problem text),
+        so a `Finding` and its lossless `EvidenceQuery` retrieve identically; the RAG core below
+        is shared and unchanged."""
+        return self._retrieve_text(f"{query.rule_id} {query.description}".strip())
+
+    def _retrieve_text(self, text: str) -> list[Citation]:
+        """The shared RAG core: embed the composed query → vector-search the frozen corpus →
+        map the nearest chunks to `Citation`s. Both `retrieve` and `retrieve_query` funnel here."""
+        embedding = self._embedder.embed_query(text)
         chunks = self._store.query(embedding, k=self._k, corpus_version=self._corpus_version)
         return _chunks_to_citations(chunks, self._sc_meta_map())
 
@@ -52,6 +69,18 @@ class Retriever:
         """Compose the search query: the axe rule id + its human-readable help is the strongest
         signal for the SC that governs the rule (e.g. 'image-alt Images must have alt text')."""
         return f"{finding.rule_id} {finding.help}".strip()
+
+
+def build_default_retriever() -> Retriever:
+    """Construct the production RAG retriever: real embedder (LiteLLM → Ollama) + pgvector store,
+    frozen at the current `corpus_version`. The single builder the orchestrator's default retrieve
+    step and the MCP server both call, so in-process and over-MCP retrieval are identical (same
+    embedder, same corpus_version). The corpus stack is imported lazily so it's required only when
+    a caller actually retrieves."""
+    from clearway.corpus import LiteLLMEmbedder, PgCorpusStore, build_corpus_version
+
+    embedder = LiteLLMEmbedder()
+    return Retriever(embedder, PgCorpusStore(), build_corpus_version(embedder))
 
 
 def _chunks_to_citations(chunks: list[CorpusChunk], sc_meta: dict[str, ScMeta]) -> list[Citation]:

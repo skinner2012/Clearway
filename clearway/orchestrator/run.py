@@ -46,14 +46,13 @@ class RunResult:
 
 def _default_retrieve() -> Retrieve:
     """Build the real RAG retriever (real embedder + pgvector, at the frozen corpus_version) and
-    return its bound `retrieve`. Constructed lazily so the corpus stack is required only when a
-    run actually retrieves — offline tests inject their own retriever and never reach this."""
-    from clearway.corpus import LiteLLMEmbedder, PgCorpusStore, build_corpus_version
-    from clearway.retriever import Retriever
+    return its bound `retrieve`. Uses the shared `build_default_retriever` so an in-process run and
+    the MCP server construct retrieval identically. Constructed lazily so the corpus stack is
+    required only when a run actually retrieves — offline tests inject their own and never reach
+    this."""
+    from clearway.retriever import build_default_retriever
 
-    embedder = LiteLLMEmbedder()
-    store = PgCorpusStore()
-    return Retriever(embedder, store, build_corpus_version(embedder)).retrieve
+    return build_default_retriever().retrieve
 
 
 def _default_draft() -> Draft:

@@ -4,6 +4,6 @@
 retriever was retired to a test double (`tests/stubs.py`) once real retrieval landed.
 """
 
-from clearway.retriever.rag import Retriever
+from clearway.retriever.rag import Retriever, build_default_retriever
 
-__all__ = ["Retriever"]
+__all__ = ["Retriever", "build_default_retriever"]

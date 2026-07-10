@@ -116,6 +116,19 @@ def test_deterministic_across_runs_on_frozen_corpus() -> None:
     assert [c.sc_id for c in retriever.retrieve(finding)] == [c.sc_id for c in retriever.retrieve(finding)]
 
 
+def test_retrieve_query_matches_retrieve_for_a_lossless_finding() -> None:
+    # A Finding maps to an EvidenceQuery losslessly (rule_id -> rule_id, help -> description), so
+    # the MCP entry point `retrieve_query` must return exactly what `retrieve(finding)` returns —
+    # the structural basis of the MCP parity test.
+    from clearway.schemas.models import EvidenceQuery
+
+    embedder, store = _seed(_chunk("sc:1.1.1", ["1.1.1"]), _chunk("sc:1.4.3", ["1.4.3"]))
+    retriever = Retriever(embedder, store, _VERSION, k=2)
+    finding = _finding("image-alt", "Images must have alternate text")
+    query = EvidenceQuery(rule_id="image-alt", description="Images must have alternate text")
+    assert retriever.retrieve_query(query) == retriever.retrieve(finding)
+
+
 def test_empty_corpus_returns_no_citations() -> None:
     embedder = FakeEmbedder()
     store = InMemoryCorpusStore()

@@ -251,7 +251,14 @@ def _mcp_serve_cmd(args: argparse.Namespace) -> int:
         f"clearway mcp-serve: retrieve_wcag_evidence on http://{host}:{port}/mcp  "
         f"corpus_version={retriever.corpus_version}"
     )
-    server.run(transport="streamable-http")
+    # The server is a separate process, so it needs its own tracer provider to export the tool span
+    # (child of the caller's run trace) to the collector → Tempo. Exporting is safe with no collector
+    # up (batched, failures logged not raised); flush on shutdown (Ctrl-C) so buffered spans leave.
+    setup_tracing()
+    try:
+        server.run(transport="streamable-http")
+    finally:
+        shutdown_tracing()
     return 0
 
 

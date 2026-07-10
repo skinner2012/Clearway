@@ -160,6 +160,24 @@ class Finding(BaseModel):
 
 
 # ============================================================
+# Reuse-shaped retrieval input  (any caller -> retriever/ over MCP)
+# ============================================================
+
+
+class EvidenceQuery(BaseModel):
+    """A described accessibility problem — the slim, reuse-shaped input the MCP retrieval
+    tool accepts. Deliberately NOT a `Finding`: it omits the internal hashed `id`,
+    `source_url`, and CSS `target` an external caller does not possess. A `Finding` maps to
+    an `EvidenceQuery` losslessly for retrieval (rule_id -> rule_id, help -> description),
+    since the retriever's query text stays `f"{rule_id} {description}".strip()`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    rule_id: str = Field("", description="optional axe rule id, if the caller has one")
+    description: str = Field(..., description="the human-readable problem")
+
+
+# ============================================================
 # Corpus / RAG grounding  (corpus/ -> retriever/, M1)
 # ============================================================
 

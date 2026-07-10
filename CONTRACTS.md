@@ -200,6 +200,22 @@ class Finding(BaseModel):
 
 
 # ============================================================
+# Reuse-shaped retrieval input  (any caller -> retriever/ over MCP)
+# ============================================================
+
+class EvidenceQuery(BaseModel):
+    """A described accessibility problem — the slim, reuse-shaped input the MCP retrieval
+    tool accepts. Deliberately NOT a `Finding`: it omits the internal hashed `id`,
+    `source_url`, and CSS `target` an external caller does not possess. A `Finding` maps to
+    an `EvidenceQuery` losslessly for retrieval (rule_id -> rule_id, help -> description),
+    since the retriever's query text stays `f"{rule_id} {description}".strip()`."""
+    model_config = ConfigDict(extra="forbid")
+
+    rule_id: str = Field("", description="optional axe rule id, if the caller has one")
+    description: str = Field(..., description="the human-readable problem")
+
+
+# ============================================================
 # Corpus / RAG grounding  (corpus/ -> retriever/, M1)
 # ============================================================
 
@@ -509,4 +525,5 @@ Added when their milestone arrives, not before:
 | 2026-07-08 | 0.3 | M1 (T0): added `CorpusChunk` (corpus/ → retriever/) and stratified `EvalMetrics` fields (`citation_hallucination_rate_verifiable`, `unverifiable_share`, `citations_verifiable_total`, `citations_unverifiable_total`). `CorpusChunk.embedding` is optional and excluded from serialization (vector lives in pgvector). Additive — existing M0 shapes unchanged. |
 | 2026-07-08 | 0.4 | M1 (T4): scanner captures axe's `incomplete` (needs-review) bucket distinctly. Factored `AxeViolation`'s fields into a shared `AxeRuleResult` base; added `AxeIncomplete` (same shape, not confirmed) and `ScanResult.incomplete: list[AxeIncomplete]`. `incomplete` is the source of eval's `unverifiable_share`. Additive — `AxeViolation` wire shape unchanged. |
 | 2026-07-08 | 0.5 | M1 (T5): normalizer carries `incomplete` items through as `Finding`s. Added `AxeBucket` enum (provenance) and `Finding.source_bucket: AxeBucket` (default `VIOLATIONS`). The oracle allowlists `VIOLATIONS`, returning no verdict for any other bucket — incomplete-sourced findings become `UNVERIFIABLE`. `source_bucket` is not part of the finding id. Additive — existing findings default to `VIOLATIONS`, wire shape unchanged. |
+| 2026-07-10 | 0.7 | M3 (T0): added `EvidenceQuery` (`rule_id: str = ""`, `description: str`) — the slim, reuse-shaped input the MCP retrieval tool accepts (any caller → retriever/). Deliberately not a `Finding`: omits the internal hashed `id` / `source_url` / `target`; a `Finding` maps to it losslessly for retrieval. `Citation` unchanged (its `title`/`level` fields get populated in T1). Additive — existing shapes unchanged. |
 | 2026-07-09 | 0.6 | M2 (T0): added durable-orchestration + HITL schemas — `RunState`, `StepState` (checkpoint/resume, keyed `(run_id, finding_id, step)` via the new `PipelineStep` enum) and `NeedsReview` (HITL approve/edit record, `ReviewReason` + `ReviewStatus` enums; written post-validation, carries the drafted `DraftRow`). Added `EvalMetrics.expert_edit_distance` (unbounded `float ≥ 0`, normalization left to T4). `NeedsReview` removed from §5 (no longer deferred). Additive — existing shapes unchanged. |

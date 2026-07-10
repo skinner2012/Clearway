@@ -15,6 +15,7 @@ from clearway.schemas.models import (
     CorpusChunk,
     DraftRow,
     EvalMetrics,
+    EvidenceQuery,
     Finding,
     L1Status,
     NeedsReview,
@@ -105,6 +106,31 @@ def test_corpus_chunk_is_strict() -> None:
     """Contracts are strict: an unexpected field is a validation error."""
     with pytest.raises(ValidationError):
         CorpusChunk(chunk_id="c1", text="t", corpus_version="v1", bogus=1)
+
+
+def test_evidence_query_round_trips_and_defaults_rule_id() -> None:
+    """Reuse input: `description` is required, `rule_id` defaults empty, and the model
+    survives a JSON round-trip unchanged."""
+    q = EvidenceQuery(description="images need a text alternative")
+    assert q.rule_id == ""
+
+    full = EvidenceQuery(rule_id="image-alt", description="images need a text alternative")
+    assert EvidenceQuery.model_validate_json(full.model_dump_json()) == full
+    # The retriever's query text is lossless in form: f"{rule_id} {description}".strip().
+    assert f"{full.rule_id} {full.description}".strip() == "image-alt images need a text alternative"
+
+
+def test_evidence_query_requires_description() -> None:
+    """`description` is the one mandatory field — a caller must describe the problem."""
+    with pytest.raises(ValidationError):
+        EvidenceQuery(rule_id="image-alt")
+
+
+def test_evidence_query_is_strict() -> None:
+    """Contracts are strict: an unexpected field is a validation error. In particular a
+    caller must not smuggle internal `Finding` fields (id / source_url / target) through."""
+    with pytest.raises(ValidationError):
+        EvidenceQuery(description="x", target="img")
 
 
 def test_eval_metrics_has_stratified_fields_defaulting_safely() -> None:

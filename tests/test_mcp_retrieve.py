@@ -32,7 +32,9 @@ from opentelemetry.trace import SpanKind, StatusCode
 
 from clearway.corpus import FakeEmbedder, InMemoryCorpusStore, ScMeta, ingest
 from clearway.mcp_server import TOOL_NAME, build_server
+from clearway.mcp_server import server as server_mod
 from clearway.oracle import AxeCoreOracle
+from clearway.orchestrator import machine as machine_mod
 from clearway.orchestrator import mcp_retrieve as mcp_retrieve_mod
 from clearway.orchestrator.machine import execute
 from clearway.orchestrator.mcp_retrieve import (
@@ -338,3 +340,36 @@ def test_client_records_metric_on_success(span_exporter: InMemorySpanExporter, m
     assert len(recorded) == 1
     assert recorded[0]["tool"] == "retrieve_wcag_evidence"
     assert recorded[0]["error_type"] is None  # success → untagged
+
+
+# --- integration: one trace_id from the run span down to the MCP server span ------
+
+
+def test_mcp_call_is_a_child_span_of_the_run_trace(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The milestone's acceptance criterion, end to end: through a full execute() over the MCP seam,
+    # the retrieval's client AND server spans share ONE trace_id with the orchestrator `clearway.run`
+    # span — the tool call is a child under the run trace, not a disconnected RPC span.
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+    # Point every layer's tracer at the one provider so all spans land in the same exporter; the
+    # trace_id still flows across the boundary via the propagated traceparent, not tracer identity.
+    for mod in (machine_mod, mcp_retrieve_mod, server_mod):
+        monkeypatch.setattr(mod, "_tracer", provider.get_tracer("test"))
+
+    server = build_server(_enriched_retriever())
+    _execute([_finding("f1")], InMemoryOrchestratorStore(), retrieve=_mcp_session_retrieve(server))
+
+    spans = exporter.get_finished_spans()
+    run = next(s for s in spans if s.name == "clearway.run")
+    step = next(s for s in spans if s.name == "clearway.step.retrieve")
+    client = next(s for s in spans if s.name == "tools/call retrieve_wcag_evidence" and s.kind is SpanKind.CLIENT)
+    served = next(s for s in spans if s.name == "tools/call retrieve_wcag_evidence" and s.kind is SpanKind.SERVER)
+
+    trace_id = run.context.trace_id
+    assert step.context.trace_id == trace_id  # orchestrator step under the run
+    assert client.context.trace_id == trace_id  # client MCP call under the run trace
+    assert served.context.trace_id == trace_id  # server tool execution too — one trace end to end
+    # ...and the parent chain is real (step -> client -> server): the boundary is crossed, not flattened.
+    assert client.parent is not None and client.parent.span_id == step.context.span_id
+    assert served.parent is not None and served.parent.span_id == client.context.span_id

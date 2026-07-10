@@ -1,0 +1,21 @@
+# Grafana Postgres datasource, provisioned as code so `docker compose up` always wires it.
+# Feeds the accuracy-over-time panel from the persisted `eval_report` rows (T5) — the true
+# per-run history Prometheus can't give (its quality gauges carry no run_id). Creds come from
+# the same POSTGRES_* env the compose Postgres uses, passed through to the Grafana container.
+apiVersion: 1
+
+datasources:
+  - name: Postgres
+    uid: postgres
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    user: $POSTGRES_USER
+    jsonData:
+      database: $POSTGRES_DB
+      sslmode: disable
+      postgresVersion: 1700
+    secureJsonData:
+      password: $POSTGRES_PASSWORD
+    isDefault: false
+    editable: false

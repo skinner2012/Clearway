@@ -36,6 +36,10 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      # Passed through so the provisioned Postgres datasource can read the eval_report history.
+      - POSTGRES_USER=${POSTGRES_USER:-clearway}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-clearway}
+      - POSTGRES_DB=${POSTGRES_DB:-clearway}
     volumes:
       - ./stack/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./stack/grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -43,6 +47,7 @@ services:
       - "3000:3000"   # UI
     depends_on:
       - prometheus
+      - postgres
 
   # The image ships the `vector` extension; the app runs CREATE EXTENSION + DDL at ingest.
   postgres:

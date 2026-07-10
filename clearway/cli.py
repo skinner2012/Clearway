@@ -235,6 +235,26 @@ def _corpus_ingest_cmd(args: argparse.Namespace) -> int:
     return 0
 
 
+def _mcp_serve_cmd(args: argparse.Namespace) -> int:
+    """Launch the standalone MCP retrieval server: a long-lived host process exposing the RAG
+    retriever as one read-only tool over streamable HTTP at `/mcp`. Builds the same retriever as
+    an in-process run (shared `build_default_retriever`), so the corpus_version it serves is
+    pinned for the process lifetime. Host/port come from `.env` (CLEARWAY_MCP_HOST / _PORT)."""
+    from clearway.mcp_server import build_server
+    from clearway.retriever import build_default_retriever
+
+    host = os.getenv("CLEARWAY_MCP_HOST", "127.0.0.1")
+    port = int(os.getenv("CLEARWAY_MCP_PORT", "8848"))
+    retriever = build_default_retriever()
+    server = build_server(retriever, host=host, port=port)
+    print(
+        f"clearway mcp-serve: retrieve_wcag_evidence on http://{host}:{port}/mcp  "
+        f"corpus_version={retriever.corpus_version}"
+    )
+    server.run(transport="streamable-http")
+    return 0
+
+
 def _corpus_query_cmd(args: argparse.Namespace) -> int:
     from clearway.corpus import LiteLLMEmbedder, PgCorpusStore, build_corpus_version
 
@@ -347,6 +367,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="ingest only the first N chunks (0 = all)",
     )
     ingest_p.set_defaults(func=_corpus_ingest_cmd)
+
+    mcp_serve_p = sub.add_parser(
+        "mcp-serve", help="serve the retriever as a standalone MCP server (retrieve_wcag_evidence over HTTP)"
+    )
+    mcp_serve_p.set_defaults(func=_mcp_serve_cmd)
 
     query_p = sub.add_parser("corpus-query", help="embed a query and print the nearest corpus chunks")
     query_p.add_argument("text", help="query text, e.g. 'images need a text alternative'")

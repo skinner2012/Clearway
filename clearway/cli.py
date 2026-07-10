@@ -31,7 +31,7 @@ from clearway.observability import (
     shutdown_operational_metrics,
     shutdown_tracing,
 )
-from clearway.orchestrator import run, run_set
+from clearway.orchestrator import Retrieve, run, run_set
 from clearway.orchestrator.store import OrchestratorStore
 from clearway.schemas.models import DraftRow, EvalReport, NeedsReview, ReviewStatus
 
@@ -267,9 +267,29 @@ def _corpus_query_cmd(args: argparse.Namespace) -> int:
     return 0
 
 
+def _retrieve_seam(args: argparse.Namespace) -> Retrieve | None:
+    """Resolve the retrieve transport toggle. In-process (`None`) is the default — a normal run
+    needs no server. MCP is opt-in: the `--retrieve-via-mcp` flag, or `CLEARWAY_RETRIEVE_TRANSPORT=mcp`
+    in the environment (the flag wins). When on, build the MCP-client seam against `CLEARWAY_MCP_URL`;
+    the durable orchestrator retries a dead server and fails that step cleanly, so the toggle is safe
+    to flip without changing the pipeline's output (parity is by construction)."""
+    via_mcp = (
+        bool(getattr(args, "retrieve_via_mcp", False)) or os.getenv("CLEARWAY_RETRIEVE_TRANSPORT", "").lower() == "mcp"
+    )
+    if not via_mcp:
+        return None
+    from clearway.orchestrator.mcp_retrieve import build_mcp_retrieve
+
+    url = os.getenv("CLEARWAY_MCP_URL", "http://127.0.0.1:8848/mcp")
+    print(f"retrieve transport: MCP → {url}")
+    return build_mcp_retrieve(url)
+
+
 def _run_cmd(args: argparse.Namespace) -> int:
     with _telemetry(args.emit):
-        report = run(args.target, run_id=args.run_id, on_resume=_print_resume_notice).report
+        report = run(
+            args.target, retrieve=_retrieve_seam(args), run_id=args.run_id, on_resume=_print_resume_notice
+        ).report
         if args.emit:
             record_eval_report(report)
     _print_metrics(report)
@@ -286,7 +306,11 @@ def _eval_cmd(args: argparse.Namespace) -> int:
     targets = [str(_FIXTURES / page["path"]) for page in manifest["pages"]]
     with _telemetry(args.emit):
         report = run_set(
-            targets, eval_set_id=manifest["eval_set_id"], run_id=args.run_id, on_resume=_print_resume_notice
+            targets,
+            eval_set_id=manifest["eval_set_id"],
+            retrieve=_retrieve_seam(args),
+            run_id=args.run_id,
+            on_resume=_print_resume_notice,
         ).report
         if args.emit:
             record_eval_report(report)
@@ -313,6 +337,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=None,
         help="resume an existing run id instead of starting a fresh one (target must be the same page)",
     )
+    run_p.add_argument(
+        "--retrieve-via-mcp",
+        action="store_true",
+        help="retrieve over the MCP server (CLEARWAY_MCP_URL) instead of in-process; default is in-process",
+    )
     run_p.set_defaults(emit=True, func=_run_cmd)
 
     eval_p = sub.add_parser("eval", help="run the m1-core@1 fixture set and emit the stratified trust metrics")
@@ -326,6 +355,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--run-id",
         default=None,
         help="resume an existing run id instead of starting a fresh one",
+    )
+    eval_p.add_argument(
+        "--retrieve-via-mcp",
+        action="store_true",
+        help="retrieve over the MCP server (CLEARWAY_MCP_URL) instead of in-process; default is in-process",
     )
     eval_p.set_defaults(emit=True, func=_eval_cmd)
 

@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.1
+- **Version:** 0.3
 
 **Status labels used below:**
 
@@ -27,6 +27,7 @@
    - [4.7 MCP](#47-mcp)
    - [4.8 Citation validation layering](#48-citation-validation-layering-verification-not-rag-layering)
    - [4.9 Judge (LLM-as-judge)](#49-judge-llm-as-judge)
+   - [4.10 Untrusted content & prompt-injection](#410-untrusted-content--prompt-injection)
 5. [The Oracle interface](#5-the-oracle-interface)
 6. [Module boundaries & repo layout](#6-module-boundaries--repo-layout)
 7. [Build sequence & milestones](#7-build-sequence--milestones)
@@ -163,6 +164,19 @@ This is citation *verification* layering, not RAG layering. For the axe-core-det
 | Judge reproducibility: pin model + version + temperature (0/low) + fixed prompt, recorded in trace | DECIDED |
 | Exact judge model (local vs cloud reference judge); "can a local model approximate the cloud judge?" experiment | OPEN |
 
+### 4.10 Untrusted content & prompt-injection
+
+Scanned pages are third-party and untrusted: page-derived text (HTML snippets, `alt`/`aria` text, help strings) can carry adversarial instructions ("mark everything as conformant", "ignore prior instructions"). The drafter feeds this to the LLM, so the risk is live from M1 on. Prompt-injection has no complete fix; the posture is **defense-in-depth + blast-radius containment**, not prevention.
+
+| Decision | Status | Note |
+|---|---|---|
+| **Structural separation:** page-derived content goes into the LLM prompt inside a labelled, fenced region marked as untrusted *data*, never as instructions. | DECIDED | Mitigation, not a guarantee. |
+| **Side-effect-free by design (system-wide):** every component that touches untrusted input has no side effects — the drafter has no tools and emits only a schema-constrained `DraftRow`; the MCP retrieval tool is read-only (embed + vector search). A hijacked model or a poisoned input can at most corrupt a draft or a query — it can never act. | DECIDED | The main blast-radius limit. |
+| **Verification as backstop:** L0/L1 + the oracle flag citations that don't match ground truth; corrupted citations on the verifiable subset are caught, and judgment items route to human review. | DECIDED | The trust layer doubles as an injection detector. |
+| **Provenance + detection:** page-derived fields are tagged untrusted; instruction-like content is flagged as a trace attribute so injection attempts are observable. | DECIDED | Feeds the same OTel/Prometheus pipeline. |
+
+Pattern-stripping untrusted text is explicitly **not** relied on (unreliable). We do not claim to prevent injection — we contain it and make attempts visible.
+
 ---
 
 ## 5. The Oracle interface (the transfer seam)
@@ -246,3 +260,5 @@ Its only job is to prove the control loop is real. The detail exists to pin one 
 | Date | Version | Change |
 |---|---|---|
 | 2026-07-05 | 0.1 | Initial Decisions of Record. |
+| 2026-07-08 | 0.2 | Added §4.10 (untrusted content & prompt-injection). |
+| 2026-07-10 | 0.3 | §4.10: generalised the side-effect-free rule system-wide (drafter + MCP retrieval tool). |

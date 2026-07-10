@@ -10,13 +10,13 @@ frameworks exist.
 - [`store.py`](store.py) — the `OrchestratorStore` seam: dumb persistence only. `PgOrchestratorStore`
   (Postgres, the same `clearway` database `corpus/store.py` uses) and `InMemoryOrchestratorStore`
   (the offline stand-in tests inject) both implement it. Holds the `run_state` / `step_state` durable
-  checkpoints and the `needs_review` HITL queue.
+  checkpoints, the `needs_review` HITL queue, and the `eval_report` run history.
 - [`machine.py`](machine.py) — the actual state machine, `execute()`. Checkpoints every step
   (`RunState`/`StepState`, `CONTRACTS.md` §3) to the store, retries transient failures with backoff,
   replays a completed step from its cached result instead of recomputing it on resume, and runs the
   HITL gate that flags a finding for human review post-validation.
 - [`run.py`](run.py) — thin wrappers, `run()`/`run_set()`: scan → normalize, then one call into
-  `execute()`; aggregate the resulting traces into an `EvalReport`.
+  `execute()`; aggregate the resulting traces into an `EvalReport` and persist it at completion.
 
 ## Durable primitives
 
@@ -40,6 +40,18 @@ uv run clearway eval --run-id <existing-id>
 
 Prints a notice — `resuming run <id>: N/M findings already complete, continuing from <finding_id>`
 — before the run proceeds, not just in a final summary.
+
+## Run history (persisted reports)
+
+At completion each run persists its `EvalReport` (`CONTRACTS.md` §3) to the `eval_report` table,
+keyed by `run_id` (PK). The report is stored whole as JSON with `created_at` lifted into its own
+column, so history is queryable by run and by time without exploding every metric into a column.
+
+This is the **data-production half** of the trust dashboard's accuracy-over-time trend (T6): M1's
+Prometheus gauges carry no `run_id`, so successive runs blur together on a time series; a persisted
+per-run row gives a true history you can query and trend. Because the key is `run_id`, a resumed run
+(e.g. a post-approval reflow) overwrites its own row rather than duplicating it — the reflowed
+metrics win, and the history never double-counts one run.
 
 ## HITL review gate (the durable interrupt)
 

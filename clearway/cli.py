@@ -213,17 +213,25 @@ def _corpus_ingest_cmd(args: argparse.Namespace) -> int:
         build_corpus_version,
         fetch_wcag_json,
         ingest,
+        parse_sc_meta,
         parse_wcag_json,
     )
 
     embedder = LiteLLMEmbedder()
     store = PgCorpusStore()
     corpus_version = build_corpus_version(embedder)
-    chunks = parse_wcag_json(fetch_wcag_json(), corpus_version=corpus_version)
+    data = fetch_wcag_json()
+    chunks = parse_wcag_json(data, corpus_version=corpus_version)
     if args.limit:
         chunks = chunks[: args.limit]
     stored = ingest(chunks, embedder, store)
-    print(f"ingested {stored} chunks  corpus_version={corpus_version}  total={store.count(corpus_version)}")
+    # Enrich: upsert the per-SC reference rows (title + level) under the same corpus_version.
+    # Metadata-only — no embedding, no re-embed of the chunks above; corpus_version is unchanged.
+    meta_stored = store.upsert_sc_meta(corpus_version, parse_sc_meta(data))
+    print(
+        f"ingested {stored} chunks  sc_meta={meta_stored}  "
+        f"corpus_version={corpus_version}  total={store.count(corpus_version)}"
+    )
     return 0
 
 

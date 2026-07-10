@@ -13,7 +13,7 @@ so the spine's exit-criterion tests inject the canned-correct stub instead of a 
 from __future__ import annotations
 
 from clearway.corpus.embed import Embedder
-from clearway.corpus.store import CorpusStore
+from clearway.corpus.store import CorpusStore, ScMeta
 from clearway.schemas.models import Citation, CorpusChunk, Finding
 
 # Top-k nearest chunks to pull per finding. Small enough to stay tight, large enough that the
@@ -32,12 +32,20 @@ class Retriever:
         self._store = store
         self._corpus_version = corpus_version
         self._k = k
+        self._sc_meta: dict[str, ScMeta] | None = None  # loaded once, lazily (below)
 
     def retrieve(self, finding: Finding) -> list[Citation]:
         """Retrieve the top-k grounding SCs for a finding, nearest-first, as `Citation`s."""
         embedding = self._embedder.embed_query(self._query_text(finding))
         chunks = self._store.query(embedding, k=self._k, corpus_version=self._corpus_version)
-        return _chunks_to_citations(chunks)
+        return _chunks_to_citations(chunks, self._sc_meta_map())
+
+    def _sc_meta_map(self) -> dict[str, ScMeta]:
+        """The SC-id → metadata join table for this corpus_version, fetched once and cached —
+        the corpus is frozen, so one lookup serves every finding (no query per retrieve)."""
+        if self._sc_meta is None:
+            self._sc_meta = self._store.sc_meta(self._corpus_version)
+        return self._sc_meta
 
     @staticmethod
     def _query_text(finding: Finding) -> str:
@@ -46,14 +54,13 @@ class Retriever:
         return f"{finding.rule_id} {finding.help}".strip()
 
 
-def _chunks_to_citations(chunks: list[CorpusChunk]) -> list[Citation]:
+def _chunks_to_citations(chunks: list[CorpusChunk], sc_meta: dict[str, ScMeta]) -> list[Citation]:
     """Map retrieved chunks to citations: one `Citation` per SC id across the top-k, deduped,
     nearest-first order preserved.
 
-    `title`/`level` are left empty in M1 (option A): the corpus persists neither as a structured
-    field — the SC handle is baked into the chunk text — and neither is needed to ground or
-    validate a citation. `sc_id` + `source` + `url` are; `technique_id` stays None until the
-    Techniques corpus is ingested.
+    `title`/`level` are joined in from the corpus's `sc_meta` reference table (T1); an SC absent
+    from it degrades to empty title / `None` level rather than failing. `sc_id` + `source` + `url`
+    come from the chunk; `technique_id` stays None until the Techniques corpus is ingested.
     """
     citations: list[Citation] = []
     seen: set[str] = set()
@@ -62,5 +69,14 @@ def _chunks_to_citations(chunks: list[CorpusChunk]) -> list[Citation]:
             if sc_id in seen:
                 continue
             seen.add(sc_id)
-            citations.append(Citation(sc_id=sc_id, source=chunk.source, url=chunk.url))
+            meta = sc_meta.get(sc_id)
+            citations.append(
+                Citation(
+                    sc_id=sc_id,
+                    title=meta.title if meta else "",
+                    level=meta.level if meta else None,
+                    source=chunk.source,
+                    url=chunk.url,
+                )
+            )
     return citations

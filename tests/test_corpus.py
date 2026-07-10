@@ -26,8 +26,10 @@ from clearway.corpus import (
     PgCorpusStore,
     build_corpus_version,
     ingest,
+    parse_sc_meta,
     parse_wcag_json,
 )
+from clearway.schemas.models import ConformanceLevel
 
 SAMPLE = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "corpus" / "wcag_sample.json"
 
@@ -60,6 +62,42 @@ def test_chunk_text_has_handle_and_is_stripped_of_html() -> None:
     assert non_text.text.startswith("Non-text Content.")
     assert "<" not in non_text.text and ">" not in non_text.text  # HTML removed
     assert "text alternative" in non_text.text  # normative body preserved
+
+
+# --- sc_meta reference rows (offline) ----------------------------------------
+
+
+def test_parse_sc_meta_takes_title_from_json_and_level_from_oracle() -> None:
+    meta = {m.sc_id: m for m in parse_sc_meta(_sample())}
+    # title comes from the JSON `handle`; level from oracle.wcag.SC_LEVELS (decision A SSOT).
+    assert meta["1.1.1"].title == "Non-text Content"
+    assert meta["1.1.1"].level == ConformanceLevel.A
+    assert meta["1.4.3"].title == "Contrast (Minimum)"
+    assert meta["1.4.3"].level == ConformanceLevel.AA
+    # 4.1.1 (removed in 2.2) is filtered out by the same 2.2 version gate as the chunks.
+    assert "4.1.1" not in meta
+
+
+def test_sc_meta_upsert_roundtrips_and_is_scoped_by_version() -> None:
+    store = InMemoryCorpusStore()
+    rows = parse_sc_meta(_sample())
+    assert store.upsert_sc_meta("v1", rows) == len(rows)
+    got = store.sc_meta("v1")
+    assert got["1.1.1"].title == "Non-text Content"
+    assert store.sc_meta("other-version") == {}  # never leaks across corpus_versions
+
+
+def test_sc_meta_upsert_does_not_touch_chunks_or_corpus_version() -> None:
+    # Enrichment is metadata-only: upserting sc_meta must not add/alter chunks or re-embed —
+    # the corpus_version and chunk count stay exactly as ingest left them (no re-embed).
+    embedder = FakeEmbedder()
+    store = InMemoryCorpusStore()
+    version = build_corpus_version(embedder)
+    ingest(parse_wcag_json(_sample(), corpus_version=version), embedder, store)
+    before = store.count(version)
+    store.upsert_sc_meta(version, parse_sc_meta(_sample()))
+    assert store.count(version) == before  # chunk table untouched
+    assert build_corpus_version(embedder) == version  # version is metadata-independent
 
 
 # --- corpus_version (offline) ------------------------------------------------
@@ -149,14 +187,19 @@ def test_real_ingest_and_retrieval_finds_1_1_1() -> None:
     embedder = LiteLLMEmbedder()
     store = PgCorpusStore()
     version = build_corpus_version(embedder) + "-pytest"
-    chunks = parse_wcag_json(_sample(), corpus_version=version)
+    data = _sample()
+    chunks = parse_wcag_json(data, corpus_version=version)
 
     try:
         assert ingest(chunks, embedder, store) == 2
         hits = store.query(embedder.embed_query("images need a text alternative"), k=1, corpus_version=version)
         assert hits and hits[0].sc_ids == ["1.1.1"]
+        # sc_meta round-trips through Postgres too (title from JSON, level from oracle).
+        assert store.upsert_sc_meta(version, parse_sc_meta(data)) == 2
+        assert store.sc_meta(version)["1.1.1"] == ("1.1.1", "Non-text Content", ConformanceLevel.A)
     finally:
         import psycopg
 
         with psycopg.connect("postgresql://clearway:clearway@localhost:5432/clearway", autocommit=True) as conn:
             conn.execute("DELETE FROM corpus_chunk WHERE corpus_version = %s", (version,))
+            conn.execute("DELETE FROM sc_meta WHERE corpus_version = %s", (version,))

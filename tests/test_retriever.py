@@ -22,13 +22,15 @@ from clearway.corpus import (
     InMemoryCorpusStore,
     LiteLLMEmbedder,
     PgCorpusStore,
+    ScMeta,
     build_corpus_version,
     ingest,
+    parse_sc_meta,
     parse_wcag_json,
 )
 from clearway.retriever import Retriever
 from clearway.retriever.rag import _DEFAULT_K
-from clearway.schemas.models import Citation, CorpusChunk, Finding
+from clearway.schemas.models import Citation, ConformanceLevel, CorpusChunk, Finding
 
 SAMPLE = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "corpus" / "wcag_sample.json"
 _VERSION = "test@1"
@@ -55,17 +57,28 @@ def _seed(*chunks: CorpusChunk) -> tuple[FakeEmbedder, InMemoryCorpusStore]:
 # --- real Retriever mechanics (offline: FakeEmbedder + InMemoryCorpusStore) --
 
 
-def test_maps_chunk_fields_and_leaves_title_level_empty() -> None:
+def test_maps_chunk_fields_and_enriches_title_level_from_sc_meta() -> None:
     embedder, store = _seed(_chunk("sc:1.1.1", ["1.1.1"], url="https://www.w3.org/TR/WCAG22/#non-text-content"))
+    store.upsert_sc_meta(_VERSION, [ScMeta(sc_id="1.1.1", title="Non-text Content", level=ConformanceLevel.A)])
     (citation,) = Retriever(embedder, store, _VERSION, k=1).retrieve(_finding("image-alt"))
     assert isinstance(citation, Citation)
     assert citation.sc_id == "1.1.1"
     assert citation.source == "WCAG-SC"
     assert citation.url == "https://www.w3.org/TR/WCAG22/#non-text-content"
-    # option A: the corpus persists neither title nor level as a structured field.
+    # T1: title + level are joined in from the sc_meta reference table.
+    assert citation.title == "Non-text Content"
+    assert citation.level == ConformanceLevel.A
+    assert citation.technique_id is None  # Techniques corpus is a later source
+
+
+def test_citation_degrades_to_empty_title_level_when_sc_meta_absent() -> None:
+    # No sc_meta seeded → the join finds nothing and the citation stays sc_id/source/url only,
+    # never raising. (Guards the "SC not in the reference table" edge.)
+    embedder, store = _seed(_chunk("sc:1.1.1", ["1.1.1"]))
+    (citation,) = Retriever(embedder, store, _VERSION, k=1).retrieve(_finding("image-alt"))
+    assert citation.sc_id == "1.1.1"
     assert citation.title == ""
     assert citation.level is None
-    assert citation.technique_id is None
 
 
 def test_dedups_to_one_citation_per_sc_across_chunks() -> None:
@@ -140,20 +153,26 @@ corpus_up = pytest.mark.skipif(
 @corpus_up
 def test_real_retriever_grounds_image_alt_in_sc_1_1_1() -> None:
     """The T2 acceptance sanity-check: an axe-detectable finding retrieves the SC its axe tag
-    implies. `image-alt` → SC 1.1.1 must be in the top-k. Runs under a throwaway corpus_version
-    (ingesting the committed sample) so it never disturbs a real ingested corpus."""
+    implies. `image-alt` → SC 1.1.1 must be in the top-k, and (T1) its citation carries the
+    enriched title + level. Runs under a throwaway corpus_version (ingesting the committed
+    sample) so it never disturbs a real ingested corpus."""
     embedder = LiteLLMEmbedder()
     store = PgCorpusStore()
     version = build_corpus_version(embedder) + "-pytest-t2"
-    chunks = parse_wcag_json(json.loads(SAMPLE.read_text()), corpus_version=version)
+    data = json.loads(SAMPLE.read_text())
+    chunks = parse_wcag_json(data, corpus_version=version)
 
     try:
         ingest(chunks, embedder, store)
+        store.upsert_sc_meta(version, parse_sc_meta(data))
         finding = _finding("image-alt", "Images must have an alternate text")
         citations = Retriever(embedder, store, version).retrieve(finding)
-        assert "1.1.1" in [c.sc_id for c in citations]
+        non_text = next(c for c in citations if c.sc_id == "1.1.1")
+        assert non_text.title == "Non-text Content"
+        assert non_text.level == ConformanceLevel.A
     finally:
         import psycopg
 
         with psycopg.connect("postgresql://clearway:clearway@localhost:5432/clearway", autocommit=True) as conn:
             conn.execute("DELETE FROM corpus_chunk WHERE corpus_version = %s", (version,))
+            conn.execute("DELETE FROM sc_meta WHERE corpus_version = %s", (version,))

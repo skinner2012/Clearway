@@ -17,8 +17,11 @@ from __future__ import annotations
 
 import json
 import urllib.request
+from collections.abc import Iterator
 from html.parser import HTMLParser
 
+from clearway.corpus.store import ScMeta
+from clearway.oracle.wcag import SC_LEVELS
 from clearway.schemas.models import CorpusChunk
 
 WCAG_JSON_URL = "https://www.w3.org/WAI/WCAG22/wcag.json"
@@ -63,6 +66,20 @@ def fetch_wcag_json(url: str = WCAG_JSON_URL) -> dict:
     return data
 
 
+def _iter_scs(data: dict) -> Iterator[dict]:
+    """Yield every WCAG-2.2-applicable success criterion, flattening principle → guideline → SC.
+
+    Shared by `parse_wcag_json` (chunks) and `parse_sc_meta` (reference rows) so both walk the
+    JSON identically and honour the same 2.2 version filter — the corpus and its metadata can
+    never disagree on which SCs exist."""
+    for principle in data.get("principles", []):
+        for guideline in principle.get("guidelines", []):
+            for sc in guideline.get("successcriteria", []):
+                if WCAG_VERSION not in sc.get("versions", []):
+                    continue  # drop SCs not applicable to WCAG 2.2 (e.g. the removed 4.1.1)
+                yield sc
+
+
 def parse_wcag_json(data: dict, corpus_version: str) -> list[CorpusChunk]:
     """Flatten the WCAG JSON into one `CorpusChunk` per success criterion (embedding unset).
 
@@ -70,23 +87,29 @@ def parse_wcag_json(data: dict, corpus_version: str) -> list[CorpusChunk]:
     text is `<handle>. <normative text>` so retrieval matches on both the SC name and its body.
     """
     chunks: list[CorpusChunk] = []
-    for principle in data.get("principles", []):
-        for guideline in principle.get("guidelines", []):
-            for sc in guideline.get("successcriteria", []):
-                if WCAG_VERSION not in sc.get("versions", []):
-                    continue  # drop SCs not applicable to WCAG 2.2 (e.g. the removed 4.1.1)
-                num = sc["num"]
-                handle = sc.get("handle", "")
-                body = _strip_html(sc.get("content", ""))
-                text = f"{handle}. {body}".strip(". ").strip() if handle else body
-                chunks.append(
-                    CorpusChunk(
-                        chunk_id=f"sc:{num}",
-                        sc_ids=[num],
-                        text=text,
-                        source=SOURCE_WCAG_SC,
-                        url=f"{_SC_ANCHOR}{sc['id']}",
-                        corpus_version=corpus_version,
-                    )
-                )
+    for sc in _iter_scs(data):
+        num = sc["num"]
+        handle = sc.get("handle", "")
+        body = _strip_html(sc.get("content", ""))
+        text = f"{handle}. {body}".strip(". ").strip() if handle else body
+        chunks.append(
+            CorpusChunk(
+                chunk_id=f"sc:{num}",
+                sc_ids=[num],
+                text=text,
+                source=SOURCE_WCAG_SC,
+                url=f"{_SC_ANCHOR}{sc['id']}",
+                corpus_version=corpus_version,
+            )
+        )
     return chunks
+
+
+def parse_sc_meta(data: dict) -> list[ScMeta]:
+    """Per-SC reference rows for the corpus store's `sc_meta` table: `title` from the JSON
+    `handle`, `level` from `oracle.wcag.SC_LEVELS` (the canonical conformance-level SSOT — the
+    same source the L0 validator trusts, so the two never drift). Not scoped by corpus_version
+    here — the store stamps that on upsert, since metadata is version-independent (no re-embed)."""
+    return [
+        ScMeta(sc_id=(num := sc["num"]), title=sc.get("handle", ""), level=SC_LEVELS.get(num)) for sc in _iter_scs(data)
+    ]

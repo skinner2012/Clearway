@@ -10,12 +10,27 @@ from __future__ import annotations
 
 import math
 import os
-from typing import Protocol, runtime_checkable
+from typing import NamedTuple, Protocol, runtime_checkable
 
-from clearway.schemas.models import CorpusChunk
+from clearway.schemas.models import ConformanceLevel, CorpusChunk
 
 _DEFAULT_DB_URL = "postgresql://clearway:clearway@localhost:5432/clearway"
 _TABLE = "corpus_chunk"
+_SC_META_TABLE = "sc_meta"
+
+
+class ScMeta(NamedTuple):
+    """Per-SC reference metadata the retriever stamps onto a `Citation` (title + level).
+
+    Not a CONTRACTS shape: it never crosses the orchestrator pipeline — it is an internal
+    corpus-store reference row (`sc_meta(sc_id, title, level)`), joined in during retrieval.
+    Kept off `CorpusChunk` on purpose: a chunk's `sc_ids` is a *list*, so per-SC metadata
+    does not belong on the chunk. `level` is `None` for any SC without a known conformance
+    level (defensive; the 86-SC reference set always has one)."""
+
+    sc_id: str
+    title: str
+    level: ConformanceLevel | None
 
 
 @runtime_checkable
@@ -38,6 +53,14 @@ class CorpusStore(Protocol):
         """How many chunks are stored under a corpus_version."""
         ...
 
+    def upsert_sc_meta(self, corpus_version: str, rows: list[ScMeta]) -> int:
+        """Insert/replace per-SC reference rows (by (corpus_version, sc_id)); return the count."""
+        ...
+
+    def sc_meta(self, corpus_version: str) -> dict[str, ScMeta]:
+        """The SC-id → metadata map for a corpus_version (the retriever's join table)."""
+        ...
+
 
 def _cosine_distance(a: list[float], b: list[float]) -> float:
     """1 - cosine similarity — matches pgvector's `<=>` operator so the fake orders like the DB."""
@@ -55,6 +78,7 @@ class InMemoryCorpusStore:
 
     def __init__(self) -> None:
         self._rows: dict[tuple[str, str], tuple[CorpusChunk, list[float]]] = {}
+        self._meta: dict[tuple[str, str], ScMeta] = {}
 
     def ensure_schema(self, dim: int) -> None:
         # nothing to create in memory; kept for seam parity with PgCorpusStore
@@ -79,6 +103,14 @@ class InMemoryCorpusStore:
 
     def count(self, corpus_version: str) -> int:
         return sum(1 for cv, _ in self._rows if cv == corpus_version)
+
+    def upsert_sc_meta(self, corpus_version: str, rows: list[ScMeta]) -> int:
+        for row in rows:
+            self._meta[(corpus_version, row.sc_id)] = row
+        return len(rows)
+
+    def sc_meta(self, corpus_version: str) -> dict[str, ScMeta]:
+        return {sc_id: meta for (cv, sc_id), meta in self._meta.items() if cv == corpus_version}
 
 
 class PgCorpusStore:
@@ -123,6 +155,17 @@ class PgCorpusStore:
             conn.execute(
                 f"CREATE INDEX IF NOT EXISTS {_TABLE}_embedding_idx "
                 f"ON {_TABLE} USING hnsw (embedding vector_cosine_ops)"
+            )
+            # Per-SC reference table (title + level), joined in at retrieval. No vector, no dim —
+            # metadata is not part of the embedding identity, so re-ingest never re-embeds.
+            conn.execute(
+                f"CREATE TABLE IF NOT EXISTS {_SC_META_TABLE} ("
+                "  corpus_version text NOT NULL,"
+                "  sc_id          text NOT NULL,"
+                "  title          text NOT NULL DEFAULT '',"
+                "  level          text NOT NULL DEFAULT '',"
+                "  PRIMARY KEY (corpus_version, sc_id)"
+                ")"
             )
 
     def upsert(self, chunks: list[CorpusChunk]) -> int:
@@ -174,3 +217,30 @@ class PgCorpusStore:
         with self._connect() as conn:
             row = conn.execute(f"SELECT count(*) FROM {_TABLE} WHERE corpus_version = %s", (corpus_version,)).fetchone()
             return int(row[0]) if row else 0
+
+    def upsert_sc_meta(self, corpus_version: str, rows: list[ScMeta]) -> int:
+        if not rows:
+            return 0
+        params = [(corpus_version, r.sc_id, r.title, r.level.value if r.level else "") for r in rows]
+        with self._connect() as conn:
+            with conn.cursor() as cur:
+                cur.executemany(
+                    f"INSERT INTO {_SC_META_TABLE} (corpus_version, sc_id, title, level) "
+                    "VALUES (%s, %s, %s, %s) "
+                    "ON CONFLICT (corpus_version, sc_id) DO UPDATE SET "
+                    "title = EXCLUDED.title, level = EXCLUDED.level",
+                    params,
+                )
+        return len(rows)
+
+    def sc_meta(self, corpus_version: str) -> dict[str, ScMeta]:
+        with self._connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"SELECT sc_id, title, level FROM {_SC_META_TABLE} WHERE corpus_version = %s",
+                    (corpus_version,),
+                )
+                return {
+                    row[0]: ScMeta(sc_id=row[0], title=row[1], level=ConformanceLevel(row[2]) if row[2] else None)
+                    for row in cur.fetchall()
+                }

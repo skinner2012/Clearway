@@ -165,6 +165,7 @@ def run(
         created_at=now,
         reviews=[r for r in do_store.load_reviews() if r.run_id == run_id],
     )
+    do_store.save_report(report)
     return RunResult(report=report, traces=traces)
 
 
@@ -217,4 +218,5 @@ def run_set(
         created_at=now,
         reviews=[r for r in do_store.load_reviews() if r.run_id == run_id],
     )
+    do_store.save_report(report)
     return RunResult(report=report, traces=traces)

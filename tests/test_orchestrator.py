@@ -72,6 +72,37 @@ def test_run_is_idempotent_on_finding_ids_and_rate() -> None:
     assert a.report.run_id != b.report.run_id
 
 
+# --- T5: the completed run persists its EvalReport (accuracy-over-time history) ---
+
+
+def test_run_persists_its_report_to_the_store() -> None:
+    """A completed run writes exactly one `EvalReport` row, keyed by its run_id and equal to the
+    report it returns — the data-production half of the T6 accuracy-over-time trend."""
+    store = InMemoryOrchestratorStore()
+    result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=store)
+    persisted = store.load_report(result.report.run_id)
+    assert persisted == result.report
+    assert len(store.load_reports()) == 1
+
+
+def test_two_runs_persist_two_report_rows() -> None:
+    store = InMemoryOrchestratorStore()
+    run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=store)
+    run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=store)
+    assert len(store.load_reports()) == 2
+
+
+def test_a_resumed_run_overwrites_its_report_row_without_duplicating() -> None:
+    """Resuming under the same run_id re-persists that run's row in place (PK on run_id), so the
+    history never double-counts a resumed run — and the reflowed report replaces the earlier one."""
+    store = InMemoryOrchestratorStore()
+    run_id = "report-resume"
+    run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=store, run_id=run_id)
+    run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=store, run_id=run_id)
+    assert len(store.load_reports()) == 1
+    assert store.load_report(run_id) is not None
+
+
 # --- run_set: the M1 exit-criterion set runner -------------------------------
 
 

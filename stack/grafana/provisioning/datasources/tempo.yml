@@ -1,0 +1,11 @@
+# Grafana Tempo datasource, provisioned as code so `docker compose up` always wires it.
+# Lets the dashboard/Explore view the run→MCP-server→retrieval trace tree by trace_id.
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false

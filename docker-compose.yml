@@ -27,6 +27,18 @@ services:
     depends_on:
       - otel-collector
 
+  # Grafana Tempo — trace backend so the run→MCP-server→retrieval span tree is
+  # queryable by trace_id (the collector forwards spans here over OTLP/gRPC). Local storage;
+  # a demo backend, not built for scale. See stack/tempo/tempo.yaml.
+  tempo:
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./stack/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - clearway-tempo-data:/var/tempo
+    ports:
+      - "3200:3200"   # Tempo query API (Grafana reads here; also handy for direct debugging)
+
   grafana:
     image: grafana/grafana:12.3.8
     environment:
@@ -48,6 +60,7 @@ services:
     depends_on:
       - prometheus
       - postgres
+      - tempo
 
   # The image ships the `vector` extension; the app runs CREATE EXTENSION + DDL at ingest.
   postgres:
@@ -68,3 +81,4 @@ services:
 
 volumes:
   clearway-pgdata:
+  clearway-tempo-data:

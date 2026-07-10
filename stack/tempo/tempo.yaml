@@ -1,0 +1,27 @@
+# Grafana Tempo — the trace backend that makes the cross-boundary MCP span queryable
+# as a child of the run trace (before this, the collector only echoed spans to its log —
+# ARCHITECTURE §4.5). Single-binary, local filesystem storage: a demo backend, not for scale.
+#
+# Flow: app → otel-collector (OTLP/HTTP :4318) → this Tempo (OTLP/gRPC :4317) → Grafana reads :3200.
+server:
+  http_listen_port: 3200
+
+# Receive spans the collector forwards over OTLP/gRPC (same docker network, no host port needed).
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+
+# Local demo stack — no phone-home.
+usage_report:
+  reporting_enabled: false

@@ -120,7 +120,7 @@ These sit at **three different layers**; they are complementary, not alternative
 | Area | Decision | Status | Note |
 |---|---|---|---|
 | Telemetry standard | OpenTelemetry **GenAI Semantic Conventions** (`gen_ai.*`) | DECIDED | Industry-standard vocabulary, not homemade. Covers LLM calls, agents, **MCP tool calls**, and (nascent) eval. |
-| Pipeline | OTel Collector → **Prometheus** (metrics) + **Grafana** (dashboards) | DECIDED | Prometheus 3.0 natively supports OTel naming. Tempo (traces) / Loki (logs) optional later. |
+| Pipeline | OTel Collector → **Prometheus** (metrics) + **Grafana** (dashboards) + **Tempo** (traces) | DECIDED | Prometheus 3.0 natively supports OTel naming. **Tempo added** to link the cross-boundary MCP span into the run trace; Loki (logs) optional later. |
 | **Eval-as-metric** | Quality-eval results are **first-class Prometheus metrics**: `citation_hallucination_rate`, `judge_kappa`, `expert_edit_distance`, `loop_closure_rate`, `confidence_calibration_*` | DECIDED | This is how "measured trust is the product" becomes a concrete, visible object — eval scores sit on the same dashboard as latency/cost. |
 | semconv maturity | Use `OTEL_SEMCONV_STABILITY_OPT_IN`; expect attribute-name churn | VERIFY | As of mid-2026 most GenAI semconv is experimental/development. OpenAI SDK instrumentation most mature; local-model (Ollama) auto-instrumentation may need custom spans. |
 

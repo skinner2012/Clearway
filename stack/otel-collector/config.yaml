@@ -1,8 +1,8 @@
 # OTel Collector — receive OTLP/HTTP metrics + traces from the app.
 # This is the buffer that outlives the short-lived `clearway run` CLI: the app pushes
 # and exits; the collector holds the last metric values until Prometheus scrapes them, and
-# echoes spans to its own log (a real trace backend like Grafana Tempo is deferred — ARCHITECTURE
-# §4.5; the `traces` pipeline exports to `debug` so the run/finding/step tree is still observable).
+# forwards spans to Grafana Tempo so the run/finding/step tree — and the
+# cross-boundary MCP child span — is queryable by trace_id, not just echoed to the log.
 receivers:
   otlp:
     protocols:
@@ -13,6 +13,11 @@ exporters:
   # Expose received metrics at :8889/metrics for Prometheus to scrape.
   prometheus:
     endpoint: 0.0.0.0:8889
+  # Forward spans to Tempo over OTLP/gRPC so they're queryable as a trace tree.
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
   # Echo to the collector log — handy when validating the pipeline hop-by-hop.
   debug:
     verbosity: normal
@@ -22,7 +27,7 @@ service:
     metrics:
       receivers: [otlp]
       exporters: [prometheus, debug]
-    # Spans land here → echoed to the collector log (no trace backend yet — see the header note).
+    # Spans fan out to Tempo (queryable trace tree) and the debug log (hop-by-hop validation).
     traces:
       receivers: [otlp]
-      exporters: [debug]
+      exporters: [otlp/tempo, debug]

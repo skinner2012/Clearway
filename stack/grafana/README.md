@@ -19,7 +19,7 @@ Straight from the emitted metrics ([`clearway/observability/metrics.py`](../../c
 | Panel | Metric | Reading |
 |---|---|---|
 | citation_hallucination_rate (overall) | `citation_hallucination_rate` | All drafted citations that fail L0/L1, verifiable + unverifiable pooled. The blended number; the row below un-blends it. |
-| unverifiable_share (the honest headline) | `unverifiable_share` | Citations with **no automated oracle** (axe `incomplete` → `NO_ORACLE` → `UNVERIFIABLE`). **Not an error** — the coverage gap the pipeline is honest about, and what M5 calibration must shrink. Coloured neutrally (blue), not pass/fail. |
+| unverifiable_share (the honest headline) | `unverifiable_share` | Citations with **no automated oracle** (axe `incomplete` → `NO_ORACLE` → `UNVERIFIABLE`). **Not an error** — the coverage gap the pipeline is honest about, and what M4 calibration must shrink. Coloured neutrally (blue), not pass/fail. |
 | current rate (verifiable subset) | `citation_hallucination_rate_verifiable` | Hallucination rate over **only** the oracle-verifiable citations (axe `violations`). ~0 by construction — anything above green is a real citation fault where an oracle exists to catch it. |
 | expert_edit_distance | `expert_edit_distance` | Mean normalized text-edit distance between drafted and human-edited remediations, over drafts a reviewer edited through the HITL gate (T4). 0 = shipped unedited; higher = model judgment drifted from the expert. |
 
@@ -45,10 +45,10 @@ happens) and per-step duration (`pipeline_step_duration`). Cost is captured per-
 but ≈ 0 for local Ollama, so it has no live series yet — it lights up when cloud LLMs enter the
 comparison (M4).
 
-### Coming in M5
+### Coming in M4
 
 Labelled placeholder panels for **judge κ** (judge–gold agreement) and **confidence calibration**.
-Present but marked "M5"; no data source until M5 builds the gold set + recalibrates confidence.
+Present but marked "M4"; no data source until M4 builds the gold set + recalibrates confidence.
 
 ## Labels
 

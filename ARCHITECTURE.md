@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.3
+- **Version:** 0.4
 
 **Status labels used below:**
 
@@ -110,7 +110,7 @@ These sit at **three different layers**; they are complementary, not alternative
 | Unified gateway (how the app calls **any** model) | **LiteLLM** | One OpenAI-compatible interface over local (Ollama) + cloud (OpenAI); does fallback, retries, cost tracking, OTel tracing. Sits **above** the runtime — it *calls* runtimes, it does not run models. | DECIDED |
 | Cloud fallback | OpenAI (via LiteLLM) | Hard judgment items; reference judge. | DECIDED |
 | Routing config | Frozen, versioned artifact (`config_id`); every eval run is tagged with it | Enables model/config-stratified eval: same fixed eval set, swap the frozen combo, re-compare. | DECIDED |
-| Routing policy (which finding → which model, thresholds) | — | Must be justified by eval data, not vibes. | OPEN |
+| Routing policy (which finding → which model, thresholds) | — | Must be justified by eval data — incl. the **M4 judge's judgment-item scores**, not just the axe-verifiable subset — not vibes. | OPEN |
 | High-throughput inference server (**vLLM**) | — | Not for local dev; production-only consideration. See note. | REJECTED (local) / OPEN (production) |
 
 **On vLLM (recorded so it isn't re-litigated):** vLLM's value is high-*concurrency* throughput (continuous batching, PagedAttention) on NVIDIA GPU + Linux. It does **not** run natively on Apple Silicon — the CPU path is ~20–30× slower than llama.cpp/Metal, and the community `vllm-metal` / `vllm-mlx` plugins are experimental, pin old vLLM versions, and are currently **text-only** (which would break the multimodal Regime-B bridge). This project's dev workload is single-user and sequential, not high-concurrency, so vLLM's advantage doesn't apply. If Clearway ever serves many concurrent audits in production, the standard pattern is: develop locally on Apple Silicon (Ollama), keep the interface OpenAI-compatible (LiteLLM), deploy vLLM on Linux+GPU behind the same interface. LiteLLM makes that a `base_url` swap — so choosing Ollama now costs nothing later.
@@ -159,10 +159,10 @@ This is citation *verification* layering, not RAG layering. For the axe-core-det
 | Decision | Status |
 |---|---|
 | Judge model ≠ drafter model (avoid self-preference bias) | DECIDED |
-| Judge is calibrated against expert gold *first* (measure judge-vs-human κ) before trusting judge-vs-model κ | DECIDED |
+| Judge is calibrated against a gold set *first* (measure judge-vs-human κ) before trusting judge-vs-model κ. M4 builds a small, **self-built *digital judgment* gold set** (`GoldLabel`) for this; the **expert, *physical* gold** is M6's Regime B — same `GoldLabel` shape, different labeller/regime. | DECIDED |
 | Prefer deterministic oracle wherever available; reserve LLM-judge for no-oracle judgment items only | DECIDED |
 | Judge reproducibility: pin model + version + temperature (0/low) + fixed prompt, recorded in trace | DECIDED |
-| Exact judge model (local vs cloud reference judge); "can a local model approximate the cloud judge?" experiment | OPEN |
+| Exact judge model (local vs cloud reference judge); "can a local model approximate the cloud judge?" experiment (M4 — its result feeds M5 routing's local-vs-cloud choice) | OPEN |
 
 ### 4.10 Untrusted content & prompt-injection
 
@@ -181,7 +181,7 @@ Pattern-stripping untrusted text is explicitly **not** relied on (unreliable). W
 
 ## 5. The Oracle interface (the transfer seam)
 
-The eval harness and the L1 citation check depend **only** on the `Oracle` interface — never on axe internals directly. Regime A implements it via axe-core (`AxeCoreOracle`); Regime B via gold labels (`GoldLabelOracle`). Swapping regimes = swapping this one implementation, with no change to `validator/` or `eval/`. That is the entire "flexibility without drift" proof reduced to a single seam.
+The eval harness and the L1 citation check depend **only** on the `Oracle` interface — never on axe internals directly. Regime A implements it via axe-core (`AxeCoreOracle`); Regime B via gold labels (`GoldLabelOracle`). Swapping regimes = swapping this one implementation, with no change to `validator/` or `eval/`. That is the entire "flexibility without drift" proof reduced to a single seam. The `GoldLabel` shape those labels use is introduced early at M4 (small, self-built *digital judgment* gold, to calibrate the judge) and reused unchanged at M6 (expert *physical* gold) — one gold contract, two labellers/regimes.
 
 Key behavioural contract: `verdict_for(finding)` returns ground truth, or `None` when the oracle can't judge that finding — in which case it falls through to the LLM-judge or human review. That single return value is what wires up the "prefer the hardest available oracle" layering (4.8).
 
@@ -210,7 +210,7 @@ The table lists each module's responsibility (with its I/O) and its build-order 
 | `orchestrator/` | Hand-rolled state machine · checkpoint · retry · HITL gate | most |
 | `cli/` | Drive the spine (`clearway run <fixture>`) | `orchestrator` |
 | `corpus/` | WCAG/ARIA ingest → chunk → embed → pgvector | — |
-| `llm/` | LiteLLM gateway + frozen routing (routing @ M4) | — |
+| `llm/` | LiteLLM gateway + frozen routing (routing @ M5) | — |
 | `mcp_server/` | Real MCP server wrapping `retriever` | `retriever` |
 | `api/` | FastAPI surface | `orchestrator` |
 
@@ -245,9 +245,9 @@ Every step emits an OTel span; every LLM/tool/retrieval call is a child span; ev
 | **M1** | Forward path, real | Replace the stubs: `scanner`, `normalizer`, `corpus`, `retriever`, `drafter`, `validator` (L0/L1). `scanner` / `corpus`+`retriever` / `drafter` / `validator` are largely parallel — one worktree each. | M0 |
 | **M2** | Control loop + HITL + observability | `orchestrator` durable primitives (retry, idempotency, checkpoint); HITL durable-interrupt gate; full trust dashboard + honest failure analysis. | M1 |
 | **M3** | MCP retrieval server | Wrap `retriever` as the real MCP server (§4.7); part of Delivery/Demo. | retriever (M1); ∥ M2 |
-| **M4** | LLM routing | LiteLLM multi-model + frozen routing config; model/config-stratified eval. | M1; benefits from M2 |
-| **M5** | Judge calibration | LLM-judge vs expert gold; κ; confidence-vs-correctness calibration. | eval + gold set |
-| **M6** | Regime B transfer | Implement `GoldLabelOracle`; swap the Oracle port; two-regime comparison. Architecture unchanged — only a new `Oracle` implementation. | M5 + gold set |
+| **M4** | Judge calibration | LLM-judge vs a small self-built gold set; judge-vs-human κ; confidence-vs-correctness calibration. | eval + gold set |
+| **M5** | LLM routing | LiteLLM multi-model + frozen routing config; model/config-stratified eval, config choice justified by the M4 judge's judgment-item scores. | M1; benefits from M2 + M4 |
+| **M6** | Regime B transfer | Implement `GoldLabelOracle`; swap the Oracle port; two-regime comparison. Architecture unchanged — only a new `Oracle` implementation. | M4 + gold set |
 
 **M0 — Walking Skeleton (the spine).** M0 runs the forward path above end-to-end but *thin*: one fixture page → real axe-core scan → normalize → L0+L1 citation check → compute `citation_hallucination_rate` → emit via OTel to a **real** Prometheus/Grafana. `retriever` and `drafter` are stubbed with canned output; routing (single model), cache, MCP, HITL, and physical are all absent.
 
@@ -262,3 +262,4 @@ Its only job is to prove the control loop is real. The detail exists to pin one 
 | 2026-07-05 | 0.1 | Initial Decisions of Record. |
 | 2026-07-08 | 0.2 | Added §4.10 (untrusted content & prompt-injection). |
 | 2026-07-10 | 0.3 | §4.10: generalised the side-effect-free rule system-wide (drafter + MCP retrieval tool). |
+| 2026-07-10 | 0.4 | Swapped M4/M5: judge calibration is now M4 (before routing) so routing can choose its config from the judge's judgment-item scores; LLM routing is now M5. Reconciled §4.9 (M4 self-built *digital* gold vs M6 expert *physical* gold, one `GoldLabel` shape), tied §4.4 routing policy to the M4 judge, and noted the `GoldLabel` reuse at the §5 seam. |

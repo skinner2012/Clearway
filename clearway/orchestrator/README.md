@@ -61,7 +61,7 @@ flagged when one trigger fires — a single `reason` is stored, by precedence:
 
 | Reason | Fires when | M2 status |
 |---|---|---|
-| `low_confidence` | `draft.confidence < 0.5` | **dormant** — real confidence sits at 0.9–1.0 regardless of correctness, so this trigger is inert until M5 calibration |
+| `low_confidence` | `draft.confidence < 0.5` | **dormant** — real confidence sits at 0.9–1.0 regardless of correctness, so this trigger is inert until M4 calibration |
 | `axe_incomplete` | the finding came from axe's `incomplete` bucket (no oracle verdict) | effective |
 | `unverifiable_judgment` | a citation is `UNVERIFIABLE` (valid SC, no oracle to check it) | effective |
 

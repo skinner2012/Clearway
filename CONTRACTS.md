@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.6
+- **Version:** 0.8
 
 > **This file is the single source of truth for cross-module data shapes.** Any shape that crosses a module boundary is defined here and nowhere else — never redefined in `ARCHITECTURE.md`, in module code, or in an LLM prompt. `ARCHITECTURE.md §5` describes the `Oracle` seam's *role* and points back here for the definition. To add or change a shape: edit §3, then update the deferred list (§5) and the change log (§6) in the same change.
 
@@ -404,7 +404,7 @@ class EvalMetrics(BaseModel):
     """Trust metrics for one eval run. M1 stratifies the hallucination rate by whether an
     automated oracle could verify the citation: the verifiable subset (axe-detectable, ~0 by
     construction) vs the unverifiable share (judgment items with no oracle — the honest
-    headline, and exactly what M5's judge/gold must target). M2 adds `expert_edit_distance`,
+    headline, and exactly what M4's judge/gold must target). M2 adds `expert_edit_distance`,
     the human-correction signal from the HITL gate."""
     model_config = ConfigDict(extra="forbid")
 
@@ -508,11 +508,11 @@ Added when their milestone arrives, not before:
 
 | Schema / concern | Milestone |
 |---|---|
-| `RoutingConfig` (frozen, versioned model/config artifact) | M4 |
-| `JudgeResult`, `CalibrationReport` (κ, confidence-vs-correctness) | M5 |
-| `GoldLabel` (expert-provided ground truth) | M6 |
+| `JudgeResult`, `CalibrationReport` (κ, confidence-vs-correctness) | M4 |
+| `GoldLabel` (judgment-item ground truth; same shape M6's `GoldLabelOracle` reuses) | M4 |
+| `RoutingConfig` (frozen, versioned model/config artifact) | M5 |
 | Full ACR/VPAT document assembly schema (beyond per-finding `DraftRow`) | later |
-| L2 retrieval-faithfulness fields on `CitationCheck` | M5 (needs the judge; RAG goes real in M1 but L2 verification does not) |
+| L2 retrieval-faithfulness fields on `CitationCheck` | M4 (needs the judge; RAG goes real in M1 but L2 verification does not) |
 
 ---
 
@@ -526,4 +526,5 @@ Added when their milestone arrives, not before:
 | 2026-07-08 | 0.4 | M1 (T4): scanner captures axe's `incomplete` (needs-review) bucket distinctly. Factored `AxeViolation`'s fields into a shared `AxeRuleResult` base; added `AxeIncomplete` (same shape, not confirmed) and `ScanResult.incomplete: list[AxeIncomplete]`. `incomplete` is the source of eval's `unverifiable_share`. Additive — `AxeViolation` wire shape unchanged. |
 | 2026-07-08 | 0.5 | M1 (T5): normalizer carries `incomplete` items through as `Finding`s. Added `AxeBucket` enum (provenance) and `Finding.source_bucket: AxeBucket` (default `VIOLATIONS`). The oracle allowlists `VIOLATIONS`, returning no verdict for any other bucket — incomplete-sourced findings become `UNVERIFIABLE`. `source_bucket` is not part of the finding id. Additive — existing findings default to `VIOLATIONS`, wire shape unchanged. |
 | 2026-07-10 | 0.7 | M3 (T0): added `EvidenceQuery` (`rule_id: str = ""`, `description: str`) — the slim, reuse-shaped input the MCP retrieval tool accepts (any caller → retriever/). Deliberately not a `Finding`: omits the internal hashed `id` / `source_url` / `target`; a `Finding` maps to it losslessly for retrieval. `Citation` unchanged (its `title`/`level` fields get populated in T1). Additive — existing shapes unchanged. |
+| 2026-07-10 | 0.8 | Swapped M4/M5 (§5 deferred): `JudgeResult` / `CalibrationReport` and `GoldLabel` move to **M4** (judge calibration now precedes routing; `GoldLabel` reworded to "judgment-item ground truth", same shape M6's `GoldLabelOracle` reuses); `RoutingConfig` moves to **M5**; L2 faithfulness follows the judge to **M4**. No §3 schema change — shapes still land at each milestone's own T0. |
 | 2026-07-09 | 0.6 | M2 (T0): added durable-orchestration + HITL schemas — `RunState`, `StepState` (checkpoint/resume, keyed `(run_id, finding_id, step)` via the new `PipelineStep` enum) and `NeedsReview` (HITL approve/edit record, `ReviewReason` + `ReviewStatus` enums; written post-validation, carries the drafted `DraftRow`). Added `EvalMetrics.expert_edit_distance` (unbounded `float ≥ 0`, normalization left to T4). `NeedsReview` removed from §5 (no longer deferred). Additive — existing shapes unchanged. |

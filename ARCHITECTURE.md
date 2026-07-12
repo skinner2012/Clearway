@@ -200,7 +200,7 @@ The table lists each module's responsibility (with its I/O) and its build-order 
 | `schemas/` | Shared cross-module data contracts (`CONTRACTS.md`) — everything imports these | — |
 | `fixtures/` | Fixed, versioned eval corpus (planted-violation pages) | — |
 | `scanner/` | Playwright + axe-core → raw `ScanResult` | — |
-| `normalizer/` | Raw violations → deduped canonical `Finding[]` | — |
+| `normalizer/` | Raw axe buckets (violations, incomplete, whitelisted quality-review passes) → deduped canonical `Finding[]` | — |
 | `retriever/` | RAG grounding: `Finding` → `Citation[]` | `corpus` |
 | `drafter/` | LLM structured output: `Finding` + `Citation[]` → `DraftRow` | — |
 | `oracle/` | Ground truth: `AxeCoreOracle` now, `GoldLabelOracle` @ M6 | — |

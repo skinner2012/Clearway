@@ -40,7 +40,8 @@ Build an LLM-judge for judgment items, prove it trustworthy by calibrating it ag
 - The **κ + calibration panels** on the M2 dashboard — reserved as placeholders in M2 — now light up, and a written **calibration report** ships, including the confidence requirement it hands to M5.
 
 - **Real:** self-built gold set + its fixtures, LLM-judge, judge-vs-human κ calibration, bias checks, confidence-vs-correctness calibration, calibration report, κ/calibration dashboard panels.
-- **Absent:** routing / multi-model (M5), physical / Regime B (M6), any change to the forward path or the drafter, any *fix* to confidence elicitation (M4 measures only).
+- **Absent:** routing / multi-model (M5), physical / Regime B (M6), any change to the **drafter**, any *fix* to confidence elicitation (M4 measures only).
+  - **One scoped forward-path exception (added after T0, see T1):** the scanner gains a whitelisted `passes[] → judgment-finding` source (existence-only axe rules — `image-alt`, `link-name`, `button-name`, `document-title`, `frame-title`, `label` — that pass on *present-but-poor* content). This is **not** a new finding-proposer (same mapping code, a new provenance bucket, `AxeBucket.PASSES`), and it is required: an empirical double-filter over pinned axe 4.12.1 showed the `incomplete[]` bucket yields **zero** DOM-decidable judgment items, so without it the judge gold set is judge-impossible and κ is meaningless. No other forward-path change.
 
 ## How to use these tickets
 
@@ -69,26 +70,29 @@ Build an LLM-judge for judgment items, prove it trustworthy by calibrating it ag
 
 ### T1 — self-built digital judgment gold set (+ the fixtures it needs)
 - **Produces:** ~12 versioned, planted **fixtures** spanning the judgment-item categories below, and the **gold set of `GoldLabel`s** for every judgment-item finding they produce (~25–30 findings — the κ floor).
-- **Detail:** the current fixture set yields only two judgment items — far too few for a meaningful κ. So T1 **authors ~12 planted fixtures, one per judgment-item category** (axe cannot check these; they require human reasoning). Organising the set around *fixtures × categories* is deliberate, and does two jobs at once:
+- **Finding source — settled after T0 by an empirical double-filter (CONTRACTS change-log 0.11).** A useful judgment gold item must be **both** (1) surfaced by axe **and** (2) decidable from the DOM the drafter/judge actually receives. Axe's `incomplete[]` bucket fails (2): all 55 incomplete-capable rules in pinned axe 4.12.1 hesitate because they need pixels / render / media / cross-frame resolution — exactly what the judge also lacks, so calibrating on them yields a meaningless κ (a meaningless κ is *worse* than none). The DOM-decidable judgment items instead live in axe's **`passes[]`** bucket: *existence-only* rules that pass on garbage (`image-alt` passes `alt="DSC_0042.jpg"`; `link-name` passes "click here"; `label` passes a placeholder-only input; `frame-title` passes `title="frame"`). T1 surfaces a **whitelist** of these as judgment findings via the new `AxeBucket.PASSES` (CONTRACTS §3) — *"axe says it exists; is it any good?"*, the product's actual value proposition. This is the scoped forward-path change noted under the milestone's **Absent** list; it is **not** a new finding-proposer.
+- **Detail:** the current fixture set yields only two judgment items — far too few for a meaningful κ. So T1 **authors ~12 planted fixtures, one per judgment-item category** (each planting a *present-but-poor* value that axe passes on existence but a human/LLM sees is inadequate). Organising the set around *fixtures × categories* is deliberate, and does two jobs at once:
   - **Breadth.** One fixture per category forces κ to measure whether the judge handles the *variety* of judgment items, not just whichever category happens to dominate. High-value categories may get more than one fixture.
   - **Independence.** Spreading findings across ~12 fixtures — rather than cramming them into a few dense pages — keeps them *less correlated*: two findings from the same page share context, so they aren't two fully-independent data points for κ (see the independence caveat below).
   
-  Categories to cover:
-  - Meaningful alt text (vs. decorative images)
-  - Heading structure & hierarchy (levels, order, nesting)
-  - Link text in context (meaningful link anchors)
-  - Form labels & instructions (associated with inputs)
-  - Reading order & logical sequence (tab order, content flow)
-  - Color contrast (judgment calls on sufficient contrast)
-  - Motion & animation (accessibility impact)
-  - [Add others as relevant to your audit scope]
+  Categories to cover — each maps to a whitelisted existence-only axe rule that **passes** on a planted *poor-but-present* value (confirm empirically, per below):
+  - **Image alt-text meaningfulness** — `image-alt` (+ `svg-img-alt` / `object-alt` / `role-img-alt` / `input-image-alt`), WCAG 1.1.1 (e.g. `alt="DSC_0042.jpg"`, `alt="image"`).
+  - **Link text in context** — `link-name`, WCAG 2.4.4 (e.g. "click here", "read more", a bare URL).
+  - **Form field label quality** — `label` / `select-name`, WCAG 1.3.1 / 3.3.2 (e.g. placeholder-as-label, an unhelpful label).
+  - **Control / button name quality** — `button-name` / `input-button-name`, WCAG 4.1.2 (e.g. `aria-label="button"`).
+  - **Page title descriptiveness** — `document-title`, WCAG 2.4.2 (e.g. "Untitled Document", "Home"). *(One finding per page.)*
+  - **Frame / iframe title quality** — `frame-title`, WCAG 4.1.2 / 2.4.1 (e.g. `title="frame"`).
+  - High-value categories (alt text, link text) get **two** fixtures to reach the ≥25-finding floor.
+
+  **Dropped from the earlier draft list** — the double-filter proved these are not judgment items *in this pipeline*: *heading structure*, *reading/tab order*, and *solid-colour contrast* are **violations** (axe hard-decides them → oracle-backed, not judgment); *gradient contrast* and *motion/animation* are DOM-undecidable (the judge can't see them either). Don't plant them.
   
   Each fixture yields ~2 judgment-item findings → **~25–30 findings total**, the floor κ needs. Label each finding: correct SC(s), conformance, severity. Version the set (`gold_version`).
   - **Single-labeller honesty:** one labeller has bias, and "judge-vs-human κ" is really judge-vs-one-person — spot-check every label against WCAG Understanding/Techniques and record disagreements in `notes`.
   - **Independence caveat (carry into T3's report):** findings from the same fixture are not statistically independent, so the *effective* n is below the raw finding count — one more reason the ~12-fixture spread beats a few dense fixtures, and why T3 reports **per-class counts**, not just an aggregate κ. Lean toward the higher end (~30).
-  - Confirm empirically that each planted fixture actually lands in axe's `incomplete[]` (or carries no axe tag), the way M1-T4 verified its incomplete fixtures — don't assume.
-- **Acceptance:** ~12 fixtures spanning the categories above, together yielding **≥25 labelled judgment-item findings**; each `GoldLabel` is complete and versioned; the labelling basis (spot-check + disagreements) recorded; the fixtures reproducibly produce their judgment items.
-- **Out of scope:** expert-provided or physical gold (M6); a large test corpus.
+  - Confirm empirically that each planted fixture actually lands in its whitelisted rule's **`passes[]`** result (→ `AxeBucket.PASSES`) — **not** `violations` (value too obviously bad → axe hard-decides it) and **not** `incomplete` — the way M1-T4 verified its incomplete fixtures. Don't assume: the planted value must be *present enough to pass* yet *poor enough to be a real WCAG failure*.
+- **Acceptance:** ~12 fixtures spanning the categories above, together yielding **≥25 labelled judgment-item findings**; each `GoldLabel` is complete and versioned; the labelling basis (spot-check + disagreements) recorded; the fixtures reproducibly produce their judgment items (each via its whitelisted `passes[]` rule → `AxeBucket.PASSES`).
+- **Out of scope:** expert-provided or physical gold (M6); a large test corpus; any forward-path change beyond the whitelisted `passes[] → judgment-finding` source.
+- **Prereq (do first, its own commit):** the scope amendment — `AxeBucket.PASSES` in CONTRACTS §3 + §6, and the scanner emitting whitelisted `passes[]` rules as judgment findings — lands before the fixtures.
 - **Depends on:** T0
 
 ### T2 — LLM-judge

@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.8
+- **Version:** 0.9
 
 > **This file is the single source of truth for cross-module data shapes.** Any shape that crosses a module boundary is defined here and nowhere else — never redefined in `ARCHITECTURE.md`, in module code, or in an LLM prompt. `ARCHITECTURE.md §5` describes the `Oracle` seam's *role* and points back here for the definition. To add or change a shape: edit §3, then update the deferred list (§5) and the change log (§6) in the same change.
 
@@ -12,8 +12,8 @@
 1. [Purpose & scope](#1-purpose--scope)
 2. [Conventions](#2-conventions)
 3. [Schemas (the contract)](#3-schemas-the-contract)
-4. [What M0 touches](#4-what-m0-touches)
-5. [Deferred (not in M0)](#5-deferred-not-in-m0)
+4. [Cross-module invariants](#4-cross-module-invariants)
+5. [Deferred](#5-deferred)
 6. [Change log](#6-change-log)
 
 ---
@@ -21,15 +21,6 @@
 ## 1. Purpose & scope
 
 Every module under `clearway/` depends on these shapes; nothing else may be shared across module boundaries. Locking them first is what lets M1+ subagents work in parallel (one `git worktree` per module) without their interfaces drifting.
-
-The M0 pipeline that these schemas serve:
-
-```
-scan (real) -> normalize (real) -> retrieve (STUB) -> draft (STUB)
-            -> validate L0+L1 (real) -> compute citation_hallucination_rate (real) -> emit trace (real)
-```
-
-`retrieve` and `draft` are stubbed in M0, but their **output shapes are real** — the stubs return canned `Citation[]` / `DraftRow` so the validator and eval downstream are exercised for real.
 
 ---
 
@@ -485,24 +476,15 @@ class Oracle(Protocol):
 
 ---
 
-## 4. What M0 touches
+## 4. Cross-module invariants
 
-| M0 step | Module | Consumes | Produces |
-|---|---|---|---|
-| scan | `scanner/` | `url` | `ScanResult` |
-| normalize / dedupe | `normalizer/` | `ScanResult` | `Finding[]` |
-| retrieve *(stub)* | `retriever/` | `Finding` | `Citation[]` |
-| draft *(stub)* | `drafter/` | `Finding`, `Citation[]` | `DraftRow` |
-| ground truth | `oracle/` (`AxeCoreOracle`) | `Finding` | `OracleVerdict` |
-| validate (L0 + L1) | `validator/` | `DraftRow`, `Finding`, `Oracle` | `CitationCheck[]` |
-| observe | `orchestrator/` + `observability/` | all of the above | `Trace` |
-| aggregate | `eval/` | `Trace[]` (each carries its `CitationCheck[]`) | `EvalReport` |
+Module ownership and pipeline order live in `ARCHITECTURE.md` §6; the shapes in §3 are the only things shared across those boundaries. The invariant the contract itself enforces:
 
-The L1 check reads ground truth via the `Oracle` protocol, never by reaching into axe internals directly — that is what keeps M6 (Regime B) a swap of the `Oracle` implementation with no change to `validator/` or `eval/`.
+The L1 check reads ground truth via the `Oracle` protocol, never by reaching into axe internals directly — that is what keeps Regime B (expert gold) a swap of the `Oracle` implementation with no change to `validator/` or `eval/`.
 
 ---
 
-## 5. Deferred (not in M0)
+## 5. Deferred
 
 Added when their milestone arrives, not before:
 
@@ -528,3 +510,4 @@ Added when their milestone arrives, not before:
 | 2026-07-10 | 0.7 | M3 (T0): added `EvidenceQuery` (`rule_id: str = ""`, `description: str`) — the slim, reuse-shaped input the MCP retrieval tool accepts (any caller → retriever/). Deliberately not a `Finding`: omits the internal hashed `id` / `source_url` / `target`; a `Finding` maps to it losslessly for retrieval. `Citation` unchanged (its `title`/`level` fields get populated in T1). Additive — existing shapes unchanged. |
 | 2026-07-10 | 0.8 | Swapped M4/M5 (§5 deferred): `JudgeResult` / `CalibrationReport` and `GoldLabel` move to **M4** (judge calibration now precedes routing; `GoldLabel` reworded to "judgment-item ground truth", same shape M6's `GoldLabelOracle` reuses); `RoutingConfig` moves to **M5**; L2 faithfulness follows the judge to **M4**. No §3 schema change — shapes still land at each milestone's own T0. |
 | 2026-07-09 | 0.6 | M2 (T0): added durable-orchestration + HITL schemas — `RunState`, `StepState` (checkpoint/resume, keyed `(run_id, finding_id, step)` via the new `PipelineStep` enum) and `NeedsReview` (HITL approve/edit record, `ReviewReason` + `ReviewStatus` enums; written post-validation, carries the drafted `DraftRow`). Added `EvalMetrics.expert_edit_distance` (unbounded `float ≥ 0`, normalization left to T4). `NeedsReview` removed from §5 (no longer deferred). Additive — existing shapes unchanged. |
+| 2026-07-12 | 0.9 | Editorial: retired the stale, M0-scoped "What M0 touches" section and the M0 pipeline sketch in §1 (retrieve/draft went real in M1; module data flow lives in `ARCHITECTURE.md` §6). Generalised §4 to the cross-module `Oracle` invariant and dropped the "(not in M0)" qualifier from §5's title. No §3 schema change. |

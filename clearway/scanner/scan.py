@@ -17,7 +17,15 @@ from urllib.parse import urlparse
 
 from playwright.sync_api import sync_playwright
 
-from clearway.schemas.models import AxeIncomplete, AxeNode, AxeRuleResult, AxeViolation, ScanResult, Severity
+from clearway.schemas.models import (
+    AxeIncomplete,
+    AxeNode,
+    AxePass,
+    AxeRuleResult,
+    AxeViolation,
+    ScanResult,
+    Severity,
+)
 
 _RuleResultT = TypeVar("_RuleResultT", bound=AxeRuleResult)
 
@@ -75,5 +83,8 @@ def scan(target: str) -> ScanResult:
         tool_version=AXE_VERSION,
         violations=[_to_rule_result(v, AxeViolation) for v in results.get("violations", [])],
         incomplete=[_to_rule_result(i, AxeIncomplete) for i in results.get("incomplete", [])],
+        # Faithful mirror of axe's passes[]; the normalizer surfaces a whitelisted existence-only
+        # subset (clearway/normalizer/quality_review.py) as quality-review judgment findings.
+        passes=[_to_rule_result(p, AxePass) for p in results.get("passes", [])],
         raw=results,
     )

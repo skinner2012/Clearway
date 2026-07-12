@@ -5,16 +5,20 @@ of the pipeline works per *place* — one issue at one element — so the normal
 explodes each rule result's nodes into individual `Finding`s, assigns a deterministic
 id, and drops duplicates (ARCHITECTURE §6: scanner → normalizer → everything).
 
-Two axe buckets become findings: confirmed `violations` and needs-review `incomplete`.
-They are structurally identical, so both flow through the same path; each finding
-records which bucket it came from in `source_bucket` so the oracle knows whether it
-carries hard ground truth (VIOLATIONS) or is oracle-poor (INCOMPLETE → unverifiable).
+Three axe buckets become findings: confirmed `violations`, needs-review `incomplete`, and a
+whitelisted, existence-only subset of `passes` (quality-review judgment items — see
+`quality_review.py` for why). They are structurally identical, so all flow through the same
+path; each finding records which bucket it came from in `source_bucket` so the oracle knows
+whether it carries hard ground truth (VIOLATIONS) or is oracle-poor (INCOMPLETE / PASSES →
+unverifiable). For a PASSES finding the help is reframed to the quality-review task, because
+axe's rule-level help ("Images must have alternate text") reads as already-conformant.
 """
 
 from __future__ import annotations
 
 import hashlib
 
+from clearway.normalizer.quality_review import QUALITY_REVIEW_RULES
 from clearway.schemas.models import AxeBucket, AxeRuleResult, Finding, ScanResult
 
 # Delimiter joining the (source_url, rule_id, target) parts before hashing. Chosen
@@ -64,7 +68,12 @@ def _findings_from_rule(source_url: str, rule: AxeRuleResult, bucket: AxeBucket)
 
     Provenance is NOT folded into the id: the id is the *place* identity
     (source_url, rule_id, target), and a place never appears in two buckets at once, so
-    the same element re-scans to the same id regardless of bucket."""
+    the same element re-scans to the same id regardless of bucket.
+
+    For a PASSES finding the help is reframed to the quality-review task: axe passed the
+    mechanical check (a name/attribute EXISTS), so its rule-level help reads as conformant —
+    the reframed help tells the drafter/judge to instead assess whether it is *meaningful*."""
+    help_text = QUALITY_REVIEW_RULES[rule.rule_id] if bucket is AxeBucket.PASSES else rule.help
     findings: list[Finding] = []
     for node in rule.nodes:
         target = _flatten_target(node.target)
@@ -77,7 +86,7 @@ def _findings_from_rule(source_url: str, rule: AxeRuleResult, bucket: AxeBucket)
                 target=target,
                 html=node.html,
                 impact=rule.impact,
-                help=rule.help,
+                help=help_text,
                 help_url=rule.help_url,
                 source_bucket=bucket,
             )
@@ -88,20 +97,25 @@ def _findings_from_rule(source_url: str, rule: AxeRuleResult, bucket: AxeBucket)
 def normalize(scan: ScanResult) -> list[Finding]:
     """Flatten a `ScanResult` into deduplicated `Finding[]`, in stable scan order.
 
-    Both axe buckets become findings — confirmed `violations` first, then needs-review
-    `incomplete` — each tagged with its `source_bucket`. Dedup is by `Finding.id` (the
-    (source_url, rule_id, target) hash): if the same rule hits the same place twice, we
-    keep the first and drop the rest. Order is preserved (first occurrence wins) so the
-    output is deterministic given a deterministic scan.
+    Three axe buckets become findings — confirmed `violations` first, then needs-review
+    `incomplete`, then the whitelisted existence-only `passes` (quality-review) — each tagged
+    with its `source_bucket`. Only passes whose rule is in the quality-review whitelist become
+    findings; the rest of axe's (large) passes[] are ignored. Dedup is by `Finding.id` (the
+    (source_url, rule_id, target) hash): if the same rule hits the same place twice, we keep
+    the first and drop the rest. Order is preserved (first occurrence wins) so the output is
+    deterministic given a deterministic scan.
     """
     seen: set[str] = set()
     findings: list[Finding] = []
     rules_by_bucket = (
         (AxeBucket.VIOLATIONS, scan.violations),
         (AxeBucket.INCOMPLETE, scan.incomplete),
+        (AxeBucket.PASSES, scan.passes),
     )
     for bucket, rules in rules_by_bucket:
         for rule in rules:
+            if bucket is AxeBucket.PASSES and rule.rule_id not in QUALITY_REVIEW_RULES:
+                continue  # only whitelisted existence-only rules are quality-review findings
             for finding in _findings_from_rule(scan.url, rule, bucket):
                 if finding.id in seen:
                     continue

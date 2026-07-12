@@ -7,8 +7,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from clearway.normalizer import normalize
+from clearway.normalizer.quality_review import QUALITY_REVIEW_RULES
 from clearway.scanner import scan
-from clearway.schemas.models import AxeBucket, AxeIncomplete, AxeNode, AxeViolation, ScanResult, Severity
+from clearway.schemas.models import (
+    AxeBucket,
+    AxeIncomplete,
+    AxeNode,
+    AxePass,
+    AxeViolation,
+    ScanResult,
+    Severity,
+)
 
 PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
 FIXTURE = PAGES / "home.html"
@@ -17,6 +26,7 @@ FIXTURE = PAGES / "home.html"
 def _scan_result(
     *violations: AxeViolation,
     incomplete: list[AxeIncomplete] | None = None,
+    passes: list[AxePass] | None = None,
     url: str = "file://home.html",
 ) -> ScanResult:
     return ScanResult(
@@ -25,6 +35,22 @@ def _scan_result(
         tool_version="4.12.1",
         violations=list(violations),
         incomplete=incomplete or [],
+        passes=passes or [],
+    )
+
+
+def _pass(
+    rule_id: str,
+    *targets: list[str],
+    tags: list[str] | None = None,
+    impact: Severity | None = None,
+) -> AxePass:
+    return AxePass(
+        rule_id=rule_id,
+        tags=tags or [],
+        impact=impact,
+        help="Images must have alternate text",  # axe's rule-level help — the misleading one
+        nodes=[AxeNode(target=t, html=f"<x>{t}</x>") for t in targets],
     )
 
 
@@ -120,6 +146,35 @@ def test_incomplete_items_become_findings_tagged_incomplete_after_violations() -
     # violations first, then incomplete — stable order
     assert [f.rule_id for f in findings] == ["image-alt", "color-contrast"]
     assert [f.source_bucket for f in findings] == [AxeBucket.VIOLATIONS, AxeBucket.INCOMPLETE]
+
+
+def test_whitelisted_pass_becomes_a_reframed_quality_review_finding() -> None:
+    """A whitelisted existence-only pass mints a PASSES finding whose help is reframed to the
+    quality-review task — NOT axe's rule-level help, which reads as already-conformant."""
+    (finding,) = normalize(_scan_result(passes=[_pass("image-alt", ["img"], tags=["wcag111"])]))
+    assert finding.source_bucket is AxeBucket.PASSES
+    assert finding.rule_id == "image-alt"
+    assert finding.help == QUALITY_REVIEW_RULES["image-alt"]
+    assert finding.help != "Images must have alternate text"  # the misleading rule-level help is dropped
+
+
+def test_non_whitelisted_pass_is_not_a_finding() -> None:
+    """axe's passes[] is large; only whitelisted existence-only rules become findings. A pass for
+    any other rule (here a heading check) is ignored."""
+    assert normalize(_scan_result(passes=[_pass("heading-order", ["h2"])])) == []
+
+
+def test_passes_findings_come_after_violations_and_incomplete() -> None:
+    result = _scan_result(
+        _violation("label", ["#email"]),
+        incomplete=[_incomplete("color-contrast", ["p"])],
+        passes=[_pass("link-name", ["a"])],
+    )
+    assert [f.source_bucket for f in normalize(result)] == [
+        AxeBucket.VIOLATIONS,
+        AxeBucket.INCOMPLETE,
+        AxeBucket.PASSES,
+    ]
 
 
 def test_source_bucket_is_not_part_of_the_id() -> None:

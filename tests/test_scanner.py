@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from clearway.scanner import AXE_VERSION, scan
-from clearway.schemas.models import AxeIncomplete, ScanResult, Severity
+from clearway.schemas.models import AxeIncomplete, AxePass, ScanResult, Severity
 
 PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
 FIXTURE = PAGES / "home.html"
@@ -61,6 +61,18 @@ def test_scan_finds_exactly_the_planted_violations() -> None:
     result = _scan()
     found = {v.rule_id for v in result.violations}
     assert found == set(EXPECTED), f"expected the 3 planted rules, got {sorted(found)}"
+
+
+def test_scan_captures_the_passes_bucket_faithfully() -> None:
+    """scan() mirrors axe's passes[] into typed AxePass — the raw bucket the normalizer draws
+    quality-review judgment findings from. home.html passes many rules (it has a <title>, a
+    named <button>, a <main> landmark), so passes[] is populated even though none of home's
+    passes are on the quality-review whitelist (so it yields no PASSES findings — see the
+    normalizer tests)."""
+    result = _scan()
+    assert result.passes, "home.html passes many axe rules; passes[] must be captured, not dropped"
+    assert all(isinstance(p, AxePass) for p in result.passes)
+    assert "document-title" in {p.rule_id for p in result.passes}  # home.html has a <title>
 
 
 def test_each_violation_carries_expected_sc_tag_and_impact() -> None:

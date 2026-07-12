@@ -61,15 +61,23 @@ class OracleRegime(str, Enum):
 
 
 class AxeBucket(str, Enum):
-    """Which axe result array a Finding came from — its provenance. Only VIOLATIONS
-    carries hard ground truth (axe decided the element fails); INCOMPLETE means axe ran
-    the rule but could NOT decide, so it has no oracle verdict and feeds the eval
-    `unverifiable_share`. The oracle allowlists VIOLATIONS: any other bucket is
-    UNVERIFIABLE by default. Values match axe's payload keys. Extend when a new bucket
-    becomes a Finding source (e.g. `passes` -> supports-evidence)."""
+    """Which axe result array a Finding came from — its provenance, and why it does (or
+    doesn't) carry an oracle verdict:
+    - VIOLATIONS — axe decided the element fails: hard ground truth, oracle-backed.
+    - INCOMPLETE — axe ran the rule but could NOT decide (needs pixels / render / media
+      it can't see): no oracle verdict, feeds `unverifiable_share`.
+    - PASSES — axe confirmed something EXISTS (an alt, an accessible name, a title) but
+      does not judge its QUALITY. A whitelist of existence-only rules is surfaced from
+      here as judgment findings ("exists, quality unjudged"); non-whitelisted passes are
+      not findings. This is the LLM-judge's real domain — quality IS decidable from the
+      DOM the drafter sees (unlike INCOMPLETE, which usually isn't).
+    The oracle allowlists VIOLATIONS only: INCOMPLETE and PASSES have no oracle verdict
+    and score UNVERIFIABLE (never folded into the verified count). Values match axe's
+    payload keys."""
 
     VIOLATIONS = "violations"  # confirmed failure — oracle-backed
-    INCOMPLETE = "incomplete"  # needs review — no oracle verdict
+    INCOMPLETE = "incomplete"  # axe couldn't decide — no oracle verdict
+    PASSES = "passes"  # exists but quality unjudged — whitelisted judgment source, no oracle
 
 
 class JudgeVerdict(str, Enum):

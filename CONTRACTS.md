@@ -99,14 +99,22 @@ class OracleRegime(str, Enum):
 
 
 class AxeBucket(str, Enum):
-    """Which axe result array a Finding came from — its provenance. Only VIOLATIONS
-    carries hard ground truth (axe decided the element fails); INCOMPLETE means axe ran
-    the rule but could NOT decide, so it has no oracle verdict and feeds the eval
-    `unverifiable_share`. The oracle allowlists VIOLATIONS: any other bucket is
-    UNVERIFIABLE by default. Values match axe's payload keys. Extend when a new bucket
-    becomes a Finding source (e.g. `passes` -> supports-evidence)."""
+    """Which axe result array a Finding came from — its provenance, and why it does (or
+    doesn't) carry an oracle verdict:
+    - VIOLATIONS — axe decided the element fails: hard ground truth, oracle-backed.
+    - INCOMPLETE — axe ran the rule but could NOT decide (needs pixels / render / media
+      it can't see): no oracle verdict, feeds `unverifiable_share`.
+    - PASSES — axe confirmed something EXISTS (an alt, an accessible name, a title) but
+      does not judge its QUALITY. A whitelist of existence-only rules is surfaced from
+      here as judgment findings ("exists, quality unjudged"); non-whitelisted passes are
+      not findings. This is the LLM-judge's real domain — quality IS decidable from the
+      DOM the drafter sees (unlike INCOMPLETE, which usually isn't).
+    The oracle allowlists VIOLATIONS only: INCOMPLETE and PASSES have no oracle verdict
+    and score UNVERIFIABLE (never folded into the verified count). Values match axe's
+    payload keys."""
     VIOLATIONS = "violations"  # confirmed failure — oracle-backed
-    INCOMPLETE = "incomplete"  # needs review — no oracle verdict
+    INCOMPLETE = "incomplete"  # axe couldn't decide — no oracle verdict
+    PASSES = "passes"          # exists but quality unjudged — whitelisted judgment source, no oracle
 
 
 class JudgeVerdict(str, Enum):
@@ -622,4 +630,5 @@ Added when their milestone arrives, not before:
 | 2026-07-10 | 0.8 | Swapped M4/M5 (§5 deferred): `JudgeResult` / `CalibrationReport` and `GoldLabel` move to **M4** (judge calibration now precedes routing; `GoldLabel` reworded to "judgment-item ground truth", same shape M6's `GoldLabelOracle` reuses); `RoutingConfig` moves to **M5**; L2 faithfulness follows the judge to **M4**. No §3 schema change — shapes still land at each milestone's own T0. |
 | 2026-07-09 | 0.6 | M2 (T0): added durable-orchestration + HITL schemas — `RunState`, `StepState` (checkpoint/resume, keyed `(run_id, finding_id, step)` via the new `PipelineStep` enum) and `NeedsReview` (HITL approve/edit record, `ReviewReason` + `ReviewStatus` enums; written post-validation, carries the drafted `DraftRow`). Added `EvalMetrics.expert_edit_distance` (unbounded `float ≥ 0`, normalization left to T4). `NeedsReview` removed from §5 (no longer deferred). Additive — existing shapes unchanged. |
 | 2026-07-12 | 0.9 | Editorial: retired the stale, M0-scoped "What M0 touches" section and the M0 pipeline sketch in §1 (retrieve/draft went real in M1; module data flow lives in `ARCHITECTURE.md` §6). Generalised §4 to the cross-module `Oracle` invariant and dropped the "(not in M0)" qualifier from §5's title. No §3 schema change. |
+| 2026-07-12 | 0.11 | M4 (T1 scope): added `AxeBucket.PASSES` — provenance for judgment findings minted from axe's `passes[]` array for a whitelist of *existence-only* rules (`image-alt` & alt variants, `link-name`, `button-name`, `document-title`, `frame-title`, `label`), where axe confirms a name/attribute EXISTS but not that it is meaningful. Non-whitelisted passes are still not findings. The oracle is unchanged (allowlists only `VIOLATIONS`), so PASSES-sourced findings score `UNVERIFIABLE` — no verified-count inflation. **Rationale:** the pinned axe 4.12.1 `incomplete[]` bucket yields zero DOM-decidable judgment items (all 55 incomplete-capable rules are pixel/render/media/name-resolution bound), so `passes[]` is the only viable source for the judge gold set. This is a scoped forward-path change, recorded in `specs/M4-judge-calibration.md`. Additive — existing findings default to `VIOLATIONS`, wire shape unchanged. |
 | 2026-07-12 | 0.10 | M4 (T0): added judge + calibration schemas — `GoldLabel` (the single gold shape, reused by M6's `GoldLabelOracle`), `JudgeResult` (+ `JudgeVerdict` enum), `ConfidenceBin`, and `CalibrationReport` (κ + the confidence-vs-correctness curve as a typed `ConfidenceBin` list). Extended `EvalMetrics` with judge/calibration **scalars only** (all Optional, default `None`): `judge_kappa` (bounds **[-1,1]** — a negative κ is signal, not an error to clamp), `judge_agreement_rate`, `judge_gold_n`, `judge_trusted`, `judgment_correctness_rate` + `judgment_items_total` + `judgment_correct_total`, `expected_calibration_error`, `overconfidence_gap`. Removed the three schemas from §5; softened the L2 row to "M4+ / when the judge exists". Judge-scored items are NOT promoted to verified — `unverifiable_share` unchanged. Additive — existing shapes unchanged. |

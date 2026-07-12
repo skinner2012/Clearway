@@ -105,8 +105,9 @@ class AxeNode(BaseModel):
 
 class AxeRuleResult(BaseModel):
     """One axe rule result over a page (may span multiple nodes). Base for the buckets
-    we consume — `violations` (confirmed) and `incomplete` (needs review) — which are
-    structurally identical in the axe payload."""
+    we consume — `violations` (confirmed), `incomplete` (needs review), and whitelisted
+    `passes` (existence-only → quality-review) — which are structurally identical in the
+    axe payload."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -131,6 +132,13 @@ class AxeIncomplete(AxeRuleResult):
     the source of eval's `unverifiable_share`. Same shape as a violation, but NOT confirmed."""
 
 
+class AxePass(AxeRuleResult):
+    """An axe PASS result (axe's `passes` bucket): the rule's mechanical check succeeded — a
+    name / attribute / title EXISTS. For a whitelist of existence-only rules, passing means only
+    "present", never "meaningful", so the normalizer surfaces those as quality-review judgment
+    findings (`AxeBucket.PASSES`). Same shape as a violation, but a PASS, not a failure."""
+
+
 class ScanResult(BaseModel):
     """Output of scanner/ for one page scan. Consumed by normalizer/."""
 
@@ -143,6 +151,11 @@ class ScanResult(BaseModel):
     violations: list[AxeViolation] = Field(default_factory=list)
     incomplete: list[AxeIncomplete] = Field(
         default_factory=list, description="axe needs-review items, kept distinct from violations"
+    )
+    passes: list[AxePass] = Field(
+        default_factory=list,
+        description="axe's passes[] bucket (faithful mirror); the normalizer surfaces a whitelisted "
+        "existence-only subset as quality-review judgment findings",
     )
     raw: dict = Field(default_factory=dict, description="full axe payload passthrough (untyped)")
 

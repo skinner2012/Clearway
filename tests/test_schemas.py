@@ -11,6 +11,8 @@ from clearway import schemas
 from clearway.schemas import models
 from clearway.schemas.models import (
     AxeBucket,
+    AxeNode,
+    AxePass,
     CalibrationReport,
     ConfidenceBin,
     Conformance,
@@ -32,6 +34,7 @@ from clearway.schemas.models import (
     ReviewStatus,
     RunState,
     RunStatus,
+    ScanResult,
     Severity,
     StepState,
     StepStatus,
@@ -80,6 +83,7 @@ def test_enum_wire_values_are_stable() -> None:
     # AxeBucket values must match axe's payload keys — the scanner reads results by these names.
     assert AxeBucket.VIOLATIONS.value == "violations"
     assert AxeBucket.INCOMPLETE.value == "incomplete"
+    assert AxeBucket.PASSES.value == "passes"
     # M2: durable orchestration + HITL wire values.
     assert PipelineStep.RETRIEVE.value == "retrieve"
     assert RunStatus.PAUSED.value == "paused"
@@ -92,6 +96,22 @@ def test_finding_defaults_to_the_violations_bucket() -> None:
     """Provenance is additive: an M0-style finding (no source_bucket) is a confirmed violation."""
     finding = Finding(id="x", source_url="u", rule_id="image-alt", target="img")
     assert finding.source_bucket is AxeBucket.VIOLATIONS
+
+
+def test_scan_result_passes_bucket_is_additive() -> None:
+    """The `passes` bucket is additive: an M0-style scan (no passes) round-trips with an empty
+    list, and an `AxePass` carries the same `AxeRuleResult` shape as a violation."""
+    empty = ScanResult(url="u", scanned_at=datetime(2026, 7, 12), tool_version="4.12.1")
+    assert empty.passes == []
+
+    scan = ScanResult(
+        url="u",
+        scanned_at=datetime(2026, 7, 12),
+        tool_version="4.12.1",
+        passes=[AxePass(rule_id="image-alt", tags=["wcag111"], nodes=[AxeNode(target=["img"], html="<img>")])],
+    )
+    assert scan.passes[0].rule_id == "image-alt"
+    assert ScanResult.model_validate_json(scan.model_dump_json()).passes[0].rule_id == "image-alt"
 
 
 def test_corpus_chunk_embedding_is_optional_and_excluded_from_serialization() -> None:

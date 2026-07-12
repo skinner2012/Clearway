@@ -139,8 +139,9 @@ class AxeNode(BaseModel):
 
 class AxeRuleResult(BaseModel):
     """One axe rule result over a page (may span multiple nodes). Base for the buckets
-    we consume — `violations` (confirmed) and `incomplete` (needs review) — which are
-    structurally identical in the axe payload."""
+    we consume — `violations` (confirmed), `incomplete` (needs review), and whitelisted
+    `passes` (existence-only → quality-review) — which are structurally identical in the
+    axe payload."""
     model_config = ConfigDict(extra="forbid")
 
     rule_id: str = Field(..., description="axe rule id, e.g. 'image-alt'")
@@ -164,6 +165,13 @@ class AxeIncomplete(AxeRuleResult):
     the source of eval's `unverifiable_share`. Same shape as a violation, but NOT confirmed."""
 
 
+class AxePass(AxeRuleResult):
+    """An axe PASS result (axe's `passes` bucket): the rule's mechanical check succeeded — a
+    name / attribute / title EXISTS. For a whitelist of existence-only rules, passing means only
+    "present", never "meaningful", so the normalizer surfaces those as quality-review judgment
+    findings (`AxeBucket.PASSES`). Same shape as a violation, but a PASS, not a failure."""
+
+
 class ScanResult(BaseModel):
     """Output of scanner/ for one page scan. Consumed by normalizer/."""
     model_config = ConfigDict(extra="forbid")
@@ -175,6 +183,11 @@ class ScanResult(BaseModel):
     violations: list[AxeViolation] = Field(default_factory=list)
     incomplete: list[AxeIncomplete] = Field(
         default_factory=list, description="axe needs-review items, kept distinct from violations"
+    )
+    passes: list[AxePass] = Field(
+        default_factory=list,
+        description="axe's passes[] bucket (faithful mirror); the normalizer surfaces a whitelisted "
+        "existence-only subset as quality-review judgment findings",
     )
     raw: dict = Field(default_factory=dict, description="full axe payload passthrough (untyped)")
 
@@ -630,5 +643,6 @@ Added when their milestone arrives, not before:
 | 2026-07-10 | 0.8 | Swapped M4/M5 (§5 deferred): `JudgeResult` / `CalibrationReport` and `GoldLabel` move to **M4** (judge calibration now precedes routing; `GoldLabel` reworded to "judgment-item ground truth", same shape M6's `GoldLabelOracle` reuses); `RoutingConfig` moves to **M5**; L2 faithfulness follows the judge to **M4**. No §3 schema change — shapes still land at each milestone's own T0. |
 | 2026-07-09 | 0.6 | M2 (T0): added durable-orchestration + HITL schemas — `RunState`, `StepState` (checkpoint/resume, keyed `(run_id, finding_id, step)` via the new `PipelineStep` enum) and `NeedsReview` (HITL approve/edit record, `ReviewReason` + `ReviewStatus` enums; written post-validation, carries the drafted `DraftRow`). Added `EvalMetrics.expert_edit_distance` (unbounded `float ≥ 0`, normalization left to T4). `NeedsReview` removed from §5 (no longer deferred). Additive — existing shapes unchanged. |
 | 2026-07-12 | 0.9 | Editorial: retired the stale, M0-scoped "What M0 touches" section and the M0 pipeline sketch in §1 (retrieve/draft went real in M1; module data flow lives in `ARCHITECTURE.md` §6). Generalised §4 to the cross-module `Oracle` invariant and dropped the "(not in M0)" qualifier from §5's title. No §3 schema change. |
+| 2026-07-12 | 0.12 | M4 (T1): scanner captures axe's `passes[]` bucket. Added `AxePass` (same `AxeRuleResult` shape, a PASS not a failure) and `ScanResult.passes: list[AxePass]` (faithful mirror of axe's passes). The normalizer surfaces a whitelist of *existence-only* rules from it as `AxeBucket.PASSES` judgment findings, reframing each finding's help to the quality-review task; the oracle is unchanged (allowlists `VIOLATIONS`) so they score `UNVERIFIABLE`. Additive — existing scans get an empty `passes`, wire shape unchanged. |
 | 2026-07-12 | 0.11 | M4 (T1 scope): added `AxeBucket.PASSES` — provenance for judgment findings minted from axe's `passes[]` array for a whitelist of *existence-only* rules (`image-alt` & alt variants, `link-name`, `button-name`, `document-title`, `frame-title`, `label`), where axe confirms a name/attribute EXISTS but not that it is meaningful. Non-whitelisted passes are still not findings. The oracle is unchanged (allowlists only `VIOLATIONS`), so PASSES-sourced findings score `UNVERIFIABLE` — no verified-count inflation. **Rationale:** the pinned axe 4.12.1 `incomplete[]` bucket yields zero DOM-decidable judgment items (all 55 incomplete-capable rules are pixel/render/media/name-resolution bound), so `passes[]` is the only viable source for the judge gold set. This is a scoped forward-path change, recorded in `specs/M4-judge-calibration.md`. Additive — existing findings default to `VIOLATIONS`, wire shape unchanged. |
 | 2026-07-12 | 0.10 | M4 (T0): added judge + calibration schemas — `GoldLabel` (the single gold shape, reused by M6's `GoldLabelOracle`), `JudgeResult` (+ `JudgeVerdict` enum), `ConfidenceBin`, and `CalibrationReport` (κ + the confidence-vs-correctness curve as a typed `ConfidenceBin` list). Extended `EvalMetrics` with judge/calibration **scalars only** (all Optional, default `None`): `judge_kappa` (bounds **[-1,1]** — a negative κ is signal, not an error to clamp), `judge_agreement_rate`, `judge_gold_n`, `judge_trusted`, `judgment_correctness_rate` + `judgment_items_total` + `judgment_correct_total`, `expected_calibration_error`, `overconfidence_gap`. Removed the three schemas from §5; softened the L2 row to "M4+ / when the judge exists". Judge-scored items are NOT promoted to verified — `unverifiable_share` unchanged. Additive — existing shapes unchanged. |

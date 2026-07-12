@@ -72,6 +72,15 @@ class AxeBucket(str, Enum):
     INCOMPLETE = "incomplete"  # needs review — no oracle verdict
 
 
+class JudgeVerdict(str, Enum):
+    """LLM-judge verdict on one drafted judgment item (M4). `partial` = exactly one of
+    citation / conformance is correct; severity is not part of the verdict."""
+
+    CORRECT = "correct"
+    INCORRECT = "incorrect"
+    PARTIAL = "partial"
+
+
 # ============================================================
 # Scanner output  (scanner/ -> normalizer/)
 # ============================================================
@@ -388,8 +397,10 @@ class EvalMetrics(BaseModel):
     """Trust metrics for one eval run. M1 stratifies the hallucination rate by whether an
     automated oracle could verify the citation: the verifiable subset (axe-detectable, ~0 by
     construction) vs the unverifiable share (judgment items with no oracle — the honest
-    headline, and exactly what M5's judge/gold must target). M2 adds `expert_edit_distance`,
-    the human-correction signal from the HITL gate."""
+    headline, and exactly what M4's judge/gold must target). M2 adds `expert_edit_distance`,
+    the human-correction signal from the HITL gate. M4 adds judge-reliability (κ),
+    judgment-item correctness, and confidence-calibration scalars — all Optional; the
+    calibration curve itself is a typed list on `CalibrationReport`, never copied here."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -425,6 +436,40 @@ class EvalMetrics(BaseModel):
         ge=0.0,
         description="mean human-edit distance over reviewed drafts this run (0 = no edits needed); "
         "unbounded above — M2 uses a normalized [0,1] text ratio, type stays open for a future distance function",
+    )
+
+    # M4: judge reliability + judgment-item correctness + confidence calibration. All Optional
+    # (M0–M3 runs carry no judge). SCALARS ONLY — the full calibration curve is a typed list on
+    # CalibrationReport, never copied here. Store numerators + denominators, not just rates.
+    judge_kappa: Optional[float] = Field(
+        None,
+        ge=-1.0,
+        le=1.0,
+        description="judge-vs-human Cohen's κ. Bounds [-1,1]: a negative κ (judge worse than chance) is the single "
+        "most important red flag — do NOT copy ge=0.0 from the rate fields above",
+    )
+    judge_agreement_rate: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="raw judge-vs-human agreement proportion"
+    )
+    judge_gold_n: Optional[int] = Field(None, ge=0, description="gold findings the judge was calibrated on")
+    judge_trusted: Optional[bool] = Field(None, description="did the judge clear the pre-committed κ bar")
+    judgment_correctness_rate: Optional[float] = Field(
+        None,
+        ge=0.0,
+        le=1.0,
+        description="judge-scored correctness over judgment items — an ESTIMATE capped by κ, not promoted to "
+        "verified (unverifiable_share stays as-is)",
+    )
+    judgment_items_total: Optional[int] = Field(None, ge=0, description="judgment items the judge scored — denominator")
+    judgment_correct_total: Optional[int] = Field(None, ge=0, description="judgment items judged correct — numerator")
+    expected_calibration_error: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="ECE — unsigned magnitude of confidence miscalibration"
+    )
+    overconfidence_gap: Optional[float] = Field(
+        None,
+        ge=-1.0,
+        le=1.0,
+        description="signed: mean confidence − mean correctness; positive = systematically over-confident",
     )
 
 
@@ -480,3 +525,106 @@ class Oracle(Protocol):
 
     @property
     def version(self) -> str: ...  # pinned for reproducibility
+
+
+# ============================================================
+# Judge + calibration  (eval/ — LLM-judge for no-oracle judgment items, M4)
+# ============================================================
+
+
+class GoldLabel(BaseModel):
+    """Human-assigned ground truth for one judgment-item finding. The SINGLE gold shape:
+    self-built digital gold now (labelled with WCAG knowledge, no external expert), and the
+    same shape a future Regime B `GoldLabelOracle` reuses for expert physical gold — one gold
+    contract, two labellers/regimes. Do NOT fork a second gold schema."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    finding_id: str
+    gold_success_criteria: list[str] = Field(
+        default_factory=list, description="canonical WCAG 2.2 SC ids the labeller assigns as correct, e.g. ['1.1.1']"
+    )
+    gold_conformance: Conformance
+    gold_severity: Optional[Severity] = None
+    labeller: str = Field(
+        ..., description="who produced this label — judge-vs-human κ is really judge-vs-this-one-labeller"
+    )
+    gold_version: str = Field(..., description="versioned gold-set id, for reproducibility")
+    notes: str = Field("", description="labelling basis / WCAG spot-check disagreements")
+
+
+class JudgeResult(BaseModel):
+    """One LLM-judge verdict on one drafted judgment-item finding. Kept SEPARATE from
+    `CitationCheck`: a per-draft correctness verdict is a different granularity than the
+    per-citation validator layer — which is why L2-faithfulness fields on `CitationCheck` stay
+    deferred. The judge scores citation + conformance only (severity is out of the verdict:
+    noisier, lower-stakes). Used ONLY for no-oracle judgment items, never the axe-verifiable
+    subset, and only after the judge is calibrated (κ)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    finding_id: str
+    run_id: str
+    judge_model: str = Field(..., description="judge model id — MUST differ from the drafter model (self-preference)")
+    judge_version: str = Field(
+        ..., description="pinned judge snapshot + temperature/prompt provenance, for reproducibility"
+    )
+    verdict: JudgeVerdict = Field(
+        ..., description="correct | incorrect | partial (partial = one dimension right, the other wrong)"
+    )
+    citation_correct: bool = Field(..., description="drafted SC(s) judged correct for the finding")
+    conformance_correct: bool = Field(..., description="drafted conformance judged correct for the finding")
+    rationale: str = Field(..., description="the judge's justification (rubric-based absolute scoring)")
+
+
+class ConfidenceBin(BaseModel):
+    """One bin of the confidence-vs-correctness calibration curve. `n` and `correct_n` are
+    MANDATORY — a bin with n=1 otherwise makes the curve lie. This typed list (on
+    `CalibrationReport`) is the curve's only home; it is never copied onto `EvalMetrics`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    lower: float = Field(..., ge=0.0, le=1.0, description="bin lower edge (drafter confidence)")
+    upper: float = Field(..., ge=0.0, le=1.0, description="bin upper edge (drafter confidence)")
+    n: int = Field(..., ge=0, description="drafts in this bin — mandatory")
+    mean_confidence: float = Field(..., ge=0.0, le=1.0, description="mean self-reported confidence in the bin")
+    correctness_rate: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="fraction correct in the bin (oracle for verifiable items, trusted judge for judgment items)",
+    )
+    correct_n: int = Field(..., ge=0, description="correct count in the bin — mandatory")
+
+
+class CalibrationReport(BaseModel):
+    """Judge reliability (judge-vs-human κ against the gold set) + the confidence-vs-correctness
+    curve. κ is judge-vs-ONE-labeller, not judge-vs-consensus — do not over-read it. A judge is
+    only trusted to score models once κ clears a bar committed BEFORE the number is seen."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    judge_kappa: float = Field(
+        ...,
+        ge=-1.0,
+        le=1.0,
+        description="Cohen's κ, judge vs human-derived verdicts. Bounds [-1,1]: a negative κ (judge worse than "
+        "chance) is the key red flag and must NOT be clamped to 0",
+    )
+    judge_agreement: float = Field(..., ge=0.0, le=1.0, description="raw agreement proportion, reported alongside κ")
+    n: int = Field(
+        ...,
+        ge=0,
+        description="gold findings compared (effective n is lower — same-fixture findings are correlated)",
+    )
+    kappa_threshold: float = Field(..., ge=-1.0, le=1.0, description="the trust bar, pre-committed before κ is seen")
+    judge_trusted: bool = Field(
+        ..., description="κ >= threshold; only a trusted judge may score models on non-gold items"
+    )
+    confidence_bins: list[ConfidenceBin] = Field(
+        default_factory=list, description="the full calibration curve — a list, not a scalar; the curve's only home"
+    )
+    bias_notes: str = Field(
+        "", description="verbosity / self-preference observations (position bias N/A — absolute rubric scoring)"
+    )
+    created_at: datetime

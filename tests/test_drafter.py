@@ -15,7 +15,8 @@ import urllib.request
 import pytest
 
 from clearway.drafter import Drafter, FakeLLMClient, LiteLLMClient, LLMUsage
-from clearway.schemas.models import Citation, Conformance, Finding, Severity
+from clearway.drafter.llm import _user_prompt
+from clearway.schemas.models import AxeBucket, Citation, Conformance, Finding, Severity
 
 _GOOD = '{"conformance":"does_not_support","cited_sc_ids":["1.1.1"],"remediation":"Add alt text.","confidence":0.9}'
 _BAD = "sorry, here is your row: **Conformance:** fail"  # markdown, not JSON → ValidationError
@@ -96,6 +97,28 @@ def test_empty_retrieval_degrades_gracefully() -> None:
     assert row.citations == []
     assert row.conformance == Conformance.NOT_APPLICABLE
     assert row.confidence == 0.2  # low, but a real row — not a crash
+
+
+# --- prompt framing by provenance --------------------------------------------
+
+
+def test_passes_finding_is_framed_as_a_quality_review_task_not_a_pass() -> None:
+    """A PASSES finding must be drafted as a quality-review task — otherwise the model reads
+    'a name exists' as conformant and drafts `supports`, and the whole gold set is non-issues.
+    The prompt must say so, and must NOT reuse the 'could not decide' framing (that's INCOMPLETE)."""
+    passes_finding = _finding().model_copy(update={"source_bucket": AxeBucket.PASSES})
+    prompt = _user_prompt(passes_finding, [_cite("1.1.1")])
+    assert "QUALITY-REVIEW" in prompt
+    assert "never supports" in prompt  # present-but-inadequate is not a pass
+    assert "could not decide" not in prompt  # that framing belongs to INCOMPLETE, not PASSES
+
+
+def test_violation_and_incomplete_framings_are_unchanged() -> None:
+    """The new branch is additive: violations and incomplete keep their existing framing."""
+    violation = _user_prompt(_finding(), [_cite("1.1.1")])  # default bucket = VIOLATIONS
+    assert "a CONFIRMED failure" in violation
+    incomplete = _finding().model_copy(update={"source_bucket": AxeBucket.INCOMPLETE})
+    assert "could not decide" in _user_prompt(incomplete, [_cite("1.1.1")])
 
 
 # --- Usage seam (T2: complete_json returns content + usage) -------------------

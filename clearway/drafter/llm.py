@@ -206,11 +206,21 @@ def _system_prompt() -> str:
 
 
 def _user_prompt(finding: Finding, citations: list[Citation]) -> str:
-    bucket = (
-        "a CONFIRMED failure"
-        if finding.source_bucket is AxeBucket.VIOLATIONS
-        else "a NEEDS-REVIEW item the scanner could not decide"
-    )
+    # Three-way framing by provenance. PASSES is the subtle one: axe *passed* the mechanical
+    # check (a name/attribute/title EXISTS) but never judged its quality — so without this branch
+    # the model reads "has alt text" as conformant and drafts `supports`, defeating the whole
+    # quality-review gold set. The finding's help is already reframed to the specific task
+    # (normalizer/quality_review.py); this states the general stance.
+    if finding.source_bucket is AxeBucket.VIOLATIONS:
+        bucket = "a CONFIRMED failure"
+    elif finding.source_bucket is AxeBucket.PASSES:
+        bucket = (
+            "a QUALITY-REVIEW item: axe confirmed a name/attribute is PRESENT but does NOT judge "
+            "whether it is meaningful — assess the CONTENT's quality; present-but-inadequate is "
+            "does_not_support or partially_supports, never supports"
+        )
+    else:
+        bucket = "a NEEDS-REVIEW item the scanner could not decide"
     candidates = "\n".join(f"- {c.sc_id} ({c.url})" for c in citations) or "- (none retrieved)"
     return (
         f"Finding ({bucket}): axe rule '{finding.rule_id}' — {finding.help or '(no description)'}\n"

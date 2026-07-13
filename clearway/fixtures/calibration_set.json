@@ -1,0 +1,1151 @@
+{
+  "set_id": "calibration",
+  "version": 1,
+  "calibration_version": "calibration@1",
+  "gold_version": "quality-gold@1",
+  "drafter_model": "gemma4:31b",
+  "judge_model": "gpt-5.6-luna",
+  "judge_version": "rubric=e396f37f; effort=medium",
+  "corpus_version": "wcag22-nomic-embed-text-768@1",
+  "kappa_threshold": 0.6,
+  "created_at": "2026-07-13T20:58:53.195884+00:00",
+  "drafts": [
+    {
+      "finding_id": "9a8390277f65a70a",
+      "target": "#hero",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 1.0,
+        "remediation": "Replace the filename in the alt attribute with a descriptive text alternative that conveys the image's purpose."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the applicable criterion for meaningful alternative text, and the filename used as the alt value does not provide an adequate text alternative, so the finding does not support conformance."
+      }
+    },
+    {
+      "finding_id": "43d7f3950d6e1120",
+      "target": "#thumb",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace the generic alt text 'product' with a descriptive name of the specific product shown in the image."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the applicable success criterion, and the generic alt value “product” does not meaningfully convey the image’s purpose or content, so it does not support the requirement."
+      }
+    },
+    {
+      "finding_id": "43d7f3950d6e1120",
+      "target": "#thumb",
+      "rule_id": "image-alt",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 1.0,
+        "remediation": "None required as the image has a descriptive alt attribute."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": false,
+        "verdict": "partial",
+        "rationale": "WCAG 1.1.1 is the correct criterion, but the generic alt text “product” does not meaningfully convey the image’s purpose, so the finding does not support conformance."
+      }
+    },
+    {
+      "finding_id": "8f33db3b42876bf5",
+      "target": "#spec",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 1.0,
+        "remediation": "None required as the alt text is descriptive and meaningful."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the applicable criterion, and the alt text meaningfully conveys the image’s subject and key information, so the finding supports conformance."
+      }
+    },
+    {
+      "finding_id": "1152e488e669e850",
+      "target": "#team",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace the generic 'team photo' alt text with a descriptive caption that conveys the same information as the image."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the correct criterion, and the generic alt text “team photo” does not meaningfully describe the image, so does_not_support is appropriate."
+      }
+    },
+    {
+      "finding_id": "1152e488e669e850",
+      "target": "#team",
+      "rule_id": "image-alt",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 1.0,
+        "remediation": "None required as the image has a descriptive alt attribute."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": false,
+        "verdict": "partial",
+        "rationale": "WCAG 1.1.1 is the correct criterion, but the generic alt text “team photo” does not meaningfully describe the image, so the finding does not support conformance."
+      }
+    },
+    {
+      "finding_id": "fc331bc55b99e392",
+      "target": "#brandlogo",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 1.0,
+        "remediation": "No remediation needed as the alt text is descriptive of the brand name."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the correct criterion, and the alt text “Acme Corp” meaningfully identifies the brand logo rather than using a generic or filename-based value."
+      }
+    },
+    {
+      "finding_id": "7e64b847cf894bc0",
+      "target": "#fig",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace the generic alt text 'graph' with a descriptive summary of the chart's data or purpose."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the applicable success criterion for an image's text alternative, and the generic alt value “graph” does not meaningfully convey the image's information, so does_not_support is correct."
+      }
+    },
+    {
+      "finding_id": "7e64b847cf894bc0",
+      "target": "#fig",
+      "rule_id": "image-alt",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 0.9,
+        "remediation": "Replace the generic alt text 'graph' with a descriptive summary of the chart's data."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": false,
+        "verdict": "partial",
+        "rationale": "WCAG 1.1.1 is the correct criterion, but the generic alt text “graph” does not meaningfully describe the chart, so the finding does not support the criterion rather than partially supporting it."
+      }
+    },
+    {
+      "finding_id": "15f5e7a231d8f1b6",
+      "target": "#shot1",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 1.0,
+        "remediation": "None required as the alt text is descriptive and meaningful."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the correct criterion for meaningful alternative text, and the specific alt text meaningfully describes the image, so it supports conformance."
+      }
+    },
+    {
+      "finding_id": "521ddc9a749223e4",
+      "target": "#shot2",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace the generic alt text 'photo' with a descriptive alternative that conveys the meaning of the street image."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the applicable success criterion, and the generic alt value “photo” does not meaningfully convey the image’s purpose or content, so the finding does not support conformance."
+      }
+    },
+    {
+      "finding_id": "521ddc9a749223e4",
+      "target": "#shot2",
+      "rule_id": "image-alt",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace the generic alt text 'photo' with a descriptive description of the image content."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the correct criterion, and because the present alt value is generic and does not meaningfully describe the image, partially_supports is an acceptable verdict."
+      }
+    },
+    {
+      "finding_id": "46863d464fa9b527",
+      "target": "#shot3",
+      "rule_id": "image-alt",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace the generic 'click to enlarge' text with a descriptive alternative that conveys the meaning of the market image."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 1.1.1 is the correct criterion for a meaningfully descriptive text alternative, and “click to enlarge” does not convey the image’s information or purpose, so the finding does not support the criterion."
+      }
+    },
+    {
+      "finding_id": "46863d464fa9b527",
+      "target": "#shot3",
+      "rule_id": "image-alt",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [
+          "1.1.1"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace the generic 'click to enlarge' text with a descriptive alternative that conveys the purpose or content of the image."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "1.1.1"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": false,
+        "verdict": "partial",
+        "rationale": "WCAG 1.1.1 is the correct criterion, but the non-descriptive alt text “click to enlarge” fails to provide an equivalent text alternative for the image, so the verdict should be does_not_support rather than partially_supports."
+      }
+    },
+    {
+      "finding_id": "57ed2f0c20c6a717",
+      "target": "#l_click",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "2.4.4"
+        ],
+        "confidence": 1.0,
+        "remediation": "Replace 'click here' with descriptive text that explains the destination, such as 'View our pricing plans'."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 2.4.4 is the correct criterion because the link text “click here” does not describe the purpose of the pricing link in context, so the does_not_support verdict is correct."
+      }
+    },
+    {
+      "finding_id": "57ed2f0c20c6a717",
+      "target": "#l_click",
+      "rule_id": "link-name",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [
+          "2.4.4",
+          "2.4.9"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace 'click here' with descriptive text that explains the destination of the link."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "SC 2.4.4 and the stricter SC 2.4.9 are relevant because “click here” does not convey the link’s purpose, while partial support is reasonable since the link has a name but that name is inadequate."
+      }
+    },
+    {
+      "finding_id": "2cd56759f8b566c6",
+      "target": "#l_learn",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [
+          "2.4.4"
+        ],
+        "confidence": 0.9,
+        "remediation": "Update the link text to be more descriptive of the destination, such as 'Learn more about our features'."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": false,
+        "verdict": "partial",
+        "rationale": "SC 2.4.4 is the correct citation, but the generic name “Learn more” does not convey the link’s purpose in context, so this instance does not support the criterion rather than partially supporting it."
+      }
+    },
+    {
+      "finding_id": "2cd56759f8b566c6",
+      "target": "#l_learn",
+      "rule_id": "link-name",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "4.1.2"
+        ],
+        "confidence": 0.95,
+        "remediation": "None required as the element currently meets the accessibility standard."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The finding concerns WCAG 2.4.4 (Link Purpose in Context), not 4.1.2, and the generic name “Learn more” does not adequately describe the link’s purpose, so it does not support the requirement."
+      }
+    },
+    {
+      "finding_id": "5d6fdbb38f6763f7",
+      "target": "#l_report",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "2.4.4",
+          "2.4.9"
+        ],
+        "confidence": 1.0,
+        "remediation": "None required as the link text is descriptive of its purpose."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "The link text clearly identifies its purpose and file type without relying on surrounding context, satisfying both SC 2.4.4 and the stricter SC 2.4.9, so supports is correct."
+      }
+    },
+    {
+      "finding_id": "d79ee0634a30f727",
+      "target": "#l_read",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "2.4.4"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace 'read more' with descriptive text that explains the destination or purpose of the link."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "WCAG 2.4.4 is the correct criterion for link purpose in context, and the link text “read more” does not convey the link’s purpose, so does_not_support is correct."
+      }
+    },
+    {
+      "finding_id": "d79ee0634a30f727",
+      "target": "#l_read",
+      "rule_id": "link-name",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [
+          "2.4.4",
+          "2.4.9"
+        ],
+        "confidence": 0.95,
+        "remediation": "Update the link text to be more descriptive of the destination or provide context via aria-label."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "WCAG 2.4.4 is the applicable criterion, but 2.4.9 is not required for this context-based finding, and a link named only “read more” that fails to convey its purpose does not support 2.4.4 rather than partially supporting it."
+      }
+    },
+    {
+      "finding_id": "021f62b788e6edbd",
+      "target": "#l_orders",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "2.4.4"
+        ],
+        "confidence": 1.0,
+        "remediation": "None required as the link text is descriptive of its purpose."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "The link text “View your order history” clearly describes the link’s purpose, so WCAG 2.4.4 is the correct citation and the finding supports it."
+      }
+    },
+    {
+      "finding_id": "a439b61d16062078",
+      "target": "#l_details",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [
+          "2.4.4"
+        ],
+        "confidence": 0.9,
+        "remediation": "Update the link text to be more descriptive of its destination, such as 'Refund Details'."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": false,
+        "verdict": "partial",
+        "rationale": "SC 2.4.4 is the correct citation, but the generic link text “Details” does not identify the link’s purpose in context, so this finding does not support the criterion rather than partially supports it."
+      }
+    },
+    {
+      "finding_id": "a439b61d16062078",
+      "target": "#l_details",
+      "rule_id": "link-name",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "4.1.2"
+        ],
+        "confidence": 1.0,
+        "remediation": "None required as the element currently meets the accessibility standard."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The relevant criterion is WCAG 2.4.4, not 4.1.2, and the generic link text “Details” does not adequately describe the link’s purpose in context, so it does not support the criterion."
+      }
+    },
+    {
+      "finding_id": "f35c974a14dc2831",
+      "target": "#l_url",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [
+          "2.4.4",
+          "2.4.9"
+        ],
+        "confidence": 0.95,
+        "remediation": "Replace the bare URL with a descriptive link text that explains the purpose of the destination page, such as 'Install Guide'."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "The bare URL does not communicate the link’s purpose, violating WCAG 2.4.4 and the link-text-only requirement of 2.4.9, so does_not_support is correct."
+      }
+    },
+    {
+      "finding_id": "f35c974a14dc2831",
+      "target": "#l_url",
+      "rule_id": "link-name",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "4.1.2"
+        ],
+        "confidence": 0.95,
+        "remediation": "None required as the link has a valid accessible name."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The bare URL does not describe the link’s purpose in context, so it fails WCAG 2.4.4, and SC 4.1.2 is not the appropriate citation for this finding."
+      }
+    },
+    {
+      "finding_id": "c46f450a461c30c5",
+      "target": "#l_support",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "2.4.4"
+        ],
+        "confidence": 1.0,
+        "remediation": "No remediation is necessary as the link text clearly describes its purpose."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "correct",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": true,
+        "verdict": "correct",
+        "rationale": "The cited SC 2.4.4 is correct, and “Contact our support team” clearly describes the link’s purpose in context, so supports is appropriate."
+      }
+    },
+    {
+      "finding_id": "176a70233274ec2d",
+      "target": "#l_dl",
+      "rule_id": "link-name",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "2.4.4"
+        ],
+        "confidence": 0.95,
+        "remediation": "Ensure the link text remains descriptive of its destination."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": true,
+        "conformance_correct": false,
+        "verdict": "partial",
+        "rationale": "WCAG 2.4.4 is the correct criterion, but the generic link name “Download” does not adequately describe the link’s purpose in context, so “supports” is incorrect."
+      }
+    },
+    {
+      "finding_id": "176a70233274ec2d",
+      "target": "#l_dl",
+      "rule_id": "link-name",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [
+          "4.1.2"
+        ],
+        "confidence": 1.0,
+        "remediation": "None required as the element currently meets the accessibility standard."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "2.4.4"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The relevant criterion is WCAG 2.4.4, not 4.1.2, and the generic name “Download” does not identify what will be downloaded, so supports is not justified."
+      }
+    },
+    {
+      "finding_id": "fb6cdb6a3446bc42",
+      "target": "#f_frame",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [],
+        "confidence": 0.95,
+        "remediation": "Replace the generic title 'frame' with a descriptive name that explains the purpose of the iframe content."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": true,
+        "verdict": "partial",
+        "rationale": "The generic title “frame” does not adequately identify or describe the iframe, so it does not support the finding, but the draft cites no applicable WCAG success criteria, including 4.1.2 and 2.4.1."
+      }
+    },
+    {
+      "finding_id": "fb6cdb6a3446bc42",
+      "target": "#f_frame",
+      "rule_id": "frame-title",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [],
+        "confidence": 1.0,
+        "remediation": "None required as the element already has a descriptive title attribute."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The draft cites no success criterion even though 4.1.2 Name, Role, Value and 2.4.1 Bypass Blocks are identified for this finding, and a generic title of “frame” does not adequately describe the frame, so “supports” is incorrect."
+      }
+    },
+    {
+      "finding_id": "af9d587c1d417a6b",
+      "target": "#f_vid",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [],
+        "confidence": 0.9,
+        "remediation": "Replace the generic title 'Video' with a descriptive name that identifies the specific purpose or content of the iframe."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": true,
+        "verdict": "partial",
+        "rationale": "The does_not_support verdict is correct because the iframe title “Video” does not adequately describe its content, but the row omits the applicable WCAG Success Criterion 4.1.2 (and the task also identifies 2.4.1)."
+      }
+    },
+    {
+      "finding_id": "af9d587c1d417a6b",
+      "target": "#f_vid",
+      "rule_id": "frame-title",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [],
+        "confidence": 1.0,
+        "remediation": "None required as the element already has a descriptive title attribute."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The draft omits the applicable WCAG 2.4.1 and 4.1.2 criteria, and a generic title such as “Video” that does not adequately describe the frame cannot support conformance."
+      }
+    },
+    {
+      "finding_id": "44587c1cfb564304",
+      "target": "#f_demo",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [],
+        "confidence": 1.0,
+        "remediation": "No remediation needed as the title is descriptive."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": true,
+        "verdict": "partial",
+        "rationale": "The descriptive title supports conformance for this finding, but the draft omits the applicable WCAG success criteria, including 4.1.2 and 2.4.1."
+      }
+    },
+    {
+      "finding_id": "f07db1217b243d2b",
+      "target": "#f_content",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [],
+        "confidence": 0.95,
+        "remediation": "Replace the generic title 'content' with a descriptive name that explains the purpose of the iframe."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": true,
+        "verdict": "partial",
+        "rationale": "The generic title “content” does not adequately describe the iframe, so it does not support the applicable requirement; however, the draft cites no WCAG success criterion even though 4.1.2 and 2.4.1 are relevant."
+      }
+    },
+    {
+      "finding_id": "f07db1217b243d2b",
+      "target": "#f_content",
+      "rule_id": "frame-title",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [],
+        "confidence": 1.0,
+        "remediation": "None required as the element already conforms to accessibility standards."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The draft omits the applicable WCAG Success Criterion citations, and the generic title “content” does not describe the iframe, so it cannot support conformance."
+      }
+    },
+    {
+      "finding_id": "0c352f825ba0dcda",
+      "target": "#f_map",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [],
+        "confidence": 0.9,
+        "remediation": "Replace the generic title 'Map' with a more descriptive name that explains the specific location or purpose of the frame content."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The row omits the clearly applicable WCAG 2.4.1 and 4.1.2 citations, and the title “Map” adequately identifies the frame’s map content, so partial support is not the correct verdict."
+      }
+    },
+    {
+      "finding_id": "0c352f825ba0dcda",
+      "target": "#f_map",
+      "rule_id": "frame-title",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [],
+        "confidence": 1.0,
+        "remediation": "None required as the element already conforms to accessibility standards."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": true,
+        "verdict": "partial",
+        "rationale": "The title “Map” meaningfully identifies the frame’s content, so supports is correct, but the draft omits the clearly applicable WCAG success criterion(s), including 4.1.2 and 2.4.1."
+      }
+    },
+    {
+      "finding_id": "9a5a80dd3ca9c24d",
+      "target": "#f_loc",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [],
+        "confidence": 1.0,
+        "remediation": "Ensure the title attribute remains descriptive of the frame's content."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": true,
+        "verdict": "partial",
+        "rationale": "The descriptive title supports the finding, but the draft omits the applicable WCAG success criteria, 4.1.2 and 2.4.1."
+      }
+    },
+    {
+      "finding_id": "20fd105fde4cddee",
+      "target": "#f_iframe",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "does_not_support",
+        "cited_sc_ids": [],
+        "confidence": 0.95,
+        "remediation": "Replace the generic title 'iframe' with a descriptive name that explains the purpose of the frame's content."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": true,
+        "verdict": "partial",
+        "rationale": "The does_not_support verdict is correct because the iframe title is generic and does not describe its content, but the row omits the applicable WCAG Success Criterion 4.1.2 (and the task also identifies 2.4.1 as relevant)."
+      }
+    },
+    {
+      "finding_id": "20fd105fde4cddee",
+      "target": "#f_iframe",
+      "rule_id": "frame-title",
+      "lever": "false_supports",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [],
+        "confidence": 1.0,
+        "remediation": "None required as the element has a descriptive title attribute."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "does_not_support"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The draft cites no success criterion, although the finding directly implicates WCAG 2.4.1 and 4.1.2, and the generic title “iframe” does not adequately describe the frame’s content, so “supports” is incorrect."
+      }
+    },
+    {
+      "finding_id": "71b79f1482a98cd7",
+      "target": "#f_ad",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "partially_supports",
+        "cited_sc_ids": [],
+        "confidence": 0.8,
+        "remediation": "Replace the generic title 'Advertisement' with a more descriptive name that explains the specific content of the frame."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "incorrect",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The row cites no success criterion even though the finding calls for WCAG 4.1.2 and/or 2.4.1, and a title of “Advertisement” does not describe the frame’s actual about:blank content, so it does not support the applicable requirement rather than only partially supporting it."
+      }
+    },
+    {
+      "finding_id": "e8d5541dcff8f83c",
+      "target": "#f_chat",
+      "rule_id": "frame-title",
+      "lever": "natural",
+      "draft": {
+        "conformance": "supports",
+        "cited_sc_ids": [],
+        "confidence": 0.95,
+        "remediation": "Ensure the title attribute remains descriptive of the frame's purpose."
+      },
+      "gold": {
+        "gold_success_criteria": [
+          "4.1.2"
+        ],
+        "gold_conformance": "supports"
+      },
+      "human_verdict": "partial",
+      "judge": {
+        "citation_correct": false,
+        "conformance_correct": false,
+        "verdict": "incorrect",
+        "rationale": "The draft cites no success criterion even though 4.1.2 Name, Role, Value is the applicable SC, and the present title is not sufficient evidence that the frame's name describes its content, so “supports” is not justified."
+      }
+    }
+  ]
+}

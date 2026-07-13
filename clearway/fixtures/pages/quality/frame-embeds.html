@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Getting Started</title>
+</head>
+<body>
+  <main>
+    <h1>Getting Started</h1>
+    <!-- Judgment fixtures (frame-title quality): each <iframe> has a title attribute, so axe's
+         frame-title PASSES on existence. The title text is IN the element, so it is visible to the
+         drafter. Does it describe the frame's content? — the human/LLM call. -->
+    <iframe id="f_frame" title="frame" src="about:blank" width="480" height="270"></iframe>          <!-- inadequate -->
+    <iframe id="f_vid" title="Video" src="about:blank" width="480" height="270"></iframe>            <!-- borderline: video of what? -->
+    <iframe id="f_demo" title="Product demo: setting up your account" src="about:blank" width="480" height="270"></iframe> <!-- adequate -->
+  </main>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>2024 Product Announcements</title>
+</head>
+<body>
+  <main>
+    <h1>2024 Product Announcements</h1>
+    <!-- Judgment fixtures (link-name quality): each <a> has visible text, so axe's link-name
+         PASSES on existence. Links are standalone (in list items) so link-in-text-block does not
+         fire. The quality — does the text convey the link's purpose? — is the human/LLM call. -->
+    <ul>
+      <li><a id="l_click" href="/pricing">click here</a></li>          <!-- inadequate -->
+      <li><a id="l_learn" href="/features">Learn more</a></li>         <!-- borderline: more of what? -->
+      <li><a id="l_report" href="/report.pdf">Download the 2024 annual report (PDF)</a></li> <!-- adequate -->
+    </ul>
+  </main>
+</body>
+</html>

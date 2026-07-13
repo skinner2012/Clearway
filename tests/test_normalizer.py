@@ -21,6 +21,7 @@ from clearway.schemas.models import (
 
 PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
 FIXTURE = PAGES / "home.html"
+QUALITY = PAGES / "quality"
 
 
 def _scan_result(
@@ -220,3 +221,42 @@ def test_incomplete_fixture_normalizes_to_an_unverifiable_finding() -> None:
     assert finding.source_bucket is AxeBucket.INCOMPLETE
     assert "wcag143" in finding.axe_tags  # carries a real SC tag...
     assert AxeCoreOracle().verdict_for(finding) is None  # ...yet the oracle gives no verdict
+
+
+# --- the planted judgment-item fixtures (each yields reframed passes[] items) -
+
+# Each quality fixture plants three present-but-poor values on a gradient (inadequate ->
+# borderline -> adequate) so that axe PASSES the existence check while the quality stays a
+# judgment call. Map: fixture -> (whitelisted rule it exercises, planted judgment items).
+QUALITY_FIXTURES = {
+    "alt-product.html": ("image-alt", 3),
+    "alt-article.html": ("image-alt", 3),
+    "alt-gallery.html": ("image-alt", 3),
+    "link-article.html": ("link-name", 3),
+    "link-nav.html": ("link-name", 3),
+    "link-footer.html": ("link-name", 3),
+    "frame-embeds.html": ("frame-title", 3),
+    "frame-media.html": ("frame-title", 3),
+    "frame-widgets.html": ("frame-title", 3),
+}
+
+
+def test_quality_fixtures_yield_only_reframed_passes_judgment_items() -> None:
+    """Each planted quality fixture lands in axe's passes[] under exactly its whitelisted rule —
+    present enough to pass existence, never a hard violation — and every minted finding is a
+    reframed quality-review task (risk #1), not axe's already-conformant rule help. The 27
+    findings across the set are the gold floor (>= 25)."""
+    total = 0
+    for page, (rule, count) in QUALITY_FIXTURES.items():
+        findings = normalize(scan(str(QUALITY / page)))
+        passes = [f for f in findings if f.source_bucket is AxeBucket.PASSES]
+
+        # every planted item passed on existence under exactly the expected whitelisted rule
+        assert [f.rule_id for f in passes] == [rule] * count, page
+        # reframed to the quality-review task — NOT axe's rule-level "…has alternate text" help
+        assert all(f.help == QUALITY_REVIEW_RULES[rule] for f in passes), page
+        # present enough to pass: the planted values must not hard-fail as violations
+        assert not any(f.source_bucket is AxeBucket.VIOLATIONS for f in findings), page
+        total += len(passes)
+
+    assert total == 27

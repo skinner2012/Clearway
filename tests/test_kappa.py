@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from clearway.eval.calibration import (
+from clearway.eval.kappa import (
     KAPPA_THRESHOLD,
     Agreement,
     analyze,

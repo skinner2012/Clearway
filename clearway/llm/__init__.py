@@ -6,9 +6,11 @@ routing across models lands later.
 """
 
 from clearway.llm.client import Completion, FakeLLMClient, LLMClient, LLMUsage
+from clearway.llm.cloud import CloudLLMClient
 from clearway.llm.local import LocalLLMClient
 
 __all__ = [
+    "CloudLLMClient",
     "Completion",
     "FakeLLMClient",
     "LLMClient",

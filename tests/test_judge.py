@@ -1,16 +1,20 @@
-"""The LLM-as-judge — offline mechanics with FakeLLMClient; the gated live path lives elsewhere.
+"""The LLM-as-judge — offline mechanics + a gated live path, mirroring the other client seams.
 
-Proven here (no network): verdict derivation across all four boolean combinations, the judge≠drafter
-guard, recorded provenance, and raise-not-fabricate on unparseable output.
+- **offline** (default): verdict derivation across all four boolean combinations, the judge≠drafter
+  guard, recorded provenance, and raise-not-fabricate on unparseable output.
+- **gated** (`openai_up`): the real cloud judge grades a judgment item, and a face-validity smoke
+  confirms it calls obvious right/wrong drafts correctly. Skips when OPENAI_API_KEY is absent.
 """
 
 from __future__ import annotations
+
+import os
 
 import pytest
 
 from clearway.judge import Judge, JudgeError
 from clearway.judge.judge import _verdict_from
-from clearway.llm import FakeLLMClient
+from clearway.llm import CloudLLMClient, FakeLLMClient
 from clearway.schemas.models import Citation, Conformance, DraftRow, Finding, JudgeVerdict
 
 _JUDGE_MODEL = "cloud-judge"
@@ -113,3 +117,35 @@ def test_reasoning_effort_is_folded_into_judge_version() -> None:
     judge = Judge(_EffortClient(_resp(True, True), model=_JUDGE_MODEL), drafter_model=_DRAFTER_MODEL)
     result = judge.judge(finding, draft, run_id="r")
     assert "effort=high" in result.judge_version
+
+
+# --- gated integration: the real cloud judge ---------------------------------
+
+openai_up = pytest.mark.skipif(not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set in the environment")
+
+
+@openai_up
+def test_real_judge_returns_wellformed_result_for_a_judgment_item() -> None:
+    """The real cloud judge grades a judgment item into a schema-valid JudgeResult whose model is
+    the cloud model (not the drafter) and whose reproducibility provenance is recorded."""
+    finding = _finding()
+    draft = _draft(finding, Conformance.DOES_NOT_SUPPORT, "1.1.1")
+    judge = Judge(CloudLLMClient(), drafter_model=_DRAFTER_MODEL)
+    result = judge.judge(finding, draft, run_id="live-1")
+    assert result.judge_model != _DRAFTER_MODEL
+    assert result.verdict in (JudgeVerdict.CORRECT, JudgeVerdict.PARTIAL, JudgeVerdict.INCORRECT)
+    assert result.rationale
+    assert "rubric=" in result.judge_version
+
+
+@openai_up
+def test_face_validity_obvious_correct_and_incorrect_drafts() -> None:
+    """Face-validity sanity eyeball, NOT a κ measurement: on an obvious garbage-alt item the judge
+    must call a right draft correct and a doubly-wrong draft incorrect. If it cannot get blatant
+    cases right, the instrument is broken and there is no point calibrating it."""
+    finding = _finding()  # alt="DSC_0042.jpg" — a clear 1.1.1 failure
+    judge = Judge(CloudLLMClient(), drafter_model=_DRAFTER_MODEL)
+    good = judge.judge(finding, _draft(finding, Conformance.DOES_NOT_SUPPORT, "1.1.1"), run_id="fv-good")
+    bad = judge.judge(finding, _draft(finding, Conformance.SUPPORTS, "1.4.3"), run_id="fv-bad")
+    assert good.verdict is JudgeVerdict.CORRECT  # right verdict + right SC
+    assert bad.verdict is JudgeVerdict.INCORRECT  # wrong verdict (supports) + irrelevant SC (contrast)

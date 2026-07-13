@@ -13,7 +13,8 @@ import pytest
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-from clearway.drafter import DraftResult, LLMUsage
+from clearway.drafter import DraftResult
+from clearway.llm import LLMUsage
 from clearway.observability.operational import (
     mcp_span_attributes,
     record_mcp_call,

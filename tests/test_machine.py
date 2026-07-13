@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from clearway.drafter import DraftResult, LLMUsage
+from clearway.drafter import DraftResult
+from clearway.llm import LLMUsage
 from clearway.oracle import AxeCoreOracle
 from clearway.orchestrator.machine import _review_reason, execute
 from clearway.orchestrator.store import InMemoryOrchestratorStore

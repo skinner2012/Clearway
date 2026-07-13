@@ -16,7 +16,8 @@ import urllib.request
 import pytest
 from stubs import canned_draft, canned_retrieve
 
-from clearway.drafter import Drafter, LiteLLMClient
+from clearway.drafter import Drafter
+from clearway.llm import LocalLLMClient
 from clearway.oracle import AxeCoreOracle
 from clearway.schemas.models import (
     AxeBucket,
@@ -171,7 +172,7 @@ def test_real_violation_draft_grades_verified() -> None:
         source_bucket=AxeBucket.VIOLATIONS,
     )
     citations = [Citation(sc_id="1.1.1", title="Non-text Content", level=ConformanceLevel.A, source="WCAG-SC")]
-    row = Drafter(LiteLLMClient()).draft(finding, citations)
+    row = Drafter(LocalLLMClient()).draft(finding, citations)
     checks = {c.sc_id: c for c in validate(row, finding, AxeCoreOracle())}
     assert "1.1.1" in checks, f"real drafter did not cite the retrieved SC; cited {list(checks)}"
     check = checks["1.1.1"]
@@ -197,7 +198,7 @@ def test_real_judgment_draft_grades_unverifiable() -> None:
         source_bucket=AxeBucket.INCOMPLETE,
     )
     citations = [Citation(sc_id="1.4.3", title="Contrast (Minimum)", level=ConformanceLevel.AA, source="WCAG-SC")]
-    row = Drafter(LiteLLMClient()).draft(finding, citations)
+    row = Drafter(LocalLLMClient()).draft(finding, citations)
     checks = validate(row, finding, AxeCoreOracle())
     assert checks, "real drafter cited nothing, so there is no citation to grade"
     for check in checks:

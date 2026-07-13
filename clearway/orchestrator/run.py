@@ -59,9 +59,10 @@ def _default_draft() -> Draft:
     """Build the real LLM drafter (LiteLLM → Ollama gemma4:31b) and return its bound `draft`.
     Constructed lazily so Ollama is required only when a run actually drafts — offline tests
     inject their own drafter and never reach this."""
-    from clearway.drafter import Drafter, LiteLLMClient
+    from clearway.drafter import Drafter
+    from clearway.llm import LocalLLMClient
 
-    return Drafter(LiteLLMClient()).draft_with_usage
+    return Drafter(LocalLLMClient()).draft_with_usage
 
 
 def _default_store() -> OrchestratorStore:

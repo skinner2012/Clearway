@@ -24,7 +24,8 @@ from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 from pydantic import BaseModel, TypeAdapter
 
-from clearway.drafter import DraftResult, LLMUsage
+from clearway.drafter import DraftResult
+from clearway.llm import LLMUsage
 from clearway.observability.operational import record_llm_call, record_step
 from clearway.orchestrator.store import OrchestratorStore
 from clearway.schemas.models import (

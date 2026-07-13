@@ -54,7 +54,7 @@ from opentelemetry.semconv._incubating.metrics.gen_ai_metrics import (
 from opentelemetry.semconv._incubating.metrics.mcp_metrics import MCP_CLIENT_OPERATION_DURATION
 from opentelemetry.semconv.attributes.error_attributes import ERROR_TYPE
 
-from clearway.drafter import LLMUsage
+from clearway.llm import LLMUsage
 
 _llm_duration: Histogram | None = None
 _llm_tokens: Histogram | None = None

@@ -1,59 +1,29 @@
-"""The real LLM drafter (M1) — replaces the M0 canned stub in the production spine.
+"""The real LLM drafter — answers per-finding: build a prompt from the finding + its retrieved
+citations → ask the model for a small *semantic* shape (`_LLMDraft`: conformance, which SC ids it
+cites, remediation, confidence) → **assemble the full `DraftRow` in code** (we own `finding_id` +
+`severity`, and resolve cited ids against the retrieved citations so the citation metadata is
+corpus-grounded, never model-invented).
 
-A `Drafter` holds an `LLMClient` and answers per-finding: build a prompt from the finding + its
-retrieved citations → ask the model for a small *semantic* shape (`_LLMDraft`: conformance,
-which SC ids it cites, remediation, confidence) → **assemble the full `DraftRow` in code**
-(we own `finding_id` + `severity`, and resolve cited ids against the retrieved citations so the
-citation metadata is corpus-grounded, never model-invented).
+The model call goes through the shared `LLMClient` gateway (`clearway.llm`); this module owns only
+the drafting. Two things it gets right: it assembles identity/citations in code rather than trusting
+the model, and it is defensive — LLM output is not guaranteed, so it validates, retries once, then
+degrades to a low-confidence fallback `DraftRow` rather than crashing.
 
-Two things this gets right that a naive `litellm.completion(...)` would not:
-1. **Provider.** Ollama chat models need the `ollama_chat/` prefix; plain `ollama/` silently
-   drops structured output and returns markdown (verified against gemma4/qwen). `response_format`
-   + an explicit prompt (exact enum values, decimal confidence) yields strict-schema JSON.
-2. **Defensiveness.** LLM output is not guaranteed; the drafter validates, retries once, then
-   degrades to a low-confidence fallback `DraftRow` rather than crashing (T3 acceptance).
-
-Grounding note (M1 scope): the retrieved `Citation`s carry sc_id + url but not the SC's normative
-text (T2 option A), so the prompt names the *relevant SC ids* and the model supplies their meaning
-from its own knowledge. Passing the SC text into the prompt for stronger grounding is a fast-follow.
+Grounding note: the retrieved `Citation`s carry sc_id + url but not the SC's normative text, so the
+prompt names the *relevant SC ids* and the model supplies their meaning from its own knowledge.
+Passing the SC text into the prompt for stronger grounding is a fast-follow.
 """
 
 from __future__ import annotations
 
-import os
-import time
-from dataclasses import dataclass
-from typing import NamedTuple, Protocol, runtime_checkable
+from typing import NamedTuple
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from clearway.llm import LLMClient, LLMUsage
 from clearway.schemas.models import AxeBucket, Citation, Conformance, DraftRow, Finding
 
-_DEFAULT_MODEL = "gemma4:31b"
-_DEFAULT_BASE_URL = "http://localhost:11434"
 _FALLBACK_CONFIDENCE = 0.0  # a draft we could not parse is worth nothing — say so, don't crash
-
-
-@dataclass(frozen=True)
-class LLMUsage:
-    """Operational telemetry from one LLM call — captured once at the call site (T2) and used to
-    fill both the OTel spans/metrics and the (until now dormant) `Trace` operational fields. Every
-    field is optional: a fake/offline client that makes no real call reports all-`None`, which is
-    the honest value (no call happened). `cost_usd` is ~0 for local Ollama but captured anyway so
-    the future cloud-vs-local comparison (M4) is data-ready."""
-
-    tokens_in: int | None = None
-    tokens_out: int | None = None
-    cost_usd: float | None = None
-    latency_ms: float | None = None
-
-
-class Completion(NamedTuple):
-    """What `complete_json` now returns: the raw JSON content **plus** its usage. (Was a bare
-    `str` through M1 — T2 widened the seam so token/cost/latency stop being discarded.)"""
-
-    content: str
-    usage: LLMUsage
 
 
 class DraftResult(NamedTuple):
@@ -75,88 +45,6 @@ class _LLMDraft(BaseModel):
     cited_sc_ids: list[str] = Field(default_factory=list)
     remediation: str = ""
     confidence: float = Field(ge=0.0, le=1.0)
-
-
-@runtime_checkable
-class LLMClient(Protocol):
-    """The seam the drafter depends on. Real (LiteLLM→Ollama) or fake (tests)."""
-
-    @property
-    def model(self) -> str: ...
-
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
-        """Return the model's raw JSON content **and its usage** for a system+user prompt under a
-        response schema."""
-        ...
-
-
-class LiteLLMClient:
-    """Real chat client: an Ollama model via LiteLLM, structured output at temperature 0."""
-
-    def __init__(self, model: str | None = None, base_url: str | None = None) -> None:
-        self._model: str = model or os.getenv("CLEARWAY_CHAT_MODEL") or _DEFAULT_MODEL
-        self._base_url: str = base_url or os.getenv("CLEARWAY_OLLAMA_BASE_URL") or _DEFAULT_BASE_URL
-
-    @property
-    def model(self) -> str:
-        return self._model
-
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
-        import litellm
-
-        start = time.perf_counter()
-        response = litellm.completion(
-            model=f"ollama_chat/{self._model}",  # ollama_chat/, NOT ollama/ — see module docstring
-            api_base=self._base_url,
-            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-            response_format=schema,
-            temperature=0.0,
-        )
-        latency_ms = (time.perf_counter() - start) * 1000.0
-        content: str = response.choices[0].message.content or ""
-        return Completion(content, _usage_from(response, latency_ms))
-
-
-def _usage_from(response: object, latency_ms: float) -> LLMUsage:
-    """Pull tokens + cost off a LiteLLM `ModelResponse`, defensively — usage is best-effort
-    telemetry, never worth crashing a run over. `completion_cost` is ~0 for local Ollama and may
-    raise for models it can't price; we swallow that to 0.0 (the call did happen)."""
-    usage = getattr(response, "usage", None)
-    tokens_in = getattr(usage, "prompt_tokens", None)
-    tokens_out = getattr(usage, "completion_tokens", None)
-    try:
-        import litellm
-
-        cost_usd: float | None = litellm.completion_cost(completion_response=response)
-    except Exception:  # noqa: BLE001 — pricing is best-effort; a local model reports ~0 anyway
-        cost_usd = 0.0
-    return LLMUsage(tokens_in=tokens_in, tokens_out=tokens_out, cost_usd=cost_usd, latency_ms=latency_ms)
-
-
-class FakeLLMClient:
-    """Deterministic offline client for unit tests: returns canned raw strings, never a network
-    call. Pass one or more responses; each call yields the next (the last repeats). Drafting
-    *quality* is proven by the gated integration test against the real model — the fake only
-    exercises drafter mechanics (assembly, citation resolution, retry-then-fallback)."""
-
-    _DEFAULT_RESPONSE = '{"conformance":"does_not_support","cited_sc_ids":[],"remediation":"","confidence":0.5}'
-
-    def __init__(self, *responses: str, model: str = "fake-llm", usage: LLMUsage | None = None) -> None:
-        self._responses = list(responses) or [self._DEFAULT_RESPONSE]
-        self._model = model
-        # Default all-`None`: a fake makes no real call, so it has no honest usage to report. Tests
-        # that exercise the usage seam pass an explicit `usage=`.
-        self._usage = usage if usage is not None else LLMUsage()
-        self._i = 0
-
-    @property
-    def model(self) -> str:
-        return self._model
-
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
-        response = self._responses[min(self._i, len(self._responses) - 1)]
-        self._i += 1
-        return Completion(response, self._usage)
 
 
 class Drafter:
@@ -250,7 +138,7 @@ def _assemble(finding: Finding, citations: list[Citation], out: _LLMDraft) -> Dr
 
 def _fallback(finding: Finding) -> DraftRow:
     """A draft we could not parse after retries: conservative verdict, zero confidence, no
-    citations — surfaces as low-trust rather than crashing the run (T3 graceful-degradation)."""
+    citations — surfaces as low-trust rather than crashing the run (graceful degradation)."""
     return DraftRow(
         finding_id=finding.id,
         conformance=Conformance.DOES_NOT_SUPPORT,

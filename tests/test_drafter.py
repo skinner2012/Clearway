@@ -4,7 +4,7 @@ Two layers, mirroring the retriever/corpus seams:
 - **offline** (default): drive `Drafter` with `FakeLLMClient` to prove the *mechanics* — code owns
   finding_id/severity, citations resolve against the retrieved set (hallucinated ids kept as bare
   citations), and bad model output retries then degrades to a low-confidence fallback (no crash).
-- **gated** (`ollama_up`): the real path — `LiteLLMClient` → Ollama `gemma4:31b` — proves the model
+- **gated** (`ollama_up`): the real path — `LocalLLMClient` → Ollama `gemma4:31b` — proves the model
   honors the structured-output contract and cites the retrieved SC. Skips when Ollama is down.
 """
 
@@ -14,8 +14,9 @@ import urllib.request
 
 import pytest
 
-from clearway.drafter import Drafter, FakeLLMClient, LiteLLMClient, LLMUsage
+from clearway.drafter import Drafter
 from clearway.drafter.llm import _user_prompt
+from clearway.llm import FakeLLMClient, LLMUsage, LocalLLMClient
 from clearway.schemas.models import AxeBucket, Citation, Conformance, Finding, Severity
 
 _GOOD = '{"conformance":"does_not_support","cited_sc_ids":["1.1.1"],"remediation":"Add alt text.","confidence":0.9}'
@@ -165,7 +166,9 @@ def test_real_drafter_returns_schema_valid_row_citing_the_retrieved_sc() -> None
     """The T3 acceptance: gemma4 via LiteLLM returns a schema-valid DraftRow whose conformance is a
     real enum, confidence is in range, and which cites the retrieved SC (1.1.1) for an image-alt
     finding. Deterministic-ish at temp 0; asserts the contract, not exact wording."""
-    row = Drafter(LiteLLMClient()).draft(_finding(), [_cite("1.1.1", "https://www.w3.org/TR/WCAG22/#non-text-content")])
+    row = Drafter(LocalLLMClient()).draft(
+        _finding(), [_cite("1.1.1", "https://www.w3.org/TR/WCAG22/#non-text-content")]
+    )
     assert isinstance(row.conformance, Conformance)
     assert 0.0 <= row.confidence <= 1.0
     assert "1.1.1" in [c.sc_id for c in row.citations]

@@ -15,7 +15,8 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.trace import StatusCode
 
-from clearway.drafter import DraftResult, LLMUsage
+from clearway.drafter import DraftResult
+from clearway.llm import LLMUsage
 from clearway.oracle import AxeCoreOracle
 from clearway.orchestrator.machine import execute
 from clearway.orchestrator.store import InMemoryOrchestratorStore

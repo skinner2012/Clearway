@@ -26,6 +26,7 @@ from clearway.judge import verdict_from
 from clearway.schemas.models import (
     CalibrationReport,
     Citation,
+    ConfidenceBin,
     Conformance,
     DraftRow,
     GoldLabel,
@@ -187,17 +188,19 @@ def build_report(
     created_at: datetime,
     threshold: float = KAPPA_THRESHOLD,
     bias_notes: str = "",
+    confidence_bins: Sequence[ConfidenceBin] = (),
 ) -> CalibrationReport:
-    """Assemble the κ-half of the `CalibrationReport`: the balanced-set κ is the gate, `judge_trusted`
-    is κ >= the pre-committed threshold, and the natural-pass numbers + caveats fill `bias_notes`.
-    `confidence_bins` stays empty here — the confidence-vs-correctness curve is a later concern."""
+    """Assemble the `CalibrationReport`: the balanced-set κ is the trust gate, `judge_trusted` is
+    κ >= the pre-committed threshold, and the natural-pass numbers + caveats fill `bias_notes`.
+    `confidence_bins` is the confidence-vs-correctness curve, supplied by the confidence assembly
+    (`confidence.build_curve`); the κ-only path leaves it empty, since the gate does not need it."""
     return CalibrationReport(
         judge_kappa=balanced.kappa,
         judge_agreement=balanced.agreement,
         n=balanced.n,
         kappa_threshold=threshold,
         judge_trusted=balanced.kappa >= threshold,
-        confidence_bins=[],
+        confidence_bins=list(confidence_bins),
         bias_notes=bias_notes or bias_summary(balanced, natural),
         created_at=created_at,
     )

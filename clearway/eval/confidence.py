@@ -19,8 +19,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any
 
-from clearway.schemas.models import ConfidenceBin
+from clearway.judge import verdict_from
+from clearway.schemas.models import ConfidenceBin, JudgeVerdict
 
 # Equal-width 0.2 bins over the whole confidence range. The width matches the milestone's own
 # `bin="0.6-0.8"` example, and it is deliberately coarse: if every draft's confidence lands in the
@@ -96,3 +98,71 @@ def overconfidence_gap(points: Sequence[ConfidencePoint]) -> float:
     mean_confidence = sum(p.confidence for p in points) / len(points)
     mean_correct = sum(1 for p in points if p.correct) / len(points)
     return mean_confidence - mean_correct
+
+
+# ============================================================
+# Assembling the curve from the two frozen calibration artifacts
+# ============================================================
+
+
+def judgment_points(artifact: dict[str, Any]) -> list[ConfidencePoint]:
+    """The judgment half of the curve, read from the frozen κ set: the drafter's NATURAL drafts only
+    (the elicited negatives are a κ-balancing device, not real-workload confidence), each paired with
+    the TRUSTED JUDGE's correctness — the judge is what scores no-oracle judgment items. The judge
+    verdict is recomputed from its raw booleans, never read off the stored 3-way, so the point is
+    self-checking exactly like the κ replay."""
+    points: list[ConfidencePoint] = []
+    for row in artifact["drafts"]:
+        if row["lever"] != "natural":
+            continue
+        j = row["judge"]
+        correct = verdict_from(j["citation_correct"], j["conformance_correct"]) is JudgeVerdict.CORRECT
+        points.append(ConfidencePoint(confidence=row["draft"]["confidence"], correct=correct))
+    return points
+
+
+def verifiable_points(artifact: dict[str, Any]) -> list[ConfidencePoint]:
+    """The verifiable half, read from the frozen oracle run: each drafted finding the oracle ruled on,
+    with the oracle's correctness. `correct` is proven re-derivable by that artifact's own replay guard,
+    so it is read straight here rather than recomputed a second time."""
+    return [ConfidencePoint(confidence=p["confidence"], correct=p["correct"]) for p in artifact["points"]]
+
+
+@dataclass(frozen=True)
+class CalibrationCurve:
+    """The combined confidence-vs-correctness curve plus the scalars the report + dashboard read from it.
+    `ece` and `overconfidence_gap` map 1:1 to the `EvalMetrics` scalars of the same name; the binned
+    `bins` are the curve's ONLY home (never copied onto `EvalMetrics`). Judgment counts ride along so
+    `judgment_correctness_rate` — a judge ESTIMATE capped by κ — ships with its numerator + denominator,
+    never a bare rate."""
+
+    bins: list[ConfidenceBin]
+    ece: float
+    overconfidence_gap: float
+    n: int
+    judgment_total: int
+    judgment_correct: int
+
+    @property
+    def judgment_correctness_rate(self) -> float:
+        return self.judgment_correct / self.judgment_total if self.judgment_total else 0.0
+
+
+def build_curve(
+    judgment: Sequence[ConfidencePoint],
+    verifiable: Sequence[ConfidencePoint],
+    edges: Sequence[float] = DEFAULT_BIN_EDGES,
+) -> CalibrationCurve:
+    """Combine the judge-scored judgment points and the oracle-scored verifiable points into ONE curve —
+    both streams already share the `ConfidencePoint` shape, so the oracle (ground truth) and the judge
+    (a κ-capped estimate) sit on the same axis without the judge ever inflating the verified count."""
+    points = [*judgment, *verifiable]
+    bins = bin_points(points, edges)
+    return CalibrationCurve(
+        bins=bins,
+        ece=expected_calibration_error(bins),
+        overconfidence_gap=overconfidence_gap(points),
+        n=len(points),
+        judgment_total=len(judgment),
+        judgment_correct=sum(1 for p in judgment if p.correct),
+    )

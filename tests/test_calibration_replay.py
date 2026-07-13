@@ -89,4 +89,4 @@ def test_kappa_replays_and_the_judge_clears_the_bar() -> None:
     report = build_report(balanced, natural, created_at=datetime(2026, 7, 13, tzinfo=timezone.utc))
     assert report.judge_trusted == (balanced.kappa >= KAPPA_THRESHOLD)
     assert report.judge_trusted is True  # the frozen set represents a calibrated, TRUSTED judge
-    assert report.confidence_bins == []  # T4 fills the curve
+    assert report.confidence_bins == []  # κ-only build leaves the curve empty; the confidence assembly supplies it

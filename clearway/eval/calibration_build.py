@@ -1,21 +1,24 @@
 """Build the balanced calibration draft set + judge verdicts, and freeze it to a versioned artifact.
 
 Live: runs the real drafter (gemma), real RAG retrieval, and the real judge (the cloud reference
-model) ONCE, then writes a checked-in JSON that the pure κ math in `calibration.py` replays
-network-free. This is the only place the non-deterministic models are called for calibration — κ
-itself never re-derives them, so the trust number stays reproducible from the frozen artifact.
+model) ONCE, then writes a checked-in JSON that the pure κ math in `kappa.py` replays network-free.
+This is the only place the non-deterministic models are called for calibration — κ itself never
+re-derives them, so the trust number stays reproducible from the frozen artifact.
 
-Two drafts per gold finding (the paired design — the judge must tell a good draft from a bad one on
-the *same* finding):
-- a **natural** draft — the faithful drafter pass, the drafter's real-workload output;
-- an **elicited-negative** draft — a REAL gemma output whose *framing* (never its label) is perturbed
-  to induce an authentic error from the observed taxonomy: false-`supports` (a poor value read as
-  conformant — the exact pre-quality-review bug), false-`does_not_support` (a good value over-flagged
-  under a maximally-strict reading), or wrong-SC (a plausible-but-wrong citation with the conformance
-  kept right → `partial`).
+Per gold finding:
+- a **natural** draft — the faithful drafter pass, the drafter's real-workload output (always kept);
+- an **elicited-negative** draft — but ONLY where gemma authentically produces one. Empirically
+  (probed on gemma4:31b) the drafter RESISTS manufactured errors: it will not over-flag genuinely
+  good content (a false-`does_not_support` lever fails), and it cites the correct SC even when offered
+  only misleading candidates (a wrong-SC lever fails). The one lever that yields an authentic negative
+  is **false-`supports`**: strip the quality-review reframe so a *borderline* poor value is read as
+  already-conformant, and gemma drafts `supports`. So negatives are harvested by applying false-supports
+  to the `does_not_support` findings and KEEPING only the ones that actually flip; `supports` and
+  obvious-garbage findings yield no authentic negative and contribute their natural draft alone.
 
-Only the negatives' framing is constructed; the label is always the human verdict derived
-mechanically from gold. The shipped drafter is untouched — all calibration framing lives here.
+The realized set is therefore ~70/30 (correct/negative), not 50/50 — the honest ceiling given the
+drafter's genuine skill, and still non-degenerate for κ. Only the framing is constructed; the label
+is always the human verdict derived mechanically from gold. The shipped drafter is untouched.
 
 Not run by the test suite (it needs Ollama + the cloud key + pgvector). Invoke explicitly:
 `uv run python -m clearway.eval.calibration_build`.
@@ -53,19 +56,6 @@ _ARTIFACT = _FIXTURES / "calibration_set.json"
 
 _CALIBRATION_VERSION = "calibration@1"
 
-# Plausible-but-WRONG candidate SCs per rule, fed to the wrong-SC lever so the drafter cites an
-# authentic wrong SC while its conformance stays right → a `partial`. None is the gold SC for the
-# rule (image-alt→1.1.1, link-name→2.4.4, frame-title→4.1.2).
-_WRONG_CANDIDATES = {
-    "image-alt": ["4.1.2", "1.4.3"],
-    "link-name": ["4.1.2", "1.3.1"],
-    "frame-title": ["2.4.4", "1.1.1"],
-}
-
-# How often a does_not_support finding gets the wrong-SC lever instead of false-supports, so all
-# three error classes appear in the set (every 3rd, deterministic by encounter order).
-_WRONG_SC_EVERY = 3
-
 
 def load_gold_pairs() -> list[tuple[Finding, GoldLabel]]:
     """Load the gold set the way the guard test does: scan+normalize each fixture, match each
@@ -97,40 +87,15 @@ def _candidate_lines(citations: list[Citation]) -> str:
 
 def _false_supports_prompt(finding: Finding, citations: list[Citation]) -> str:
     """Strip the quality-review reframe: present the passed check as "the attribute is present",
-    inducing the pre-quality-review read that present == conformant → an authentic `supports`."""
+    inducing the pre-quality-review read that present == conformant → an authentic `supports` on a
+    borderline value. (Obvious-garbage values don't flip — gemma knows they're bad — which is exactly
+    why only the borderline items yield negatives, and why those are the interesting judge calls.)"""
     return (
         f"Finding: axe rule '{finding.rule_id}' PASSED its automated check — the required "
         "name/text/attribute is PRESENT on the element.\n"
         f"Target element: {finding.target}\n"
         f"HTML: {finding.html or '(not captured)'}\n"
         f"Candidate WCAG success criteria you may cite:\n{_candidate_lines(citations)}\n"
-        "Draft the conformance verdict, the SC ids you cite, a one-sentence remediation, and your confidence."
-    )
-
-
-def _false_does_not_support_prompt(finding: Finding, citations: list[Citation]) -> str:
-    """Push a maximally-strict reading on a genuinely-adequate value → an authentic over-flag."""
-    return (
-        f"Finding (quality review): axe rule '{finding.rule_id}' — {finding.help or 'assess the value quality'}. "
-        "Apply the STRICTEST possible reading: unless this value is exemplary and complete, treat it "
-        "as NOT fully meeting the success criterion.\n"
-        f"Target element: {finding.target}\n"
-        f"HTML: {finding.html or '(not captured)'}\n"
-        f"Candidate WCAG success criteria you may cite:\n{_candidate_lines(citations)}\n"
-        "Draft the conformance verdict, the SC ids you cite, a one-sentence remediation, and your confidence."
-    )
-
-
-def _wrong_sc_prompt(finding: Finding, wrong_candidates: list[str]) -> str:
-    """Keep the quality-review reframe (conformance stays does_not_support for a poor value) but
-    offer ONLY plausible-but-wrong candidate SCs → an authentic wrong citation → `partial`."""
-    lines = "\n".join(f"- {sc}" for sc in wrong_candidates)
-    return (
-        f"Finding (quality review): axe rule '{finding.rule_id}' confirmed a name/attribute is "
-        "PRESENT but did not judge its quality — assess whether the CONTENT is adequate.\n"
-        f"Target element: {finding.target}\n"
-        f"HTML: {finding.html or '(not captured)'}\n"
-        f"Candidate WCAG success criteria you may cite:\n{lines}\n"
         "Draft the conformance verdict, the SC ids you cite, a one-sentence remediation, and your confidence."
     )
 
@@ -148,23 +113,6 @@ def _elicit(client: LLMClient, finding: Finding, citations: list[Citation], user
             continue
         return _assemble(finding, citations, out)
     raise RuntimeError(f"elicitation produced no parseable draft for finding {finding.id!r}")
-
-
-def _negative_draft(
-    client: LLMClient, finding: Finding, gold: GoldLabel, citations: list[Citation], dns_index: int
-) -> tuple[DraftRow, str]:
-    """Pick the lever by gold polarity and produce one authentic negative draft. A `supports` gold
-    gets over-flagged; a `does_not_support` gold gets read-as-conformant, with a wrong-SC sprinkle so
-    `partial` appears too. Returns the draft and the lever name recorded on the artifact."""
-    if gold.gold_conformance is Conformance.SUPPORTS:
-        return _elicit(client, finding, citations, _false_does_not_support_prompt(finding, citations)), (
-            "false_does_not_support"
-        )
-    if dns_index % _WRONG_SC_EVERY == _WRONG_SC_EVERY - 1:
-        wrong = _WRONG_CANDIDATES[finding.rule_id]
-        wrong_citations = [Citation(sc_id=sc) for sc in wrong]
-        return _elicit(client, finding, wrong_citations, _wrong_sc_prompt(finding, wrong)), "wrong_sc"
-    return _elicit(client, finding, citations, _false_supports_prompt(finding, citations)), "false_supports"
 
 
 def _record(
@@ -200,7 +148,9 @@ def _record(
 
 
 def build_calibration_set(created_at: str) -> dict[str, Any]:
-    """Run the full live build: two drafts per gold finding, judged, into one artifact dict."""
+    """Run the full live build: a natural draft for every gold finding, plus an authentic
+    false-supports negative for each `does_not_support` finding that actually flips. Prints per-finding
+    progress (the run is ~40 min, gemma-bound) so it is never opaque."""
     pairs = load_gold_pairs()
     drafter_client = LocalLLMClient()
     judge_client = CloudLLMClient()
@@ -209,16 +159,25 @@ def build_calibration_set(created_at: str) -> dict[str, Any]:
     judge = Judge(judge_client, drafter_model=drafter_client.model)
 
     rows: list[dict[str, Any]] = []
-    dns_index = 0
-    for finding, gold in pairs:
+    negatives_kept = 0
+    for i, (finding, gold) in enumerate(pairs, start=1):
         citations = retriever.retrieve(finding)
-        natural = drafter.draft(finding, citations)
-        rows.append(_record(finding, gold, natural, "natural", judge, _CALIBRATION_VERSION))
-        negative, lever = _negative_draft(drafter_client, finding, gold, citations, dns_index)
-        if gold.gold_conformance is not Conformance.SUPPORTS:
-            dns_index += 1
-        rows.append(_record(finding, gold, negative, lever, judge, _CALIBRATION_VERSION))
+        natural_row = _record(finding, gold, drafter.draft(finding, citations), "natural", judge, _CALIBRATION_VERSION)
+        rows.append(natural_row)
+        note = f"natural={natural_row['human_verdict']}"
+        # Authentic negatives: only false-supports on does_not_support findings, kept only when the
+        # draft actually flips (borderline values). Everything else yields no authentic negative.
+        if gold.gold_conformance is Conformance.DOES_NOT_SUPPORT:
+            negative = _elicit(drafter_client, finding, citations, _false_supports_prompt(finding, citations))
+            if human_verdict(negative, gold) is not JudgeVerdict.CORRECT:
+                rows.append(_record(finding, gold, negative, "false_supports", judge, _CALIBRATION_VERSION))
+                negatives_kept += 1
+                note += " | negative=KEPT"
+            else:
+                note += " | negative=no-flip (discarded)"
+        print(f"[{i:2d}/{len(pairs)}] {finding.rule_id:11s} {finding.target:12s} {note}", flush=True)
 
+    print(f"kept {negatives_kept} authentic negatives", flush=True)
     return {
         "set_id": "calibration",
         "version": 1,

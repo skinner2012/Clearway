@@ -7,18 +7,22 @@ derivation that puts the human rater on the judge's own categorical scale.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import pytest
 
 from clearway.eval.kappa import (
     KAPPA_THRESHOLD,
     Agreement,
+    agreements_from_artifact,
     analyze,
+    build_report,
     cohen_kappa,
     human_verdict,
     is_correct,
     raw_agreement,
 )
-from clearway.schemas.models import Citation, Conformance, DraftRow, GoldLabel, JudgeVerdict
+from clearway.schemas.models import CalibrationReport, Citation, Conformance, DraftRow, GoldLabel, JudgeVerdict
 
 C = JudgeVerdict.CORRECT
 P = JudgeVerdict.PARTIAL
@@ -137,3 +141,78 @@ def test_is_correct_collapses_partial_and_incorrect_to_not_correct() -> None:
     assert is_correct(C) is True
     assert is_correct(P) is False
     assert is_correct(X) is False
+
+
+# --- report assembly from a (synthetic) frozen artifact ----------------------
+
+
+def _row(
+    lever: str, draft_conf: str, draft_scs: list[str], gold_conf: str, gold_scs: list[str], jc: bool, jconf: bool
+) -> dict:
+    # verdict/rationale are deliberately bogus — agreements_from_artifact must RECOMPUTE from raw,
+    # never read the stored 3-way verdict.
+    return {
+        "finding_id": "f",
+        "lever": lever,
+        "draft": {"conformance": draft_conf, "cited_sc_ids": draft_scs, "confidence": 0.9, "remediation": ""},
+        "gold": {"gold_success_criteria": gold_scs, "gold_conformance": gold_conf},
+        "judge": {"citation_correct": jc, "conformance_correct": jconf, "verdict": "BOGUS", "rationale": "x"},
+    }
+
+
+def test_agreements_from_artifact_recomputes_verdicts_from_raw() -> None:
+    artifact = {
+        "drafts": [
+            _row("natural", "does_not_support", ["1.1.1"], "does_not_support", ["1.1.1"], True, True),  # correct
+            _row("false_supports", "supports", ["1.1.1"], "does_not_support", ["1.1.1"], True, False),  # partial
+            _row("natural", "supports", ["1.1.1"], "supports", ["1.1.1"], True, True),  # correct
+            _row("wrong_sc", "does_not_support", ["4.1.2"], "does_not_support", ["1.1.1"], False, True),  # partial
+        ]
+    }
+    balanced, natural = agreements_from_artifact(artifact)
+    # balanced = all four; both raters recompute to [correct, partial, correct, partial] → perfect
+    assert balanced.n == 4
+    assert balanced.agreement == pytest.approx(1.0)
+    assert balanced.kappa == pytest.approx(1.0)
+    assert balanced.human_counts == {C: 2, P: 2, X: 0}
+    # natural = the two lever=="natural" rows, both correct → constant streams → κ degenerate (0.0)
+    assert natural.n == 2
+    assert natural.agreement == pytest.approx(1.0)
+    assert natural.kappa == 0.0
+
+
+def _agreement(kappa: float) -> Agreement:
+    return Agreement(
+        n=30,
+        kappa=kappa,
+        kappa_binary=kappa,
+        agreement=0.8,
+        human_counts={C: 10, P: 10, X: 10},
+        judge_counts={C: 10, P: 10, X: 10},
+        agree_by_class={C: 8, P: 8, X: 8},
+    )
+
+
+def test_build_report_trusts_when_balanced_kappa_clears_the_bar() -> None:
+    when = datetime(2026, 7, 13, tzinfo=timezone.utc)
+    report = build_report(_agreement(0.7), _agreement(0.1), created_at=when)
+    assert isinstance(report, CalibrationReport)
+    assert report.judge_kappa == pytest.approx(0.7)  # the BALANCED κ is the gate
+    assert report.judge_trusted is True
+    assert report.kappa_threshold == KAPPA_THRESHOLD
+    assert report.n == 30
+    assert report.confidence_bins == []  # T4 fills the curve
+    assert report.created_at == when
+    assert "0.700" in report.bias_notes  # both κ's disclosed in the honesty note
+
+
+def test_build_report_distrusts_when_below_the_bar() -> None:
+    report = build_report(_agreement(0.5), _agreement(0.0), created_at=datetime(2026, 7, 13, tzinfo=timezone.utc))
+    assert report.judge_trusted is False
+
+
+def test_build_report_accepts_explicit_bias_notes() -> None:
+    report = build_report(
+        _agreement(0.7), _agreement(0.1), created_at=datetime(2026, 7, 13, tzinfo=timezone.utc), bias_notes="custom"
+    )
+    assert report.bias_notes == "custom"

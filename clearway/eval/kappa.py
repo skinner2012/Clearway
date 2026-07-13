@@ -19,9 +19,18 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Hashable, Sequence
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
 from clearway.judge import verdict_from
-from clearway.schemas.models import DraftRow, GoldLabel, JudgeVerdict
+from clearway.schemas.models import (
+    CalibrationReport,
+    Citation,
+    Conformance,
+    DraftRow,
+    GoldLabel,
+    JudgeVerdict,
+)
 
 # The trust bar, PRE-COMMITTED here before any live κ is computed: κ >= 0.6 is "substantial"
 # agreement (Landis & Koch). Fixed in code first so the number cannot be moved to fit the result —
@@ -114,3 +123,81 @@ def _require_aligned(a: Sequence[Hashable], b: Sequence[Hashable]) -> None:
         raise ValueError(f"rater streams must be aligned, got lengths {len(a)} and {len(b)}")
     if not a:
         raise ValueError("need at least one paired rating")
+
+
+# ============================================================
+# Assembling the trust report from the frozen calibration set
+# ============================================================
+
+
+def _row_verdicts(row: dict[str, Any]) -> tuple[JudgeVerdict, JudgeVerdict]:
+    """Recompute (human, judge) verdicts for one artifact row FROM RAW — the human verdict from the
+    draft vs its gold, the judge verdict from the two stored booleans — so the replay never trusts the
+    stored 3-way verdicts (readability only), and the frozen data is self-checking, not just believed."""
+    draft = DraftRow(
+        finding_id=row["finding_id"],
+        conformance=Conformance(row["draft"]["conformance"]),
+        citations=[Citation(sc_id=sc) for sc in row["draft"]["cited_sc_ids"]],
+        confidence=row["draft"]["confidence"],
+    )
+    gold = GoldLabel(
+        finding_id=row["finding_id"],
+        gold_success_criteria=list(row["gold"]["gold_success_criteria"]),
+        gold_conformance=Conformance(row["gold"]["gold_conformance"]),
+        labeller="(artifact)",
+        gold_version="(artifact)",
+    )
+    j = row["judge"]
+    return human_verdict(draft, gold), verdict_from(j["citation_correct"], j["conformance_correct"])
+
+
+def _streams(rows: list[dict[str, Any]]) -> tuple[list[JudgeVerdict], list[JudgeVerdict]]:
+    pairs = [_row_verdicts(r) for r in rows]
+    return [h for h, _ in pairs], [j for _, j in pairs]
+
+
+def agreements_from_artifact(artifact: dict[str, Any]) -> tuple[Agreement, Agreement]:
+    """Read the frozen calibration set → the (balanced, natural) agreement pair. BALANCED is every
+    draft (the trust gate); NATURAL is the faithful drafter pass (lever == "natural"), the real-workload
+    honesty check reported alongside. Verdicts are recomputed from raw, never read off the stored ones."""
+    rows = artifact["drafts"]
+    balanced = analyze(*_streams(rows))
+    natural = analyze(*_streams([r for r in rows if r["lever"] == "natural"]))
+    return balanced, natural
+
+
+def bias_summary(balanced: Agreement, natural: Agreement) -> str:
+    """The honesty paragraph for `bias_notes`: both κ's, the constructed-distribution caveat, and the
+    single-labeller caveat — everything the spec says must ship beside the gate number."""
+    return (
+        f"Trust gate = balanced-set κ {balanced.kappa:.3f} (binary-collapse {balanced.kappa_binary:.3f}, "
+        f"raw agreement {balanced.agreement:.3f}, n={balanced.n}). "
+        f"Natural faithful-pass κ {natural.kappa:.3f} (raw agreement {natural.agreement:.3f}, n={natural.n}) "
+        "— near-degenerate by construction (the drafter is right ~90% of the time, so the human stream is "
+        "near-constant), reported for real-workload honesty. κ is judge-vs-one-labeller, not consensus. "
+        "Negatives are authentic drafter outputs elicited toward the observed error taxonomy, so the gate κ "
+        "measures discrimination on a constructed distribution. Absolute rubric scoring → position bias N/A."
+    )
+
+
+def build_report(
+    balanced: Agreement,
+    natural: Agreement,
+    *,
+    created_at: datetime,
+    threshold: float = KAPPA_THRESHOLD,
+    bias_notes: str = "",
+) -> CalibrationReport:
+    """Assemble the κ-half of the `CalibrationReport`: the balanced-set κ is the gate, `judge_trusted`
+    is κ >= the pre-committed threshold, and the natural-pass numbers + caveats fill `bias_notes`.
+    `confidence_bins` stays empty here — the confidence-vs-correctness curve is a later concern."""
+    return CalibrationReport(
+        judge_kappa=balanced.kappa,
+        judge_agreement=balanced.agreement,
+        n=balanced.n,
+        kappa_threshold=threshold,
+        judge_trusted=balanced.kappa >= threshold,
+        confidence_bins=[],
+        bias_notes=bias_notes or bias_summary(balanced, natural),
+        created_at=created_at,
+    )

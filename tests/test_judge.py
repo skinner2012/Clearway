@@ -12,8 +12,7 @@ import os
 
 import pytest
 
-from clearway.judge import Judge, JudgeError
-from clearway.judge.judge import _verdict_from
+from clearway.judge import Judge, JudgeError, verdict_from
 from clearway.llm import CloudLLMClient, FakeLLMClient
 from clearway.schemas.models import Citation, Conformance, DraftRow, Finding, JudgeVerdict
 
@@ -66,7 +65,7 @@ def _judge(*responses: str) -> Judge:
     ],
 )
 def test_verdict_is_derived_from_the_two_booleans(cit: bool, conf: bool, want: JudgeVerdict) -> None:
-    assert _verdict_from(cit, conf) is want
+    assert verdict_from(cit, conf) is want
 
 
 # --- Judge mechanics (offline: FakeLLMClient) --------------------------------

@@ -72,8 +72,12 @@ class _JudgeVerdict(BaseModel):
     rationale: str
 
 
-def _verdict_from(citation_correct: bool, conformance_correct: bool) -> JudgeVerdict:
-    """correct = both right; incorrect = both wrong; partial = exactly one right."""
+def verdict_from(citation_correct: bool, conformance_correct: bool) -> JudgeVerdict:
+    """correct = both right; incorrect = both wrong; partial = exactly one right.
+
+    Public because calibration derives the *human* verdict with this exact rule so the two rater
+    streams κ compares are on one scale (spec: map to the verdict "by the same rule the judge uses").
+    """
     if citation_correct and conformance_correct:
         return JudgeVerdict.CORRECT
     if not citation_correct and not conformance_correct:
@@ -119,7 +123,7 @@ class Judge:
                 run_id=run_id,
                 judge_model=self._client.model,
                 judge_version=self._judge_version,
-                verdict=_verdict_from(out.citation_correct, out.conformance_correct),
+                verdict=verdict_from(out.citation_correct, out.conformance_correct),
                 citation_correct=out.citation_correct,
                 conformance_correct=out.conformance_correct,
                 rationale=out.rationale,

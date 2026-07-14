@@ -4,7 +4,7 @@
   "tags": ["clearway", "trust"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 3,
+  "version": 4,
   "refresh": "5s",
   "time": { "from": "now-6h", "to": "now" },
   "panels": [
@@ -404,30 +404,228 @@
     {
       "id": 103,
       "type": "row",
-      "title": "Coming in M5 — judge calibration",
+      "title": "Judge calibration & confidence — does the system know when it doesn't know?",
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 69 },
       "panels": []
     },
     {
       "id": 15,
-      "type": "text",
-      "title": "judge κ (M5)",
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 70 },
-      "options": {
-        "mode": "markdown",
-        "content": "### 🚧 M5\n**Judge–gold agreement (Cohen's κ).** How well the LLM judge agrees with the human gold labels on the *unverifiable* citations — the number that decides whether the judge can shrink `unverifiable_share` without lying. No data source until M5 builds the gold set + judge."
-      }
+      "type": "stat",
+      "title": "judge κ (judge-vs-human)",
+      "description": "Cohen's κ between the LLM judge and the human gold labels on judgment items. Judge-vs-ONE-labeller (not consensus), so do not over-read it. Green at/above the pre-committed 0.6 bar; red below. A snapshot gauge, refreshed only when the calibration is re-emitted.",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 70 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "judge_kappa",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": -1,
+          "max": 1,
+          "decimals": 3,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 0.6 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "judge trusted?",
+      "description": "1 iff κ cleared the pre-committed 0.6 bar. Only a trusted judge may score models on non-gold items — the gate M5 depends on.",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 70 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "judge_trusted",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NOT TRUSTED", "color": "red" }, "1": { "text": "TRUSTED", "color": "green" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "raw judge agreement",
+      "description": "Raw proportion of drafts where the judge and human verdicts match — reported alongside κ because a small n makes κ fragile.",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 70 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "judge_agreement_rate",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 19,
+      "type": "stat",
+      "title": "judgment correctness (judge-scored)",
+      "description": "Fraction of judgment items the judge scored correct — an ESTIMATE capped by κ, never promoted into the verified count. Distinct from the oracle-verified subset.",
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 70 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "judgment_correctness_rate",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
     {
       "id": 16,
-      "type": "text",
-      "title": "confidence calibration (M5)",
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 70 },
-      "options": {
-        "mode": "markdown",
-        "content": "### 🚧 M5\n**Confidence calibration.** Reliability of the drafter's self-reported confidence against actual correctness. M1 found confidence sits 0.9–1.0 regardless of correctness (why the `low_confidence` gate is dormant) — M5 recalibrates it. Placeholder until then."
-      }
+      "type": "timeseries",
+      "title": "confidence → correctness (per confidence bin)",
+      "description": "The calibration curve: for each confidence bin, the drafter's mean self-reported confidence vs. its actual correctness. A calibrated drafter keeps the two lines together; the vertical gap between them IS the miscalibration. The reads predict a single populated bin in [0.8,1.0] — confidence never drops — with correctness far below it (over-confident).",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 76 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "confidence_mean_confidence",
+          "legendFormat": "mean confidence [{{bin}}]"
+        },
+        {
+          "refId": "B",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "confidence_correctness",
+          "legendFormat": "correctness [{{bin}}]"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "pointSize": 8, "showPoints": "always" }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "ECE",
+      "description": "Expected Calibration Error — the count-weighted average gap between confidence and correctness across bins. Unsigned magnitude of miscalibration; 0 = perfectly calibrated.",
+      "gridPos": { "h": 7, "w": 4, "x": 12, "y": 76 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "expected_calibration_error",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.1 }, { "color": "red", "value": 0.2 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 21,
+      "type": "stat",
+      "title": "over-confidence gap",
+      "description": "Signed confidence − correctness. Positive = systematically MORE confident than right (over-confident, the predicted failure mode); negative = under-confident.",
+      "gridPos": { "h": 7, "w": 4, "x": 16, "y": 76 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "overconfidence_gap",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": -1,
+          "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.1 }, { "color": "red", "value": 0.2 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 22,
+      "type": "stat",
+      "title": "drafts per bin (n)",
+      "description": "How many drafts fall in each confidence bin. Ships beside the curve so a single populated bin cannot masquerade as a full calibration — the count is what makes a flat curve honest.",
+      "gridPos": { "h": 7, "w": 4, "x": 20, "y": 76 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "confidence_bin_n",
+          "legendFormat": "{{bin}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": { "mode": "fixed", "fixedColor": "purple" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "purple", "value": null } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } }
     }
   ]
 }

@@ -1,0 +1,61 @@
+Vendored W3C ACT-Rules test cases — NOTICE and provenance
+==========================================================
+
+This directory contains a frozen, redistributed copy of expert-authored
+accessibility test cases from the ACT-Rules Community Group, used here as an
+external, deterministic ground truth for an acceptance benchmark.
+
+Source
+------
+  Name:      ACT-Rules Community test cases
+  Website:   https://act-rules.github.io
+  Export:    https://act-rules.github.io/testcases.json
+  License:   https://act-rules.github.io/pages/license/
+
+License and attribution (required)
+----------------------------------
+The ACT-Rules content is published under the **W3C Software and Document
+Notice and License** (https://www.w3.org/copyright/software-license/).
+
+This software or document includes material copied from or derived from the
+ACT-Rules Community Group test cases (https://act-rules.github.io/testcases.json).
+Copyright © 2022 W3C® (MIT, ERCIM, Keio, Beihang).
+
+The material is provided "AS IS" and the copyright holders disclaim all
+warranties and liability, as stated in the license.
+
+What was vendored
+-----------------
+Only the test cases for the five ACT rules that can reach this pipeline are
+included (see the feasibility report). For each rule, ALL published examples
+(passed / failed / inapplicable) are vendored, so the set is the complete rule
+set and not a favorable subset:
+
+  Link in context is descriptive   (ruleId 5effbb)  18 cases
+  Link is descriptive              (ruleId aizyf1)  12 cases
+  Form field label is descriptive  (ruleId cc0f0a)  14 cases
+  Heading is descriptive           (ruleId b49b2e)  17 cases
+  HTML page title is descriptive   (ruleId c4a8a4)   6 cases
+
+  testcases.json : the full published export (all 1134 cases), kept intact.
+  html/          : the 67 referenced HTML files for the five rules above.
+
+How this copy is pinned (freeze)
+--------------------------------
+The published export carries no version field of its own, so the freeze is by
+content hash, recorded in `checksums.sha256` (verify with
+`shasum -a 256 -c checksums.sha256` from this directory):
+
+  testcases.json  sha256: a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293
+  html/*.html     sha256: one line per file in checksums.sha256
+
+  Fetched:        2026-07-14
+  Freeze id:      act-gold@a805d865   (first 8 hex of the testcases.json sha256)
+
+Note on `testcaseId`: ACT assigns each case a stable SHA-1 identifier
+(`testcaseId`), which we carry through as the case identity. It is NOT the SHA-1
+of the published HTML bytes fetched here (ACT hashes a source form), so integrity
+of this vendored copy is guaranteed by our own sha256 checksums above, not by
+recomputing `testcaseId`.
+
+The benchmark runner reads THIS vendored copy only, never the live URL.

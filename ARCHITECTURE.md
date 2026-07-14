@@ -3,7 +3,7 @@
 - **Status:** Draft
 - **Date:** 2026-07-05
 - **Author:** FuYuan (Skinner) Cheng
-- **Version:** 0.4
+- **Version:** 0.5
 
 **Status labels used below:**
 
@@ -159,10 +159,10 @@ This is citation *verification* layering, not RAG layering. For the axe-core-det
 | Decision | Status |
 |---|---|
 | Judge model ≠ drafter model (avoid self-preference bias) | DECIDED |
-| Judge is calibrated against a gold set *first* (measure judge-vs-human κ) before trusting judge-vs-model κ. M4 builds a small, **self-built *digital judgment* gold set** (`GoldLabel`) for this; the **expert, *physical* gold** is M6's Regime B — same `GoldLabel` shape, different labeller/regime. | DECIDED |
+| Judge is calibrated against a gold set *first* (measure judge-vs-human κ) before trusting judge-vs-model κ. M4 builds a small, **self-built *digital judgment* gold set** (`GoldLabel`) for this; M5 re-measures the judge against **W3C ACT expert gold** — same `GoldLabel` shape, a different labeller. | DECIDED |
 | Prefer deterministic oracle wherever available; reserve LLM-judge for no-oracle judgment items only | DECIDED |
 | Judge reproducibility: pin model + version + temperature (0/low) + fixed prompt, recorded in trace | DECIDED |
-| Exact judge model (local vs cloud reference judge); "can a local model approximate the cloud judge?" experiment (M4 — its result feeds M5 routing's local-vs-cloud choice) | OPEN |
+| Exact judge model (local vs cloud reference judge); "can a local model approximate the cloud judge?" experiment (M4 — its result feeds a later routing milestone's local-vs-cloud choice) | OPEN |
 
 ### 4.10 Untrusted content & prompt-injection
 
@@ -181,7 +181,7 @@ Pattern-stripping untrusted text is explicitly **not** relied on (unreliable). W
 
 ## 5. The Oracle interface (the transfer seam)
 
-The eval harness and the L1 citation check depend **only** on the `Oracle` interface — never on axe internals directly. Regime A implements it via axe-core (`AxeCoreOracle`); Regime B via gold labels (`GoldLabelOracle`). Swapping regimes = swapping this one implementation, with no change to `validator/` or `eval/`. That is the entire "flexibility without drift" proof reduced to a single seam. The `GoldLabel` shape those labels use is introduced early at M4 (small, self-built *digital judgment* gold, to calibrate the judge) and reused unchanged at M6 (expert *physical* gold) — one gold contract, two labellers/regimes.
+The eval harness and the L1 citation check depend **only** on the `Oracle` interface — never on axe internals directly. Regime A implements it via axe-core (`AxeCoreOracle`); Regime B via gold labels (`GoldLabelOracle`). Swapping regimes = swapping this one implementation, with no change to `validator/` or `eval/`. That is the entire "flexibility without drift" proof reduced to a single seam. The `GoldLabel` shape is introduced at M4 (small, self-built *digital judgment* gold, to calibrate the judge) and reused unchanged at M5 (W3C ACT expert gold) — one gold contract, different labellers.
 
 Key behavioural contract: `verdict_for(finding)` returns ground truth, or `None` when the oracle can't judge that finding — in which case it falls through to the LLM-judge or human review. That single return value is what wires up the "prefer the hardest available oracle" layering (4.8).
 
@@ -203,14 +203,14 @@ The table lists each module's responsibility (with its I/O) and its build-order 
 | `normalizer/` | Raw axe buckets (violations, incomplete, whitelisted quality-review passes) → deduped canonical `Finding[]` | — |
 | `retriever/` | RAG grounding: `Finding` → `Citation[]` | `corpus` |
 | `drafter/` | LLM structured output: `Finding` + `Citation[]` → `DraftRow` | — |
-| `oracle/` | Ground truth: `AxeCoreOracle` now, `GoldLabelOracle` @ M6 | — |
+| `oracle/` | Ground truth: `AxeCoreOracle` today; a `GoldLabelOracle` is the seam's other implementation | — |
 | `validator/` | L0 (enum) + L1 (axe tag) citation checks → `CitationCheck[]` | — |
 | `eval/` | Harness + trust-metric computation (`citation_hallucination_rate`, …) | `oracle` |
 | `observability/` | OTel setup, exporters, Prometheus/Grafana wiring | — |
 | `orchestrator/` | Hand-rolled state machine · checkpoint · retry · HITL gate | most |
 | `cli/` | Drive the spine (`clearway run <fixture>`) | `orchestrator` |
 | `corpus/` | WCAG/ARIA ingest → chunk → embed → pgvector | — |
-| `llm/` | LiteLLM gateway + frozen routing (routing @ M5) | — |
+| `llm/` | LiteLLM gateway + frozen routing (a later milestone) | — |
 | `mcp_server/` | Real MCP server wrapping `retriever` | `retriever` |
 | `api/` | FastAPI surface | `orchestrator` |
 
@@ -246,8 +246,9 @@ Every step emits an OTel span; every LLM/tool/retrieval call is a child span; ev
 | **M2** | Control loop + HITL + observability | `orchestrator` durable primitives (retry, idempotency, checkpoint); HITL durable-interrupt gate; full trust dashboard + honest failure analysis. | M1 |
 | **M3** | MCP retrieval server | Wrap `retriever` as the real MCP server (§4.7); part of Delivery/Demo. | retriever (M1); ∥ M2 |
 | **M4** | Judge calibration | LLM-judge vs a small self-built gold set; judge-vs-human κ; confidence-vs-correctness calibration. | eval + gold set |
-| **M5** | LLM routing | LiteLLM multi-model + frozen routing config; model/config-stratified eval, config choice justified by the M4 judge's judgment-item scores. | M1; benefits from M2 + M4 |
-| **M6** | Regime B transfer | Implement `GoldLabelOracle`; swap the Oracle port; two-regime comparison. Architecture unchanged — only a new `Oracle` implementation. | M4 + gold set |
+| **M5** | Acceptance benchmark | Held-out acceptance set built from W3C ACT judgment-rule test cases (expert gold); drafter and judge both scored **deterministically against ACT gold, never by the judge**; noise floor; a frozen scorecard as the regression baseline. | M4 |
+
+**M5 is the current end of the plan.** What comes after it depends on what the benchmark shows — the next milestone is chosen from its results, not fixed in advance.
 
 **M0 — Walking Skeleton (the spine).** M0 runs the forward path above end-to-end but *thin*: one fixture page → real axe-core scan → normalize → L0+L1 citation check → compute `citation_hallucination_rate` → emit via OTel to a **real** Prometheus/Grafana. `retriever` and `drafter` are stubbed with canned output; routing (single model), cache, MCP, HITL, and physical are all absent.
 
@@ -263,3 +264,4 @@ Its only job is to prove the control loop is real. The detail exists to pin one 
 | 2026-07-08 | 0.2 | Added §4.10 (untrusted content & prompt-injection). |
 | 2026-07-10 | 0.3 | §4.10: generalised the side-effect-free rule system-wide (drafter + MCP retrieval tool). |
 | 2026-07-10 | 0.4 | Swapped M4/M5: judge calibration is now M4 (before routing) so routing can choose its config from the judge's judgment-item scores; LLM routing is now M5. Reconciled §4.9 (M4 self-built *digital* gold vs M6 expert *physical* gold, one `GoldLabel` shape), tied §4.4 routing policy to the M4 judge, and noted the `GoldLabel` reuse at the §5 seam. |
+| 2026-07-14 | 0.5 | M5 is now the acceptance benchmark (held-out W3C ACT gold; scored deterministically, never by the judge). Removed M6 (Regime B) — not being built. No milestones are declared past M5: the next one is chosen from the benchmark's results. |

@@ -122,20 +122,19 @@ no usable signal.
   a little more than half the time. This is the number a better drafter or a routing choice must move.
 - **Judge leniency at the partial/correct boundary** (§1) — the rater's own residual bias.
 
-## The requirement M4 hands M5 (explicit entry requirement)
+## The confidence requirement M4 hands forward
 
 M4 **measures** the confidence failure; it does not fix it. The robust fix — a real trust signal —
-structurally needs multi-model machinery M4 does not have, so it is correctly located in M5, not
-dropped. **This is a hard requirement M5 must satisfy at entry:**
+structurally needs multi-model machinery M4 does not have, so it is **deferred, not dropped**: a
+requirement for whatever milestone tackles confidence, not discharged here.
 
-> The drafter's self-reported confidence carries **no usable signal** (ECE 0.392, zero spread). M5
-> must therefore **either (a) synthesise a real confidence signal** — from self-consistency or
-> cross-model disagreement — **or (b) route by finding-class instead of confidence.** Routing may
-> **not** be justified on the drafter's confidence field, because that field is decorative.
+> The drafter's self-reported confidence carries **no usable signal** (ECE 0.392, zero spread). A
+> later milestone must **synthesise a real confidence signal** — from self-consistency or cross-model
+> disagreement — or key any routing decision to **finding-class, never the confidence field**, because
+> that field is decorative.
 
-Because the judge is now trusted (κ 0.79), M5 can justify its routing choice on judgment items too —
-scored automatically, with no human in the comparison loop. That is what sequencing calibration before
-routing bought.
+Because the judge is now trusted (κ 0.79), that future work can score judgment items automatically,
+with no human in the comparison loop — which is what sequencing calibration first bought.
 
 ## Reproducibility
 

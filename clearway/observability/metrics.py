@@ -22,7 +22,7 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 
-from clearway.schemas.models import EvalReport
+from clearway.schemas.models import CalibrationReport, EvalMetrics, EvalReport
 
 _DEFAULT_ENDPOINT = "http://localhost:4318"
 _METRIC_NAME = "citation_hallucination_rate"
@@ -30,11 +30,32 @@ _METRIC_VERIFIABLE = "citation_hallucination_rate_verifiable"
 _METRIC_UNVERIFIABLE_SHARE = "unverifiable_share"
 _METRIC_EXPERT_EDIT_DISTANCE = "expert_edit_distance"
 
+# M4 calibration series. Names are BARE (no `clearway_` prefix, no unit) to match the existing gauges
+# above — a unit would make the Prometheus exporter suffix `..._ratio`, and a prefix would diverge from
+# the dashboard's other queries. The scalars mirror the `EvalMetrics` judge/calibration fields; the
+# curve is emitted per-bin as a labelled series so its data lives once (on `CalibrationReport`) and is
+# never copied onto `EvalMetrics`. All are point-in-time milestone gauges, pushed by an explicit
+# calibration emit, not by a per-run forward path.
+_CAL_SCALAR_METRICS: dict[str, str] = {
+    "judge_kappa": "Judge-vs-human Cohen's κ (the trust gate; [-1,1], negative = worse than chance).",
+    "judge_agreement_rate": "Raw judge-vs-human agreement proportion, reported alongside κ.",
+    "judge_trusted": "1 iff the judge cleared the pre-committed κ bar (else 0).",
+    "judgment_correctness_rate": "Judge-scored correctness over judgment items (a κ-capped estimate).",
+    "expected_calibration_error": "ECE — unsigned magnitude of confidence miscalibration.",
+    "overconfidence_gap": "Signed confidence − correctness (positive = systematically over-confident).",
+}
+_CAL_CURVE_METRICS: dict[str, str] = {
+    "confidence_correctness": "Correctness rate within a confidence bin (labelled by `bin`).",
+    "confidence_mean_confidence": "Mean self-reported confidence within a bin (the calibration diagonal).",
+    "confidence_bin_n": "Draft count in a bin — ships beside the rate so a single-bin curve cannot lie.",
+}
+
 _provider: MeterProvider | None = None
 _rate_gauge: Gauge | None = None
 _rate_verifiable_gauge: Gauge | None = None
 _unverifiable_share_gauge: Gauge | None = None
 _expert_edit_distance_gauge: Gauge | None = None
+_cal_gauges: dict[str, Gauge] = {}
 
 
 def setup_metrics(endpoint: str | None = None) -> None:
@@ -78,6 +99,8 @@ def setup_metrics(endpoint: str | None = None) -> None:
         _METRIC_EXPERT_EDIT_DISTANCE,
         description="Mean normalized text distance a human moved this run's edited drafts (0 = no edits).",
     )
+    for name, description in {**_CAL_SCALAR_METRICS, **_CAL_CURVE_METRICS}.items():
+        _cal_gauges[name] = meter.create_gauge(name, description=description)
 
 
 def record_rate(rate: float, *, eval_set_id: str, config_id: str, oracle_regime: str) -> None:
@@ -117,6 +140,39 @@ def record_eval_report(report: EvalReport) -> None:
     _expert_edit_distance_gauge.set(m.expert_edit_distance, labels)
 
 
+def record_calibration(metrics: EvalMetrics, report: CalibrationReport, *, judge_model: str, gold_version: str) -> None:
+    """Push the M4 calibration snapshot: the judge/calibration SCALARS off `EvalMetrics`, and the
+    confidence curve as a per-bin labelled series off `CalibrationReport.confidence_bins`.
+
+    A milestone-triggered, point-in-time emit — the calibration is a milestone artifact, not a per-run
+    metric, so its gauges hold the last snapshot rather than a per-run series. Labels are the pinned
+    provenance (`judge_model`, `gold_version`): both are constants, so cardinality stays at one series
+    per metric. The scalars are Optional on `EvalMetrics` but a calibration carrier always sets them —
+    a missing one means the snapshot was mis-assembled, so we fail loudly rather than push a silent 0.
+    """
+    if not _cal_gauges:
+        setup_metrics()
+    labels = {"judge_model": judge_model, "gold_version": gold_version}
+    scalars: dict[str, float | None] = {
+        "judge_kappa": metrics.judge_kappa,
+        "judge_agreement_rate": metrics.judge_agreement_rate,
+        "judge_trusted": None if metrics.judge_trusted is None else float(metrics.judge_trusted),
+        "judgment_correctness_rate": metrics.judgment_correctness_rate,
+        "expected_calibration_error": metrics.expected_calibration_error,
+        "overconfidence_gap": metrics.overconfidence_gap,
+    }
+    for name, value in scalars.items():
+        if value is None:
+            raise ValueError(f"calibration metric {name!r} is unset — the snapshot was mis-assembled")
+        _cal_gauges[name].set(value, labels)
+
+    for b in report.confidence_bins:
+        bin_labels = {**labels, "bin": f"{b.lower}-{b.upper}"}
+        _cal_gauges["confidence_correctness"].set(b.correctness_rate, bin_labels)
+        _cal_gauges["confidence_mean_confidence"].set(b.mean_confidence, bin_labels)
+        _cal_gauges["confidence_bin_n"].set(b.n, bin_labels)
+
+
 def shutdown() -> None:
     """Flush pending metrics and tear down. MUST run before a short-lived process exits."""
     global _provider, _rate_gauge, _rate_verifiable_gauge, _unverifiable_share_gauge
@@ -129,3 +185,4 @@ def shutdown() -> None:
         _rate_verifiable_gauge = None
         _unverifiable_share_gauge = None
         _expert_edit_distance_gauge = None
+        _cal_gauges.clear()

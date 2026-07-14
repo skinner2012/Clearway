@@ -78,3 +78,52 @@ def calibration_metrics(report: CalibrationReport, curve: CalibrationCurve) -> E
         expected_calibration_error=curve.ece,
         overconfidence_gap=curve.overconfidence_gap,
     )
+
+
+def _print_summary(report: CalibrationReport, curve: CalibrationCurve) -> None:
+    trusted = "TRUSTED" if report.judge_trusted else "NOT TRUSTED"
+    print(
+        f"judge κ {report.judge_kappa:.4f} (raw agreement {report.judge_agreement:.4f}, n={report.n}) "
+        f"vs bar {report.kappa_threshold} → {trusted}"
+    )
+    print(
+        f"confidence: ECE {curve.ece:.4f}, over-confidence gap {curve.overconfidence_gap:+.4f}, "
+        f"judgment correctness {curve.judgment_correct}/{curve.judgment_total}"
+    )
+    for b in curve.bins:
+        print(
+            f"  bin [{b.lower}-{b.upper}]  n={b.n}  mean_conf={b.mean_confidence:.4f}  correct={b.correctness_rate:.4f}"
+        )
+
+
+def main() -> None:
+    """Assemble the snapshot from the frozen artifacts and push it to the OTLP collector.
+
+    The push side is imported locally so the pure assembly above stays free of the observability stack.
+    Run explicitly when the calibration changes: `uv run python -m clearway.eval.calibration_snapshot`.
+    """
+    from datetime import timezone
+
+    from clearway.observability import metrics
+
+    calibration = _load(_CALIBRATION)
+    report, curve = assemble(
+        created_at=datetime.now(timezone.utc), calibration=calibration, confidence=_load(_CONFIDENCE)
+    )
+    _print_summary(report, curve)
+
+    metrics.setup_metrics()
+    try:
+        metrics.record_calibration(
+            calibration_metrics(report, curve),
+            report,
+            judge_model=calibration["judge_model"],
+            gold_version=calibration["gold_version"],
+        )
+    finally:
+        metrics.shutdown()
+    print("pushed calibration snapshot to the OTLP collector")
+
+
+if __name__ == "__main__":
+    main()

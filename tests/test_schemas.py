@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -10,22 +12,30 @@ from pydantic import BaseModel, ValidationError
 from clearway import schemas
 from clearway.schemas import models
 from clearway.schemas.models import (
+    AcceptanceScorecard,
     AxeBucket,
     AxeNode,
     AxePass,
+    BenchmarkReport,
     CalibrationReport,
     ConfidenceBin,
     Conformance,
     CorpusChunk,
+    DrafterScore,
     DraftRow,
     EvalMetrics,
     EvidenceQuery,
+    ExemptMetric,
     Finding,
     GoldLabel,
+    JudgeConfusion,
     JudgeResult,
     JudgeVerdict,
     L1Status,
+    MetricCI,
     NeedsReview,
+    NoiseFloor,
+    NotMeasuredItem,
     Oracle,
     OracleRegime,
     OracleVerdict,
@@ -38,6 +48,7 @@ from clearway.schemas.models import (
     Severity,
     StepState,
     StepStatus,
+    TierBSmoke,
 )
 
 # Every concrete BaseModel defined in the contract (Oracle is a Protocol, excluded).
@@ -391,3 +402,179 @@ def test_calibration_report_holds_the_curve_and_is_strict() -> None:
             created_at=_AT,
             bogus=1,
         )
+
+
+# ---------------------------------------------------------------------------
+# GoldLabel gains an ACT-gold provenance (must stay backward-compatible)
+# ---------------------------------------------------------------------------
+
+
+def test_gold_label_new_provenance_fields_default_for_pre_existing_gold() -> None:
+    """The two new fields are Optional-with-default: gold written before they existed (no
+    `source`, no `act_testcase_id`) must still validate under extra='forbid', defaulting to
+    self-built provenance. This is what keeps the M4 calibration gold loading."""
+    pre_existing = GoldLabel(
+        finding_id="f1",
+        gold_success_criteria=["1.1.1"],
+        gold_conformance=Conformance.DOES_NOT_SUPPORT,
+        labeller="skinner",
+        gold_version="quality-gold@1",
+    )
+    assert pre_existing.source == "self"
+    assert pre_existing.act_testcase_id is None
+
+
+def test_gold_label_carries_w3c_act_provenance() -> None:
+    """W3C ACT gold records its external labeller + the case's content-hash id."""
+    act = GoldLabel(
+        finding_id="f1",
+        gold_success_criteria=["2.4.6"],
+        gold_conformance=Conformance.SUPPORTS,
+        labeller="ACT Rules Community Group",
+        gold_version="act-export@<sha>",
+        source="w3c-act",
+        act_testcase_id="0a1b2c3d",
+    )
+    assert (act.source, act.act_testcase_id) == ("w3c-act", "0a1b2c3d")
+
+
+_CALIBRATION_SET = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "calibration_set.json"
+
+
+@pytest.mark.skipif(not _CALIBRATION_SET.exists(), reason="calibration_set.json not built yet")
+def test_existing_calibration_gold_still_loads_unchanged() -> None:
+    """T0 acceptance: the existing M4 gold must load unchanged. Reconstruct a GoldLabel from each
+    calibration_set.json row exactly as the replay path does (without the new fields) and confirm
+    it validates, defaulting to self-built provenance."""
+    rows = json.loads(_CALIBRATION_SET.read_text())["drafts"]
+    assert rows, "calibration_set.json has no drafts to check"
+    for row in rows:
+        gold = GoldLabel(
+            finding_id=row["finding_id"],
+            gold_success_criteria=row["gold"]["gold_success_criteria"],
+            gold_conformance=Conformance(row["gold"]["gold_conformance"]),
+            labeller="(replay)",
+            gold_version="(replay)",
+        )
+        assert gold.source == "self"
+        assert gold.act_testcase_id is None
+
+
+# ---------------------------------------------------------------------------
+# Acceptance benchmark: BenchmarkReport / AcceptanceScorecard
+# ---------------------------------------------------------------------------
+
+
+def _ci(value: float, n: int) -> MetricCI:
+    return MetricCI(value=value, n=n, ci_low=max(0.0, value - 0.1), ci_high=min(1.0, value + 0.1))
+
+
+def _drafter_score() -> DrafterScore:
+    return DrafterScore(
+        recall=_ci(0.7, 23),
+        false_positive_rate=_ci(0.2, 30),
+        sc_citation_match=_ci(0.4, 16),
+        expected_calibration_error=ExemptMetric(
+            value=0.39, n=53, exempt_reason="single-bin overconfidence; nothing to bin"
+        ),
+        overconfidence_gap=0.39,
+    )
+
+
+def _judge_confusion() -> JudgeConfusion:
+    return JudgeConfusion(
+        correct_release=20,
+        missed_error=2,
+        false_alarm=3,
+        correct_catch=5,
+        miss_rate=ExemptMetric(
+            value=2 / 7, n=7, exempt_reason="too few naturally-wrong drafts; see injected detection"
+        ),
+        false_alarm_rate=_ci(3 / 23, 23),
+        kappa=0.6,
+        injected_conformance_flip=_ci(0.8, 20),
+        injected_sc_swap=_ci(0.9, 20),
+    )
+
+
+def _benchmark_report(scorecard: AcceptanceScorecard) -> BenchmarkReport:
+    return BenchmarkReport(
+        run_ids=["r1"],
+        config_id="bench-single@1",
+        eval_set_id="act-acceptance@1",
+        corpus_version="wcag22-nomic-embed-text-768@1",
+        drafter_model="gemma4:31b",
+        drafter_model_digest="sha256:aaaa",
+        judge_model="gpt-5.6-luna",
+        judge_model_digest="sha256:bbbb",
+        judge_version="rubric=e396f37f; effort=medium",
+        axe_core_version="4.12.1",
+        act_export_hash="sha1:cccc",
+        created_at=_AT,
+        scorecard=scorecard,
+    )
+
+
+def test_single_run_scorecard_is_complete_without_noise_floor_or_tier_b() -> None:
+    """A single run has the drafter + judge scores; the noise floor (needs 3–5 repeats) and Tier B
+    (built separately) are Optional and absent, while not_measured and the collapse rule default."""
+    card = AcceptanceScorecard(drafter=_drafter_score(), judge=_judge_confusion())
+    assert card.noise_floor is None
+    assert card.tier_b is None
+    assert card.not_measured == []
+    assert card.conformance_collapse_rule.startswith("FLAGS=")
+
+
+def test_benchmark_report_nests_the_scorecard_and_round_trips() -> None:
+    """The frozen artifact nests the scorecard and survives a JSON round-trip unchanged, carrying
+    the model digests + ACT export hash that make it reproducible by content, not name."""
+    card = AcceptanceScorecard(
+        drafter=_drafter_score(),
+        judge=_judge_confusion(),
+        noise_floor=NoiseFloor(
+            runs=5,
+            per_metric_sd={"false_positive_rate": 0.03, "recall": 0.04},
+            min_detectable_improvement=0.04,
+            dominant_source="binomial-sampling",
+        ),
+        tier_b=TierBSmoke(
+            instance_ids=["b1", "b2"], method_and_limits="ACT snippet embedded intact; n=2, illustrative"
+        ),
+        not_measured=[NotMeasuredItem(what="expert-minutes-per-finding", why="needs a real specialist + stopwatch")],
+    )
+    report = _benchmark_report(card)
+    assert report.scorecard.drafter.false_positive_rate.n == 30
+    assert report.drafter_model_digest == "sha256:aaaa"
+    assert BenchmarkReport.model_validate_json(report.model_dump_json()) == report
+
+
+def test_benchmark_report_is_strict() -> None:
+    """Every contract is strict: an unexpected field on the frozen artifact is a validation error."""
+    with pytest.raises(ValidationError):
+        BenchmarkReport(
+            run_ids=["r1"],
+            config_id="bench-single@1",
+            eval_set_id="act-acceptance@1",
+            corpus_version="v1",
+            drafter_model="gemma4:31b",
+            drafter_model_digest="sha256:aaaa",
+            judge_model="gpt-5.6-luna",
+            judge_model_digest="sha256:bbbb",
+            judge_version="v1",
+            axe_core_version="4.12.1",
+            act_export_hash="sha1:cccc",
+            created_at=_AT,
+            scorecard=AcceptanceScorecard(drafter=_drafter_score(), judge=_judge_confusion()),
+            bogus=1,
+        )
+
+
+def test_metric_ci_and_exempt_metric_bounds() -> None:
+    """MetricCI is a rate (bounds [0,1]); ExemptMetric must carry its mandatory reason and a rate
+    out of range is rejected on both."""
+    ci = MetricCI(value=0.2, n=30, ci_low=0.1, ci_high=0.35, effective_n=5)
+    assert ci.ci_method == "wilson" and ci.effective_n == 5
+    with pytest.raises(ValidationError):
+        MetricCI(value=1.5, n=30, ci_low=0.1, ci_high=0.35)
+    with pytest.raises(ValidationError):
+        ExemptMetric(value=0.3, n=10)  # missing the mandatory exempt_reason

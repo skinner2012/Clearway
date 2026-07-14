@@ -557,7 +557,8 @@ class GoldLabel(BaseModel):
     """Human-assigned ground truth for one judgment-item finding. The SINGLE gold shape:
     self-built digital gold now (labelled with WCAG knowledge, no external expert), and the
     same shape a future Regime B `GoldLabelOracle` reuses for expert physical gold — one gold
-    contract, two labellers/regimes. Do NOT fork a second gold schema."""
+    contract, two labellers/regimes. Do NOT fork a second gold schema. `source` records which
+    labeller regime produced the label — self-built WCAG gold or external W3C ACT expert gold."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -571,6 +572,16 @@ class GoldLabel(BaseModel):
         ..., description="who produced this label — judge-vs-human κ is really judge-vs-this-one-labeller"
     )
     gold_version: str = Field(..., description="versioned gold-set id, for reproducibility")
+    source: str = Field(
+        "self",
+        description='label provenance: "self" (WCAG-knowledge, no external expert) | "w3c-act" (W3C ACT expert '
+        "gold). Optional-with-default so pre-existing gold (which carries neither new field) still loads under "
+        "extra='forbid'",
+    )
+    act_testcase_id: Optional[str] = Field(
+        None,
+        description="the ACT case content-hash id (SHA-1 `testcaseId`) when source='w3c-act'; None for self-built gold",
+    )
     notes: str = Field("", description="labelling basis / WCAG spot-check disagreements")
 
 
@@ -649,3 +660,242 @@ class CalibrationReport(BaseModel):
         "", description="verbosity / self-preference observations (position bias N/A — absolute rubric scoring)"
     )
     created_at: datetime
+
+
+# ============================================================
+# Acceptance benchmark output  (eval/ — held-out ACT-gold scorecard)
+# ============================================================
+
+
+class MetricCI(BaseModel):
+    """A rate with its denominator and a confidence interval — the standard (value + n + CI)
+    triple every headline benchmark number carries. The interval is the ASYMMETRIC Wilson score
+    interval (never a symmetric ±), quoted as observed. `effective_n` records the clustering
+    caveat: cases cluster in ~5 rules and the drafter shares one framing per rule, so within-rule
+    outcomes correlate — the honest precision is `effective_n` (≈ #rules), not the raw `n`, and
+    the iid Wilson bounds understate the true width."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    value: float = Field(..., ge=0.0, le=1.0, description="point estimate (a rate in [0,1])")
+    n: int = Field(
+        ...,
+        ge=0,
+        description="denominator — the STRATUM size this rate runs on (e.g. 30 TN / 23 TP), not the pooled 53",
+    )
+    ci_low: float = Field(..., ge=0.0, le=1.0, description="Wilson lower bound (asymmetric)")
+    ci_high: float = Field(..., ge=0.0, le=1.0, description="Wilson upper bound (asymmetric)")
+    effective_n: Optional[int] = Field(
+        None,
+        ge=0,
+        description="clustering-adjusted n ≈ #rules; when set, the CI assumes an independence the data lacks — read "
+        "this, not n, as the real precision",
+    )
+    ci_method: str = Field(
+        "wilson", description="interval method — Wilson by contract (asymmetric, tighter near 0/1 than a normal ±)"
+    )
+
+
+class ExemptMetric(BaseModel):
+    """A number the Scorecard explicitly EXEMPTS from the n+CI rule, and which MUST say why.
+    Exactly two figures qualify: ECE (at n ≤ 53 with single-bin overconfidence there is nothing
+    to bin — the raw gap, no CI) and the judge's real-draft miss rate (too few naturally-wrong
+    drafts; the trustworthy figure is the injected-detection upper bound instead)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    value: float = Field(..., ge=0.0, le=1.0, description="the reported magnitude (no interval)")
+    n: int = Field(..., ge=0, description="the count behind it, reported even though no CI is claimed")
+    exempt_reason: str = Field(
+        ..., description="why this figure carries no CI — mandatory, so the exemption is never silent"
+    )
+
+
+class DrafterScore(BaseModel):
+    """Subject #1: the drafter's `DraftRow` scored ENTIRELY by deterministic comparison against
+    ACT gold — never via the judge. `false_positive_rate` (on the ACT-passed true negatives) is
+    the headline: flagging clean content inverts the product's value. `recall` (on ACT-failed true
+    positives) is the primary correctness axis. `sc_citation_match` is SECONDARY and reported
+    separately — the quality-review help text steers to SCs that disagree with ACT gold, so it
+    reads low for reasons of framing, not capability, and must NOT be 'fixed' by retuning the help
+    text to the held-out set (contamination)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    recall: MetricCI = Field(..., description="conformance FLAGS vs ACT failed examples — does it find the problem")
+    false_positive_rate: MetricCI = Field(
+        ..., description="conformance FLAGS vs ACT passed examples — does it cry wolf (the most important number)"
+    )
+    sc_citation_match: MetricCI = Field(
+        ...,
+        description="cited sc_id ∩ ACT gold_success_criteria, over correctly-flagged failed cases only — secondary",
+    )
+    expected_calibration_error: ExemptMetric = Field(
+        ..., description="ECE — self-reported confidence vs ACT gold; exempt from CI (single-bin at this n)"
+    )
+    overconfidence_gap: float = Field(
+        ..., ge=-1.0, le=1.0, description="signed: mean confidence − mean correctness; positive = over-confident"
+    )
+    remediation_technique_match: Optional[MetricCI] = Field(
+        None, description="fix aligns with the ACT canonical technique (G94/G95/F30…) — direction, a PROXY only"
+    )
+    abstained_n: int = Field(
+        0, ge=0, description="not_applicable drafts reported as a separate cell, never folded silently into 'clean'"
+    )
+
+
+class JudgeConfusion(BaseModel):
+    """Subject #2: the judge measured AGAINST ACT gold, not used as the ruler (M4's 'no oracle →
+    use the judge' rule does not hold here — ACT supplies the oracle). The 2×2 confusion of judge
+    verdict × ACT gold, with the two errors reported SEPARATELY and NEVER collapsed into one κ: a
+    missed error (a wrong draft rubber-stamped 'verified') is dangerous; a false alarm is merely
+    annoying. Detection on INJECTED bad drafts is an UPPER BOUND on real miss-catching, split into
+    two mutations each with its own n — a conformance flip (rationale regenerated to argue the
+    flipped verdict, else the strawman effect inflates it) and an SC swap (citation-catching only,
+    a secondary axis)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    correct_release: int = Field(..., ge=0, description="judge pass · ACT correct — ✅ correct release")
+    missed_error: int = Field(..., ge=0, description="judge pass · ACT wrong — ⚠️ the dangerous half")
+    false_alarm: int = Field(..., ge=0, description="judge fail · ACT correct — ⚠️ merely annoying")
+    correct_catch: int = Field(..., ge=0, description="judge fail · ACT wrong — ✅ correct catch")
+
+    miss_rate: ExemptMetric = Field(
+        ...,
+        description="missed_error / (missed_error + correct_catch) — EXEMPT: too few naturally-wrong drafts to CI",
+    )
+    false_alarm_rate: MetricCI = Field(
+        ..., description="false_alarm / (false_alarm + correct_release) — the annoying half, with CI"
+    )
+    kappa: float = Field(
+        ...,
+        ge=-1.0,
+        le=1.0,
+        description="judge-vs-ACT-gold Cohen's κ — harder and more independent than M4's self-built-gold κ",
+    )
+    injected_conformance_flip: MetricCI = Field(
+        ..., description="detection on conformance-flipped drafts (rationale regenerated) — an upper bound"
+    )
+    injected_sc_swap: MetricCI = Field(
+        ..., description="detection on SC-swapped drafts — citation-catching only, secondary; an upper bound"
+    )
+    rationale_coherence_note: str = Field(
+        "", description="how rationale coherence was preserved on the flip (LLM re-authorship is a bias to note)"
+    )
+
+
+class NoiseFloor(BaseModel):
+    """Variance over 3–5 repeat runs on the SAME acceptance set → the minimum detectable
+    improvement: a change smaller than this may not be claimed as progress. Reports which source
+    dominates — at temperature 0 on a local model the run-to-run jitter may be near zero, leaving
+    binomial sampling as the floor, not the model. The paired McNemar discordance (per stratum,
+    TN→FP and TP→miss counted separately, never pooled) is the benchmark's PRIMARY change signal;
+    a change is real only if its discordance exceeds this same-config jitter floor, not zero."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    runs: int = Field(..., ge=2, description="repeat runs the variance is computed over (3–5)")
+    per_metric_sd: dict[str, float] = Field(
+        ..., description="standard deviation of each headline metric across the runs"
+    )
+    min_detectable_improvement: float = Field(
+        ..., ge=0.0, description="smallest claimable improvement (pp) — the yardstick's smallest gradation"
+    )
+    dominant_source: str = Field(
+        ..., description="'llm-jitter' | 'binomial-sampling' — which sets the floor, reported not assumed"
+    )
+    paired_mdi_note: str = Field(
+        "", description="the per-stratum McNemar discordance floor for paired A/B comparison (separate from the CI)"
+    )
+
+
+class TierBSmoke(BaseModel):
+    """Tier B: ACT snippets embedded intact into realistic noisy pages, scored exactly like Tier A
+    (deterministic vs ACT gold). At n = 2 this is ILLUSTRATIVE, not statistical — a smoke test that
+    the pipeline survives real-page noise, NOT a measured rate (no CI attaches to two points). It
+    does NOT enter the headline scorecard as a number. The report MUST state the embedding method
+    used and its limits (methodology is preliminary)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    n: int = Field(2, ge=0, description="embedded instances — illustrative at this size, not a rate")
+    instance_ids: list[str] = Field(default_factory=list, description="the acceptance-case ids embedded")
+    clean_vs_noisy_note: str = Field(
+        "", description="the clean − noisy delta = the cost of real-world messiness, reported as illustration"
+    )
+    method_and_limits: str = Field(
+        ..., description="the embedding / noise-construction method used and its limitations — mandatory"
+    )
+
+
+class NotMeasuredItem(BaseModel):
+    """One thing this benchmark explicitly does NOT measure — stated, not hidden (e.g.
+    expert-minutes-per-finding, recall / missed findings, image alt-text quality, the judge's own
+    ceiling)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    what: str = Field(..., description="the unmeasured thing")
+    why: str = Field(..., description="why it is out of scope for this benchmark")
+
+
+class AcceptanceScorecard(BaseModel):
+    """The metrics payload of a benchmark run: the drafter's ACT-gold score (subject #1), the
+    judge's confusion against ACT gold (subject #2), the noise floor, the Tier B smoke test, and a
+    structured not-measured list. Every rate carries n + a Wilson CI except the two figures
+    `ExemptMetric` covers. `noise_floor` and `tier_b` are Optional — a single run has the drafter
+    and judge scores, but the noise floor needs 3–5 repeats and Tier B is built separately."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    drafter: DrafterScore
+    judge: JudgeConfusion
+    noise_floor: Optional[NoiseFloor] = Field(
+        None, description="variance over repeat runs — absent on a single run, filled once repeats exist"
+    )
+    tier_b: Optional[TierBSmoke] = Field(
+        None, description="the realistic-page smoke test — illustrative, never part of the headline number"
+    )
+    not_measured: list[NotMeasuredItem] = Field(
+        default_factory=list, description="the explicit out-of-scope list — stated, not hidden"
+    )
+    conformance_collapse_rule: str = Field(
+        "FLAGS={does_not_support, partially_supports}; CLEAN={supports, not_applicable}",
+        description="the four-value → binary collapse, stated so the scoring is auditable",
+    )
+    notes: str = Field(
+        "", description="methodology / sensitivity notes (e.g. partially_supports scored the other way; NA handling)"
+    )
+
+
+class BenchmarkReport(BaseModel):
+    """The frozen, reproducible top-level benchmark artifact — the regression baseline for every
+    later iteration. Freeze is by CONTENT HASH, not by a name: it pins the drafter / judge model
+    DIGESTS (immutable hashes, not the mutable Ollama tags), the axe-core version, the corpus
+    version, and the vendored ACT export hash. The nested `AcceptanceScorecard` holds the numbers;
+    this shell holds the provenance that makes them reproducible."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    run_ids: list[str] = Field(
+        ..., description="run(s) this report aggregates — one for a single run, 3–5 for the frozen noise-floor artifact"
+    )
+    config_id: str = Field(..., description="pinned pipeline config")
+    eval_set_id: str = Field(
+        ..., description="the acceptance set id — DISTINCT from the dev fixtures, never overlapping"
+    )
+    corpus_version: str = Field(..., description="RAG corpus version (lives on CorpusChunk, not EvalReport) — pinned")
+    drafter_model: str = Field(..., description="drafter model tag, for readability")
+    drafter_model_digest: str = Field(
+        ..., description="drafter model IMMUTABLE digest — the freeze key, not the mutable tag"
+    )
+    judge_model: str = Field(..., description="judge model tag, for readability")
+    judge_model_digest: str = Field(..., description="judge model IMMUTABLE digest — the freeze key")
+    judge_version: str = Field(..., description="pinned judge snapshot + prompt / temperature provenance")
+    axe_core_version: str = Field(..., description="pinned axe-core version — the coverage gate for every Finding")
+    act_export_hash: str = Field(
+        ..., description="content hash of the vendored ACT export — the gold is pinned, never fetched live"
+    )
+    created_at: datetime
+    scorecard: AcceptanceScorecard

@@ -21,23 +21,25 @@ oracle-poor share of a real audit — and they are decidable from the DOM, so th
 them too. The normalizer therefore mints a judgment `Finding` (`AxeBucket.PASSES`) for each
 whitelisted pass.
 
-Why these four rules — and why two are deliberately deferred
-------------------------------------------------------------
+Why these six rules — and why one is still deliberately deferred
+----------------------------------------------------------------
 Each rule below was **empirically confirmed** (against pinned axe 4.12.1) to PASS on a
-present-but-poor value, so it yields a real judgment finding. Two further existence-only rules,
-`document-title` and `button-name`, are **deferred**, for two compounding reasons:
-  1. They were NOT confirmed to pass on poor content — a page title or button with any text
-     usually reads as adequate, so a clean "present-but-inadequate" case is hard to plant.
-  2. Enabling them would mint findings on the existing frozen regression fixtures (every fixture
-     has a `<title>`; `home.html` has a named `<button>`), disturbing versioned anchors for the
-     two weakest categories.
-Scoping to the confirmed four gives a smaller but *more valid* judge calibration: every gold
-item is a clean, DOM-decidable judgment call, and the set the judge calibrates on is exactly
-the set the pipeline surfaces in production (same whitelist), so κ never overstates the judge's
-reliability on its real workload. `document-title` / `button-name` (and the alt/name variants
-`svg-img-alt`, `object-alt`, `role-img-alt`, `input-image-alt`, `select-name`) can be added
-later — each behind a fixture version bump — once a fixture confirms it passes on poor content
-and the product's judgment scope calls for it.
+present-but-poor value, so it yields a real judgment finding. `empty-heading` and `document-title`
+were confirmed against the vendored ACT test cases: `empty-heading` PASSES on a present-but-
+non-descriptive heading (only `aria-hidden` headings fall out of the accessibility tree and mint
+nothing — an honest miss), and `document-title` PASSES on every page with a `<title>`. Both are
+existence-only in the same sense as the others: axe confirms the heading/title EXISTS but never
+whether it is meaningful.
+
+One further existence-only rule, `button-name`, is still **deferred**: a button with any text
+usually reads as adequate, so a clean "present-but-inadequate" case is hard to plant, and it was
+not confirmed to pass on poor content. The alt/name variants (`svg-img-alt`, `object-alt`,
+`role-img-alt`, `input-image-alt`, `select-name`) remain deferred on the same empirical bar.
+
+Note the cost paid for `empty-heading` / `document-title`: the whitelist is GLOBAL, so both mint
+new judgment findings on every frozen fixture that has a heading/title (all of them). That moved
+versioned anchors and required a fixture version bump — the mechanism this module already
+prescribes for any whitelist change.
 
 The reframe (the VALUES)
 ------------------------
@@ -66,5 +68,13 @@ QUALITY_REVIEW_RULES: dict[str, str] = {
     "frame-title": (
         "The frame has a title — judge whether it DESCRIBES the frame's content for "
         "WCAG 4.1.2 / 2.4.1; a generic 'frame' / 'iframe' does NOT."
+    ),
+    "empty-heading": (
+        "The heading has non-empty text — judge whether it DESCRIBES the section's topic for "
+        "WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT."
+    ),
+    "document-title": (
+        "The page has a non-empty <title> — judge whether it DESCRIBES the page's topic or purpose "
+        "for WCAG 2.4.2; a generic 'Untitled' / 'Home' / boilerplate title does NOT."
     ),
 }

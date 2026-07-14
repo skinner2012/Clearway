@@ -103,7 +103,7 @@ def test_cli_run_with_run_id_resumes_and_prints_a_notice(monkeypatch, capsys) ->
 
     assert main(["run", FIXTURE, "--no-emit", "--run-id", "cli-resume-test"]) == 0
     out = capsys.readouterr().out
-    assert "resuming run cli-resume-test: 3/3 findings already complete, nothing left to do" in out
+    assert "resuming run cli-resume-test: 5/5 findings already complete, nothing left to do" in out
 
 
 # --- HITL review queue (T3) ---------------------------------------------------
@@ -161,7 +161,8 @@ def test_cli_review_approve_then_resume_restores_the_unverifiable_share(shared_s
 
 def test_cli_review_edit_with_remediation_persists_and_flows_into_the_report(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]
     """`review edit --remediation` re-drafts a queued row without the editor; it persists as an
-    edit and, on resume, the finding assembles into the report (findings_total climbs back to 5)."""
+    edit and, on resume, the finding assembles into the report (findings_total climbs back to 11:
+    3 violations + 6 whitelist judgment findings + the 2 edited-and-folded incomplete items)."""
     assert main(["eval", "--no-emit", "--run-id", "cli-edit"]) == 0
     capsys.readouterr()
 
@@ -175,9 +176,9 @@ def test_cli_review_edit_with_remediation_persists_and_flows_into_the_report(sha
     assert edited.edited_draft is not None
     assert edited.edited_draft.remediation == "human-reviewed fix"
 
-    # ...and flows into the assembled output on resume (all 5 findings scored again).
+    # ...and flows into the assembled output on resume (all 11 findings scored again).
     assert main(["eval", "--no-emit", "--run-id", "cli-edit"]) == 0
-    assert "findings=5" in capsys.readouterr().out
+    assert "findings=11" in capsys.readouterr().out
 
 
 def test_cli_review_reject_keeps_the_finding_out_of_the_report(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]
@@ -189,7 +190,8 @@ def test_cli_review_reject_keeps_the_finding_out_of_the_report(shared_spine, cap
     capsys.readouterr()
 
     assert main(["eval", "--no-emit", "--run-id", "cli-reject"]) == 0
-    assert "findings=3" in capsys.readouterr().out  # rejected items never rejoin the report
+    # 3 violations + 6 whitelist judgment findings stay; the 2 rejected incomplete never rejoin.
+    assert "findings=9" in capsys.readouterr().out
 
 
 def test_cli_review_show_unknown_finding_errors(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]

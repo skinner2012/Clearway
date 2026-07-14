@@ -3,9 +3,18 @@
 Real-browser integration test — the runners scan fixtures with headless Chromium + axe-core, then
 normalize → retrieve → draft → validate → eval. Requires `playwright install chromium`. `run` over
 home.html asserts `citation_hallucination_rate == 2/3`; `run_set` over the m1-core@1 pages asserts
-the honest stratified aggregate (5 findings, 2 UNVERIFIABLE → `unverifiable_share == 2/5`). The
+the honest stratified aggregate (`unverifiable_share == 2/5`, computed over CITATIONS). The
 runners are pure — emission (OTel) lives in the CLI and is proven by the stack-gated
 test_observability.py.
+
+Note on the finding COUNTS below: the global quality-review whitelist mints existence-only
+judgment findings (document-title on every <title>, empty-heading on every non-empty <h1>), so
+each fixture carries two more findings than its planted violations/incomplete. Those judgment
+findings flow through the spine but carry NO canned citation offline (the stub returns [] for
+rules it doesn't model) — they are measured properly against W3C ACT expert gold in the acceptance
+benchmark, not scored here. So they lift the finding/trace/call COUNTS without touching any
+citation-based metric: `citation_hallucination_rate == 2/3` and `unverifiable_share == 2/5` hold
+unchanged.
 
 Both model-facing steps are injected with canned stubs, and the durable checkpoint store is an
 in-memory stand-in, so the spine runs offline (no corpus stack, no Ollama, no Postgres):
@@ -40,8 +49,10 @@ def test_run_end_to_end_hits_the_exit_criterion() -> None:
     assert isinstance(result.report, EvalReport)
 
     m = result.report.metrics
-    # 3 planted findings, 3 citations, 2 intentional faults (html-has-lang→1.1.1, label→9.9.9).
-    assert m.findings_total == 3
+    # 3 planted violations + 2 whitelist judgment findings (document-title, empty-heading) = 5.
+    # Only the 3 violations carry canned citations (3 total, 2 intentional faults html-has-lang→1.1.1,
+    # label→9.9.9); the 2 judgment findings carry none offline, so the citation metrics are unmoved.
+    assert m.findings_total == 5
     assert m.citations_total == 3
     assert m.hallucinations_total == 2
     assert m.citation_hallucination_rate == 2 / 3
@@ -49,13 +60,15 @@ def test_run_end_to_end_hits_the_exit_criterion() -> None:
 
 def test_run_produces_one_trace_per_finding_sharing_a_run() -> None:
     result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore())
-    assert len(result.traces) == 3
+    assert len(result.traces) == 5  # 3 violations + 2 whitelist judgment findings
     assert all(isinstance(t, Trace) for t in result.traces)
     # all traces of one run share run_id / config_id, and each carries its checks.
     assert len({t.run_id for t in result.traces}) == 1
     assert {t.config_id for t in result.traces} == {"m1-single@1"}
     assert result.report.run_id == result.traces[0].run_id
-    assert all(t.checks for t in result.traces)
+    # the 3 violations carry validation checks; the 2 judgment findings have no citation offline
+    # (stub returns []), so their traces have nothing to validate — no checks.
+    assert sum(1 for t in result.traces if t.checks) == 3
     # report labels are read off the oracle, not hardcoded.
     assert result.report.oracle_regime == OracleRegime.A_DIGITAL
     assert result.report.eval_set_id == "m0-core@1"
@@ -108,12 +121,14 @@ def test_a_resumed_run_overwrites_its_report_row_without_duplicating() -> None:
 
 def test_run_set_folds_the_verifiable_findings_and_queues_the_incomplete_ones() -> None:
     """T3: the HITL gate withholds the 2 incomplete-bucket findings for review, so a fresh run
-    assembles only home's 3 verifiable violations and queues the rest — the run does not stall."""
+    assembles the ungated findings and queues the incomplete rest — the run does not stall.
+    Ungated = home's 3 violations + the 6 whitelist judgment findings (2 per page) = 9 traces;
+    only the 2 incomplete items are gated (the judgment findings are not gated)."""
     store = InMemoryOrchestratorStore()
     result = run_set(M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store)
     assert isinstance(result, RunResult)
-    # 3 verifiable violations assemble; the 2 incomplete items are gated into the queue.
-    assert len(result.traces) == 3
+    # 3 violations + 6 judgment findings assemble; the 2 incomplete items are gated into the queue.
+    assert len(result.traces) == 9
     assert len(store.load_reviews(status=ReviewStatus.PENDING)) == 2
     assert {r.reason for r in store.load_reviews()} == {ReviewReason.AXE_INCOMPLETE}
     # the whole set scores under ONE run so it aggregates into a single report.
@@ -124,16 +139,18 @@ def test_run_set_folds_the_verifiable_findings_and_queues_the_incomplete_ones() 
 
 
 def test_run_set_gates_then_after_approval_restores_the_honest_unverifiable_share() -> None:
-    """The M1 stratified headline (2/5 unverifiable) is now reached through the M2 HITL path: a
-    fresh run withholds the 2 incomplete items (unverifiable_share drops to 0); once a human
-    approves them, a resume folds them back in and the honest 2/5 share reappears."""
+    """The M1 stratified headline (2/5 unverifiable, over CITATIONS) is reached through the M2 HITL
+    path: a fresh run withholds the 2 incomplete items (their unverifiable citations drop out →
+    unverifiable_share 0); once a human approves them, a resume folds them back in and the honest
+    2/5 share reappears. The 6 whitelist judgment findings ride along in findings_total but carry no
+    citation offline, so they never touch the citation-based headline."""
     store = InMemoryOrchestratorStore()
     run_id = "hitl-reflow"
     fresh = run_set(
         M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store, run_id=run_id
     ).report.metrics
-    # Fresh run: only home's 3 verifiable violations are scored — the incomplete items are queued.
-    assert fresh.findings_total == 3
+    # Fresh run: home's 3 violations + 6 judgment findings are scored; the 2 incomplete items are queued.
+    assert fresh.findings_total == 9
     assert fresh.citations_unverifiable_total == 0
     assert fresh.unverifiable_share == pytest.approx(0.0)
     assert fresh.citation_hallucination_rate_verifiable == pytest.approx(2 / 3)
@@ -145,7 +162,9 @@ def test_run_set_gates_then_after_approval_restores_the_honest_unverifiable_shar
         M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store, run_id=run_id
     ).report.metrics
 
-    assert m.findings_total == 5
+    # 3 violations + 6 judgment findings + 2 approved-incomplete = 11 findings; but only the 5
+    # oracle-relevant findings carry citations (the 6 judgment findings carry none offline).
+    assert m.findings_total == 11
     assert m.citations_total == 5
     # the 2 incomplete-bucket citations (1.4.3, 1.2.2) have no oracle → UNVERIFIABLE.
     assert m.citations_unverifiable_total == 2
@@ -239,8 +258,8 @@ def test_run_resumes_a_partially_completed_run_via_an_explicit_run_id() -> None:
     )
 
     assert findings[0].id not in calls  # replayed, not recomputed
-    assert len(result.traces) == 3  # all 3 findings present in the final result
-    assert resume_notices == [(run_id, 1, 3, findings[1].id)]
+    assert len(result.traces) == 5  # all 5 findings present in the final result
+    assert resume_notices == [(run_id, 1, 5, findings[1].id)]
 
 
 def test_run_set_resumes_across_pages_without_recomputing_completed_pages() -> None:
@@ -256,7 +275,7 @@ def test_run_set_resumes_across_pages_without_recomputing_completed_pages() -> N
         return canned_retrieve(finding)
 
     run_set(M1_SET, eval_set_id="m1-core@1", retrieve=counting_retrieve, draft=canned_draft, store=store, run_id=run_id)
-    assert len(calls) == 5
+    assert len(calls) == 11  # every finding retrieved once: (3+2) home + (1+2) contrast + (1+2) video
     calls.clear()
 
     resume_notices = []
@@ -271,11 +290,14 @@ def test_run_set_resumes_across_pages_without_recomputing_completed_pages() -> N
     )
 
     assert calls == []  # every finding replayed, nothing recomputed
-    # 3 verifiable traces assemble; the 2 incomplete items stay gated in the queue. The resume
-    # notices still count all findings — the gate is post-validate, so every VALIDATE step is DONE.
-    assert len(result.traces) == 3
+    # 9 ungated traces assemble (3 violations + 6 judgment findings); the 2 incomplete items stay
+    # gated in the queue. The resume notices still count all findings — the gate is post-validate,
+    # so every VALIDATE step is DONE.
+    assert len(result.traces) == 9
+    # per-page counts (scoped to each page's own batch): home 3 violations + 2 judgment = 5;
+    # contrast/video 1 incomplete + 2 judgment = 3 each.
     assert [(done, total, next_id) for _, done, total, next_id in resume_notices] == [
+        (5, 5, None),
         (3, 3, None),
-        (1, 1, None),
-        (1, 1, None),
+        (3, 3, None),
     ]

@@ -29,7 +29,7 @@ def _manifest() -> dict:
 def test_manifest_is_well_formed_and_versioned() -> None:
     m = _manifest()
     assert m["set_id"] == "quality-gold"
-    assert m["gold_version"] == "quality-gold@1"
+    assert m["gold_version"] == "quality-gold@2"
     assert m["labeller"], "a single labeller must be named — kappa is judge-vs-this-one-labeller"
     assert len(m["pages"]) == 9
     for page in m["pages"]:
@@ -60,10 +60,14 @@ def test_gold_maps_one_to_one_onto_findings_and_every_label_validates() -> None:
     conformances: set[str] = set()
     for page in m["pages"]:
         findings = normalize(scan(str(FIXTURES / page["path"])))
-        passes = {f.target: f for f in findings if f.source_bucket is AxeBucket.PASSES}
+        # Scope to this page's own rule: the global whitelist now also mints empty-heading /
+        # document-title judgment findings on every fixture's <h1>/<title>, but this set
+        # calibrates only image-alt / link-name / frame-title (the two new rules are validated
+        # against ACT gold, not relabelled here — see the manifest note).
+        passes = {f.target: f for f in findings if f.source_bucket is AxeBucket.PASSES and f.rule_id == page["rule_id"]}
         item_targets = {item["target"] for item in page["items"]}
 
-        # one-to-one: no uncovered finding, no orphan label
+        # one-to-one within the page's rule: no uncovered finding, no orphan label
         assert set(passes) == item_targets, page["path"]
 
         for item in page["items"]:

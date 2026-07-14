@@ -66,9 +66,10 @@ def test_scan_finds_exactly_the_planted_violations() -> None:
 def test_scan_captures_the_passes_bucket_faithfully() -> None:
     """scan() mirrors axe's passes[] into typed AxePass — the raw bucket the normalizer draws
     quality-review judgment findings from. home.html passes many rules (it has a <title>, a
-    named <button>, a <main> landmark), so passes[] is populated even though none of home's
-    passes are on the quality-review whitelist (so it yields no PASSES findings — see the
-    normalizer tests)."""
+    named <button>, a non-empty <h1>, a <main> landmark), so passes[] is populated. Two of those
+    passes (document-title, empty-heading) are on the quality-review whitelist, so home does mint
+    PASSES judgment findings (see the normalizer/orchestrator tests) — this scanner test only
+    asserts the raw bucket is captured faithfully, before any whitelist is applied."""
     result = _scan()
     assert result.passes, "home.html passes many axe rules; passes[] must be captured, not dropped"
     assert all(isinstance(p, AxePass) for p in result.passes)

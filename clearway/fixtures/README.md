@@ -15,7 +15,9 @@ Two eval sets, one machine-readable manifest each:
 
 ### `pages/home.html`
 
-Produces **exactly 3** violations under default axe-core — no more. `<title>`, an `<h1>`, and a `<main>` landmark are present so axe does not raise incidental `document-title`, `region`, or `bypass` findings.
+Produces **exactly 3** violations under default axe-core — no more. `<title>`, an `<h1>`, and a `<main>` landmark are present so axe does not raise incidental `region` or `bypass` findings.
+
+> **Note — judgment findings.** The `<title>` and `<h1>` also land in axe's `passes[]`, and the global quality-review whitelist now surfaces `document-title` / `empty-heading` as **judgment** findings. So the pipeline mints 3 violations **+ 2 judgment findings = 5** on this page (and 2 extra on every fixture with a heading/title). Those judgment items carry no oracle here and are measured against W3C ACT gold in the acceptance benchmark, not in these violation/incomplete sets — so this manifest (which tracks only violations) is unchanged.
 
 | # | Planted defect | axe rule | WCAG SC (level) | axe tag | target | impact |
 |---|---|---|---|---|---|---|

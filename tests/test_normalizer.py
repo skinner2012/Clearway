@@ -190,17 +190,20 @@ def test_source_bucket_is_not_part_of_the_id() -> None:
 # --- end-to-end: real scan -> normalize (the acceptance case) ----------------
 
 
-def test_fixture_scan_normalizes_to_three_deterministic_findings() -> None:
+def test_fixture_scan_normalizes_home_deterministically() -> None:
     result = scan(str(FIXTURE))
     findings = normalize(result)
 
-    by_rule = {f.rule_id: f for f in findings}
+    by_rule = {f.rule_id: f for f in findings if f.source_bucket is AxeBucket.VIOLATIONS}
     assert set(by_rule) == {"image-alt", "html-has-lang", "label"}
     assert by_rule["image-alt"].target == "img"
     assert by_rule["html-has-lang"].target == "html"
     assert by_rule["label"].target == "#email"
     # tags carried so the oracle can derive SCs downstream
     assert "wcag412" in by_rule["label"].axe_tags
+    # home also has a <title> and a non-empty <h1>, so the global quality-review whitelist mints
+    # two existence-only judgment findings (measured against ACT gold in the acceptance benchmark).
+    assert {f.rule_id for f in findings if f.source_bucket is AxeBucket.PASSES} == {"document-title", "empty-heading"}
 
     # idempotency: normalizing the same scan again yields identical ids
     assert [f.id for f in findings] == [f.id for f in normalize(result)]
@@ -215,8 +218,11 @@ def test_incomplete_fixture_normalizes_to_an_unverifiable_finding() -> None:
     result = scan(str(PAGES / "contrast-gradient.html"))
     findings = normalize(result)
 
-    assert len(findings) == 1
-    (finding,) = findings
+    # the page also has a <title>/<h1>, so scope to the incomplete bucket (the whitelist mints
+    # two judgment findings alongside — see the home normalizer test).
+    incomplete = [f for f in findings if f.source_bucket is AxeBucket.INCOMPLETE]
+    assert len(incomplete) == 1
+    (finding,) = incomplete
     assert finding.rule_id == "color-contrast"
     assert finding.source_bucket is AxeBucket.INCOMPLETE
     assert "wcag143" in finding.axe_tags  # carries a real SC tag...
@@ -244,12 +250,14 @@ QUALITY_FIXTURES = {
 def test_quality_fixtures_yield_only_reframed_passes_judgment_items() -> None:
     """Each planted quality fixture lands in axe's passes[] under exactly its whitelisted rule —
     present enough to pass existence, never a hard violation — and every minted finding is a
-    reframed quality-review task (risk #1), not axe's already-conformant rule help. The 27
-    findings across the set are the gold floor (>= 25)."""
+    reframed quality-review task (risk #1), not axe's already-conformant rule help. The 27 findings
+    across the set (scoped to each page's own rule) are the gold floor (>= 25). Each page also has a
+    <title>/<h1>, so the global whitelist mints document-title/empty-heading judgment findings too;
+    those are validated against ACT gold, not this set, so we scope to the page's planted rule."""
     total = 0
     for page, (rule, count) in QUALITY_FIXTURES.items():
         findings = normalize(scan(str(QUALITY / page)))
-        passes = [f for f in findings if f.source_bucket is AxeBucket.PASSES]
+        passes = [f for f in findings if f.source_bucket is AxeBucket.PASSES and f.rule_id == rule]
 
         # every planted item passed on existence under exactly the expected whitelisted rule
         assert [f.rule_id for f in passes] == [rule] * count, page

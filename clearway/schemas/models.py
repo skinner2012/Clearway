@@ -81,7 +81,7 @@ class AxeBucket(str, Enum):
 
 
 class JudgeVerdict(str, Enum):
-    """LLM-judge verdict on one drafted judgment item (M4). `partial` = exactly one of
+    """LLM-judge verdict on one drafted judgment item. `partial` = exactly one of
     citation / conformance is correct; severity is not part of the verdict."""
 
     CORRECT = "correct"
@@ -208,7 +208,7 @@ class EvidenceQuery(BaseModel):
 
 
 # ============================================================
-# Corpus / RAG grounding  (corpus/ -> retriever/, M1)
+# Corpus / RAG grounding  (corpus/ -> retriever/)
 # ============================================================
 
 
@@ -236,7 +236,7 @@ class CorpusChunk(BaseModel):
 
 
 # ============================================================
-# Retrieval output  (retriever/ — STUB in M0, real in M1)
+# Retrieval output  (retriever/)
 # ============================================================
 
 
@@ -254,7 +254,7 @@ class Citation(BaseModel):
 
 
 # ============================================================
-# Drafting output  (drafter/ — STUB in M0)
+# Drafting output  (drafter/)
 # ============================================================
 
 
@@ -302,7 +302,7 @@ class Trace(BaseModel):
 
     run_id: str
     finding_id: str
-    config_id: str = Field(..., description="frozen routing-config id (single model in M0)")
+    config_id: str = Field(..., description="frozen routing-config id")
     model: str = Field(..., description="model that produced the draft")
     retrieved_sc_ids: list[str] = Field(default_factory=list)
     confidence: Optional[float] = None
@@ -315,12 +315,12 @@ class Trace(BaseModel):
 
 
 # ============================================================
-# Durable orchestration + HITL  (orchestrator/, M2 — ARCHITECTURE §4.6)
+# Durable orchestration + HITL  (orchestrator/ — ARCHITECTURE §4.6)
 # ============================================================
 
 
 class PipelineStep(str, Enum):
-    """The three per-finding steps the durable orchestrator checkpoints (M1's real modules)."""
+    """The three per-finding steps the durable orchestrator checkpoints."""
 
     RETRIEVE = "retrieve"
     DRAFT = "draft"
@@ -415,13 +415,13 @@ class NeedsReview(BaseModel):
 
 
 class EvalMetrics(BaseModel):
-    """Trust metrics for one eval run. M1 stratifies the hallucination rate by whether an
+    """Trust metrics for one eval run. The hallucination rate is stratified by whether an
     automated oracle could verify the citation: the verifiable subset (axe-detectable, ~0 by
     construction) vs the unverifiable share (judgment items with no oracle — the honest
-    headline, and exactly what M4's judge/gold must target). M2 adds `expert_edit_distance`,
-    the human-correction signal from the HITL gate. M4 adds judge-reliability (κ),
-    judgment-item correctness, and confidence-calibration scalars — all Optional; the
-    calibration curve itself is a typed list on `CalibrationReport`, never copied here."""
+    headline, and what the judge/gold exist to target). `expert_edit_distance` is the
+    human-correction signal from the HITL gate. Judge-reliability (κ), judgment-item
+    correctness, and confidence-calibration scalars are all Optional; the calibration curve
+    itself is a typed list on `CalibrationReport`, never copied here."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -432,7 +432,7 @@ class EvalMetrics(BaseModel):
     citations_total: int = 0
     hallucinations_total: int = 0
 
-    # M1 stratification. Invariant: citations_verifiable_total + citations_unverifiable_total == citations_total.
+    # Stratification. Invariant: citations_verifiable_total + citations_unverifiable_total == citations_total.
     # UNVERIFIABLE is never a hallucination, so hallucinations_total is the numerator for BOTH rates.
     citation_hallucination_rate_verifiable: float = Field(
         0.0,
@@ -451,16 +451,16 @@ class EvalMetrics(BaseModel):
     )
     citations_unverifiable_total: int = Field(0, description="citations with no oracle verdict (UNVERIFIABLE)")
 
-    # M2: human-correction signal from the HITL gate (needs a NeedsReview.edited_draft to exist).
+    # Human-correction signal from the HITL gate (needs a NeedsReview.edited_draft to exist).
     expert_edit_distance: float = Field(
         0.0,
         ge=0.0,
         description="mean human-edit distance over reviewed drafts this run (0 = no edits needed); "
-        "unbounded above — M2 uses a normalized [0,1] text ratio, type stays open for a future distance function",
+        "unbounded above — a normalized [0,1] text ratio, type stays open for a future distance function",
     )
 
-    # M4: judge reliability + judgment-item correctness + confidence calibration. All Optional
-    # (M0–M3 runs carry no judge). SCALARS ONLY — the full calibration curve is a typed list on
+    # Judge reliability + judgment-item correctness + confidence calibration. All Optional
+    # (a run without a judge carries none of these). SCALARS ONLY — the full calibration curve is a typed list on
     # CalibrationReport, never copied here. Store numerators + denominators, not just rates.
     judge_kappa: Optional[float] = Field(
         None,
@@ -533,7 +533,7 @@ class Oracle(Protocol):
     eval/ and validator/ (L1) depend ONLY on this Protocol.
 
     Regime A: AxeCoreOracle   (near-free, hard ground truth from axe tags)
-    Regime B: GoldLabelOracle (expert-provided, costly, sparse)  [M6]
+    Regime B: GoldLabelOracle (expert-provided, costly, sparse)
     """
 
     def verdict_for(self, finding: Finding) -> Optional[OracleVerdict]:
@@ -549,7 +549,7 @@ class Oracle(Protocol):
 
 
 # ============================================================
-# Judge + calibration  (eval/ — LLM-judge for no-oracle judgment items, M4)
+# Judge + calibration  (eval/ — LLM-judge for no-oracle judgment items)
 # ============================================================
 
 

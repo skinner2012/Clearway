@@ -11,7 +11,7 @@
 
 ## Preamble
 
-M0 proved the loop with `retriever` and `drafter` stubbed. **M1 makes the forward path real:** a real WCAG corpus in pgvector, real RAG retrieval, and real LLM drafting — so the pipeline produces genuine cited `DraftRow`s instead of canned ones. Still **single model** (routing is M5), **no cache** (an optimization for later), **no judge** (M4).
+M0 proved the loop with `retriever` and `drafter` stubbed. **M1 makes the forward path real:** a real WCAG corpus in pgvector, real RAG retrieval, and real LLM drafting — so the pipeline produces genuine cited `DraftRow`s instead of canned ones. Still **single model** (routing deferred), **no cache** (an optimization for later), **no judge** (M4).
 
 M1 is also where the eval first gets something worth measuring, and the framing matters. Within digital there are two oracle conditions:
 
@@ -27,8 +27,8 @@ Make the forward path real end-to-end — real corpus/RAG retrieval + real LLM d
 **Exit criterion:** `clearway run <target>` produces real RAG-grounded `Citation`s and LLM-drafted `DraftRow`s (conformance + remediation); the eval reports **two** figures — `citation_hallucination_rate` on the axe-verifiable subset (expected ~0) and the **unverifiable share** (judgment items with no automated oracle) — both on Grafana; plus a short written note of where retrieval/drafting look weak.
 
 - **Real:** corpus, retriever (RAG), drafter (LLM via LiteLLM → Ollama), scanner / normalizer / validator (hardened), oracle, eval (stratified), observability, orchestrator.
-- **Single model:** routing deferred to M5.
-- **Absent:** routing (M5), cache (optimization, later), judge / gold / calibration and L2 faithfulness (M4), full dashboard + HITL (M2), MCP server (M3), physical / Regime B.
+- **Single model:** routing deferred (a later milestone).
+- **Absent:** routing (deferred), cache (optimization, later), judge / gold / calibration and L2 faithfulness (M4), full dashboard + HITL (M2), MCP server (M3), physical / Regime B.
 
 ## How to use these tickets
 
@@ -59,10 +59,10 @@ Everything depends on **T0** (CONTRACTS additions). After T0, **T1 / T4 / T5 run
 
 ### T3 — drafter (real LLM)  *(replaces M0 stub)*
 - **Consumes:** `Finding`, `Citation[]`. **Produces:** `DraftRow`.
-- **Detail:** call the LLM via **LiteLLM → Ollama** (single pinned model, low temperature) using the `DraftRow` JSON schema as the structured-output contract; ground conformance + remediation in the retrieved citations. Record model + `config_id` on the `Trace`. Single model only — routing is M5. **Verify-first:** confirm the chat model (Gemma 4 / Qwen 3.5) pulls on Ollama **and** honors structured output before pinning.
+- **Detail:** call the LLM via **LiteLLM → Ollama** (single pinned model, low temperature) using the `DraftRow` JSON schema as the structured-output contract; ground conformance + remediation in the retrieved citations. Record model + `config_id` on the `Trace`. Single model only — routing is a later milestone. **Verify-first:** confirm the chat model (Gemma 4 / Qwen 3.5) pulls on Ollama **and** honors structured output before pinning.
 - **Testing:** unit tests inject a **fake LLM client** (canned schema-valid `DraftRow`) for fast, offline, deterministic CI; **one integration test gated on Ollama** proves the real LiteLLM → Ollama path (skips when Ollama is down, mirroring `test_observability.py`).
 - **Acceptance:** returns a schema-valid `DraftRow`; conformance + remediation reference the retrieved citations; model + `config_id` recorded; empty/weak retrieval degrades gracefully (low confidence, not a crash).
-- **Out of scope:** multi-model routing (M5); the LLM-judge (M4).
+- **Out of scope:** multi-model routing (deferred); the LLM-judge (M4).
 - **Depends on:** T0
 
 ### T4 — scanner hardening

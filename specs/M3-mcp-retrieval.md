@@ -23,7 +23,7 @@ Why this piece, and why it matters for Clearway:
 
 **The headline engineering artifact is distributed tracing across the protocol boundary.** Instrumented with the MCP semantic conventions and W3C `traceparent` propagation, a single `trace_id` links the whole chain — orchestrator → MCP server → retrieval — so the tool call shows up as a *child span* of the same run trace on the M2 dashboard, not a flattened, disconnected RPC span.
 
-Still **single model** (routing is M5); still **no judge** (M4). MCP wraps retrieval only.
+Still **single model** (routing deferred); still **no judge** (M4). MCP wraps retrieval only.
 
 ## Goal & exit criterion
 
@@ -38,7 +38,7 @@ Turn retrieval from an in-process function into a **reusable, observable MCP ser
 
 - **Real:** `EvidenceQuery` contract, citation enrichment (corpus), MCP server (one read-only tool), MCP client in the orchestrator + transport toggle, MCP observability (cross-boundary trace propagation), reuse demo.
 - **Unchanged:** the RAG retrieval logic (M1 — embed + vector search); single model.
-- **Absent:** scanner-as-MCP (rejected, §4.7), multi-tool server, OAuth/multi-tenant auth, routing (M5), judge (M4).
+- **Absent:** scanner-as-MCP (rejected, §4.7), multi-tool server, OAuth/multi-tenant auth, routing (deferred), judge (M4).
 
 ## How to use these tickets
 
@@ -71,7 +71,7 @@ Turn retrieval from an in-process function into a **reusable, observable MCP ser
 - **Consumes / Produces:** the same pipeline I/O; the retrieve step optionally goes over MCP.
 - **Detail:** add an MCP-client `do_retrieve` that maps the finding to an `EvidenceQuery` (`{rule_id: finding.rule_id, description: finding.help}`) and calls the T2 server. Wire a **transport toggle**: in-process retrieval stays the **default** (normal runs need no server), MCP is opt-in via env/flag (e.g. `CLEARWAY_RETRIEVE_TRANSPORT=mcp` or `--retrieve-via-mcp`). The seam already exists (`retrieve: Retrieve | None`), so this is CLI/config wiring, not new architecture. Keep it inside the M2 durable primitives: an MCP-call failure retries/backs off like any step and fails that step **cleanly** (does not crash the run); a completed retrieve step **replays from the checkpoint cache** on resume (the `list[Citation]` is stored as `result_json`), so a dead server only affects not-yet-done steps.
 - **Acceptance:** `clearway run` / `eval` produce the **same output** in-process (default) vs via MCP (toggle); an MCP-call failure retries via the M2 orchestrator; a stopped server degrades gracefully; a resumed run does **not** re-call the server for already-completed retrieve steps.
-- **Out of scope:** routing (M5).
+- **Out of scope:** routing (deferred).
 - **Depends on:** T2, M2 orchestrator
 
 ### T4 — MCP observability  *(headline)*

@@ -2,7 +2,7 @@
 
 *A trust-measurement bench for accessibility conformance, proven across two oracle regimes.*
 
-> **Role of this document (the WHY).** This is the product rationale — scope, thesis, motivation. For build decisions see [`ARCHITECTURE.md`](ARCHITECTURE.md); for schemas see [`CONTRACTS.md`](CONTRACTS.md). Where this note's milestones (M1–M4) and `ARCHITECTURE.md`'s build sequence (M0–M6) differ, the latter is the refined, authoritative plan.
+> **Role of this document (the WHY).** This is the product rationale — scope, thesis, motivation. For build decisions see [`ARCHITECTURE.md`](ARCHITECTURE.md); for schemas see [`CONTRACTS.md`](CONTRACTS.md). Where this note's coarse phases and `ARCHITECTURE.md`'s finer build sequence differ, the latter is the refined, authoritative plan.
 
 ## 1. TL;DR
 
@@ -138,25 +138,25 @@ PDF is a useful bridge: it demonstrates the oracle-poor regime without leaving d
 
 B's success metric is "did the bench transfer cleanly under a scarce oracle?" — not "is the physical audit complete?" If the build drifts into exhaustive CBC coverage, B degrades into an orthogonal domain-knowledge sink. Include only enough physical substrate to prove no-drift under an oracle-poor regime.
 
-## 7. Milestones (M1–M4)
+## 7. Milestones
 
-> These are the note's original, coarse milestones. The build plan in [`ARCHITECTURE.md` §7](ARCHITECTURE.md) refines them into finer, dependency-ordered milestones (M0–M6); that is the authoritative sequence.
+> These are the note's original, coarse phases — thematic groupings, not a fixed sequence or count. The build plan in [`ARCHITECTURE.md` §7](ARCHITECTURE.md) refines them into finer, dependency-ordered milestones and is the authoritative sequence — deliberately open-ended, each next milestone chosen from results rather than fixed in advance.
 
-Sequencing logic: build the bench on the cheap oracle first (M1–M2), deepen the eval where it is hardest (M3), then prove transfer to the scarce-oracle regime (M4).
+Sequencing logic: build the bench on the cheap oracle first, deepen the eval where it is hardest, then prove transfer to the scarce-oracle regime.
 
-**M1 — Forward path + hard-oracle loop (website HTML).** Intake a URL → axe-core scan → normalize & de-duplicate into a canonical finding set → retrieve the correct SC + citation + technique → draft conformance + remediation via structured output → assemble ACR/VPAT rows. Hard-oracle eval: citation/conformance correctness is objectively checkable against the checker; fix → re-scan closes the loop.
+**Forward path + hard-oracle loop (website HTML).** Intake a URL → axe-core scan → normalize & de-duplicate into a canonical finding set → retrieve the correct SC + citation + technique → draft conformance + remediation via structured output → assemble ACR/VPAT rows. Hard-oracle eval: citation/conformance correctness is objectively checkable against the checker; fix → re-scan closes the loop.
 - *Deliverable:* given a URL, output a decision-ready ACR draft with per-finding citations; report the citation-hallucination rate against ground truth.
 - *Uses:* LLM integration, retrieval grounding (eval begins).
 
-**M2 — Control loop + human review + observability.** Add the needs-review queue (axe-core incomplete items + low-confidence judgment items), the human approve/edit gate, per-finding traces (retrieved SC, model, cost, confidence), and a trust dashboard (citation-hallucination rate, edit-distance, accuracy over time). This is where the eval layer goes deep.
+**Control loop + human review + observability.** Add the needs-review queue (axe-core incomplete items + low-confidence judgment items), the human approve/edit gate, per-finding traces (retrieved SC, model, cost, confidence), and a trust dashboard (citation-hallucination rate, edit-distance, accuracy over time). This is where the eval layer goes deep.
 - *Deliverable:* the trust dashboard + a written eval report that includes an honest failure analysis (where the judge or retrieval failed, and why).
 - *Uses:* orchestration + human-in-the-loop, eval & observability.
 
-**M3 — Judge-calibration regime.** For the judgment items with no automated oracle, calibrate the LLM-judge against gold labels (self-built, or expert-provided — see §11); measure agreement/κ; surface confidence-vs-correctness calibration; detect systematic bias.
+**Judge-calibration regime.** For the judgment items with no automated oracle, calibrate the LLM-judge against gold labels (self-built, or expert-provided — see §11); measure agreement/κ; surface confidence-vs-correctness calibration; detect systematic bias.
 - *Deliverable:* a calibration report showing whether the system knows when it does not know — i.e., low confidence tracks low correctness.
 - *Uses:* eval & observability (core).
 
-**M4 — Cross-regime transfer proof (physical, thin).** Swap the intake (photos/measurements/voice) and the oracle (expert gold), keep the bench constant. Run the same trust-measurement loop on a small physical gold set. Deliver a side-by-side comparison of Regime A and Regime B — the "flexibility without drift" proof.
+**Cross-regime transfer proof (physical, thin).** Swap the intake (photos/measurements/voice) and the oracle (expert gold), keep the bench constant. Run the same trust-measurement loop on a small physical gold set. Deliver a side-by-side comparison of Regime A and Regime B — the "flexibility without drift" proof.
 - *Deliverable:* the same bench running on a small physical gold set + a two-regime comparison.
 - *Uses:* all four capabilities, on the bench (not on new domain features).
 
@@ -216,4 +216,4 @@ Framing for the expert: "This is a personal portfolio project; the tool only spe
 
 1. Does a usable public physical-accessibility gold set exist, or must it be self-built? (§10)
 2. Should PDF be built as the oracle-poor bridge before physical, to prove the two regimes without leaving digital?
-3. What is the minimum gold-set size for M3 calibration to be statistically meaningful (vs. a mechanism demo)?
+3. What is the minimum gold-set size for judge calibration to be statistically meaningful (vs. a mechanism demo)?

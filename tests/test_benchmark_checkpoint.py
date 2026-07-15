@@ -7,7 +7,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from clearway.eval.benchmark_build import _done_case_ids, _read_partial, _write_partial
+import pytest
+
+from clearway.drafter import Drafter
+from clearway.eval.benchmark_build import _done_case_ids, _draft_checked, _read_partial, _write_partial
+from clearway.llm import FakeLLMClient
+from clearway.schemas.models import Finding
 
 
 def _state() -> dict:
@@ -46,3 +51,13 @@ def test_done_ids_are_the_completed_cases() -> None:
 def test_done_ids_empty_without_a_checkpoint() -> None:
     """No checkpoint → nothing done → a fresh run drafts every case."""
     assert _done_case_ids(None) == set()
+
+
+def test_draft_checked_aborts_on_a_drafter_fallback() -> None:
+    """A silently-degraded drafter (never parses) must fail the acceptance run, not freeze a
+    does_not_support@0.0 row that would score as a phantom flag and skew FP/recall."""
+    finding = Finding(id="h:x", source_url="file://x", rule_id="image-alt", target="img", help="h")
+    with pytest.raises(RuntimeError, match="fell back"):
+        _draft_checked(Drafter(FakeLLMClient("not json", "still not json")), finding, [])
+    good = '{"conformance":"supports","cited_sc_ids":[],"remediation":"ok","confidence":0.9}'
+    assert _draft_checked(Drafter(FakeLLMClient(good)), finding, []).confidence == 0.9

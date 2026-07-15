@@ -24,6 +24,7 @@ from clearway.llm import LLMClient, LLMUsage
 from clearway.schemas.models import AxeBucket, Citation, Conformance, DraftRow, Finding
 
 _FALLBACK_CONFIDENCE = 0.0  # a draft we could not parse is worth nothing — say so, don't crash
+FALLBACK_REMEDIATION = "(draft unavailable — the model did not return a usable response)"
 
 
 class DraftResult(NamedTuple):
@@ -143,7 +144,16 @@ def _fallback(finding: Finding) -> DraftRow:
         finding_id=finding.id,
         conformance=Conformance.DOES_NOT_SUPPORT,
         citations=[],
-        remediation="(draft unavailable — the model did not return a usable response)",
+        remediation=FALLBACK_REMEDIATION,
         severity=finding.impact,
         confidence=_FALLBACK_CONFIDENCE,
     )
+
+
+def is_fallback_draft(row: DraftRow) -> bool:
+    """True iff `row` is the graceful-degradation fallback (`_fallback`): the model never returned
+    parseable JSON. Detected by its exact signature — zero confidence *and* the fixed fallback
+    remediation — so a genuine low-confidence draft is never mistaken for one. The acceptance
+    benchmark aborts rather than freeze a fallback: a `does_not_support`@0.0 row would score as a
+    phantom flag and silently skew FP/recall."""
+    return row.confidence == _FALLBACK_CONFIDENCE and row.remediation == FALLBACK_REMEDIATION

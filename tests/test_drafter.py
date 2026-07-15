@@ -14,7 +14,7 @@ import urllib.request
 
 import pytest
 
-from clearway.drafter import Drafter
+from clearway.drafter import Drafter, is_fallback_draft
 from clearway.drafter.llm import _user_prompt
 from clearway.llm import FakeLLMClient, LLMUsage, LocalLLMClient
 from clearway.schemas.models import AxeBucket, Citation, Conformance, Finding, Severity
@@ -84,6 +84,16 @@ def test_degrades_to_fallback_when_output_never_parses() -> None:
     assert row.citations == []
     assert row.severity == Severity.CRITICAL  # still carries what code knows
     assert row.finding_id == "h:image-alt"
+
+
+def test_is_fallback_draft_identifies_only_the_degraded_row() -> None:
+    """The acceptance benchmark aborts on a fallback, so it must be detected precisely — a real draft,
+    even a genuine does_not_support @ 0.0 with its own remediation, must NOT read as a fallback."""
+    fallback = Drafter(FakeLLMClient(_BAD, _BAD)).draft(_finding(), [_cite("1.1.1")])
+    assert is_fallback_draft(fallback) is True
+    assert is_fallback_draft(Drafter(FakeLLMClient(_GOOD)).draft(_finding(), [_cite("1.1.1")])) is False
+    real_zero = '{"conformance":"does_not_support","cited_sc_ids":[],"remediation":"Add a real fix.","confidence":0.0}'
+    assert is_fallback_draft(Drafter(FakeLLMClient(real_zero)).draft(_finding(), [])) is False
 
 
 def test_out_of_range_confidence_is_rejected_then_falls_back() -> None:

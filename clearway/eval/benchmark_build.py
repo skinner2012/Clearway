@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from clearway.drafter import Drafter
+from clearway.drafter import Drafter, is_fallback_draft
 from clearway.eval.act_gold import _ACT_GOLD, _EXPORT_SHA256, _MANIFEST, _minting_findings
 from clearway.eval.benchmark import build_report
 from clearway.eval.benchmark_inject import RATIONALE_NOTE, conformance_flip, sc_swap
@@ -36,7 +36,7 @@ from clearway.judge import Judge
 from clearway.llm import CloudLLMClient, LocalLLMClient
 from clearway.retriever import build_default_retriever
 from clearway.scanner import AXE_VERSION
-from clearway.schemas.models import Conformance
+from clearway.schemas.models import Citation, Conformance, DraftRow, Finding
 
 # The benchmark pins the SAME frozen single-model pipeline config the orchestrator runs (one model, no
 # routing); only the eval set differs — it is held out, so it gets its own id, distinct from every dev
@@ -106,6 +106,19 @@ def _draft_record(finding: Any, draft: Any, judge_result: Any) -> dict[str, Any]
     }
 
 
+def _draft_checked(drafter: Drafter, finding: Finding, citations: list[Citation]) -> DraftRow:
+    """Draft one finding, aborting the whole acceptance run if the model fell back (never returned
+    parseable JSON). A fallback ships as `does_not_support`@0.0 and would score as a phantom flag, so
+    a silently-degraded drafter must fail the freeze loudly rather than quietly skew FP/recall."""
+    draft = drafter.draft(finding, citations)
+    if is_fallback_draft(draft):
+        raise RuntimeError(
+            f"drafter fell back on finding {finding.id!r} (no parseable model output) — aborting the "
+            f"acceptance run; a fallback scores as a silent flag and would skew FP/recall. Fix the model, re-run."
+        )
+    return draft
+
+
 def _run_tier_b(drafter: Drafter, retriever: Any, clean_flags: dict[str, bool]) -> dict[str, Any]:
     """Draft each noisy page; for its focal snippet compare the noisy verdict to the clean counterpart
     (from the Tier-A run), and count noise-region false positives (a flagged noise finding citing one of
@@ -116,11 +129,11 @@ def _run_tier_b(drafter: Drafter, retriever: Any, clean_flags: dict[str, bool]) 
         by_key = {(f.rule_id, f.target): f for f in _page_findings(_NOISY / page["path"])}
         focal = page["focal"]
         ff = by_key[(focal["axe_rule"], focal["target"])]
-        flagged_noisy = is_flag(drafter.draft(ff, retriever.retrieve(ff)).conformance)
+        flagged_noisy = is_flag(_draft_checked(drafter, ff, retriever.retrieve(ff)).conformance)
         noise_fp = 0
         for n in page["noise"]:
             nf = by_key[(n["axe_rule"], n["target"])]
-            nd = drafter.draft(nf, retriever.retrieve(nf))
+            nd = _draft_checked(drafter, nf, retriever.retrieve(nf))
             if is_flag(nd.conformance) and {c.sc_id for c in nd.citations} & set(n["tested_sc"]):
                 noise_fp += 1
         results.append(
@@ -178,7 +191,7 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
         drafts: list[dict[str, Any]] = []
         for finding in findings:
             citations = retriever.retrieve(finding)
-            draft = drafter.draft(finding, citations)
+            draft = _draft_checked(drafter, finding, citations)
             drafts.append(_draft_record(finding, draft, judge.judge(finding, draft, run_id)))
 
             # SC-swap: a wrong citation on every draft → caught = judge flags the CITATION as wrong.

@@ -5,9 +5,11 @@ the shared gateway (`clearway.llm`). The canned drafter was retired to a test do
 (`tests/stubs.py`) once real drafting landed.
 """
 
-from clearway.drafter.llm import Drafter, DraftResult
+from clearway.drafter.llm import FALLBACK_REMEDIATION, Drafter, DraftResult, is_fallback_draft
 
 __all__ = [
+    "FALLBACK_REMEDIATION",
     "DraftResult",
     "Drafter",
+    "is_fallback_draft",
 ]

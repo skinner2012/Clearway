@@ -50,7 +50,7 @@ def case_outcomes(run: dict[str, Any]) -> dict[str, tuple[str, bool]]:
     for c in run["cases"]:
         flagged = any(is_flag(Conformance(d["conformance"])) for d in c["drafts"])
         outcomes[c["act_testcase_id"]] = (c["expected"], flagged)
-    for m in run.get("honest_misses", []):
+    for m in run["honest_misses"]:  # required — a silent [] default would skew the paired discordance
         outcomes[m["act_testcase_id"]] = (m["expected"], False)
     return outcomes
 
@@ -66,7 +66,7 @@ def binomial_sd(p: float, n: int) -> float:
 
 
 def _stratum_n(run: dict[str, Any], expected: str) -> int:
-    return sum(1 for c in (run["cases"] + run.get("honest_misses", [])) if c["expected"] == expected)
+    return sum(1 for c in (run["cases"] + run["honest_misses"]) if c["expected"] == expected)
 
 
 def _discordance(runs: list[dict[str, Any]], expected: str) -> list[int]:

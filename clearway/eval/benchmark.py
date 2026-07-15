@@ -55,6 +55,17 @@ NOT_MEASURED: list[NotMeasuredItem] = [
 ]
 
 
+def _require(d: dict[str, Any], key: str, what: str = "benchmark artifact") -> Any:
+    """Read a required key, raising loudly if it is absent. A `.get(key, default)` here would let a
+    renamed or truncated artifact score *silently*: an absent `honest_misses` drops failed cases out
+    of the recall denominator (inflating recall), an absent injected mutation reads as an n=0 no-data
+    detection rate. Genuinely optional sections (`injected`, `tier_b`) are guarded by presence, not by
+    this — but once present, their inner keys are required through here."""
+    if key not in d:
+        raise KeyError(f"{what} is missing required key {key!r} (present: {sorted(d)}) — refusing to score it silently")
+    return d[key]
+
+
 def _drafted_finding(d: dict[str, Any]) -> DraftedFinding:
     return DraftedFinding(
         conformance=Conformance(d["conformance"]),
@@ -84,7 +95,7 @@ def _drafted_cases(artifact: dict[str, Any]) -> list[DraftedCase]:
             gold_success_criteria=tuple(m["gold_success_criteria"]),
             drafts=(),
         )
-        for m in artifact.get("honest_misses", [])
+        for m in _require(artifact, "honest_misses")
     ]
     return cases + misses
 
@@ -108,9 +119,14 @@ def _judged_drafts(artifact: dict[str, Any]) -> list[JudgedDraft]:
 
 def _injected(artifact: dict[str, Any], key: str) -> list[InjectedResult]:
     """The injected known-wrong drafts of one mutation, if the artifact has an injection pass — else
-    empty (a plain run reports the detection rates as no-data)."""
+    empty (a plain run reports the detection rates as no-data). When the pass IS present, the mutation
+    key is required, so a producer-side rename fails loudly instead of silently reading as no-data."""
+    injected = artifact.get("injected")
+    if injected is None:
+        return []
     return [
-        InjectedResult(rule_name=r["rule_name"], caught=r["caught"]) for r in artifact.get("injected", {}).get(key, [])
+        InjectedResult(rule_name=r["rule_name"], caught=r["caught"])
+        for r in _require(injected, key, "injected section")
     ]
 
 
@@ -133,11 +149,12 @@ def build_scorecard(artifact: dict[str, Any], *, noise_floor: NoiseFloor | None 
     single run (it needs the repeat runs a lone artifact does not carry) and is passed in by the freeze
     step once the sweep exists."""
     drafter_scoring = score_drafter(_drafted_cases(artifact))
+    injected = artifact.get("injected")
     judge = score_judge(
         _judged_drafts(artifact),
         conformance_flip=_injected(artifact, "conformance_flip"),
         sc_swap=_injected(artifact, "sc_swap"),
-        rationale_note=artifact.get("injected", {}).get("rationale_note", ""),
+        rationale_note=_require(injected, "rationale_note", "injected section") if injected is not None else "",
     )
     return AcceptanceScorecard(
         drafter=drafter_scoring.score,

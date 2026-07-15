@@ -156,3 +156,20 @@ def test_tier_b_section_is_read_when_present() -> None:
     assert tb.n == 2
     assert tb.instance_ids == ["page-a-title", "page-b-label"]
     assert "illustrative" in tb.method_and_limits
+
+
+def test_missing_honest_misses_is_rejected_not_defaulted() -> None:
+    """A truncated/renamed artifact must fail loudly — silently defaulting honest_misses to [] would
+    drop failed cases out of the recall denominator and inflate recall."""
+    art = _artifact()
+    del art["honest_misses"]
+    with pytest.raises(KeyError, match="honest_misses"):
+        build_report(art)
+
+
+def test_renamed_injected_mutation_key_is_rejected_not_read_as_no_data() -> None:
+    """With an injection pass present, a producer-side rename of a mutation key must raise, not
+    silently read as an n=0 no-data detection rate."""
+    art = _artifact(injected={"conf_flip": [], "sc_swap": [], "rationale_note": ""})  # 'conformance_flip' renamed
+    with pytest.raises(KeyError, match="conformance_flip"):
+        build_report(art)

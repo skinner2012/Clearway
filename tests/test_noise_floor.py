@@ -110,3 +110,12 @@ def test_identical_runs_are_floored_by_binomial_sampling() -> None:
 def test_single_run_has_no_noise_floor() -> None:
     with pytest.raises(ValueError, match="at least two runs"):
         build_noise_floor([_RUN_A])
+
+
+def test_missing_honest_misses_is_rejected() -> None:
+    """The noise floor replays run artifacts; a missing honest_misses must raise, never default — the
+    same silent recall-denominator skew the report loader guards against."""
+    run = _run("2026-07-15T00:00:00+00:00", [("f1", "failed", "does_not_support")])
+    del run["honest_misses"]
+    with pytest.raises(KeyError, match="honest_misses"):
+        build_noise_floor([run, run])

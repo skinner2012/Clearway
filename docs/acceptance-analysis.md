@@ -271,3 +271,27 @@ paired regression harness, treat its absolute rates as directional, and keep the
 all of this — refusing to let one model grade another once real gold exists. A self-graded benchmark would
 have reported the judge as trustworthy (κ 0.791); external gold showed it grading at chance. That refusal
 is the real deliverable.
+
+---
+
+## A pre-commitment: after the fix, this set is a regression set, not an acceptance set
+
+Recorded here **before** any fix lands, in the same pre-commitment spirit as the κ threshold — because
+once a fix is tuned against these cases, the flattering reading becomes available and tempting.
+
+- **These ACT cases are spent.** All 53 applicable cases for the five reachable rules (47 minting + 6
+  honest misses) were consumed; there is no held-back split and no larger honest denominator to recover
+  (`clearway/eval/act_gold.py`, `docs/act-feasibility.md`). The other ACT rule families are structurally
+  unreachable by a DOM-only pipeline (image content invisible, set-level rules unrepresentable, the
+  error-message rule unmintable).
+- **Post-fix numbers are regression evidence, not acceptance evidence.** "FP fell from 0.433 to X on the
+  frozen set the fix was tuned against" is a true and useful sentence. "The system's held-out
+  false-positive rate is X" would be **false** — the moment the fix uses these cases' findings, the set is
+  a development set. Report the paired per-stratum McNemar delta against the SD-0 baseline; never re-quote
+  an absolute rate on this set as a fresh acceptance claim.
+- **A renewed acceptance claim needs gold that does not exist yet** — a future ACT export revision with new
+  cases, a new external expert artifact, or a multimodal pipeline that makes the excluded image examples
+  valid. Until one of those exists, there is no unspent external ruler.
+- **Scope of the FP rate.** 0.433 is a rate on ACT's minimal *synthetic* pages; the only real-page evidence
+  is Tier B at n = 2 (no rate). The honest phrasing is "~43% of clean **ACT-style** content" — real-page
+  false-positive behaviour is unmeasured.

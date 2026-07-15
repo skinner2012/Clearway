@@ -44,13 +44,17 @@ from clearway.schemas.models import Conformance
 _CONFIG_ID = "m1-single@1"
 _EVAL_SET_ID = "act-acceptance@1"
 
+# Layout: raw runs are inputs (runs/), derived reports are outputs (reports/). A single run is run_1;
+# the noise-floor sweep adds run_2… beside it, and its scorecard/noise-floor live under reports/.
 _OUT = Path(__file__).resolve().parents[2] / "benchmark"
-_RUN_ARTIFACT = _OUT / "acceptance_run.json"
-_REPORT = _OUT / "acceptance_report.json"
+_RUNS_DIR = _OUT / "runs"
+_REPORTS_DIR = _OUT / "reports"
+_RUN_ARTIFACT = _RUNS_DIR / "run_1.json"
+_REPORT = _REPORTS_DIR / "scorecard.json"
 # The per-case checkpoint: the expensive accumulated state (drafts + judge verdicts), flushed after
 # every case so a mid-run crash or hang never loses the ~2h of drafting. Removed on clean completion;
 # its presence on start-up means "resume". Transient — gitignored, never committed.
-_PARTIAL = _OUT / "acceptance_run.partial.json"
+_PARTIAL = _OUT / "run.partial.json"
 
 _OLLAMA_BASE_URL = os.getenv("CLEARWAY_OLLAMA_BASE_URL") or "http://localhost:11434"
 
@@ -242,7 +246,8 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
 
 
 def main() -> None:
-    _OUT.mkdir(exist_ok=True)
+    _RUNS_DIR.mkdir(parents=True, exist_ok=True)
+    _REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     artifact = run_acceptance(created_at=datetime.now(timezone.utc).isoformat())
     _RUN_ARTIFACT.write_text(json.dumps(artifact, indent=2, ensure_ascii=False) + "\n")
     report = build_report(artifact)

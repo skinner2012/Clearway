@@ -10,7 +10,7 @@ dashboard and breaks any saved link); the **title** is milestone-neutral.
 
 The pipeline's headline is not "how good is the AI" — it's **how much of the AI's output we can
 actually verify, how honest we are about the rest, and what it costs to produce that measurement**.
-The dashboard puts all three on one board, in four rows.
+The dashboard puts all three on one board, in stacked rows.
 
 ### Quality — trust metrics
 
@@ -19,9 +19,9 @@ Straight from the emitted metrics ([`clearway/observability/metrics.py`](../../c
 | Panel | Metric | Reading |
 |---|---|---|
 | citation_hallucination_rate (overall) | `citation_hallucination_rate` | All drafted citations that fail L0/L1, verifiable + unverifiable pooled. The blended number; the row below un-blends it. |
-| unverifiable_share (the honest headline) | `unverifiable_share` | Citations with **no automated oracle** (axe `incomplete` → `NO_ORACLE` → `UNVERIFIABLE`). **Not an error** — the coverage gap the pipeline is honest about, and what M4 calibration must shrink. Coloured neutrally (blue), not pass/fail. |
+| unverifiable_share (the honest headline) | `unverifiable_share` | Citations with **no automated oracle** (axe `incomplete` → `NO_ORACLE` → `UNVERIFIABLE`). **Not an error** — the coverage gap the pipeline is honest about, and what judge calibration must shrink. Coloured neutrally (blue), not pass/fail. |
 | current rate (verifiable subset) | `citation_hallucination_rate_verifiable` | Hallucination rate over **only** the oracle-verifiable citations (axe `violations`). ~0 by construction — anything above green is a real citation fault where an oracle exists to catch it. |
-| expert_edit_distance | `expert_edit_distance` | Mean normalized text-edit distance between drafted and human-edited remediations, over drafts a reviewer edited through the HITL gate (T4). 0 = shipped unedited; higher = model judgment drifted from the expert. |
+| expert_edit_distance | `expert_edit_distance` | Mean normalized text-edit distance between drafted and human-edited remediations, over drafts a reviewer edited through the HITL gate. 0 = shipped unedited; higher = model judgment drifted from the expert. |
 
 `hallucinations_total` is the numerator of **both** rates; `UNVERIFIABLE` is never counted as a
 hallucination, so every hallucination lives in the verifiable subset. That is why the honest story
@@ -31,11 +31,11 @@ is two numbers, never one: a low overall rate can hide a large unverifiable shar
 
 The quality gauges above carry no `run_id`, so successive runs **move the same line** rather than
 building a history (a deliberate low-cardinality choice — see the metrics module). The true per-run
-trend comes instead from the **persisted `eval_report` rows** (T5, one row per completed run), read
+trend comes instead from the **persisted `eval_report` rows** (one row per completed run), read
 through the **Postgres datasource** via a small `jsonb` query over `report_json`. This is the panel
 that shows accuracy *across* runs, not just the latest value.
 
-### Operational — the cost of producing the measurement (T2)
+### Operational — the cost of producing the measurement
 
 From the OTel instrumentation in [`clearway/observability/operational.py`](../../clearway/observability/operational.py),
 so eval scores sit next to what they cost: LLM call latency (`gen_ai_client_operation_duration_seconds`),
@@ -43,18 +43,30 @@ token usage split by input/output (`gen_ai_client_token_usage`), pipeline step r
 (`pipeline_step_retries_total` / `pipeline_failures_total` — "no data" until a retry actually
 happens) and per-step duration (`pipeline_step_duration`). Cost is captured per-trace (`Trace.cost_usd`)
 but ≈ 0 for local Ollama, so it has no live series yet — it lights up when cloud LLMs enter the
-comparison (M4).
+comparison.
 
-### Coming in M4
+### Judge calibration & confidence
 
-Labelled placeholder panels for **judge κ** (judge–gold agreement) and **confidence calibration**.
-Present but marked "M4"; no data source until M4 builds the gold set + recalibrates confidence.
+The judge-reliability and confidence panels (`judge_kappa`, `judge_agreement_rate`, the
+confidence→correctness curve, `expected_calibration_error`, `overconfidence_gap`) — pushed
+point-in-time by the calibration snapshot, not by a per-run tick. They show the judge cleared its
+self-built-gold bar (κ 0.79) and that the drafter's self-reported confidence is systematically
+over-confident.
+
+### Benchmark — held-out acceptance (ACT gold)
+
+The frozen acceptance scorecard (`benchmark_*` series), pushed point-in-time by the acceptance
+snapshot from [`benchmark/reports/scorecard.json`](../../benchmark/reports/scorecard.json): the
+drafter's recall and false-positive rate (with Wilson bounds + n), the judge's confusion against
+**external** expert gold (κ, the dangerous miss-rate, false-alarm, injected-detection upper bounds),
+and the noise floor. Nothing on this row is scored by an LLM. The honest headline lives here — the
+full diagnosis is the [acceptance-benchmark failure analysis](../../docs/acceptance-analysis.md).
 
 ## Labels
 
 Quality series carry the low-cardinality label set `eval_set_id` / `config_id` / `oracle_regime`
 (no `run_id` — the Postgres history above is the run-keyed view instead). Operational series are
-tagged by `gen_ai.request.model` and `step`. The M1 set run emits under `eval_set_id="m1-core@1"`.
+tagged by `gen_ai.request.model` and `step`. The core forward-path run emits under `eval_set_id="m1-core@1"`.
 
 ## Seeing values
 

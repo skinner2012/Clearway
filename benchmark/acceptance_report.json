@@ -1,0 +1,119 @@
+{
+  "run_ids": [
+    "acceptance-2026-07-15T01:55:47.047521+00:00"
+  ],
+  "config_id": "m1-single@1",
+  "eval_set_id": "act-acceptance@1",
+  "corpus_version": "wcag22-nomic-embed-text-768@1",
+  "drafter_model": "gemma4:31b",
+  "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+  "judge_model": "gpt-5.6-luna",
+  "judge_model_digest": "cloud-snapshot:gpt-5.6-luna",
+  "judge_version": "rubric=e396f37f; effort=medium",
+  "axe_core_version": "4.12.1",
+  "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "created_at": "2026-07-15T01:55:47.047521Z",
+  "scorecard": {
+    "drafter": {
+      "recall": {
+        "value": 0.7391304347826086,
+        "n": 23,
+        "ci_low": 0.5352999516257462,
+        "ci_high": 0.8745138395501366,
+        "effective_n": 5,
+        "ci_method": "wilson"
+      },
+      "false_positive_rate": {
+        "value": 0.43333333333333335,
+        "n": 30,
+        "ci_low": 0.2737748557646652,
+        "ci_high": 0.6080269299918639,
+        "effective_n": 5,
+        "ci_method": "wilson"
+      },
+      "sc_citation_match": {
+        "value": 0.6470588235294118,
+        "n": 17,
+        "ci_low": 0.41300363485218694,
+        "ci_high": 0.8269027960275627,
+        "effective_n": 5,
+        "ci_method": "wilson"
+      },
+      "expected_calibration_error": {
+        "value": 0.3293650793650793,
+        "n": 63,
+        "exempt_reason": "single populated confidence bin at this n — there is nothing to bin, so the raw gap is reported without a CI (the two-figure n+CI exemption)"
+      },
+      "overconfidence_gap": 0.3293650793650793,
+      "remediation_technique_match": null,
+      "abstained_n": 0
+    },
+    "judge": {
+      "correct_release": 31,
+      "missed_error": 16,
+      "false_alarm": 8,
+      "correct_catch": 8,
+      "miss_rate": {
+        "value": 0.6666666666666666,
+        "n": 24,
+        "exempt_reason": "the judge's real-draft miss rate — too few naturally-wrong drafts to put a CI on; the injected conformance-flip detection rate is the trustworthy upper bound reported instead"
+      },
+      "false_alarm_rate": {
+        "value": 0.20512820512820512,
+        "n": 39,
+        "ci_low": 0.10779718230710383,
+        "ci_high": 0.35533968013582296,
+        "effective_n": 5,
+        "ci_method": "wilson"
+      },
+      "kappa": 0.13698630136986298,
+      "injected_conformance_flip": {
+        "value": 0.8205128205128205,
+        "n": 39,
+        "ci_low": 0.6733195433811838,
+        "ci_high": 0.9102273452678089,
+        "effective_n": 5,
+        "ci_method": "wilson"
+      },
+      "injected_sc_swap": {
+        "value": 1.0,
+        "n": 63,
+        "ci_low": 0.9425288004111484,
+        "ci_high": 1.0,
+        "effective_n": 5,
+        "ci_method": "wilson"
+      },
+      "rationale_coherence_note": "Conformance flip is a pure mutation — no rationale regeneration. The judge rubric grades conformance from the finding and cited SC only and does not read the draft's remediation prose, so a flipped verdict is coherent to the judge (not a self-contradictory strawman); no LLM re-authorship was introduced, avoiding that authorship bias entirely."
+    },
+    "noise_floor": null,
+    "tier_b": {
+      "n": 2,
+      "instance_ids": [
+        "page-a-title",
+        "page-b-label"
+      ],
+      "clean_vs_noisy_note": "page-a-title (focal document-title [failed]): clean=correct, noisy=correct, 0 noise-region FP | page-b-label (focal label [passed]): clean=wrong, noisy=wrong, 1 noise-region FP. Focal verdicts changed under noise: 0/2; total noise-region false positives: 1. The clean − noisy delta is the cost of real-page noise, reported as illustration (n=2, no CI).",
+      "method_and_limits": "Each ACT snippet is embedded INTACT as the focal case, preserving its local context; the noise is built from ACT passed snippets plus trivially-descriptive authored chrome (clean by construction), so a noise-region flag citing a tested property counts as a false positive while a flag citing an unrelated SC is excluded. Scored exactly like the bare ACT cases (deterministic vs gold), but n=2 is illustrative, not a rate — no confidence interval attaches to two points, and the methodology is preliminary."
+    },
+    "not_measured": [
+      {
+        "what": "Expert-minutes-per-finding, and whether a drafted remediation is genuinely useful to an implementer",
+        "why": "both need a real accessibility specialist's time — the one resource unavailable; the benchmark checks only alignment with the canonical technique (direction), which is a proxy, not efficacy."
+      },
+      {
+        "what": "Recall / missed findings — how much the system failed to raise",
+        "why": "a Finding exists only when axe emits something; what axe cannot see (reading order, motion) is invisible to the pipeline too, so total miss volume cannot be measured here."
+      },
+      {
+        "what": "Image alt-text quality",
+        "why": "raised via passes[] but not validatable — the ACT filename leaks the answer, so a DOM-only pipeline would score filename-matching, not image-text-correspondence judgment; needs a multimodal drafter."
+      },
+      {
+        "what": "The judge's own ceiling",
+        "why": "judgment-item scores in production are the judge's, so no judgment-item number can be trusted beyond judge_kappa — the judge's accuracy is their upper bound."
+      }
+    ],
+    "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+    "notes": "FP over the 27 non-trivial true negatives (dropping the passed honest-misses that mint no finding) = 13/27 = 0.481; the headline FP uses all true negatives. partially_supports scored as CLEAN instead of FLAGS → recall 17/23 = 0.739, FP 11/30 = 0.367. Construct-validity: among failed cases whose cited SC intersects the ACT SC (n=12), conformance-correct on 11 (0.917). not_applicable drafts (n=0) are CLEAN under the primary collapse but reported separately as abstained_n, never folded silently. remediation_technique_match is not wired (ACT G/F technique metadata is not vendored) — see the not-measured list."
+  }
+}

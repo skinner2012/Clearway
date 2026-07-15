@@ -289,7 +289,14 @@ class DraftRow(BaseModel):
     citations: list[Citation] = Field(default_factory=list)
     remediation: str = ""
     severity: Optional[Severity] = None
-    confidence: float = Field(..., ge=0.0, le=1.0, description="model's self-reported confidence")
+    confidence: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="model's self-reported confidence. DECORATIVE — do NOT gate, route, or triage on it: "
+        "measured to carry no usable signal (held-out over-confidence gap +0.329; values pinned ~0.85-1.0 "
+        "regardless of correctness). Derive a real trust signal elsewhere — see docs/acceptance-analysis.md.",
+    )
 
 
 # ============================================================
@@ -801,6 +808,7 @@ Added when their milestone arrives, not before:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-07-15 | 0.16 | Pre-release honesty pass: health-warned `DraftRow.confidence` — the description now states the field is **decorative** (do not gate/route/triage on it), citing the held-out over-confidence gap +0.329 and its pinned ~0.85–1.0 range. Description only, no shape change; §5 unaffected. Pairs with dropping the "confidence-scored" product claim from README/ARCHITECTURE. |
 | 2026-07-14 | 0.15 | Quality-review whitelist grew from four rules to six: added `empty-heading` (SC 2.4.6 — a **new** existence-only judgment rule) and `document-title` (SC 2.4.2 — **reverses** the earlier deferral). Both were empirically confirmed against pinned axe 4.12.1 to PASS on present-but-non-descriptive content, so each mints an `AxeBucket.PASSES` judgment finding. The whitelist is global, so both mint new findings on every frozen fixture carrying a heading/title — versioned anchors moved, so the affected fixture sets were bumped (`quality-gold@1`→`@2`, scoped to its original three rules; the m0/m1 orchestrator counts updated). `button-name` and the alt/name variants stay deferred. No §3 schema change — this records a decision in code (`normalizer/quality_review.py`), not a shape. |
 | 2026-07-14 | 0.14 | Acceptance-benchmark schemas (T0). Added `BenchmarkReport` (frozen, reproducible top-level artifact — pins config/corpus versions, drafter+judge model **digests**, axe-core version, and the vendored ACT export hash; freeze by content hash, not name) nesting `AcceptanceScorecard`, which composes `DrafterScore` (subject #1, scored vs ACT gold — FP rate on true negatives is the headline), `JudgeConfusion` (subject #2, 2×2 vs ACT gold with miss/false-alarm reported separately + injected-bad-draft detection), `NoiseFloor`, `TierBSmoke`, and `NotMeasuredItem`, plus the reusable `MetricCI` (value + n + asymmetric Wilson CI + clustering-aware `effective_n`) and `ExemptMetric` (the two figures that carry no CI, each with a mandatory reason). Extended `GoldLabel` with `source` (`"self"` \| `"w3c-act"`, default `"self"`) and `act_testcase_id` (Optional) — both Optional-with-default so the existing `calibration_set.json` gold still loads under `extra="forbid"`. Removed `BenchmarkReport` / `AcceptanceScorecard` from §5. Additive — existing shapes and reports unchanged. |
 | 2026-07-14 | 0.13 | Editorial: removed milestone labels from all live content (docstrings, comments, §5). Milestones move; the schemas don't. §5 now carries a `Note` column instead of a `Milestone` column, and lists the benchmark's `BenchmarkReport` / `AcceptanceScorecard` as deferred. No §3 schema change. |

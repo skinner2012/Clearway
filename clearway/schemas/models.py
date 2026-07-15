@@ -269,7 +269,14 @@ class DraftRow(BaseModel):
     citations: list[Citation] = Field(default_factory=list)
     remediation: str = ""
     severity: Optional[Severity] = None
-    confidence: float = Field(..., ge=0.0, le=1.0, description="model's self-reported confidence")
+    confidence: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="model's self-reported confidence. DECORATIVE — do NOT gate, route, or triage on it: "
+        "measured to carry no usable signal (held-out over-confidence gap +0.329; values pinned ~0.85-1.0 "
+        "regardless of correctness). Derive a real trust signal elsewhere — see docs/acceptance-analysis.md.",
+    )
 
 
 # ============================================================

@@ -254,6 +254,14 @@ def _review_reason(finding: Finding, draft_row: DraftRow, checks: list[CitationC
     `axe_incomplete` > `unverifiable_judgment` (decision #5) — or None if none apply. The triggers
     overlap (an axe-incomplete finding also yields UNVERIFIABLE citations), so precedence collapses
     them to one stored reason."""
+    # A HALLUCINATED citation (the hard oracle proved a cited SC false) is deliberately NOT a trigger.
+    # Gating withholds a finding from the report *and* drops its Trace, so a gated hallucination would
+    # fall out of `citation_hallucination_rate` (`eval/report.py` counts only shipped traces) — the same
+    # understatement the forward-path analysis flagged for `unverifiable_share` on a gated run. So the
+    # honest choice today is to keep the hallucination *counted* (it ships, visibly wrong-cited) rather
+    # than *hidden* in the queue. Acting on it correctly needs a composite (report ⊕ queue) metric;
+    # until that exists, adding HALLUCINATED here would flatter the headline, not improve trust. See
+    # this module's README for the full rationale.
     if draft_row.confidence < _LOW_CONFIDENCE_THRESHOLD:
         return ReviewReason.LOW_CONFIDENCE
     if finding.source_bucket is AxeBucket.INCOMPLETE:

@@ -59,11 +59,18 @@ The hand-rolled equivalent of LangGraph's `interrupt` (`ARCHITECTURE.md` §4.6).
 `machine.py` **after** validation, once a finding's `DraftRow` + `CitationCheck`s exist. A finding is
 flagged when one trigger fires — a single `reason` is stored, by precedence:
 
-| Reason | Fires when | M2 status |
+| Reason | Fires when | Status |
 |---|---|---|
-| `low_confidence` | `draft.confidence < 0.5` | **dormant** — real confidence sits at 0.9–1.0 regardless of correctness, so this trigger is inert until M4 calibration |
+| `low_confidence` | `draft.confidence < 0.5` | **dead** — the calibration study found self-reported confidence decorative (pinned ~0.85–1.0 regardless of correctness), so it effectively never fires; a real signal must be *derived*, not calibrated (see the calibration report) |
 | `axe_incomplete` | the finding came from axe's `incomplete` bucket (no oracle verdict) | effective |
 | `unverifiable_judgment` | a citation is `UNVERIFIABLE` (valid SC, no oracle to check it) | effective |
+
+**A `HALLUCINATED` citation is deliberately *not* a trigger.** The hard oracle catches it (L0/L1) and it
+is honestly counted in `citation_hallucination_rate`, but *gating* it would withhold its `Trace` and drop
+it from that metric — hiding the failure in the queue and flattering the headline, the same understatement
+seen for `unverifiable_share` on a gated run. Until a composite (report ⊕ queue) metric exists, the honest
+choice is to keep the hallucination **counted** (it ships, visibly wrong-cited) rather than **hidden**. So
+a known-false citation is *measured* but still reaches the specialist — a documented gap, not an oversight.
 
 On flag, a `NeedsReview(status=pending)` record (`CONTRACTS.md` §3) is persisted and **that finding is
 withheld from the report** — the rest of the run continues. Because the record is durable, the queue

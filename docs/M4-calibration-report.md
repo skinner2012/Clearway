@@ -17,6 +17,17 @@ never by re-calling a non-deterministic model:
 The short version: **the judge is trustworthy; the drafter's confidence is not.** That two-part result
 is the honest boundary this milestone draws and hands forward.
 
+> **⚠️ Superseded verdict (2026-07-15).** The "judge is trustworthy" conclusion below is **scoped to the
+> self-built gold set it was measured on, and did not survive out-of-distribution.** A later held-out
+> benchmark against external W3C ACT expert gold showed the judge's agreement collapse from κ 0.791 to
+> **≈ 0** (negative in one of three runs) — worse than chance on natural errors. Two structural reasons,
+> both invisible to the κ 0.791 above: this measures agreement with *one labeller who was not independent
+> of the system under test*, on a *constructed* balanced set — neither property transfers. **Do not read
+> this report as evidence the judge can score judgment items without a human** (the exact inference §"The
+> confidence requirement…" draws below, now disproved). The current, honest assessment is
+> [`docs/acceptance-analysis.md`](acceptance-analysis.md), and the judge is being taken out of the trust
+> path. This report is retained unaltered below as a point-in-time record.
+
 ## Provenance (pinned)
 
 | | |
@@ -135,6 +146,10 @@ requirement for whatever milestone tackles confidence, not discharged here.
 
 Because the judge is now trusted (κ 0.79), that future work can score judgment items automatically,
 with no human in the comparison loop — which is what sequencing calibration first bought.
+
+> **Superseded (2026-07-15).** This inference is exactly what the held-out benchmark disproved: against
+> external W3C ACT gold the judge grades at **κ ≈ 0**, so it **cannot** score judgment items without a
+> human. See [`docs/acceptance-analysis.md`](acceptance-analysis.md).
 
 ## Reproducibility
 

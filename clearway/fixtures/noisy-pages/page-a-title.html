@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- ============================================================================================
+       FOCAL — ACT "HTML page title is descriptive" [FAILED] · SC 2.4.2 · testcaseId
+       64ad3868e9022dcfa3f8ba5a3ac1943fd1a9a240, embedded VERBATIM.
+       The page's <main> is about clementine harvesting; this apple title fails to describe it, so
+       the ACT label ("failed" → does_not_support) still holds after embedding. This is the ONE
+       measured element on the page. Clean counterpart: act-gold/html/64ad3868….html.
+       ============================================================================================ -->
+  <title>Apple harvesting season</title>
+  <style>
+    body { font-family: system-ui, sans-serif; color: #1a1a1a; background: #fff; margin: 0; line-height: 1.5; }
+    header { border-bottom: 1px solid #cccccc; padding: 1rem 1.5rem; }
+    header .brand { font-weight: 700; margin: 0 0 .5rem; }
+    nav a { margin-right: 1rem; }
+    .wrap { display: grid; grid-template-columns: 1fr 15rem; gap: 2rem; max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
+    main { min-width: 0; }
+    aside { border-left: 1px solid #cccccc; padding-left: 1.5rem; }
+    footer { border-top: 1px solid #cccccc; padding: 1rem 1.5rem; color: #444444; }
+    a { color: #0b5394; }
+  </style>
+</head>
+<body>
+  <!-- NOISE (authored-trivial chrome): site brand + primary nav. Each link is obviously descriptive
+       and carries a DISTINCT accessible name, so no two links share a name → this does NOT mint the
+       excluded "identical accessible names" rule. Human-certified as passing — NOT ACT-sourced;
+       recorded as "authored-trivial" in the manifest, not an ACT-certified true negative. -->
+  <header>
+    <p class="brand">Sunnyvale Citrus Growers</p>
+    <nav aria-label="Primary">
+      <a href="/">Home</a>
+      <a href="/growing-guides">Growing guides</a>
+      <a href="/contact">Contact us</a>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <main>
+      <!-- NOISE (authored-trivial): a descriptive heading. It reinforces that the page's topic is
+           clementines — which is exactly what the apple <title> above fails to describe — so it
+           strengthens (never weakens) the focal label. Passes "Heading is descriptive". -->
+      <h1>Clementine harvesting season</h1>
+
+      <!-- FOCAL context — the verbatim ACT body the <title> is supposed to describe: -->
+      <p>Clementines will be ready to harvest from late October through February.</p>
+
+      <!-- Neutral authored prose (mints no whitelisted finding) — fleshes out the article and keeps
+           the page's topic unambiguously "clementines". -->
+      <p>Pick the fruit once the skin has turned a deep orange and the segments part easily. Cooler
+         nights sweeten the crop, so the later weeks of the season often give the best flavour.</p>
+    </main>
+
+    <aside aria-label="Related reading">
+      <p>Related reading</p>
+      <!-- NOISE (ACT-certified passed): ACT "Link is descriptive" [passed] · SC 2.4.9 · testcaseId
+           16d451321559dc35b8c33f0d21b2c7f49175914e, embedded INTACT with its describing
+           <p id="desc"> context. A true negative certified by W3C — a finding raised here that cites
+           2.4.9 is a false positive. -->
+      <a href="#desc">See the description of this product.</a>
+      <p id="desc">This product consists of several web pages.</p>
+    </aside>
+  </div>
+
+  <footer>
+    <p>© Sunnyvale Citrus Growers. Grown and packed in California.</p>
+  </footer>
+</body>
+</html>

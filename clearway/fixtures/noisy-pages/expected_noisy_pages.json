@@ -1,0 +1,175 @@
+{
+  "set_id": "noisy-pages",
+  "version": 1,
+  "gold_version": "act-gold@a805d865",
+  "source": "w3c-act",
+  "note": "Realistic noisy pages — 2 pages, each embedding one ACT judgment snippet intact as the FOCAL case (scored deterministically vs ACT gold, never the judge). Noise is HYBRID: real ACT passed snippets (provenance 'act:<id>') + trivially-descriptive authored chrome (provenance 'self', human-certified, NOT ACT-certified) + neutral non-finding prose. n=2 is a SMOKE TEST — illustrative, not a measured rate; it does not enter the headline scorecard. Methodology preliminary (see the M5 spec, realistic-pages tier).",
+  "pages": [
+    {
+      "page_id": "page-a-title",
+      "path": "page-a-title.html",
+      "measures": "miss-under-noise: does real-page noise make the drafter MISS a real problem (recall)?",
+      "focal": {
+        "act_testcase_id": "64ad3868e9022dcfa3f8ba5a3ac1943fd1a9a240",
+        "clean_counterpart": "../act-gold/html/64ad3868e9022dcfa3f8ba5a3ac1943fd1a9a240.html",
+        "rule_name": "HTML page title is descriptive",
+        "axe_rule": "document-title",
+        "target": "html",
+        "expected": "failed",
+        "gold_success_criteria": [
+          "2.4.2"
+        ],
+        "spot_check": "Title 'Apple harvesting season' still fails to describe a page whose <main> is about clementine harvesting; the nav/aside/footer noise is peripheral and topically neutral, so it does not rescue the title. Focal label ('failed') holds after embedding.",
+        "gold_conformance": "does_not_support"
+      },
+      "noise": [
+        {
+          "axe_rule": "empty-heading",
+          "target": "h1",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.6"
+          ],
+          "note": "descriptive heading 'Clementine harvesting season'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "link-name",
+          "target": "a[href=\"/\"]",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.4",
+            "2.4.9"
+          ],
+          "note": "nav link 'Home'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "link-name",
+          "target": "a[href$=\"growing-guides\"]",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.4",
+            "2.4.9"
+          ],
+          "note": "nav link 'Growing guides'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "link-name",
+          "target": "a[href$=\"contact\"]",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.4",
+            "2.4.9"
+          ],
+          "note": "nav link 'Contact us'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "link-name",
+          "target": "a[href$=\"#desc\"]",
+          "provenance": "act:16d451321559dc35b8c33f0d21b2c7f49175914e",
+          "tested_sc": [
+            "2.4.9"
+          ],
+          "note": "ACT 'Link is descriptive' [passed], intact with #desc context",
+          "gold_conformance": "supports"
+        }
+      ]
+    },
+    {
+      "page_id": "page-b-label",
+      "path": "page-b-label.html",
+      "measures": "cry-wolf-under-noise: does noise induce a FALSE POSITIVE on an all-clean page?",
+      "focal": {
+        "act_testcase_id": "90d77d3e5b2fdc19bce47f9f9362283861d3903b",
+        "clean_counterpart": "../act-gold/html/90d77d3e5b2fdc19bce47f9f9362283861d3903b.html",
+        "rule_name": "Form field label is descriptive",
+        "axe_rule": "label",
+        "target": "#fname",
+        "expected": "passed",
+        "gold_success_criteria": [
+          "2.4.6"
+        ],
+        "spot_check": "Label 'First name:' clearly identifies its field; wrapping it in a realistic form with nav/heading/aside noise does not change the association or the accessible name. Focal label ('passed') holds; the whole page is clean, so any flag anywhere is a false positive.",
+        "gold_conformance": "supports"
+      },
+      "noise": [
+        {
+          "axe_rule": "document-title",
+          "target": "html",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.2"
+          ],
+          "note": "descriptive title 'Create your Northwind Books account'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "empty-heading",
+          "target": "h1",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.6"
+          ],
+          "note": "descriptive heading 'Create your account'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "label",
+          "target": "#email",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.6"
+          ],
+          "note": "descriptive label 'Email address'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "link-name",
+          "target": "a[href=\"/\"]",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.4",
+            "2.4.9"
+          ],
+          "note": "nav link 'Home'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "link-name",
+          "target": "a[href$=\"catalog\"]",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.4",
+            "2.4.9"
+          ],
+          "note": "nav link 'Browse the catalog'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "link-name",
+          "target": "a[href$=\"help\"]",
+          "provenance": "self",
+          "tested_sc": [
+            "2.4.4",
+            "2.4.9"
+          ],
+          "note": "nav link 'Help centre'",
+          "gold_conformance": "supports"
+        },
+        {
+          "axe_rule": "link-name",
+          "target": "a[href$=\"#desc\"]",
+          "provenance": "act:16d451321559dc35b8c33f0d21b2c7f49175914e",
+          "tested_sc": [
+            "2.4.9"
+          ],
+          "note": "ACT 'Link is descriptive' [passed], intact with #desc context",
+          "gold_conformance": "supports"
+        }
+      ]
+    }
+  ]
+}

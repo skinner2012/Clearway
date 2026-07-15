@@ -43,6 +43,26 @@ These land in axe's **`incomplete`** bucket: the rule ran but axe **could not de
 
 `m1-core@1` also includes `pages/home.html` for the verifiable subset, so one eval run over the set yields both strata.
 
+## `noisy-pages` — ACT snippets embedded in realistic pages
+
+Two hand-built realistic pages ([`noisy-pages/`](noisy-pages/)), each embedding **one ACT judgment snippet verbatim** as the **focal** case, surrounded by nav/heading/aside/footer noise. The label travels with the snippet, so these are scored **exactly like the bare ACT cases** — a deterministic comparison against ACT gold, never the judge. Built + verified by [`clearway/eval/noisy_pages.py`](../eval/noisy_pages.py); manifest [`expected_noisy_pages.json`](noisy-pages/expected_noisy_pages.json); guarded by `tests/test_noisy_pages.py`.
+
+**`n = 2` is a smoke test** — illustrative, *not* a measured rate (no CI attaches to two points); it does **not** enter the headline scorecard. The two pages probe **opposite** harm axes:
+
+| Page | Focal (verbatim ACT) | Outcome | Clean counterpart | Measures |
+|---|---|---|---|---|
+| `page-a-title.html` | HTML page title is descriptive (SC 2.4.2) | **failed** | `act-gold/…/64ad3868….html` | miss-under-noise (recall) |
+| `page-b-label.html` | Form field label is descriptive (SC 2.4.6) | **passed** | `act-gold/…/90d77d3e….html` | cry-wolf-under-noise (FP) |
+
+**Noise is hybrid, and provenance is recorded per element:**
+
+- `act:<id>` — a real ACT *passed* snippet, embedded intact → a **W3C-certified** true negative.
+- `self` — trivially-descriptive **authored** chrome (nav links, heading, a descriptive `<title>`) → human-certified as passing, **not** externally certified. An honest limitation, marked in the manifest, never dressed up as W3C gold.
+
+Every noise element is clean by construction, so a finding raised on any of them is a **false positive**. Each page mints **only** `passes[]`-bucket judgment findings (no violations/incompletes) — `noisy_pages.build_manifest()` asserts the live composition matches the declared focal + noise exactly, so an axe-core bump that shifts a selector fails loudly. HTML alone is sufficient: the pipeline is DOM-only, so the light `<style>` is cosmetic (no `display:none`) and there is no JS.
+
+**Methodology is preliminary** (see the M5 spec, realistic-pages tier): the noise-construction method and its limits will be iterated and re-stated in the report.
+
 ## Changing a set
 
 Any change to a planted signal is a **version bump**: increment `version` (and `eval_set_id`) in the relevant `expected_m*.json` and here. Downstream eval runs are tagged with the set version, so a bump never silently invalidates past results.

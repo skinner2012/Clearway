@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- NOISE (authored-trivial): a descriptive page title for a sign-up page → passes "HTML page
+       title is descriptive". Page B is deliberately ALL-CLEAN, so the whole page is a cry-wolf test:
+       any finding the drafter FLAGS here is a false positive. This title is human-certified, NOT
+       ACT-sourced — a flag citing 2.4.2 is an FP. -->
+  <title>Create your Northwind Books account</title>
+  <style>
+    body { font-family: system-ui, sans-serif; color: #1a1a1a; background: #fff; margin: 0; line-height: 1.5; }
+    header { border-bottom: 1px solid #cccccc; padding: 1rem 1.5rem; }
+    header .brand { font-weight: 700; margin: 0 0 .5rem; }
+    nav a { margin-right: 1rem; }
+    .wrap { display: grid; grid-template-columns: 1fr 15rem; gap: 2rem; max-width: 60rem; margin: 0 auto; padding: 1.5rem; }
+    main { min-width: 0; }
+    form p { margin: .75rem 0 .25rem; }
+    label { display: block; font-weight: 600; }
+    input { display: block; margin: .25rem 0 1rem; padding: .4rem; min-width: 16rem; }
+    button { padding: .5rem 1rem; }
+    aside { border-left: 1px solid #cccccc; padding-left: 1.5rem; }
+    footer { border-top: 1px solid #cccccc; padding: 1rem 1.5rem; color: #444444; }
+    a { color: #0b5394; }
+  </style>
+</head>
+<body>
+  <!-- NOISE (authored-trivial chrome): brand + primary nav, distinct descriptive names, no same-name
+       collision. Human-certified, NOT ACT-sourced. -->
+  <header>
+    <p class="brand">Northwind Books</p>
+    <nav aria-label="Primary">
+      <a href="/">Home</a>
+      <a href="/catalog">Browse the catalog</a>
+      <a href="/help">Help centre</a>
+    </nav>
+  </header>
+
+  <div class="wrap">
+    <main>
+      <!-- NOISE (authored-trivial): descriptive heading → passes "Heading is descriptive". -->
+      <h1>Create your account</h1>
+      <p>Join Northwind Books to track your orders and save your favourites.</p>
+
+      <form action="/register" method="post">
+        <!-- ====================================================================================
+             FOCAL — ACT "Form field label is descriptive" [PASSED] · SC 2.4.6 · testcaseId
+             90d77d3e5b2fdc19bce47f9f9362283861d3903b, embedded VERBATIM inside a realistic form.
+             The label "First name:" clearly identifies the field → the ACT label ("passed" →
+             supports) still holds. The measured question: does the surrounding page noise make the
+             system wrongly FLAG this good label (a false positive)? Clean counterpart:
+             act-gold/html/90d77d3e….html.
+             ==================================================================================== -->
+        <label for="fname">First name:</label>
+        <input id="fname" type="text" name="fname" />
+
+        <!-- NOISE (authored-trivial): a second descriptive, DISTINCT-name label → passes "label". -->
+        <label for="email">Email address</label>
+        <input id="email" type="email" name="email" />
+
+        <button type="submit">Create account</button>
+      </form>
+    </main>
+
+    <aside aria-label="New here">
+      <p>New here?</p>
+      <!-- NOISE (ACT-certified passed): ACT "Link is descriptive" [passed] · SC 2.4.9 · testcaseId
+           16d451321559dc35b8c33f0d21b2c7f49175914e, embedded INTACT with its <p id="desc"> context.
+           W3C-certified true negative. -->
+      <a href="#desc">See the description of this product.</a>
+      <p id="desc">This product consists of several web pages.</p>
+    </aside>
+  </div>
+
+  <footer>
+    <p>© Northwind Books. All rights reserved.</p>
+  </footer>
+</body>
+</html>

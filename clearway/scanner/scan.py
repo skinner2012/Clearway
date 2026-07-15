@@ -72,6 +72,14 @@ def scan(target: str) -> ScanResult:
         try:
             page.goto(url, wait_until="load")
             page.add_script_tag(path=str(_AXE_MIN_JS))
+            engine_version = page.evaluate("() => axe.version")
+            if engine_version != AXE_VERSION:
+                raise RuntimeError(
+                    f"vendored axe-core reports version {engine_version!r} but AXE_VERSION is {AXE_VERSION!r} — "
+                    f"the pinned constant and vendor/axe.min.js have drifted. Every ScanResult.tool_version and "
+                    f"the frozen benchmark's axe_core_version would silently record the wrong engine; bump the "
+                    f"constant deliberately, don't let provenance rot."
+                )
             results: dict = page.evaluate("() => axe.run()")
         finally:
             browser.close()

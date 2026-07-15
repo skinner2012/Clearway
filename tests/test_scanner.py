@@ -8,6 +8,7 @@ of M0 (fixtures manifest, oracle) assumes (ARCHITECTURE §4.2, §4.8).
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -55,6 +56,16 @@ def test_scan_returns_typed_result_with_pinned_version() -> None:
     assert result.url.startswith("file://") and result.url.endswith("home.html")
     assert result.raw, "full axe payload should be passed through in .raw"
     assert result.incomplete == [], "home.html has no needs-review items; incomplete stays distinct + empty"
+
+
+def test_scan_rejects_a_version_drift_between_the_constant_and_the_vendored_engine(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """If vendor/axe.min.js and AXE_VERSION drift, every tool_version + the frozen benchmark's
+    axe_core_version would silently record the wrong engine. scan() refuses instead of stamping a lie."""
+    monkeypatch.setattr(sys.modules["clearway.scanner.scan"], "AXE_VERSION", "0.0.0-wrong")
+    with pytest.raises(RuntimeError, match="drifted"):
+        scan(str(FIXTURE))
 
 
 def test_scan_finds_exactly_the_planted_violations() -> None:

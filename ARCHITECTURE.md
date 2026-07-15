@@ -37,7 +37,7 @@
 
 ## 1. One-liner & positioning
 
-Clearway ingests a real accessibility signal (a URL, later photos/measurements), produces **decision-ready, cited, confidence-scored evidence** for a qualified human specialist, and **measures the trustworthiness of its own outputs**. It never renders the final conformance decision — the specialist does.
+Clearway ingests a real accessibility signal (a URL, later photos/measurements), produces **decision-ready, cited evidence** for a qualified human specialist, and **measures the trustworthiness of its own outputs**. It never renders the final conformance decision — the specialist does.
 
 The intended trajectory (context, not current scope): Clearway accelerates the evaluation-and-report workflow of a real accessibility practice (the anchor described in [`DESIGN_NOTE.md`](DESIGN_NOTE.md) §9), and can later grow an Ops surface (quote generation, notifying the humans/engineers who do the physical remediation). **We are not building it as a demo of skills; we are building a system that would speed up real work if put in production.** Every architectural choice below is judged by that bar, not by showcase value.
 
@@ -85,7 +85,7 @@ The single most important seam is the **`Oracle` interface** (§5). If the harne
 | Browser automation | Playwright (Python) → headless Chromium | DECIDED | Self-hosted. No third-party scan API — buying a scanner would contradict the "axe-core is my free oracle" thesis. |
 | Checker | axe-core, injected via `page.evaluate` (`axe.run()`) | DECIDED | Core oracle. Lighthouse deferred (heavier, Node). |
 | Eval corpus | **Fixed, versioned fixture HTML set**; some pages with *planted* violations (= hard ground truth beyond axe-core) | DECIDED | Eval must be reproducible across time → cannot be random live pages. **Live scanning is a demo feature, not the eval backbone.** |
-| Scraping ethics | robots.txt, rate-limit, explicit User-Agent; prefer owned/fixture pages | DECIDED | Applies to any non-fixture scanning. |
+| Scraping ethics | robots.txt, rate-limit, explicit User-Agent; prefer owned/fixture pages | DECIDED (policy) | **As built (2026-07-15), only the explicit User-Agent exists** (`scanner/scan.py`); robots.txt + rate-limit are unimplemented — acceptable while live scanning is a demo feature only, required before any production scanning. |
 
 ### 4.3 Cache policy (deterministic re-work only)
 
@@ -170,10 +170,12 @@ Scanned pages are third-party and untrusted: page-derived text (HTML snippets, `
 
 | Decision | Status | Note |
 |---|---|---|
-| **Structural separation:** page-derived content goes into the LLM prompt inside a labelled, fenced region marked as untrusted *data*, never as instructions. | DECIDED | Mitigation, not a guarantee. |
+| **Structural separation:** page-derived content goes into the LLM prompt inside a labelled, fenced region marked as untrusted *data*, never as instructions. | OPEN | **Designed, not implemented (2026-07-15):** raw page HTML is currently interpolated verbatim into both the drafter and judge prompts, with no fenced/labelled region. Build deferred; do not assume it is present. |
 | **Side-effect-free by design (system-wide):** every component that touches untrusted input has no side effects — the drafter has no tools and emits only a schema-constrained `DraftRow`; the MCP retrieval tool is read-only (embed + vector search). A hijacked model or a poisoned input can at most corrupt a draft or a query — it can never act. | DECIDED | The main blast-radius limit. |
 | **Verification as backstop:** L0/L1 + the oracle flag citations that don't match ground truth; corrupted citations on the verifiable subset are caught, and judgment items route to human review. | DECIDED | The trust layer doubles as an injection detector. |
-| **Provenance + detection:** page-derived fields are tagged untrusted; instruction-like content is flagged as a trace attribute so injection attempts are observable. | DECIDED | Feeds the same OTel/Prometheus pipeline. |
+| **Provenance + detection:** page-derived fields are tagged untrusted; instruction-like content is flagged as a trace attribute so injection attempts are observable. | OPEN | **Designed, not implemented (2026-07-15):** no untrusted-tagging or instruction-like-content detection exists in code. Build deferred; do not assume it is present. |
+
+**As-built status (2026-07-15).** Rows 2–3 (side-effect-free by design; verification as backstop) hold in code and are the load-bearing mitigations. Rows 1 and 4 are **designed but not built** — see their status column. The benchmark's own finding that both models follow prompt framing over page content is a reason to build rows 1/4 before any production scanning, not a reason to assume they exist.
 
 Pattern-stripping untrusted text is explicitly **not** relied on (unreliable). We do not claim to prevent injection — we contain it and make attempts visible.
 
@@ -265,3 +267,4 @@ Its only job is to prove the control loop is real. The detail exists to pin one 
 | 2026-07-10 | 0.3 | §4.10: generalised the side-effect-free rule system-wide (drafter + MCP retrieval tool). |
 | 2026-07-10 | 0.4 | Swapped M4/M5: judge calibration is now M4 (before routing) so routing can choose its config from the judge's judgment-item scores; LLM routing is now M5. Reconciled §4.9 (M4 self-built *digital* gold vs M6 expert *physical* gold, one `GoldLabel` shape), tied §4.4 routing policy to the M4 judge, and noted the `GoldLabel` reuse at the §5 seam. |
 | 2026-07-14 | 0.5 | M5 is now the acceptance benchmark (held-out W3C ACT gold; scored deterministically, never by the judge). Removed M6 (Regime B) — not being built. No milestones are declared past M5: the next one is chosen from the benchmark's results. |
+| 2026-07-15 | 0.6 | Pre-release honesty pass: dropped "confidence-scored" from the §1 one-liner (self-reported confidence is measured decorative — see the calibration report); re-statused §4.10 rows 1 (structural separation) and 4 (provenance + detection) from DECIDED to **OPEN** — designed but not built (raw HTML is interpolated verbatim into both prompts; no untrusted-tagging exists); noted §4.2 scraping ethics as **built = User-Agent only** (robots.txt + rate-limit unimplemented; acceptable while live scanning is demo-only). No code change — the decision log now matches the code. |

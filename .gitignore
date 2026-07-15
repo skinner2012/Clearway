@@ -22,6 +22,9 @@ venv/
 .coverage
 htmlcov/
 
+# Transient benchmark checkpoint (per-case resume state; removed on clean completion)
+benchmark/*.partial.json
+
 # OS / editor
 .DS_Store
 .idea/

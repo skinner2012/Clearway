@@ -47,8 +47,28 @@ _EVAL_SET_ID = "act-acceptance@1"
 _OUT = Path(__file__).resolve().parents[2] / "benchmark"
 _RUN_ARTIFACT = _OUT / "acceptance_run.json"
 _REPORT = _OUT / "acceptance_report.json"
+# The per-case checkpoint: the expensive accumulated state (drafts + judge verdicts), flushed after
+# every case so a mid-run crash or hang never loses the ~2h of drafting. Removed on clean completion;
+# its presence on start-up means "resume". Transient — gitignored, never committed.
+_PARTIAL = _OUT / "acceptance_run.partial.json"
 
 _OLLAMA_BASE_URL = os.getenv("CLEARWAY_OLLAMA_BASE_URL") or "http://localhost:11434"
+
+
+def _read_partial(path: Path = _PARTIAL) -> dict[str, Any] | None:
+    """The checkpoint to resume from, or None for a fresh run."""
+    return dict(json.loads(path.read_text())) if path.exists() else None
+
+
+def _write_partial(state: dict[str, Any], path: Path = _PARTIAL) -> None:
+    """Flush the accumulated run state (compact, no indent — it is transient)."""
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps(state, ensure_ascii=False) + "\n")
+
+
+def _done_case_ids(partial: dict[str, Any] | None) -> set[str]:
+    """The act_testcase_ids already completed in a checkpoint — the cases a resume must skip."""
+    return {c["act_testcase_id"] for c in partial["cases"]} if partial else set()
 
 
 def _ollama_digest(model: str, base_url: str = _OLLAMA_BASE_URL) -> str:
@@ -114,9 +134,30 @@ def _run_tier_b(drafter: Drafter, retriever: Any, clean_flags: dict[str, bool]) 
 def run_acceptance(created_at: str) -> dict[str, Any]:
     """Draft + judge every minting ACT case, carry the honest-misses as drafts-less cases, and stamp
     the reproducibility provenance → the raw run artifact. Prints per-case progress (the run is long,
-    gemma-bound) so it is never opaque."""
+    gemma-bound) so it is never opaque.
+
+    CHECKPOINTED: the accumulated case/injection state is flushed after every case, so a crash or hang
+    resumes from the last completed case instead of losing the whole run. A checkpoint present on entry
+    means "resume" — its `created_at` (hence run identity) is kept, and completed cases are skipped.
+    The checkpoint is removed on clean completion.
+    """
     manifest = json.loads(_MANIFEST.read_text())
     total = len(manifest["cases"])
+
+    partial = _read_partial()
+    if partial:
+        created_at = partial["created_at"]  # keep the original run identity across the resume
+        cases, conf_flip, sc_swaps, tier_b = (
+            partial["cases"],
+            partial["conf_flip"],
+            partial["sc_swaps"],
+            partial.get("tier_b"),
+        )
+        done = _done_case_ids(partial)
+        print(f"resuming run {created_at}: {len(done)}/{total} cases already done", flush=True)
+    else:
+        cases, conf_flip, sc_swaps, tier_b, done = [], [], [], None, set()
+
     drafter_client = LocalLLMClient()
     judge_client = CloudLLMClient()
     retriever = build_default_retriever()
@@ -124,10 +165,9 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
     judge = Judge(judge_client, drafter_model=drafter_client.model)
     run_id = f"acceptance-{created_at}"
 
-    cases: list[dict[str, Any]] = []
-    conf_flip: list[dict[str, Any]] = []  # injected conformance-flipped drafts the judge tried to catch
-    sc_swaps: list[dict[str, Any]] = []  # injected SC-swapped drafts the judge tried to catch
     for i, case in enumerate(manifest["cases"], start=1):
+        if case["act_testcase_id"] in done:
+            continue  # already checkpointed — do not re-draft
         rule, gold = case["rule_name"], case["gold_success_criteria"]
         findings = _minting_findings(_ACT_GOLD / case["path"], case["axe_rule"])
         drafts: list[dict[str, Any]] = []
@@ -154,6 +194,7 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
                 "drafts": drafts,
             }
         )
+        _write_partial({"created_at": created_at, "cases": cases, "conf_flip": conf_flip, "sc_swaps": sc_swaps})
         print(f"[{i:2d}/{total}] {rule[:30]:30s} {case['expected']:7s} n={len(drafts)}", flush=True)
 
     honest_misses = [
@@ -169,7 +210,13 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
     clean_flags = {
         c["act_testcase_id"]: any(is_flag(Conformance(d["conformance"])) for d in c["drafts"]) for c in cases
     }
-    return {
+    if tier_b is None:  # Tier B is the last phase; checkpoint it so a late crash need not repeat it.
+        tier_b = _run_tier_b(drafter, retriever, clean_flags)
+        _write_partial(
+            {"created_at": created_at, "cases": cases, "conf_flip": conf_flip, "sc_swaps": sc_swaps, "tier_b": tier_b}
+        )
+
+    artifact = {
         "run_ids": [run_id],
         "config_id": _CONFIG_ID,
         "eval_set_id": _EVAL_SET_ID,
@@ -188,8 +235,10 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
         "cases": cases,
         "honest_misses": honest_misses,
         "injected": {"conformance_flip": conf_flip, "sc_swap": sc_swaps, "rationale_note": RATIONALE_NOTE},
-        "tier_b": _run_tier_b(drafter, retriever, clean_flags),
+        "tier_b": tier_b,
     }
+    _PARTIAL.unlink(missing_ok=True)  # fully assembled in memory → the checkpoint has done its job
+    return artifact
 
 
 def main() -> None:

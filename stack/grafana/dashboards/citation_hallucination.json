@@ -412,8 +412,8 @@
     {
       "id": 15,
       "type": "stat",
-      "title": "judge κ (judge-vs-human)",
-      "description": "Cohen's κ between the LLM judge and the human gold labels on judgment items. Judge-vs-ONE-labeller (not consensus), so do not over-read it. Green at/above the pre-committed 0.6 bar; red below. A snapshot gauge, refreshed only when the calibration is re-emitted.",
+      "title": "judge κ (self-built gold · superseded)",
+      "description": "⚠️ SUPERSEDED (2026-07-15): the held-out benchmark row below re-measured this judge against external W3C ACT gold at κ ≈ 0 (mean of 3 runs; negative in one). This gauge reflects the SELF-BUILT distribution only — 0.79 there did not transfer, so do not read it as current judge trust. Original note: Cohen's κ between the LLM judge and one human labeller (not consensus); a snapshot gauge, refreshed only when the calibration is re-emitted.",
       "gridPos": { "h": 6, "w": 6, "x": 0, "y": 70 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
@@ -439,8 +439,8 @@
     {
       "id": 23,
       "type": "stat",
-      "title": "judge trusted?",
-      "description": "1 iff κ cleared the pre-committed 0.6 bar. Only a trusted judge may score models on non-gold items — the gate M5 depends on.",
+      "title": "judge trusted? (superseded)",
+      "description": "⚠️ SUPERSEDED (2026-07-15): this 'trusted' verdict was measured on the SELF-BUILT gold and did NOT survive out-of-distribution — the held-out benchmark row below grades the same judge at κ ≈ 0 (negative in one of three runs). The judge is being taken out of the trust path; do not read TRUSTED as current. Original note: 1 iff κ cleared the pre-committed 0.6 bar on the self-built gold.",
       "gridPos": { "h": 6, "w": 6, "x": 6, "y": 70 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
@@ -455,7 +455,7 @@
         "defaults": {
           "unit": "none",
           "mappings": [
-            { "type": "value", "options": { "0": { "text": "NOT TRUSTED", "color": "red" }, "1": { "text": "TRUSTED", "color": "green" } } }
+            { "type": "value", "options": { "0": { "text": "NOT TRUSTED", "color": "red" }, "1": { "text": "TRUSTED on self-built · SUPERSEDED", "color": "orange" } } }
           ],
           "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null } ] }
         },
@@ -493,8 +493,8 @@
     {
       "id": 19,
       "type": "stat",
-      "title": "judgment correctness (judge-scored)",
-      "description": "Fraction of judgment items the judge scored correct — an ESTIMATE capped by κ, never promoted into the verified count. Distinct from the oracle-verified subset.",
+      "title": "judgment correctness (judge-scored · superseded)",
+      "description": "⚠️ SUPERSEDED (2026-07-15): this is 'an ESTIMATE capped by κ' — and κ is now ≈ 0 on external W3C ACT gold (benchmark row below), so the cap is ≈ 0 and this number carries no trust. Retained for provenance only. Original note: fraction of judgment items the judge scored correct, never promoted into the verified count.",
       "gridPos": { "h": 6, "w": 6, "x": 18, "y": 70 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [

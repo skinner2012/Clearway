@@ -22,7 +22,7 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 
-from clearway.schemas.models import CalibrationReport, EvalMetrics, EvalReport
+from clearway.schemas.models import BenchmarkReport, CalibrationReport, EvalMetrics, EvalReport
 
 _DEFAULT_ENDPOINT = "http://localhost:4318"
 _METRIC_NAME = "citation_hallucination_rate"
@@ -50,12 +50,42 @@ _CAL_CURVE_METRICS: dict[str, str] = {
     "confidence_bin_n": "Draft count in a bin — ships beside the rate so a single-bin curve cannot lie.",
 }
 
+# M5 held-out benchmark series. Same convention as above: bare names (no prefix would suffix `..._ratio`),
+# point-in-time milestone gauges pushed by an explicit snapshot emit — the frozen scorecard is an
+# artifact, not a per-run series, so a gauge holds the last freeze. The headline rates ship their Wilson
+# bounds and n as sibling series so a panel shows the interval, never a bare point. Names mirror the
+# `AcceptanceScorecard` fields; `benchmark_gauge_values` is the single source of what each one holds.
+_BENCH_METRICS: dict[str, str] = {
+    # Subject #1 — drafter, scored deterministically against ACT gold (never via the judge).
+    "benchmark_drafter_recall": "Drafter recall on ACT failed cases — does it find the real problem (primary axis).",
+    "benchmark_drafter_recall_ci_low": "Recall Wilson lower bound (asymmetric).",
+    "benchmark_drafter_recall_ci_high": "Recall Wilson upper bound (asymmetric).",
+    "benchmark_drafter_recall_n": "Recall denominator — the ACT-failed true positives.",
+    "benchmark_drafter_false_positive_rate": "Drafter FP rate on ACT passed cases — does it cry wolf (THE headline).",
+    "benchmark_drafter_false_positive_rate_ci_low": "FP-rate Wilson lower bound.",
+    "benchmark_drafter_false_positive_rate_ci_high": "FP-rate Wilson upper bound.",
+    "benchmark_drafter_false_positive_rate_n": "FP-rate denominator — the ACT-passed true negatives.",
+    "benchmark_drafter_sc_citation_match": "Cited SC ∩ ACT gold on flagged fails — secondary; low by framing.",
+    "benchmark_drafter_ece": "Expected calibration error — CI-exempt (single bin at this n); read with the gap.",
+    "benchmark_drafter_overconfidence_gap": "Signed confidence − correctness; positive = over-confident.",
+    # Subject #2 — judge, measured AGAINST ACT gold (a subject, not the ruler).
+    "benchmark_judge_kappa": "Judge-vs-ACT-gold Cohen's κ on independent W3C gold (harder than M4's κ).",
+    "benchmark_judge_miss_rate": "Judge passed a wrong draft — the DANGEROUS half; CI-exempt.",
+    "benchmark_judge_false_alarm_rate": "Judge blocked a correct draft — the merely-annoying half.",
+    "benchmark_judge_injected_flip_detection": "Detection on conformance-flipped drafts — an UPPER BOUND.",
+    "benchmark_judge_injected_swap_detection": "Detection on SC-swapped drafts — upper bound, secondary.",
+    # Overall — the noise floor, the regression yardstick's smallest gradation.
+    "benchmark_min_detectable_improvement": "Smallest claimable improvement (pp) — below this is jitter.",
+    "benchmark_noise_floor_judge_kappa_sd": "Judge κ SD across repeat runs — run-to-run unstable.",
+}
+
 _provider: MeterProvider | None = None
 _rate_gauge: Gauge | None = None
 _rate_verifiable_gauge: Gauge | None = None
 _unverifiable_share_gauge: Gauge | None = None
 _expert_edit_distance_gauge: Gauge | None = None
 _cal_gauges: dict[str, Gauge] = {}
+_bench_gauges: dict[str, Gauge] = {}
 
 
 def setup_metrics(endpoint: str | None = None) -> None:
@@ -101,6 +131,8 @@ def setup_metrics(endpoint: str | None = None) -> None:
     )
     for name, description in {**_CAL_SCALAR_METRICS, **_CAL_CURVE_METRICS}.items():
         _cal_gauges[name] = meter.create_gauge(name, description=description)
+    for name, description in _BENCH_METRICS.items():
+        _bench_gauges[name] = meter.create_gauge(name, description=description)
 
 
 def record_rate(rate: float, *, eval_set_id: str, config_id: str, oracle_regime: str) -> None:
@@ -173,6 +205,53 @@ def record_calibration(metrics: EvalMetrics, report: CalibrationReport, *, judge
         _cal_gauges["confidence_bin_n"].set(b.n, bin_labels)
 
 
+def benchmark_gauge_values(report: BenchmarkReport) -> dict[str, float]:
+    """The frozen scorecard → {gauge_name: value}: the single, pure source of what each benchmark gauge
+    holds. Kept off the OTLP path so it can be tested against a frozen artifact with no collector, and
+    so `record_benchmark` cannot silently skip a declared metric (the keys must equal `_BENCH_METRICS`).
+
+    The snapshot is only meaningful for the FROZEN baseline, which carries the noise floor — a scorecard
+    without one means a single run was passed in by mistake, so we fail loudly rather than push a 0.
+    """
+    sc = report.scorecard
+    d, j, nf = sc.drafter, sc.judge, sc.noise_floor
+    if nf is None:
+        raise ValueError("benchmark snapshot needs the frozen baseline (with its noise floor) — freeze the sweep first")
+    return {
+        "benchmark_drafter_recall": d.recall.value,
+        "benchmark_drafter_recall_ci_low": d.recall.ci_low,
+        "benchmark_drafter_recall_ci_high": d.recall.ci_high,
+        "benchmark_drafter_recall_n": float(d.recall.n),
+        "benchmark_drafter_false_positive_rate": d.false_positive_rate.value,
+        "benchmark_drafter_false_positive_rate_ci_low": d.false_positive_rate.ci_low,
+        "benchmark_drafter_false_positive_rate_ci_high": d.false_positive_rate.ci_high,
+        "benchmark_drafter_false_positive_rate_n": float(d.false_positive_rate.n),
+        "benchmark_drafter_sc_citation_match": d.sc_citation_match.value,
+        "benchmark_drafter_ece": d.expected_calibration_error.value,
+        "benchmark_drafter_overconfidence_gap": d.overconfidence_gap,
+        "benchmark_judge_kappa": j.kappa,
+        "benchmark_judge_miss_rate": j.miss_rate.value,
+        "benchmark_judge_false_alarm_rate": j.false_alarm_rate.value,
+        "benchmark_judge_injected_flip_detection": j.injected_conformance_flip.value,
+        "benchmark_judge_injected_swap_detection": j.injected_sc_swap.value,
+        "benchmark_min_detectable_improvement": nf.min_detectable_improvement,
+        "benchmark_noise_floor_judge_kappa_sd": nf.per_metric_sd.get("judge_kappa", 0.0),
+    }
+
+
+def record_benchmark(report: BenchmarkReport) -> None:
+    """Push the frozen benchmark scorecard: the drafter's ACT-gold rates (with their Wilson bounds + n),
+    the judge's two error rates and injected-detection upper bounds, and the noise floor. A point-in-time
+    milestone emit like `record_calibration` — the frozen baseline is an artifact, not a per-run series,
+    so its gauges hold the last snapshot. Labels are the pinned (eval_set_id, config_id): both constant,
+    so cardinality stays at one series per metric."""
+    if not _bench_gauges:
+        setup_metrics()
+    labels = {"eval_set_id": report.eval_set_id, "config_id": report.config_id}
+    for name, value in benchmark_gauge_values(report).items():
+        _bench_gauges[name].set(value, labels)
+
+
 def shutdown() -> None:
     """Flush pending metrics and tear down. MUST run before a short-lived process exits."""
     global _provider, _rate_gauge, _rate_verifiable_gauge, _unverifiable_share_gauge
@@ -186,3 +265,4 @@ def shutdown() -> None:
         _unverifiable_share_gauge = None
         _expert_edit_distance_gauge = None
         _cal_gauges.clear()
+        _bench_gauges.clear()

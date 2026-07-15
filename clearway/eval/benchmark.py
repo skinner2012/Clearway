@@ -24,6 +24,7 @@ from clearway.schemas.models import (
     AcceptanceScorecard,
     BenchmarkReport,
     Conformance,
+    NoiseFloor,
     NotMeasuredItem,
     TierBSmoke,
 )
@@ -127,9 +128,10 @@ def _tier_b(artifact: dict[str, Any]) -> TierBSmoke | None:
     )
 
 
-def build_scorecard(artifact: dict[str, Any]) -> AcceptanceScorecard:
-    """Score both subjects off the frozen artifact → the metrics payload. `noise_floor` stays None —
-    it needs the repeat runs a single artifact does not carry."""
+def build_scorecard(artifact: dict[str, Any], *, noise_floor: NoiseFloor | None = None) -> AcceptanceScorecard:
+    """Score both subjects off the frozen artifact → the metrics payload. `noise_floor` is None on a
+    single run (it needs the repeat runs a lone artifact does not carry) and is passed in by the freeze
+    step once the sweep exists."""
     drafter_scoring = score_drafter(_drafted_cases(artifact))
     judge = score_judge(
         _judged_drafts(artifact),
@@ -140,7 +142,7 @@ def build_scorecard(artifact: dict[str, Any]) -> AcceptanceScorecard:
     return AcceptanceScorecard(
         drafter=drafter_scoring.score,
         judge=judge,
-        noise_floor=None,
+        noise_floor=noise_floor,
         tier_b=_tier_b(artifact),
         not_measured=NOT_MEASURED,
         conformance_collapse_rule=COLLAPSE_RULE,
@@ -148,12 +150,21 @@ def build_scorecard(artifact: dict[str, Any]) -> AcceptanceScorecard:
     )
 
 
-def build_report(artifact: dict[str, Any]) -> BenchmarkReport:
+def build_report(
+    artifact: dict[str, Any],
+    *,
+    noise_floor: NoiseFloor | None = None,
+    run_ids: list[str] | None = None,
+) -> BenchmarkReport:
     """The frozen artifact → the reproducible `BenchmarkReport`. Provenance (config / corpus versions,
     model digests, axe version, ACT export hash) is read straight off the artifact — the builder is
-    responsible for freezing it by content hash, not by a mutable name."""
+    responsible for freezing it by content hash, not by a mutable name.
+
+    `noise_floor` and `run_ids` are the freeze step's two overrides: a single run has neither, but the
+    frozen baseline embeds the 3-run noise floor and lists every run's id (the numbers stay run_1's —
+    the drafter is deterministic, so run_1 IS the frozen score)."""
     return BenchmarkReport(
-        run_ids=list(artifact["run_ids"]),
+        run_ids=list(run_ids) if run_ids is not None else list(artifact["run_ids"]),
         config_id=artifact["config_id"],
         eval_set_id=artifact["eval_set_id"],
         corpus_version=artifact["corpus_version"],
@@ -165,5 +176,5 @@ def build_report(artifact: dict[str, Any]) -> BenchmarkReport:
         axe_core_version=artifact["axe_core_version"],
         act_export_hash=artifact["act_export_hash"],
         created_at=datetime.fromisoformat(artifact["created_at"]),
-        scorecard=build_scorecard(artifact),
+        scorecard=build_scorecard(artifact, noise_floor=noise_floor),
     )

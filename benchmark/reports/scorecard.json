@@ -1,6 +1,8 @@
 {
   "run_ids": [
-    "acceptance-2026-07-15T01:55:47.047521+00:00"
+    "acceptance-2026-07-15T01:55:47.047521+00:00",
+    "acceptance-2026-07-15T04:16:36.867992+00:00",
+    "acceptance-2026-07-15T06:03:41.204807+00:00"
   ],
   "config_id": "m1-single@1",
   "eval_set_id": "act-acceptance@1",
@@ -85,7 +87,18 @@
       },
       "rationale_coherence_note": "Conformance flip is a pure mutation — no rationale regeneration. The judge rubric grades conformance from the finding and cited SC only and does not read the draft's remediation prose, so a flipped verdict is coherent to the judge (not a self-contradictory strawman); no LLM re-authorship was introduced, avoiding that authorship bias entirely."
     },
-    "noise_floor": null,
+    "noise_floor": {
+      "runs": 3,
+      "per_metric_sd": {
+        "recall": 0.0,
+        "false_positive_rate": 0.0,
+        "judge_kappa": 0.15845937556367137,
+        "judge_miss_rate": 0.10485881160098265
+      },
+      "min_detectable_improvement": 0.0,
+      "dominant_source": "binomial-sampling",
+      "paired_mdi_note": "Same-config paired discordance across 3 run-pair(s) — the floor a real A/B change must EXCEED, per stratum, never pooled: TP→miss flips max 0, TN→FP flips max 0. A change whose discordance is at or below this is jitter, not progress."
+    },
     "tier_b": {
       "n": 2,
       "instance_ids": [

@@ -45,12 +45,13 @@ _CONFIG_ID = "m1-single@1"
 _EVAL_SET_ID = "act-acceptance@1"
 
 # Layout: raw runs are inputs (runs/), derived reports are outputs (reports/). A single run is run_1;
-# the noise-floor sweep adds run_2… beside it, and its scorecard/noise-floor live under reports/.
+# the noise-floor sweep adds run_2… beside it. This builder owns only the raw run; the scored report
+# under reports/ is a derived output — the noise-floor sweep and the freeze step (benchmark_freeze) own
+# reports/, so a re-run of the single-run builder never clobbers the frozen baseline.
 _OUT = Path(__file__).resolve().parents[2] / "benchmark"
 _RUNS_DIR = _OUT / "runs"
 _REPORTS_DIR = _OUT / "reports"
 _RUN_ARTIFACT = _RUNS_DIR / "run_1.json"
-_REPORT = _REPORTS_DIR / "scorecard.json"
 # The per-case checkpoint: the expensive accumulated state (drafts + judge verdicts), flushed after
 # every case so a mid-run crash or hang never loses the ~2h of drafting. Removed on clean completion;
 # its presence on start-up means "resume". Transient — gitignored, never committed.
@@ -247,16 +248,14 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
 
 def main() -> None:
     _RUNS_DIR.mkdir(parents=True, exist_ok=True)
-    _REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     artifact = run_acceptance(created_at=datetime.now(timezone.utc).isoformat())
     _RUN_ARTIFACT.write_text(json.dumps(artifact, indent=2, ensure_ascii=False) + "\n")
     report = build_report(artifact)
-    _REPORT.write_text(report.model_dump_json(indent=2) + "\n")
 
     d = report.scorecard.drafter
     j = report.scorecard.judge
     fp, mr, far = d.false_positive_rate, j.miss_rate, j.false_alarm_rate
-    print(f"\nwrote {_RUN_ARTIFACT.relative_to(Path.cwd())} + {_REPORT.relative_to(Path.cwd())}")
+    print(f"\nwrote {_RUN_ARTIFACT.relative_to(Path.cwd())} (freeze the baseline with benchmark_freeze)")
     print(f"drafter: recall {d.recall.value:.3f} (n={d.recall.n}), FP {fp.value:.3f} (n={fp.n})")
     print(f"judge:   miss {mr.value:.3f} (n={mr.n}), false-alarm {far.value:.3f}, κ {j.kappa:.3f}")
 

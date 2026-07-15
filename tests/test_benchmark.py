@@ -8,7 +8,7 @@ from __future__ import annotations
 import pytest
 
 from clearway.eval.benchmark import NOT_MEASURED, build_report
-from clearway.schemas.models import BenchmarkReport
+from clearway.schemas.models import BenchmarkReport, NoiseFloor
 
 
 def _draft(conformance: str, sc: list[str], *, conf: float, judge_ok: bool) -> dict:
@@ -102,6 +102,26 @@ def test_plain_run_has_no_noise_floor_or_tier_b() -> None:
     assert len(sc.not_measured) == len(NOT_MEASURED) == 4
     assert sc.notes  # the sensitivity notes travel on the scorecard
     assert "does_not_support" in sc.conformance_collapse_rule
+
+
+def test_noise_floor_is_embedded_when_passed() -> None:
+    """The freeze step passes the sweep's noise floor in — a single artifact never carries one, but
+    the override lands it on the scorecard so the frozen baseline discloses run-to-run variance."""
+    nf = NoiseFloor(
+        runs=3,
+        per_metric_sd={"recall": 0.0, "false_positive_rate": 0.0, "judge_kappa": 0.16},
+        min_detectable_improvement=0.0,
+        dominant_source="binomial-sampling",
+    )
+    sc = build_report(_artifact(), noise_floor=nf).scorecard
+    assert sc.noise_floor is not None
+    assert sc.noise_floor.per_metric_sd["judge_kappa"] == 0.16
+
+
+def test_run_ids_override_lists_every_swept_run() -> None:
+    """The baseline aggregates the whole sweep, so its run_ids override the single artifact's one id."""
+    report = build_report(_artifact(), run_ids=["run-a", "run-b", "run-c"])
+    assert report.run_ids == ["run-a", "run-b", "run-c"]
 
 
 def test_injected_section_is_read_when_present() -> None:

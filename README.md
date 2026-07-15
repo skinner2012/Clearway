@@ -92,4 +92,4 @@ The full interface — endpoint, transport, the `EvidenceQuery` / `Citation` sch
 
 ## License & authorship
 
-Licensed under the [Apache License 2.0](LICENSE). You may use and build on this work, but must retain the attribution in [`NOTICE`](NOTICE). Original author, architect, and designer: **FuYuan (Skinner) Cheng**. The public commit history is the authoritative record of authorship and precedence.
+Licensed under the [MIT License](LICENSE). Original author, architect, and designer: **FuYuan (Skinner) Cheng**. The public commit history is the authoritative record of authorship and precedence.

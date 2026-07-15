@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "An accessibility evidence pipeline that measures the trustworthiness of its own AI-generated conformance evidence."
 readme = "README.md"
 requires-python = ">=3.13"
-license = "Apache-2.0"
+license = "MIT"
 authors = [{ name = "FuYuan (Skinner) Cheng" }]
 dependencies = [
     "litellm>=1.91.0",

@@ -1582,6 +1582,21 @@
         "mode": "markdown",
         "content": "**Frozen regression baseline** — the yardstick every later change is measured against.\n\n- **Nothing here is scored by an LLM.** Every number is a deterministic comparison against W3C ACT expert gold. The judge is a *subject*, not the ruler.\n- **FP-rate is the headline** — flagging clean content inverts the product's value.\n- **CIs are asymmetric Wilson.** Cases cluster in ~5 rules → *effective n ≈ #rules*; the intervals understate the true width. The verdict is *works / broken*, not a fine number.\n- **Drafter deterministic (SD 0); judge unstable** (κ SD ≈ 0.16). Trust the drafter numbers as rock-solid; average the judge over runs.\n- **Tier B (n=2) is an illustrative smoke test** — it is NOT charted here and enters no headline number."
       }
+    },
+    {
+      "id": 46,
+      "type": "text",
+      "title": "per-class trust — read each finding by its class",
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 110
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "The benchmark scored the quality-review classes against ACT gold and they differ sharply — read each finding by its class's trust, not as an indistinguishable peer. Code SSOT: `FINDING_CLASS_TRUST` in `clearway/normalizer/quality_review.py`; numbers in `docs/acceptance-analysis.md`; full table in `docs/finding-class-trust.md`.\n\n| class (axe rule) | trust | benchmark |\n|---|---|---|\n| `empty-heading` | ✅ reliable | recall 4/5, FP 1/8 — descriptiveness judged from the DOM |\n| `document-title` | ⚠️ weak | 3/3 false positives on clean titles — a constant classifier |\n| `label` | ⚠️ weak | ~4/6 false positives — tracks label mechanism, not the name |\n| `link-name` | ⚠️ weak | mixed (recall 3/5), high FP on in-context purpose |\n| `image-alt` | ❔ unmeasured | structurally unvalidatable text-only (needs a multimodal drafter) |\n| `frame-title` | ❔ unmeasured | no external gold anywhere |\n\n**reliable** = act on it · **weak** = look, expect ~half false alarms · **unmeasured** = no validated signal, treat as unverified."
+      }
     }
   ]
 }

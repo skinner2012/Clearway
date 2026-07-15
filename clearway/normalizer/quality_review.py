@@ -52,6 +52,8 @@ set of non-issues.
 
 from __future__ import annotations
 
+from enum import Enum
+
 QUALITY_REVIEW_RULES: dict[str, str] = {
     "image-alt": (
         "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for "
@@ -77,4 +79,28 @@ QUALITY_REVIEW_RULES: dict[str, str] = {
         "The page has a non-empty <title> — judge whether it DESCRIBES the page's topic or purpose "
         "for WCAG 2.4.2; a generic 'Untitled' / 'Home' / boilerplate title does NOT."
     ),
+}
+
+
+class FindingClassTrust(str, Enum):
+    """Per-class trust status from the held-out acceptance benchmark, so a specialist can tell a
+    measured-reliable class from a measured-weak or a never-measured one instead of receiving them as
+    indistinguishable peers. Qualitative by design — the exact per-rule numbers live in
+    `docs/acceptance-analysis.md` / `docs/finding-class-trust.md`, not duplicated here where they
+    could drift."""
+
+    RELIABLE = "reliable"  # measured vs ACT gold, decent (empty-heading: recall 4/5, FP 1/8)
+    WEAK = "weak"  # measured, high cry-wolf (document-title ~100% FP; label / link-name ~50%)
+    UNMEASURED = "unmeasured"  # never validated against gold — no trust signal exists for the class
+
+
+# Every whitelisted class MUST carry a trust tier (enforced by test): a new quality-review rule has to
+# state how far its judgment is trusted, so no class ships as an unlabelled peer of a measured one.
+FINDING_CLASS_TRUST: dict[str, FindingClassTrust] = {
+    "empty-heading": FindingClassTrust.RELIABLE,
+    "document-title": FindingClassTrust.WEAK,
+    "label": FindingClassTrust.WEAK,
+    "link-name": FindingClassTrust.WEAK,
+    "image-alt": FindingClassTrust.UNMEASURED,
+    "frame-title": FindingClassTrust.UNMEASURED,
 }

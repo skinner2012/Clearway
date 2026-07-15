@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from clearway.normalizer import normalize
-from clearway.normalizer.quality_review import QUALITY_REVIEW_RULES
+from clearway.normalizer.quality_review import FINDING_CLASS_TRUST, QUALITY_REVIEW_RULES, FindingClassTrust
 from clearway.scanner import scan
 from clearway.schemas.models import (
     AxeBucket,
@@ -207,6 +207,16 @@ def test_fixture_scan_normalizes_home_deterministically() -> None:
 
     # idempotency: normalizing the same scan again yields identical ids
     assert [f.id for f in findings] == [f.id for f in normalize(result)]
+
+
+def test_every_whitelisted_class_carries_a_trust_tier() -> None:
+    """A new quality-review rule must declare how far its judgment is trusted — so no finding class
+    ships as an unlabelled peer of a measured one. The benchmark showed the classes differ sharply:
+    empty-heading reliable, document-title ~100% cry-wolf, image-alt never measured."""
+    assert set(FINDING_CLASS_TRUST) == set(QUALITY_REVIEW_RULES)
+    assert FINDING_CLASS_TRUST["empty-heading"] is FindingClassTrust.RELIABLE
+    assert FINDING_CLASS_TRUST["document-title"] is FindingClassTrust.WEAK
+    assert FINDING_CLASS_TRUST["image-alt"] is FindingClassTrust.UNMEASURED
 
 
 def test_incomplete_fixture_normalizes_to_an_unverifiable_finding() -> None:

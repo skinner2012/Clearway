@@ -1,0 +1,12 @@
+{
+  "runs": 3,
+  "per_metric_sd": {
+    "recall": 0.0,
+    "false_positive_rate": 0.0,
+    "judge_kappa": 0.15845937556367137,
+    "judge_miss_rate": 0.10485881160098265
+  },
+  "min_detectable_improvement": 0.0,
+  "dominant_source": "binomial-sampling",
+  "paired_mdi_note": "Same-config paired discordance across 3 run-pair(s) — the floor a real A/B change must EXCEED, per stratum, never pooled: TP→miss flips max 0, TN→FP flips max 0. A change whose discordance is at or below this is jitter, not progress."
+}

@@ -35,7 +35,15 @@ from clearway.normalizer import normalize
 from clearway.oracle import AxeCoreOracle
 from clearway.orchestrator import InMemoryOrchestratorStore, RunResult, execute, run, run_set
 from clearway.scanner import scan
-from clearway.schemas.models import EvalReport, OracleRegime, ReviewReason, ReviewStatus, Trace
+from clearway.schemas.models import (
+    Conformance,
+    DraftRow,
+    EvalReport,
+    OracleRegime,
+    ReviewReason,
+    ReviewStatus,
+    Trace,
+)
 
 PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
 FIXTURE = str(PAGES / "home.html")
@@ -56,6 +64,51 @@ def test_run_end_to_end_hits_the_exit_criterion() -> None:
     assert m.citations_total == 3
     assert m.hallucinations_total == 2
     assert m.citation_hallucination_rate == 2 / 3
+
+
+def test_run_surfaces_assembled_drafts_aligned_with_traces() -> None:
+    """`run` returns the assembled DraftRow for every non-withheld finding — the ACR/VPAT rows the
+    CLI renders — one per trace, in the same order. The `on_assembled` sink fires exactly when a
+    Trace is produced, so a finding withheld at the review gate appears in neither list (proven for
+    the withheld incomplete pages by the run_set alignment below)."""
+    result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore())
+    assert all(isinstance(d, DraftRow) for d in result.drafts)
+    assert [d.finding_id for d in result.drafts] == [t.finding_id for t in result.traces]
+    # the canned drafter marks every fixture finding does_not_support
+    assert {d.conformance for d in result.drafts} == {Conformance.DOES_NOT_SUPPORT}
+
+
+def test_run_set_drafts_exclude_withheld_findings() -> None:
+    """A fresh run_set over the m1 set withholds the two incomplete pages at the review gate. Since
+    drafts track traces 1:1, the withheld findings are absent from `drafts` too — the report never
+    ships a row it held back for review."""
+    store = InMemoryOrchestratorStore()
+    result = run_set(M1_SET, eval_set_id="m1-core@1", retrieve=canned_retrieve, draft=canned_draft, store=store)
+    assert [d.finding_id for d in result.drafts] == [t.finding_id for t in result.traces]
+
+
+def test_run_reports_progress_per_step() -> None:
+    """`run` fires on_progress as it works — a 'scan' then 'normalize' page event carrying the
+    finding count, then retrieve/draft/validate per finding — the live read a long real-LLM run
+    shows so the console isn't silent for minutes."""
+    events: list[tuple[str, int, int, str]] = []
+    run(
+        FIXTURE,
+        retrieve=canned_retrieve,
+        draft=canned_draft,
+        store=InMemoryOrchestratorStore(),
+        on_progress=lambda step, index, total, label: events.append((step, index, total, label)),
+    )
+    steps = [e[0] for e in events]
+    assert "scan" in steps
+    # normalize fires once and carries the finding count (5 = 3 violations + 2 judgment findings)
+    normalize_events = [e for e in events if e[0] == "normalize"]
+    assert len(normalize_events) == 1
+    assert normalize_events[0][2] == 5
+    # every finding is drafted; the index runs 1..5 with a stable total
+    draft_events = [e for e in events if e[0] == "draft"]
+    assert [e[1] for e in draft_events] == [1, 2, 3, 4, 5]
+    assert all(e[2] == 5 for e in draft_events)
 
 
 def test_run_produces_one_trace_per_finding_sharing_a_run() -> None:

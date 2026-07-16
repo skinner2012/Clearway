@@ -10,14 +10,116 @@ pgvector), since those subcommands construct the real embedder/store.
 from __future__ import annotations
 
 import urllib.request
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from stubs import canned_draft, canned_retrieve
 
-from clearway.cli import main
+from clearway.cli import _render_drafts, main
+from clearway.schemas.models import (
+    Citation,
+    Conformance,
+    ConformanceLevel,
+    DraftRow,
+    NeedsReview,
+    ReviewReason,
+    ReviewStatus,
+    Severity,
+)
 
 FIXTURE = str(Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages" / "home.html")
+
+
+def _draft_row(**overrides: object) -> DraftRow:
+    """A representative assembled DraftRow for the renderer tests; override any field per case."""
+    fields: dict[str, object] = {
+        "finding_id": "img-1",
+        "conformance": Conformance.DOES_NOT_SUPPORT,
+        "citations": [
+            Citation(
+                sc_id="1.1.1",
+                title="Non-text Content",
+                level=ConformanceLevel.A,
+                url="https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html",
+            )
+        ],
+        "remediation": "Add an alt attribute to the image.",
+        "severity": Severity.SERIOUS,
+        "confidence": 0.9,
+    }
+    fields.update(overrides)
+    return DraftRow(**fields)  # type: ignore[arg-type]
+
+
+def _review(reason: ReviewReason) -> NeedsReview:
+    """A minimal pending NeedsReview for the withheld-summary tests — only `reason` varies."""
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    return NeedsReview(
+        run_id="r1",
+        finding_id="f",
+        draft=_draft_row(),
+        reason=reason,
+        status=ReviewStatus.PENDING,
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def test_render_drafts_shows_an_acr_shaped_row() -> None:
+    out = _render_drafts("https://example.gov", [_draft_row()], [])
+    assert "ACR / VPAT evidence -- https://example.gov" in out
+    assert "Does Not Support" in out  # standard VPAT wording, not the raw enum value
+    assert "does_not_support" not in out
+    assert "serious" in out
+    assert "1.1.1 Non-text Content (Level A)" in out
+    assert "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html" in out
+    assert "Add an alt attribute to the image." in out
+
+
+def test_render_drafts_omits_decorative_confidence() -> None:
+    out = _render_drafts("t", [_draft_row(confidence=0.9)], [])
+    assert "0.9" not in out
+    assert "onfidence" not in out
+
+
+def test_render_drafts_marks_a_row_with_no_citations() -> None:
+    out = _render_drafts("t", [_draft_row(citations=[])], [])
+    assert "(none cited)" in out
+
+
+def test_render_drafts_lists_every_citation() -> None:
+    rows = [
+        _draft_row(
+            citations=[
+                Citation(sc_id="1.1.1", title="Non-text Content", level=ConformanceLevel.A),
+                Citation(sc_id="2.4.4", title="Link Purpose (In Context)", level=ConformanceLevel.A),
+            ]
+        )
+    ]
+    out = _render_drafts("t", rows, [])
+    assert "1.1.1 Non-text Content (Level A)" in out
+    assert "2.4.4 Link Purpose (In Context) (Level A)" in out
+
+
+def test_render_drafts_empty_is_explicit() -> None:
+    out = _render_drafts("https://example.gov", [], [])
+    assert "No rows assembled" in out
+
+
+def test_render_drafts_summarises_withheld_by_reason() -> None:
+    withheld = [_review(ReviewReason.UNVERIFIABLE_JUDGMENT)] * 3 + [_review(ReviewReason.AXE_INCOMPLETE)] * 2
+    out = _render_drafts("t", [_draft_row()], withheld)
+    assert "5 withheld for specialist review" in out
+    assert "3 no automated oracle" in out
+    assert "2 axe could not decide" in out
+    assert "clearway review list --status pending" in out
+
+
+def test_render_drafts_empty_still_names_the_withheld_gap() -> None:
+    out = _render_drafts("t", [], [_review(ReviewReason.UNVERIFIABLE_JUDGMENT)])
+    assert "No rows assembled" in out
+    assert "1 withheld for specialist review" in out
 
 
 @pytest.fixture
@@ -81,6 +183,28 @@ def test_cli_eval_no_emit_reports_the_stratified_set(offline_spine, capsys) -> N
     assert "m1-core@1" in out
     assert "unverifiable_share=0.000" in out
     assert "emitted" not in out  # --no-emit must not touch OTel
+
+
+def test_cli_run_prints_the_acr_evidence_block(offline_spine, capsys) -> None:  # type: ignore[no-untyped-def]
+    """`clearway run <url>` prints the assembled ACR/VPAT rows, then the trust-metric summary — the
+    drafter output a reader sees, not just the aggregate metrics."""
+    code = main(["run", FIXTURE, "--no-emit"])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "ACR / VPAT evidence" in out
+    assert "Conformance" in out
+    assert "Does Not Support" in out  # the canned drafter marks every fixture finding does_not_support
+    assert "citation_hallucination_rate" in out  # metrics still print after the rows
+
+
+def test_cli_run_prints_progress_to_stderr(offline_spine, capsys) -> None:  # type: ignore[no-untyped-def]
+    """`clearway run` shows live progress — the finding count and per-step lines — on stderr, so
+    redirecting stdout to a file still captures only the report, not the progress log."""
+    assert main(["run", FIXTURE, "--no-emit"]) == 0
+    captured = capsys.readouterr()
+    assert "5 finding(s) found" in captured.err
+    assert "[1/5] draft" in captured.err
+    assert "finding(s) found" not in captured.out  # progress stays out of the report on stdout
 
 
 def test_cli_run_with_run_id_resumes_and_prints_a_notice(monkeypatch, capsys) -> None:  # type: ignore[no-untyped-def]

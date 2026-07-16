@@ -15,6 +15,8 @@ import os
 import subprocess
 import sys
 import tempfile
+import textwrap
+from collections import Counter
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -33,7 +35,7 @@ from clearway.observability import (
 )
 from clearway.orchestrator import Retrieve, run, run_set
 from clearway.orchestrator.store import OrchestratorStore
-from clearway.schemas.models import DraftRow, EvalReport, NeedsReview, ReviewStatus
+from clearway.schemas.models import Citation, Conformance, DraftRow, EvalReport, NeedsReview, ReviewStatus
 
 _FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -52,6 +54,88 @@ def _print_metrics(report: EvalReport) -> None:
         f"unverifiable_share={m.unverifiable_share:.3f} "
         f"({m.citations_unverifiable_total}/{m.citations_total})"
     )
+
+
+# --- ACR/VPAT evidence rendering ---------------------------------------------
+# ARCHITECTURE §2: "Findings -> ACR/VPAT-shaped output with correct citations, severity,
+# remediation." `run` assembles one DraftRow per non-withheld finding; this renders them as the
+# plain-text rows a specialist reads. `confidence` is deliberately omitted — the field is
+# decorative (see its schema note) — and each row is drafted evidence, never a final decision:
+# Clearway does not render the conformance verdict, the specialist does.
+
+_ROW_LABEL_W = 11  # widest label ("Conformance" / "Remediation"), so the value columns align
+_VALUE_COL = 2 + _ROW_LABEL_W + 3  # "  " + label + " : "
+_VALUE_INDENT = " " * _VALUE_COL
+_RULE_W = 72
+_WRAP_W = _RULE_W - _VALUE_COL
+
+
+def _fmt_conformance(conformance: Conformance) -> str:
+    """The Conformance enum in standard VPAT/ACR wording: `does_not_support` -> 'Does Not Support'."""
+    return conformance.value.replace("_", " ").title()
+
+
+def _fmt_citation(citation: Citation) -> list[str]:
+    """One cited SC as one or two lines: 'id Title (Level X)', then its URL underneath if present."""
+    level = f" (Level {citation.level.value})" if citation.level is not None else ""
+    head = " ".join(part for part in (citation.sc_id, citation.title) if part) + level
+    return [head, citation.url] if citation.url else [head]
+
+
+def _labelled(label: str, value: str) -> str:
+    return f"  {label:<{_ROW_LABEL_W}} : {value}"
+
+
+_REASON_LABEL = {
+    "unverifiable_judgment": "no automated oracle",
+    "axe_incomplete": "axe could not decide",
+    "low_confidence": "low confidence",
+}
+
+
+def _withheld_line(withheld: list[NeedsReview]) -> str | None:
+    """One ASCII line summarising what the review gate held back from the evidence, by reason — so a
+    run that ships few rows explains the gap (a real page withholds most findings into the queue)
+    instead of looking empty. None when nothing was withheld."""
+    if not withheld:
+        return None
+    counts = Counter(r.reason.value for r in withheld)
+    parts = ", ".join(f"{n} {_REASON_LABEL.get(reason, reason)}" for reason, n in counts.most_common())
+    return f"{len(withheld)} withheld for specialist review ({parts}) -- see: clearway review list --status pending"
+
+
+def _render_drafts(target: str, drafts: list[DraftRow], withheld: list[NeedsReview]) -> str:
+    """Render the assembled DraftRows as one plain-text ACR/VPAT evidence block — pure ASCII, no
+    colour or box-drawing, so it survives a copy-paste into an article. Returns the whole block; the
+    caller prints it."""
+    rule = "=" * _RULE_W
+    out: list[str] = [rule, f"ACR / VPAT evidence -- {target}", rule, ""]
+    withheld_line = _withheld_line(withheld)
+    if not drafts:
+        out.append("No rows assembled for evidence -- the page produced no findings that reached drafting,")
+        out.append("or every finding was withheld for specialist review.")
+        if withheld_line is not None:
+            out.append(withheld_line)
+        return "\n".join(out)
+    out.append(f"{len(drafts)} finding(s) drafted for evidence -- not a final conformance decision.")
+    if withheld_line is not None:
+        out.append(withheld_line)
+    out.append("")
+    for i, row in enumerate(drafts, start=1):
+        out.append(f"[{i}] {row.finding_id}")
+        out.append(_labelled("Conformance", _fmt_conformance(row.conformance)))
+        out.append(_labelled("Severity", row.severity.value if row.severity is not None else "unspecified"))
+        if row.citations:
+            cited = [line for citation in row.citations for line in _fmt_citation(citation)]
+            out.append(_labelled("WCAG", cited[0]))
+            out.extend(_VALUE_INDENT + line for line in cited[1:])
+        else:
+            out.append(_labelled("WCAG", "(none cited)"))
+        wrapped = textwrap.wrap(row.remediation.strip(), width=_WRAP_W) or ["(none provided)"]
+        out.append(_labelled("Remediation", wrapped[0]))
+        out.extend(_VALUE_INDENT + line for line in wrapped[1:])
+        out.append("")
+    return "\n".join(out).rstrip()
 
 
 @contextmanager
@@ -80,6 +164,19 @@ def _print_resume_notice(run_id: str, done_count: int, total_count: int, next_fi
     35-50s each."""
     where = f"continuing from {next_finding_id}" if next_finding_id is not None else "nothing left to do"
     print(f"resuming run {run_id}: {done_count}/{total_count} findings already complete, {where}")
+
+
+def _print_progress(step: str, index: int, total: int, label: str) -> None:
+    """`execute()`'s `on_progress` hook, wired to a stderr print so a long real-LLM run (drafting is
+    ~35-50s per finding) shows where it is. Goes to stderr, so redirecting stdout to a file still
+    captures only the report. Flushed, so each line appears live rather than at the end."""
+    if step == "scan":
+        line = f"scanning {label} ..."
+    elif step == "normalize":
+        line = f"{total} finding(s) found"
+    else:  # retrieve / draft / validate, per finding
+        line = f"  [{index}/{total}] {step} {label}"
+    print(line, file=sys.stderr, flush=True)
 
 
 # --- HITL review queue (T3) --------------------------------------------------
@@ -294,12 +391,18 @@ def _retrieve_seam(args: argparse.Namespace) -> Retrieve | None:
 
 def _run_cmd(args: argparse.Namespace) -> int:
     with _telemetry(args.emit):
-        report = run(
-            args.target, retrieve=_retrieve_seam(args), run_id=args.run_id, on_resume=_print_resume_notice
-        ).report
+        result = run(
+            args.target,
+            retrieve=_retrieve_seam(args),
+            run_id=args.run_id,
+            on_resume=_print_resume_notice,
+            on_progress=_print_progress,
+        )
         if args.emit:
-            record_eval_report(report)
-    _print_metrics(report)
+            record_eval_report(result.report)
+    print(_render_drafts(args.target, result.drafts, result.withheld))
+    print()
+    _print_metrics(result.report)
     if args.emit:
         print("emitted → OTel (the Grafana panel will update)")
     return 0
@@ -318,6 +421,7 @@ def _eval_cmd(args: argparse.Namespace) -> int:
             retrieve=_retrieve_seam(args),
             run_id=args.run_id,
             on_resume=_print_resume_notice,
+            on_progress=_print_progress,
         ).report
         if args.emit:
             record_eval_report(report)

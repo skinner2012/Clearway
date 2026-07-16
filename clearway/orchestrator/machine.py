@@ -63,6 +63,15 @@ Retrieve = Callable[[Finding], list[Citation]]
 Draft = Callable[[Finding, list[Citation]], "DraftRow | DraftResult"]
 # Called once, only when resuming: (run_id, done_count, total_count, next_finding_id | None).
 OnResume = Callable[[str, int, int, Optional[str]], None]
+# Called with each finding's final assembled DraftRow (post-HITL-gate) just before its Trace is
+# built — the row the run actually ships. Never fires for a finding that failed a step or was
+# withheld at the review gate, so a collector sees exactly the assembled set. Default None = a pure
+# side-channel with zero effect on the pipeline; `run()` uses it to surface drafts for display.
+AssembledSink = Callable[[DraftRow], None]
+# Called as each finding enters a pipeline step: (step, index, total, label) — e.g.
+# ("draft", 3, 8, "color-contrast"). A live progress read for long real-LLM runs (drafting is
+# ~35-50s per finding). Pure side-channel, default None; the CLI wires it to a stderr print.
+OnProgress = Callable[[str, int, int, str], None]
 
 
 def execute(
@@ -79,6 +88,8 @@ def execute(
     max_attempts: int = 3,
     backoff_seconds: float = 1.0,
     on_resume: Optional[OnResume] = None,
+    on_assembled: Optional[AssembledSink] = None,
+    on_progress: Optional[OnProgress] = None,
 ) -> list[Trace]:
     """Drive every finding through retrieve -> draft -> validate, checkpointing each step to
     `store`. A step already checkpointed DONE for this `run_id` is replayed from its cached
@@ -107,7 +118,8 @@ def execute(
         store.save_run(RunState(run_id=run_id, config_id=config_id, status=RunStatus.RUNNING, created_at=created_at))
 
         traces: list[Trace] = []
-        for finding in findings:
+        total = len(findings)
+        for index, finding in enumerate(findings, start=1):
             trace_row = _process_finding(
                 finding,
                 store=store,
@@ -121,6 +133,10 @@ def execute(
                 max_attempts=max_attempts,
                 backoff_seconds=backoff_seconds,
                 created_at=created_at,
+                on_assembled=on_assembled,
+                index=index,
+                total=total,
+                on_progress=on_progress,
             )
             if trace_row is not None:
                 traces.append(trace_row)
@@ -143,6 +159,10 @@ def _process_finding(
     max_attempts: int,
     backoff_seconds: float,
     created_at: datetime,
+    on_assembled: Optional[AssembledSink] = None,
+    index: int = 0,
+    total: int = 0,
+    on_progress: Optional[OnProgress] = None,
 ) -> Trace | None:
     """Drive one finding through retrieve -> draft -> validate under a `clearway.finding` span,
     returning its `Trace` — or None if any step failed (that finding is skipped; the run continues).
@@ -152,6 +172,11 @@ def _process_finding(
         span.set_attribute("clearway.finding_id", finding.id)
         span.set_attribute("clearway.model", model)
 
+        def _progress(step: str) -> None:
+            if on_progress is not None:
+                on_progress(step, index, total, finding.rule_id)
+
+        _progress("retrieve")
         citations = _step(
             store,
             existing,
@@ -179,6 +204,7 @@ def _process_finding(
                 return out.row
             return out  # bare DraftRow: an offline stub with no LLM call, so no usage
 
+        _progress("draft")
         draft_row = _step(
             store,
             existing,
@@ -197,6 +223,7 @@ def _process_finding(
         if usage is not None:  # a real LLM call happened (not a replay or a bare-row stub)
             record_llm_call(model=model, usage=usage)
 
+        _progress("validate")
         checks = _step(
             store,
             existing,
@@ -233,6 +260,8 @@ def _process_finding(
                 return None  # still pending / rejected — withheld from the report
             draft_row, checks = gated  # approved (original) or edited row flows into assembly
 
+        if on_assembled is not None:
+            on_assembled(draft_row)  # the row this finding actually ships, post-gate
         return Trace(
             run_id=run_id,
             finding_id=finding.id,

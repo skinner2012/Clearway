@@ -5,6 +5,45 @@ retrieve → draft → validate (`ARCHITECTURE.md` §4.6). Not Temporal, not Lan
 mini-harness over the same primitives, built to understand them and be able to say why those
 frameworks exist.
 
+> **Want to run or demo the pipeline?** The top-level [README](../../README.md#running-the-pipeline)
+> is the single source for that — setup, the scan → review → resume walkthrough, and every command.
+> This document is the **internals**: how the durable control loop works and why.
+
+## Control flow
+
+```mermaid
+flowchart TB
+    S["scan + normalize"]
+    subgraph PF["per finding"]
+        direction LR
+        RET["retrieve"] --> DRA["draft"] --> VAL["validate"]
+    end
+    GATE{"flag for review?"}
+    ASM["assemble"]
+    REP["EvalReport persisted<br/>+ assembled rows returned"]
+    Q[("NeedsReview queue<br/>withheld from report")]:::queue
+    REV["clearway review<br/>approve · edit · reject"]:::human
+    RES["resume: re-run the SAME target with --run-id"]
+    GATE2{"gate re-reads status"}
+
+    S --> RET
+    VAL --> GATE
+    GATE -->|no| ASM --> REP
+    GATE -->|yes| Q
+    Q -.-> REV
+    REV -.-> RES
+    RES --> GATE2
+    GATE2 -->|approved / edited| ASM
+    GATE2 -->|rejected / pending| Q
+    classDef queue fill:#f0f0f0,stroke:#888,color:#333;
+    classDef human fill:#eef2ff,stroke:#88a,color:#333;
+```
+
+*Every step between `scan` and `assemble` is checkpointed, so a resume replays completed steps from
+their cached result instead of recomputing them (see [Durable primitives](#durable-primitives)). The
+dashed edges are the human-in-the-loop interrupt: a flagged finding waits in the queue until a
+`clearway review` action resolves it and a resume flows it back through the gate.*
+
 ## Layout
 
 - [`store.py`](store.py) — the `OrchestratorStore` seam: dumb persistence only. `PgOrchestratorStore`
@@ -33,13 +72,16 @@ nothing outside this module reads it directly.
 
 ## Resuming a run
 
-```
-uv run clearway run <page> --run-id <existing-id>
-uv run clearway eval --run-id <existing-id>
-```
+Resume is `run` / `eval` with an existing `--run-id` (the runnable step is in the
+[README](../../README.md#running-the-pipeline)). Before proceeding, `execute()` prints
+`resuming run <id>: N/M findings already complete, continuing from <finding_id>` — surfaced up
+front, not just in a final summary.
 
-Prints a notice — `resuming run <id>: N/M findings already complete, continuing from <finding_id>`
-— before the run proceeds, not just in a final summary.
+Resume relies on the caller re-supplying the **same target** — `RunState` carries no `targets`
+field, so it lines findings back up by their deterministic `Finding.id` hash. That is why `run` and
+`eval` are *not* interchangeable on resume: `run <page-or-url>` re-scans *your* page, while `eval`
+always re-scans the built-in `m1-core@1` fixture set regardless of `--run-id`. A live-URL run must
+resume with `run <url> --run-id …`, never `eval`.
 
 ## Run history (persisted reports)
 
@@ -76,29 +118,20 @@ On flag, a `NeedsReview(status=pending)` record (`CONTRACTS.md` §3) is persiste
 withheld from the report** — the rest of the run continues. Because the record is durable, the queue
 survives an orchestrator restart between flag and resolution.
 
-A human resolves the queue from a **separate entrypoint**, `clearway review`:
-
-```
-uv run clearway review list [--status pending]        # the queue
-uv run clearway review show <finding-id>              # draft + reason + context
-uv run clearway review approve <finding-id>           # keep the draft as-is
-uv run clearway review edit <finding-id>              # opens the DraftRow JSON in $EDITOR (re-validated on save)
-uv run clearway review edit <finding-id> --remediation "…"   # quick single-field edit, no editor
-uv run clearway review reject <finding-id>            # keep it out of the output
-```
-
-`review` commands mutate the record and print the exact resume command; they do **not** re-scan
-themselves (resume needs the target re-supplied — `RunState` carries no `targets`). Resolving a
-review then flowing it into the output is two steps:
-
-```
-uv run clearway review approve <finding-id>
-uv run clearway eval --run-id <existing-id>           # resume: the approved/edited row now assembles
-```
+A human works the queue through the separate `clearway review` entrypoint — `list` / `show` /
+`approve` / `edit` / `reject`. The runnable commands and the review → resume walkthrough live in the
+[README](../../README.md#running-the-pipeline); mechanically, these commands mutate the durable
+`NeedsReview` record and print the exact resume command, but they do **not** re-scan — resume
+re-supplies the target (see [Resuming a run](#resuming-a-run)).
 
 On resume the gate reads the `NeedsReview` status back: `approved` assembles the original draft,
 `edited` re-validates the human's `edited_draft` and assembles that, `pending` / `rejected` stay
 withheld.
+
+> **Do not `edit` then `approve`.** `edit` sets the status to `edited`, which the resume gate honors;
+> `approve` sets it to `approved`, which assembles the **original** draft and silently discards your
+> edit — even though `review show` still displays the edit as attached. To make an edit stick, use
+> `edit` alone; use `approve` only for a draft you are keeping unchanged.
 
 An `edited` review is also the raw material for the **`expert_edit_distance`** metric
 (`eval/edit_distance.py`): a normalized `[0, 1]` `difflib` ratio over how far the human moved the

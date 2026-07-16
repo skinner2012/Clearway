@@ -45,26 +45,71 @@ docker compose down     # stop it
 
 ## Running the pipeline
 
-The pipeline runs the real forward path — scan (Playwright + axe-core) → normalize → **retrieve** (real embedder + pgvector) → **draft** (real LLM via Ollama) → validate → eval — and reports the stratified trust metrics: the overall `citation_hallucination_rate`, the verifiable-subset rate, and the honest `unverifiable_share`. There is no offline/stub mode from the CLI (stubs are test-only), so each command hits the services it needs; `--no-emit` only skips the OTel push, not the model calls.
+This section is the **single source for running and demoing Clearway** end to end. The pipeline runs the real forward path — scan (Playwright + axe-core) → normalize → **retrieve** (real embedder + pgvector) → **draft** (real LLM via Ollama) → validate → **assemble** — and prints, per finding, an **ACR/VPAT-shaped row** (conformance · severity · WCAG citation · remediation), then the stratified trust metrics (`citation_hallucination_rate`, the verifiable-subset rate, and the honest `unverifiable_share`). There is no offline/stub mode from the CLI (stubs are test-only), so each command hits the services it needs; `--no-emit` only skips the OTel push, not the model calls.
 
-First, ingest the WCAG corpus once so the retriever has something to search. This needs the Ollama **embedding** model + **pgvector** (started by `docker compose up -d`) — but *not* the chat model:
+> **Before you start:** `uv sync` and `docker compose up -d` (above), with the Ollama models pulled. A live run drafts with a real LLM at **~35–50s per finding**, so begin with the bundled fixture page — it exercises the entire path in seconds-to-minutes, not hours.
+
+### 1 · Ingest the WCAG corpus (once)
+
+The retriever searches this corpus. Needs the Ollama **embedding** model + **pgvector** — but *not* the chat model.
 
 ```bash
-uv run clearway corpus-ingest                                    # fetch WCAG 2.2 → chunk + embed → upsert into pgvector
+uv run clearway corpus-ingest                                    # fetch WCAG 2.2 → chunk + embed → pgvector
 uv run clearway corpus-query "images need a text alternative"    # sanity-check retrieval
 ```
 
-Then run the forward path — over one page, or the whole eval set. This needs the **full stack**: the Ollama **chat** *and* **embedding** models, **pgvector**, and a headless browser to scan:
+### 2 · Scan a page and read the evidence
+
+Point it at a bundled fixture (fast) or any live URL. It prints the ACR/VPAT rows to **stdout**, with live progress (which finding, which step) on **stderr**. `--run-id` names the run so you can resume it in step 4.
 
 ```bash
-uv run clearway run clearway/fixtures/pages/home.html   # one page
-uv run clearway eval                                     # the m1-core@1 fixture set (3 pages, 5 findings)
-
-# --no-emit computes + prints only; without it, the metrics push to OTel and the Grafana panel moves:
-uv run clearway eval --no-emit
+uv run clearway run clearway/fixtures/pages/home.html --run-id demo-1     # bundled fixture (fast)
+uv run clearway run https://some-public-site.example/page --run-id demo-1 # any live page (single page; no crawl)
 ```
 
-Emitted metrics land on the **Clearway — Trust Dashboard** at <http://localhost:3000> — see [`stack/grafana/README.md`](stack/grafana/README.md) for how to read its panels.
+The output — one block per shipped finding, then the trust summary (values below are illustrative of the *shape*; the remediation prose and the rates are produced live):
+
+```text
+[2] <finding-id>
+  Conformance : Does Not Support
+  Severity    : critical
+  WCAG        : 1.1.1 Non-text Content (Level A)
+  Remediation : <the drafter's one-line fix>
+...
+m0-core@1  run demo-1  findings=N citations=N hallucinations=N
+  citation_hallucination_rate=…  verifiable=…  unverifiable_share=… (n/n)
+```
+
+### 3 · See what was held back for a human
+
+Not every finding ships: axe-`incomplete` and no-oracle *judgment* items are **withheld into a review queue** instead of sent out unvetted — so the printed rows can be fewer than the findings scanned, and that gap is the queue.
+
+```bash
+uv run clearway review list --status pending
+uv run clearway review show <finding-id>        # the flagged draft + why it was held
+```
+
+### 4 · Resolve an item and finish the report
+
+Approve / edit / reject, then **resume the same command** (same target + `--run-id`) so the approved rows assemble into the report.
+
+```bash
+uv run clearway review approve <finding-id>
+uv run clearway run clearway/fixtures/pages/home.html --run-id demo-1   # resume: the approved row now assembles
+```
+
+> Two gotchas: resume with the **same target you first ran**, not `eval` (which always re-scans the fixture set); and to make an *edit* stick use `edit` **alone** — `edit` then `approve` ships the original draft. Both, plus how the durable interrupt/checkpointing works, are in [`clearway/orchestrator/README.md`](clearway/orchestrator/README.md).
+
+### 5 · Watch the metrics move (optional)
+
+Drop `--no-emit` and the run pushes to OTel; the **Clearway — Trust Dashboard** at <http://localhost:3000> updates — operational panels (LLM latency, tokens) during the run, the trust metric at the end. See [`stack/grafana/README.md`](stack/grafana/README.md) for how to read the panels.
+
+```bash
+uv run clearway run clearway/fixtures/pages/home.html    # no --no-emit → emits to OTel
+uv run clearway eval                                     # or the whole m1-core@1 set (3 pages, 5 findings)
+```
+
+How the queue, checkpointing, and resume work under the hood — the **durable control loop** — is documented in [`clearway/orchestrator/README.md`](clearway/orchestrator/README.md).
 
 ## Retrieval as an MCP service
 

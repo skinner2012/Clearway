@@ -1,5 +1,9 @@
 # Clearway fixtures — eval corpus
 
+> **Looking to run or demo the pipeline over these pages?** The walkthrough (every command, end to
+> end) is in the top-level [README](../../README.md#running-the-pipeline). This document describes
+> the fixture **corpus itself** — what each page plants and why.
+
 A **fixed, versioned** set of HTML pages with **deliberately planted** accessibility signals. This is the ground truth the scanner (T2/T4), oracle (T6), and eval (T8) are measured against. Random/live pages are never used for eval (ARCHITECTURE §4.2) — reproducibility requires a frozen corpus.
 
 Two eval sets, one machine-readable manifest each:

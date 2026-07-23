@@ -10,7 +10,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from clearway.eval.drafter_kappa import ClassKappa, ClassKappaCI, class_kappa_cis, class_kappas
+from clearway.eval.drafter_kappa import (
+    CEILING_PREREGISTRATION,
+    ClassCeiling,
+    ClassKappa,
+    ClassKappaCI,
+    class_ceilings,
+    class_kappa_cis,
+    class_kappas,
+)
 
 _RUNS = Path(__file__).resolve().parent.parent / "benchmark" / "runs"
 
@@ -132,3 +140,52 @@ def test_ci_point_kappa_matches_the_class_kappa() -> None:
     point = {c.axe_rule: round(c.kappa, 6) for c in class_kappas(_artifact())}
     with_ci = {c.axe_rule: round(c.kappa, 6) for c in class_kappa_cis(_artifact())}
     assert point == with_ci
+
+
+def _ceil_by_axe(name: str = "run_1.json", *, partial_flags: bool = True) -> dict[str, ClassCeiling]:
+    return {c.axe_rule: c for c in class_ceilings(_artifact(name), partial_flags=partial_flags)}
+
+
+def test_ceiling_rows_reproduce_the_pre_registered_table() -> None:
+    ceil = _ceil_by_axe()
+    assert (ceil["link-name"].errors, ceil["link-name"].p_value) == (9, 0.5**9)  # 0.0020
+    assert (ceil["label"].errors, ceil["label"].p_value) == (5, 0.5**5)  # 0.0312
+    assert (ceil["document-title"].errors, ceil["document-title"].p_value) == (3, 0.5**3)  # 0.1250
+    assert (ceil["empty-heading"].errors, ceil["empty-heading"].p_value) == (2, 0.5**2)  # 0.2500
+
+
+def test_certifiability_verdicts() -> None:
+    ceil = _ceil_by_axe()
+    assert ceil["link-name"].certifiable is True
+    assert ceil["label"].certifiable is True
+    assert ceil["document-title"].certifiable is False  # 0.125 > alpha at ANY fix quality — a size limit
+    assert ceil["empty-heading"].certifiable is False  # the control
+
+
+def test_ceiling_error_split_matches_class_kappa() -> None:
+    kap = {c.axe_rule: c for c in class_kappas(_artifact())}
+    for c in class_ceilings(_artifact()):
+        k = kap[c.axe_rule]
+        assert (c.fp, c.fn, c.errors) == (k.fp, k.fn, k.fp + k.fn)
+
+
+def test_alpha_is_pre_registered_on_every_row() -> None:
+    assert all(c.alpha == 0.05 for c in class_ceilings(_artifact()))
+
+
+def test_pre_registration_prose_states_the_limits() -> None:
+    text = CEILING_PREREGISTRATION.lower()
+    assert "one-sided" in text
+    assert "gold set" in text
+    assert "noise floor" in text
+
+
+def test_partial_flags_false_shifts_only_the_link_ceiling() -> None:
+    true_ = _ceil_by_axe()
+    false_ = _ceil_by_axe(partial_flags=False)
+    # link's two partially_supports cry-wolves vanish → errors 9→7, still certifiable; no verdict flips
+    assert false_["link-name"].errors == 7
+    assert false_["link-name"].certifiable is True
+    for axe in ("document-title", "empty-heading", "label"):
+        assert false_[axe].errors == true_[axe].errors
+        assert false_[axe].certifiable == true_[axe].certifiable

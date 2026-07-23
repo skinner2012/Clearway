@@ -28,6 +28,12 @@ recorded so they reproduce bit-for-bit. Two honesty guards ship with every inter
 degenerate-resample share (resamples where a stream came out constant, so κ was undefined and returned
 0.0 by convention), and a constant-classifier flag on any ZERO-WIDTH interval — document-title's
 `[0.0, 0.0]` is no variance because no signal, and must never read as precision.
+
+**The ceiling** (`class_ceilings`) is what a class could prove even under a PERFECT future fix:
+p = 0.5^errors, the one-sided exact sign-test p if a fix corrected every current error and introduced
+none. Its direction and α are pre-registered before any M7 result exists (`CEILING_PREREGISTRATION`), so
+they cannot be chosen after the fact. A class that cannot clear α at any fix quality is limited by the
+gold set's SIZE — the per-class analogue of M5's run-to-run noise floor, not a verdict on the drafter.
 """
 
 from __future__ import annotations
@@ -44,6 +50,23 @@ from clearway.eval.offline import _drafted_cases
 # cannot reproduce is not a measurement. Case-level, 10k resamples.
 _BOOTSTRAP_SEED = 0
 _RESAMPLES = 10_000
+
+# PRE-REGISTERED, here in code, before any M7 result exists: the ceiling test is ONE-SIDED (M7's
+# hypothesis is directional — a fix should improve, not merely change) at α = 0.05. Fixing the direction
+# and the level now — the same discipline as the pre-committed KAPPA_THRESHOLD — is what separates the
+# ceiling from choosing a test after seeing the result.
+_ALPHA = 0.05
+
+CEILING_PREREGISTRATION = (
+    "Pre-registered before any M7 result exists: the detectable-improvement test is ONE-SIDED (M7's "
+    "hypothesis is directional — a fix should improve, not merely change) at alpha = 0.05, and "
+    "p = 0.5^errors is the MOST GENEROUS outcome available — a hypothetical fix that corrects every "
+    "current error (FP + miss) and introduces none. Fixing the direction and alpha here, before any "
+    "fixed run, is what separates this from p-hacking. A class marked NOT certifiable is limited by the "
+    "GOLD SET'S SIZE, never by the drafter or any future fix: at n this small even a perfect fix cannot "
+    "clear alpha. This is the per-class analogue of M5's run-to-run noise floor — one yardstick: you "
+    "cannot detect an improvement the class lacks the statistical room to show."
+)
 
 
 @dataclass(frozen=True)
@@ -93,6 +116,25 @@ class ClassKappaCI:
     seed: int
     constant_classifier: bool
     partial_flags: bool
+
+
+@dataclass(frozen=True)
+class ClassCeiling:
+    """The most generous detectable improvement for a class: if a future fix corrected EVERY current
+    error (`errors` = FP + miss) and introduced none, the one-sided exact sign-test p-value it could
+    reach — p = 0.5^errors (every discordant pair improving). `certifiable` = p <= the pre-registered
+    `alpha`. A NOT-certifiable class is limited by the GOLD SET'S SIZE, never by the drafter or any future
+    fix: at n this small even a perfect fix cannot clear alpha. See `CEILING_PREREGISTRATION` for the
+    standing pre-registration and the lineage to M5's noise floor."""
+
+    axe_rule: str
+    n: int
+    errors: int
+    fp: int
+    fn: int
+    p_value: float
+    alpha: float
+    certifiable: bool
 
 
 def _rule_to_axe(artifact: dict[str, Any]) -> dict[str, str]:
@@ -215,3 +257,31 @@ def class_kappa_cis(
             )
         )
     return results
+
+
+def class_ceilings(
+    artifact: dict[str, Any], *, partial_flags: bool = True, alpha: float = _ALPHA
+) -> list[ClassCeiling]:
+    """Per-class detectable-improvement ceiling, sorted by `axe_rule`. Pure — deterministic arithmetic on
+    the frozen artifact's error counts, no model. For each class, `errors` = current FP + miss; `p_value`
+    = 0.5^errors is the one-sided exact sign-test p a fix correcting all of them (and introducing none)
+    could reach — the most generous outcome. `certifiable` = p_value <= `alpha`. The one-sided direction
+    and alpha are PRE-REGISTERED (`CEILING_PREREGISTRATION`), before any M7 result exists; 'not
+    certifiable' is a property of the gold set's size, not of the drafter or any fix."""
+    ceilings: list[ClassCeiling] = []
+    for c in class_kappas(artifact, partial_flags=partial_flags):
+        errors = c.fp + c.fn
+        p_value = 0.5**errors
+        ceilings.append(
+            ClassCeiling(
+                axe_rule=c.axe_rule,
+                n=c.n,
+                errors=errors,
+                fp=c.fp,
+                fn=c.fn,
+                p_value=p_value,
+                alpha=alpha,
+                certifiable=p_value <= alpha,
+            )
+        )
+    return ceilings

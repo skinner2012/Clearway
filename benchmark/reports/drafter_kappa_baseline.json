@@ -1,0 +1,119 @@
+{
+  "classes": [
+    {
+      "axe_rule": "document-title",
+      "rule_names": [
+        "HTML page title is descriptive"
+      ],
+      "n": 5,
+      "failed": 2,
+      "passed": 3,
+      "tp": 2,
+      "fp": 3,
+      "fn": 0,
+      "tn": 0,
+      "raw_agreement": 0.4,
+      "kappa": 0.0,
+      "kappa_partial_false": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "degenerate_share": 1.0,
+      "constant_classifier": true,
+      "errors": 3,
+      "errors_partial_false": 3,
+      "p_value": 0.125,
+      "certifiable": false
+    },
+    {
+      "axe_rule": "empty-heading",
+      "rule_names": [
+        "Heading is descriptive"
+      ],
+      "n": 13,
+      "failed": 5,
+      "passed": 8,
+      "tp": 4,
+      "fp": 1,
+      "fn": 1,
+      "tn": 7,
+      "raw_agreement": 0.8461538461538461,
+      "kappa": 0.6749999999999999,
+      "kappa_partial_false": 0.6749999999999999,
+      "ci_low": 0.15584415584415592,
+      "ci_high": 1.0,
+      "degenerate_share": 0.0029,
+      "constant_classifier": false,
+      "errors": 2,
+      "errors_partial_false": 2,
+      "p_value": 0.25,
+      "certifiable": false
+    },
+    {
+      "axe_rule": "label",
+      "rule_names": [
+        "Form field label is descriptive"
+      ],
+      "n": 11,
+      "failed": 5,
+      "passed": 6,
+      "tp": 4,
+      "fp": 4,
+      "fn": 1,
+      "tn": 2,
+      "raw_agreement": 0.5454545454545454,
+      "kappa": 0.12698412698412698,
+      "kappa_partial_false": 0.12698412698412698,
+      "ci_low": -0.375,
+      "ci_high": 0.6333333333333335,
+      "degenerate_share": 0.0303,
+      "constant_classifier": false,
+      "errors": 5,
+      "errors_partial_false": 5,
+      "p_value": 0.03125,
+      "certifiable": true
+    },
+    {
+      "axe_rule": "link-name",
+      "rule_names": [
+        "Link in context is descriptive",
+        "Link is descriptive"
+      ],
+      "n": 24,
+      "failed": 11,
+      "passed": 13,
+      "tp": 7,
+      "fp": 5,
+      "fn": 4,
+      "tn": 8,
+      "raw_agreement": 0.625,
+      "kappa": 0.25,
+      "kappa_partial_false": 0.40845070422535223,
+      "ci_low": -0.15862068965517226,
+      "ci_high": 0.6000000000000001,
+      "degenerate_share": 0.0,
+      "constant_classifier": false,
+      "errors": 9,
+      "errors_partial_false": 7,
+      "p_value": 0.001953125,
+      "certifiable": true
+    }
+  ],
+  "headline_partial_flags": true,
+  "alpha": 0.05,
+  "preregistration": "Pre-registered before any M7 result exists: the detectable-improvement test is ONE-SIDED (M7's hypothesis is directional — a fix should improve, not merely change) at alpha = 0.05, and p = 0.5^errors is the MOST GENEROUS outcome available — a hypothetical fix that corrects every current error (FP + miss) and introduces none. Fixing the direction and alpha here, before any fixed run, is what separates this from p-hacking. A class marked NOT certifiable is limited by the GOLD SET'S SIZE, never by the drafter or any future fix: at n this small even a perfect fix cannot clear alpha. This is the per-class analogue of M5's run-to-run noise floor — one yardstick: you cannot detect an improvement the class lacks the statistical room to show.",
+  "bootstrap_seed": 0,
+  "bootstrap_resamples": 10000,
+  "run_ids": [
+    "acceptance-2026-07-15T01:55:47.047521+00:00",
+    "acceptance-2026-07-15T04:16:36.867992+00:00",
+    "acceptance-2026-07-15T06:03:41.204807+00:00"
+  ],
+  "config_id": "m1-single@1",
+  "eval_set_id": "act-acceptance@1",
+  "corpus_version": "wcag22-nomic-embed-text-768@1",
+  "drafter_model": "gemma4:31b",
+  "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+  "axe_core_version": "4.12.1",
+  "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "created_at": "2026-07-15T01:55:47.047521Z"
+}

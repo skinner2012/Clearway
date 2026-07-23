@@ -1001,3 +1001,82 @@ class VerdictVector(BaseModel):
         ..., description="the source run's timestamp (read from the artifact, never generated)"
     )
     rationale: str = Field(..., description="why this artifact exists — a κ scalar cannot be paired against")
+
+
+class DrafterKappaClass(BaseModel):
+    """One fix-unit class's row in the frozen drafter-κ baseline. The 2×2 (`tp/fp/fn/tn`), `raw_agreement`,
+    `kappa`, the bootstrap interval and the ceiling are all the HEADLINE reading (`partial_flags=True`,
+    the convention every other rate uses); `kappa_partial_false` + `errors_partial_false` carry the
+    second reading, so the "robust to the partially_supports reading" claim is checkable from the
+    artifact. `raw_agreement` rides beside `kappa` because κ can be low at high agreement when one class
+    dominates — the constant-classifier tell. `constant_classifier` marks a ZERO-WIDTH interval (no
+    variance because no signal — never precision); `degenerate_share` is the fraction of resamples with a
+    single-valued stream (κ undefined → 0.0), disclosed because unreported it drags the lower bound down.
+    `certifiable` = `p_value <= alpha`; NOT certifiable is a property of the gold set's SIZE, not the
+    drafter or any future fix."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    axe_rule: str = Field(..., description="the fix-unit class (axe rule); the two link rules pool as 'link-name'")
+    rule_names: list[str] = Field(..., description="the ACT rule(s) this class pools")
+    n: int = Field(..., ge=0, description="ACT cases in the class, honest-misses included")
+    failed: int = Field(..., ge=0, description="cases whose ACT gold outcome is failed (gold FLAG)")
+    passed: int = Field(..., ge=0, description="cases whose ACT gold outcome is not failed (gold CLEAN)")
+    tp: int = Field(..., ge=0, description="drafter FLAG ∧ gold FLAG (headline reading)")
+    fp: int = Field(..., ge=0, description="drafter FLAG ∧ gold CLEAN — a cry-wolf (headline reading)")
+    fn: int = Field(..., ge=0, description="drafter CLEAN ∧ gold FLAG — a miss (headline reading)")
+    tn: int = Field(..., ge=0, description="drafter CLEAN ∧ gold CLEAN (headline reading)")
+    raw_agreement: float = Field(..., ge=0.0, le=1.0, description="raw drafter-vs-gold agreement (headline reading)")
+    kappa: float = Field(..., ge=-1.0, le=1.0, description="Cohen's κ, headline reading (partial_flags=True)")
+    kappa_partial_false: float = Field(
+        ..., ge=-1.0, le=1.0, description="Cohen's κ under partial_flags=False — the second reading"
+    )
+    ci_low: float = Field(..., ge=-1.0, le=1.0, description="2.5th-percentile bootstrap bound (headline reading)")
+    ci_high: float = Field(..., ge=-1.0, le=1.0, description="97.5th-percentile bootstrap bound (headline reading)")
+    degenerate_share: float = Field(
+        ..., ge=0.0, le=1.0, description="fraction of resamples with a single-valued stream (κ undefined → 0.0)"
+    )
+    constant_classifier: bool = Field(
+        ..., description="True iff the interval is zero-width — no variance because no signal, never precision"
+    )
+    errors: int = Field(..., ge=0, description="fp + fn (headline reading) — current discordant cases")
+    errors_partial_false: int = Field(
+        ..., ge=0, description="fp + fn under partial_flags=False — for the robustness claim"
+    )
+    p_value: float = Field(
+        ..., ge=0.0, le=1.0, description="0.5^errors — the one-sided exact sign-test p a perfect fix could reach"
+    )
+    certifiable: bool = Field(..., description="p_value <= alpha — whether the class has room to prove an improvement")
+
+
+class DrafterKappaBaseline(BaseModel):
+    """The frozen per-class drafter-κ baseline — the reference every future drafter claim is measured
+    against, and the diagnostic that separates *judging* from *stamping* per fix-unit class. Each row is
+    scored against ACT gold (never the judge), per ACT case, honest-misses carried in. It carries the
+    drafter-side provenance (model DIGEST, axe/corpus versions, ACT export hash) so it is reproducible,
+    and the pre-registered ceiling test (`preregistration`, `alpha`) so the detectable-improvement limit
+    travels with the numbers. The bootstrap `seed`/`resamples` are recorded so every interval reproduces
+    bit-for-bit. Its authority rests on honest method — external gold, deterministic replay, degeneracy
+    disclosed, ceilings stated — not on narrow intervals."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    classes: list[DrafterKappaClass] = Field(..., description="one row per fix-unit class, sorted by axe_rule")
+    headline_partial_flags: bool = Field(
+        ..., description="the partially_supports reading the 2×2/CI/ceiling use; both κ readings are on each row"
+    )
+    alpha: float = Field(..., gt=0.0, lt=1.0, description="the PRE-REGISTERED one-sided significance level")
+    preregistration: str = Field(..., description="the standing pre-registration of the ceiling test — direction + α")
+    bootstrap_seed: int = Field(..., description="the pinned bootstrap seed — bounds reproduce exactly")
+    bootstrap_resamples: int = Field(..., ge=1, description="the bootstrap resample count")
+    run_ids: list[str] = Field(..., description="the run(s) this baseline was frozen from")
+    config_id: str = Field(..., description="pinned pipeline config")
+    eval_set_id: str = Field(..., description="the acceptance set id")
+    corpus_version: str = Field(..., description="RAG corpus version — pinned")
+    drafter_model: str = Field(..., description="drafter model tag, for readability")
+    drafter_model_digest: str = Field(..., description="drafter model IMMUTABLE digest — the freeze key")
+    axe_core_version: str = Field(..., description="pinned axe-core version")
+    act_export_hash: str = Field(..., description="content hash of the vendored ACT export — the gold is pinned")
+    created_at: datetime = Field(
+        ..., description="the source run's timestamp (read from the artifact, never generated)"
+    )

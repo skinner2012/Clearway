@@ -853,6 +853,63 @@ class VerdictVector(BaseModel):
         ..., description="the source run's timestamp (read from the artifact, never generated)"
     )
     rationale: str = Field(..., description="why this artifact exists — a κ scalar cannot be paired against")
+
+
+class DrafterKappaClass(BaseModel):
+    """One fix-unit class's row in the frozen drafter-κ baseline. The 2×2 (`tp/fp/fn/tn`), `raw_agreement`,
+    `kappa`, the bootstrap interval and the ceiling are all the HEADLINE reading (`partial_flags=True`);
+    `kappa_partial_false` + `errors_partial_false` carry the second reading so the robustness claim is
+    checkable from the artifact. `constant_classifier` marks a ZERO-WIDTH interval (no variance because no
+    signal — never precision); `degenerate_share` is the fraction of resamples with a single-valued stream.
+    `certifiable` = `p_value <= alpha`; NOT certifiable is a property of the gold set's SIZE."""
+    model_config = ConfigDict(extra="forbid")
+
+    axe_rule: str = Field(..., description="the fix-unit class (axe rule); the two link rules pool as 'link-name'")
+    rule_names: list[str] = Field(..., description="the ACT rule(s) this class pools")
+    n: int = Field(..., ge=0, description="ACT cases in the class, honest-misses included")
+    failed: int = Field(..., ge=0, description="cases whose ACT gold outcome is failed (gold FLAG)")
+    passed: int = Field(..., ge=0, description="cases whose ACT gold outcome is not failed (gold CLEAN)")
+    tp: int = Field(..., ge=0, description="drafter FLAG ∧ gold FLAG (headline reading)")
+    fp: int = Field(..., ge=0, description="drafter FLAG ∧ gold CLEAN — a cry-wolf (headline reading)")
+    fn: int = Field(..., ge=0, description="drafter CLEAN ∧ gold FLAG — a miss (headline reading)")
+    tn: int = Field(..., ge=0, description="drafter CLEAN ∧ gold CLEAN (headline reading)")
+    raw_agreement: float = Field(..., ge=0.0, le=1.0, description="raw drafter-vs-gold agreement (headline reading)")
+    kappa: float = Field(..., ge=-1.0, le=1.0, description="Cohen's κ, headline reading (partial_flags=True)")
+    kappa_partial_false: float = Field(..., ge=-1.0, le=1.0, description="Cohen's κ under partial_flags=False — second reading")
+    ci_low: float = Field(..., ge=-1.0, le=1.0, description="2.5th-percentile bootstrap bound (headline reading)")
+    ci_high: float = Field(..., ge=-1.0, le=1.0, description="97.5th-percentile bootstrap bound (headline reading)")
+    degenerate_share: float = Field(..., ge=0.0, le=1.0, description="fraction of resamples with a single-valued stream")
+    constant_classifier: bool = Field(..., description="True iff the interval is zero-width — no signal, never precision")
+    errors: int = Field(..., ge=0, description="fp + fn (headline reading) — current discordant cases")
+    errors_partial_false: int = Field(..., ge=0, description="fp + fn under partial_flags=False — for the robustness claim")
+    p_value: float = Field(..., ge=0.0, le=1.0, description="0.5^errors — the one-sided sign-test p a perfect fix could reach")
+    certifiable: bool = Field(..., description="p_value <= alpha — whether the class has room to prove an improvement")
+
+
+class DrafterKappaBaseline(BaseModel):
+    """The frozen per-class drafter-κ baseline — the reference every future drafter claim is measured
+    against, and the diagnostic that separates *judging* from *stamping* per fix-unit class. Each row is
+    scored against ACT gold (never the judge), per ACT case, honest-misses carried in. Carries drafter-side
+    provenance (model DIGEST, axe/corpus versions, ACT export hash) so it is reproducible, the pre-registered
+    ceiling test (`preregistration`, `alpha`), and the bootstrap `seed`/`resamples` so every interval
+    reproduces bit-for-bit."""
+    model_config = ConfigDict(extra="forbid")
+
+    classes: list[DrafterKappaClass] = Field(..., description="one row per fix-unit class, sorted by axe_rule")
+    headline_partial_flags: bool = Field(..., description="the reading the 2×2/CI/ceiling use; both κ readings are on each row")
+    alpha: float = Field(..., gt=0.0, lt=1.0, description="the PRE-REGISTERED one-sided significance level")
+    preregistration: str = Field(..., description="the standing pre-registration of the ceiling test — direction + α")
+    bootstrap_seed: int = Field(..., description="the pinned bootstrap seed — bounds reproduce exactly")
+    bootstrap_resamples: int = Field(..., ge=1, description="the bootstrap resample count")
+    run_ids: list[str] = Field(..., description="the run(s) this baseline was frozen from")
+    config_id: str = Field(..., description="pinned pipeline config")
+    eval_set_id: str = Field(..., description="the acceptance set id")
+    corpus_version: str = Field(..., description="RAG corpus version — pinned")
+    drafter_model: str = Field(..., description="drafter model tag, for readability")
+    drafter_model_digest: str = Field(..., description="drafter model IMMUTABLE digest — the freeze key")
+    axe_core_version: str = Field(..., description="pinned axe-core version")
+    act_export_hash: str = Field(..., description="content hash of the vendored ACT export — the gold is pinned")
+    created_at: datetime = Field(..., description="the source run's timestamp (read from the artifact, never generated)")
 ```
 
 ---
@@ -883,6 +940,7 @@ Added when their milestone arrives, not before:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-07-23 | 0.21 | Added `DrafterKappaBaseline` (the frozen per-class **drafter**-κ baseline — the reference every future drafter claim is measured against; drafter-only by design, the judge enters no number) nesting `DrafterKappaClass` (per fix-unit class: 2×2, raw agreement, κ under **both** `partial_flags` readings, seeded bootstrap CI + degenerate share + constant-classifier flag, and the pre-registered ceiling — `errors`/`p_value`/`certifiable`). Carries the drafter-side provenance (config / eval-set / corpus versions, drafter model **digest**, axe-core version, ACT export hash, run ids, source timestamp), the pre-registration string, α, and the bootstrap seed/resamples so every number reproduces bit-for-bit. Assembled by the pure `eval/drafter_kappa_baseline.py::build_drafter_kappa_baseline` from the frozen run artifact — no model, scored against ACT gold only. Additive — no existing shape changed; §5 unaffected. |
 | 2026-07-23 | 0.20 | Removed the `low_confidence` HITL trigger and its `ReviewReason.LOW_CONFIDENCE` member. The `draft.confidence < 0.5` branch is deleted from `orchestrator/machine.py`, reducing gate precedence to `AXE_INCOMPLETE > UNVERIFIABLE_JUDGMENT`. It gated on noise (confidence is decorative — pinned ~0.9 regardless of correctness) and never fired, so no stored `NeedsReview` record can carry the value (grep of every `*.json`/`*.jsonl` is clean) — the enum member is dropped outright, not deprecated. No drafter behaviour changes, no metric moves, and review-queue composition is unchanged. §5 unaffected. |
 | 2026-07-23 | 0.19 | Internal Evaluation metric scaffold on `OnlineEvalMetrics` — schema-only, additive, no builder wiring. Added the composite (report ⊕ queue) hallucination fields (`citation_hallucination_rate_composite`, `hallucinations_queued_total`, `citations_queued_total`) that close the gap where a gated hallucination falls out of the shipped-only `citation_hallucination_rate`; the queue side is structurally absent until M9 routes findings to the review queue. Added the reflection (drafter self-revision) counters (`reflection_iterations_total`, `reflection_caught_repaired_total`), inert until a reflection loop exists. All five are Optional-with-default `None` so they read as "not yet produced", never a measured zero, and existing persisted reports still load under `extra="forbid"`. Fixed `expected_calibration_error` / `overconfidence_gap` as internal calibration receipts only — never a VPAT/ACR column (confidence is decorative; settled). No behavioural change and no currently-reported number moves; §5 unaffected. |
 | 2026-07-23 | 0.18 | Added `VerdictVector` (the frozen per-case drafter verdict vector — M7's paired-comparison baseline, keyed by `act_testcase_id`) nesting `CaseVerdict` (per ACT case: drafter FLAG/CLEAN, gold FLAG/CLEAN, the underlying conformances, the axe_rule class). Carries the offline report's drafter-side provenance (config / eval-set / corpus versions, drafter model **digest**, axe-core version, ACT export hash, run ids, source timestamp) so the vector is reproducible. A κ scalar cannot be paired against, so this vector is what makes M7's most sensitive test exist. Additive — no existing shape changed; §5 unaffected. |

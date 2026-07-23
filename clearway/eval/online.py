@@ -1,6 +1,6 @@
 """Eval aggregation — fold per-finding `CitationCheck`s into the trust metrics.
 
-M1 wraps a stratified set of trust metrics in a reproducible `EvalReport` (ARCHITECTURE §4.5):
+M1 wraps a stratified set of trust metrics in a reproducible `OnlineEvalReport` (ARCHITECTURE §4.5):
 the overall `citation_hallucination_rate` plus its split by oracle-verifiability — the verifiable
 rate (~0 by construction) and the `unverifiable_share` (the honest headline). The checks are read
 from each `Trace.checks` (the authoritative per-finding record), not a side list.
@@ -18,16 +18,16 @@ from datetime import datetime
 from clearway.eval.edit_distance import mean_expert_edit_distance
 from clearway.schemas.models import (
     CitationVerdict,
-    EvalMetrics,
-    EvalReport,
     NeedsReview,
+    OnlineEvalMetrics,
+    OnlineEvalReport,
     OracleRegime,
     Trace,
 )
 
 
-def compute_metrics(traces: list[Trace], reviews: list[NeedsReview] | None = None) -> EvalMetrics:
-    """Count citations and hallucinations across all traces → `EvalMetrics`.
+def compute_metrics(traces: list[Trace], reviews: list[NeedsReview] | None = None) -> OnlineEvalMetrics:
+    """Count citations and hallucinations across all traces → `OnlineEvalMetrics`.
 
     The M1 stratification splits citations by whether an automated oracle could verify them:
     UNVERIFIABLE (no oracle verdict) vs verifiable (VERIFIED | HALLUCINATED). `hallucinations_total`
@@ -42,7 +42,7 @@ def compute_metrics(traces: list[Trace], reviews: list[NeedsReview] | None = Non
     hallucinations_total = sum(1 for c in checks if c.verdict is CitationVerdict.HALLUCINATED)
     unverifiable_total = sum(1 for c in checks if c.verdict is CitationVerdict.UNVERIFIABLE)
     verifiable_total = citations_total - unverifiable_total
-    return EvalMetrics(
+    return OnlineEvalMetrics(
         citation_hallucination_rate=hallucinations_total / citations_total if citations_total else 0.0,
         findings_total=len(traces),
         citations_total=citations_total,
@@ -63,8 +63,8 @@ def evaluate(
     oracle_version: str,
     created_at: datetime,
     reviews: list[NeedsReview] | None = None,
-) -> EvalReport:
-    """Aggregate one run's traces into an `EvalReport`.
+) -> OnlineEvalReport:
+    """Aggregate one run's traces into an `OnlineEvalReport`.
 
     `run_id` / `config_id` are read off the traces (all traces in a run share them;
     a mismatch means the traces are from different runs, which is an error). `reviews` are this
@@ -81,7 +81,7 @@ def evaluate(
     if len(config_ids) != 1:
         raise ValueError(f"traces span multiple configs: {sorted(config_ids)}")
 
-    return EvalReport(
+    return OnlineEvalReport(
         run_id=run_ids.pop(),
         config_id=config_ids.pop(),
         eval_set_id=eval_set_id,

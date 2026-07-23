@@ -22,7 +22,7 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 
-from clearway.schemas.models import BenchmarkReport, CalibrationReport, EvalMetrics, EvalReport
+from clearway.schemas.models import CalibrationReport, OfflineEvalReport, OnlineEvalMetrics, OnlineEvalReport
 
 _DEFAULT_ENDPOINT = "http://localhost:4318"
 _METRIC_NAME = "citation_hallucination_rate"
@@ -32,9 +32,9 @@ _METRIC_EXPERT_EDIT_DISTANCE = "expert_edit_distance"
 
 # M4 calibration series. Names are BARE (no `clearway_` prefix, no unit) to match the existing gauges
 # above — a unit would make the Prometheus exporter suffix `..._ratio`, and a prefix would diverge from
-# the dashboard's other queries. The scalars mirror the `EvalMetrics` judge/calibration fields; the
+# the dashboard's other queries. The scalars mirror the `OnlineEvalMetrics` judge/calibration fields; the
 # curve is emitted per-bin as a labelled series so its data lives once (on `CalibrationReport`) and is
-# never copied onto `EvalMetrics`. All are point-in-time milestone gauges, pushed by an explicit
+# never copied onto `OnlineEvalMetrics`. All are point-in-time milestone gauges, pushed by an explicit
 # calibration emit, not by a per-run forward path.
 _CAL_SCALAR_METRICS: dict[str, str] = {
     "judge_kappa": "Judge-vs-human Cohen's κ (the trust gate; [-1,1], negative = worse than chance).",
@@ -54,7 +54,7 @@ _CAL_CURVE_METRICS: dict[str, str] = {
 # point-in-time milestone gauges pushed by an explicit snapshot emit — the frozen scorecard is an
 # artifact, not a per-run series, so a gauge holds the last freeze. The headline rates ship their Wilson
 # bounds and n as sibling series so a panel shows the interval, never a bare point. Names mirror the
-# `AcceptanceScorecard` fields; `benchmark_gauge_values` is the single source of what each one holds.
+# `OfflineEvalScorecard` fields; `benchmark_gauge_values` is the single source of what each one holds.
 _BENCH_METRICS: dict[str, str] = {
     # Subject #1 — drafter, scored deterministically against ACT gold (never via the judge).
     "benchmark_drafter_recall": "Drafter recall on ACT failed cases — does it find the real problem (primary axis).",
@@ -146,8 +146,8 @@ def record_rate(rate: float, *, eval_set_id: str, config_id: str, oracle_regime:
     )
 
 
-def record_eval_report(report: EvalReport) -> None:
-    """Emit the trust metrics from a computed `EvalReport`: the overall hallucination rate plus its
+def record_eval_report(report: OnlineEvalReport) -> None:
+    """Emit the trust metrics from a computed `OnlineEvalReport`: the overall hallucination rate plus its
     oracle-verifiability stratification (verifiable rate + unverifiable share), and the M2 HITL
     `expert_edit_distance` (run-mean human-edit distance). All share the same low-cardinality label
     set, so they move together on one panel per (eval_set, config)."""
@@ -172,14 +172,16 @@ def record_eval_report(report: EvalReport) -> None:
     _expert_edit_distance_gauge.set(m.expert_edit_distance, labels)
 
 
-def record_calibration(metrics: EvalMetrics, report: CalibrationReport, *, judge_model: str, gold_version: str) -> None:
-    """Push the M4 calibration snapshot: the judge/calibration SCALARS off `EvalMetrics`, and the
+def record_calibration(
+    metrics: OnlineEvalMetrics, report: CalibrationReport, *, judge_model: str, gold_version: str
+) -> None:
+    """Push the M4 calibration snapshot: the judge/calibration SCALARS off `OnlineEvalMetrics`, and the
     confidence curve as a per-bin labelled series off `CalibrationReport.confidence_bins`.
 
     A milestone-triggered, point-in-time emit — the calibration is a milestone artifact, not a per-run
     metric, so its gauges hold the last snapshot rather than a per-run series. Labels are the pinned
     provenance (`judge_model`, `gold_version`): both are constants, so cardinality stays at one series
-    per metric. The scalars are Optional on `EvalMetrics` but a calibration carrier always sets them —
+    per metric. The scalars are Optional on `OnlineEvalMetrics` but a calibration carrier always sets them —
     a missing one means the snapshot was mis-assembled, so we fail loudly rather than push a silent 0.
     """
     if not _cal_gauges:
@@ -205,7 +207,7 @@ def record_calibration(metrics: EvalMetrics, report: CalibrationReport, *, judge
         _cal_gauges["confidence_bin_n"].set(b.n, bin_labels)
 
 
-def benchmark_gauge_values(report: BenchmarkReport) -> dict[str, float]:
+def benchmark_gauge_values(report: OfflineEvalReport) -> dict[str, float]:
     """The frozen scorecard → {gauge_name: value}: the single, pure source of what each benchmark gauge
     holds. Kept off the OTLP path so it can be tested against a frozen artifact with no collector, and
     so `record_benchmark` cannot silently skip a declared metric (the keys must equal `_BENCH_METRICS`).
@@ -239,7 +241,7 @@ def benchmark_gauge_values(report: BenchmarkReport) -> dict[str, float]:
     }
 
 
-def record_benchmark(report: BenchmarkReport) -> None:
+def record_benchmark(report: OfflineEvalReport) -> None:
     """Push the frozen benchmark scorecard: the drafter's ACT-gold rates (with their Wilson bounds + n),
     the judge's two error rates and injected-detection upper bounds, and the noise floor. A point-in-time
     milestone emit like `record_calibration` — the frozen baseline is an artifact, not a per-run series,

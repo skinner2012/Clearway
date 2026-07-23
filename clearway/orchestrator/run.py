@@ -4,7 +4,7 @@ report.
 `run()` / `run_set()` are thin wrappers: scan → normalize, then hand the findings to the durable
 state machine (`orchestrator/machine.py`'s `execute()`) for the checkpointed, resumable
 retrieve → draft → validate pass (ARCHITECTURE §4.6), then aggregate the resulting traces into an
-`EvalReport`. They are deliberately **pure** — no OTel emission here; the CLI owns that side effect
+`OnlineEvalReport`. They are deliberately **pure** — no OTel emission here; the CLI owns that side effect
 (so the whole pipeline is testable offline, without the stack running).
 
 The scan keeps its own minimal retry (the headless-browser step is the only external/flaky part
@@ -24,7 +24,7 @@ from clearway.oracle import AxeCoreOracle
 from clearway.orchestrator.machine import AssembledSink, Draft, OnProgress, OnResume, Retrieve, execute
 from clearway.orchestrator.store import OrchestratorStore
 from clearway.scanner import scan
-from clearway.schemas.models import DraftRow, EvalReport, NeedsReview, Oracle, ReviewStatus, ScanResult, Trace
+from clearway.schemas.models import DraftRow, NeedsReview, OnlineEvalReport, Oracle, ReviewStatus, ScanResult, Trace
 
 # Frozen run identity for M1. config_id/eval_set_id are METRIC LABELS, so they are stable and
 # low-cardinality by design (the T9 discipline); run_id is per-invocation and is NOT a label (it
@@ -43,7 +43,7 @@ class RunResult:
     non-withheld finding, in trace order). `drafts` excludes findings withheld at the review gate;
     `withheld` is those held-back records (pending/rejected) so the caller can report the gap."""
 
-    report: EvalReport
+    report: OnlineEvalReport
     traces: list[Trace]
     drafts: list[DraftRow] = field(default_factory=list)
     withheld: list[NeedsReview] = field(default_factory=list)
@@ -202,7 +202,7 @@ def run_set(
     """Run the forward path over every page in an eval set and aggregate ONE report.
 
     This is the M1 exit-criterion runner: all pages score under a single `run_id`, so their traces
-    fold into one `EvalReport` labelled with the caller's `eval_set_id` (e.g. `m1-core@1`). The two
+    fold into one `OnlineEvalReport` labelled with the caller's `eval_set_id` (e.g. `m1-core@1`). The two
     incomplete-bucket fixtures contribute the UNVERIFIABLE citations that make `unverifiable_share`
     non-trivial — the honest headline the single-page `run` can't show on the verifiable-only home
     page. The real retriever/drafter/store are built once and reused across every page (not per

@@ -4,7 +4,7 @@ payload. Illustrative (n=2), never a headline rate — asserted here so the note
 
 from __future__ import annotations
 
-from clearway.eval.benchmark_tier_b import NoisyFocalResult, tier_b_smoke
+from clearway.eval.offline_tier_b import NoisyFocalResult, tier_b_smoke
 
 
 def _clean_survives() -> list[NoisyFocalResult]:

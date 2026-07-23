@@ -22,7 +22,7 @@ import statistics
 from math import sqrt
 from typing import Any
 
-from clearway.eval.benchmark import build_report
+from clearway.eval.offline import build_report
 from clearway.eval.stats import is_flag
 from clearway.schemas.models import Conformance, NoiseFloor
 

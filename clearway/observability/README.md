@@ -10,7 +10,7 @@ so an offline / `--no-emit` run (and the whole test suite) needs no collector.
 
 ## Layout
 
-- [`metrics.py`](metrics.py) — the **quality** trust gauges, set from a finished `EvalReport`:
+- [`metrics.py`](metrics.py) — the **quality** trust gauges, set from a finished `OnlineEvalReport`:
   `citation_hallucination_rate`, `citation_hallucination_rate_verifiable`, `unverifiable_share`,
   `expert_edit_distance` (M2 HITL human-correction signal).
   Low-cardinality labels only (no `run_id`), so one series *moves* across runs. Owns the

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from clearway.eval.benchmark_inject import (
+from clearway.eval.offline_inject import (
     conformance_flip,
     decoy_sc,
     flip_conformance,

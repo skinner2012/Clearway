@@ -1,5 +1,5 @@
 """The calibration snapshot: prove the two frozen artifacts assemble into the κ report + confidence
-curve, and that the `EvalMetrics` projection carries every calibration scalar (and nothing else).
+curve, and that the `OnlineEvalMetrics` projection carries every calibration scalar (and nothing else).
 
 Skips until both artifacts exist — they are built offline by the calibration_build / confidence_build
 modules; once committed this runs on every suite, guarding the numbers the dashboard gauges read.
@@ -52,7 +52,7 @@ def test_assemble_reproduces_the_frozen_trust_gate_and_curve() -> None:
 
 
 def test_report_owns_the_curve_the_metrics_never_copy_it() -> None:
-    """The curve lives on the report; the EvalMetrics projection has no field to copy it into."""
+    """The curve lives on the report; the OnlineEvalMetrics projection has no field to copy it into."""
     report, curve = assemble(created_at=_AT, calibration=_cal(), confidence=_conf())
     assert report.confidence_bins  # the curve's only home
     assert not hasattr(calibration_metrics(report, curve), "confidence_bins")

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from clearway.eval.benchmark_freeze import freeze_report
+from clearway.eval.offline_freeze import freeze_report
 from clearway.schemas.models import NoiseFloor
 
 

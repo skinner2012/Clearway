@@ -38,7 +38,7 @@ from clearway.scanner import scan
 from clearway.schemas.models import (
     Conformance,
     DraftRow,
-    EvalReport,
+    OnlineEvalReport,
     OracleRegime,
     ReviewReason,
     ReviewStatus,
@@ -54,7 +54,7 @@ M1_SET = [str(PAGES / p) for p in ("home.html", "contrast-gradient.html", "video
 def test_run_end_to_end_hits_the_exit_criterion() -> None:
     result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=InMemoryOrchestratorStore())
     assert isinstance(result, RunResult)
-    assert isinstance(result.report, EvalReport)
+    assert isinstance(result.report, OnlineEvalReport)
 
     m = result.report.metrics
     # 3 planted violations + 2 whitelist judgment findings (document-title, empty-heading) = 5.
@@ -138,11 +138,11 @@ def test_run_is_idempotent_on_finding_ids_and_rate() -> None:
     assert a.report.run_id != b.report.run_id
 
 
-# --- T5: the completed run persists its EvalReport (accuracy-over-time history) ---
+# --- T5: the completed run persists its OnlineEvalReport (accuracy-over-time history) ---
 
 
 def test_run_persists_its_report_to_the_store() -> None:
-    """A completed run writes exactly one `EvalReport` row, keyed by its run_id and equal to the
+    """A completed run writes exactly one `OnlineEvalReport` row, keyed by its run_id and equal to the
     report it returns — the data-production half of the T6 accuracy-over-time trend."""
     store = InMemoryOrchestratorStore()
     result = run(FIXTURE, retrieve=canned_retrieve, draft=canned_draft, store=store)

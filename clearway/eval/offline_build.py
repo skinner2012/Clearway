@@ -1,8 +1,8 @@
-"""Run the held-out acceptance set through the full pipeline ONCE and freeze it to a `BenchmarkReport`.
+"""Run the held-out acceptance set through the full pipeline ONCE and freeze it to a `OfflineEvalReport`.
 
 Live: real drafter (gemma), real RAG retrieval, real judge (the cloud reference model) over every
 vendored ACT case, then two checked-in JSON files — the raw run artifact (drafts + judge booleans +
-provenance) and the scored report the pure `benchmark.build_report` derives from it. The artifact is
+provenance) and the scored report the pure `offline.build_report` derives from it. The artifact is
 the reproducibility freeze: the non-deterministic models are called here once, and every number is
 re-derivable network-free, exactly like the κ set. The runner reads the VENDORED gold, never the live
 ACT endpoint.
@@ -12,7 +12,7 @@ as a subject, never as the ruler. Freeze is by content hash: the model DIGESTS (
 tag), the axe-core version, the corpus version, and the pinned ACT export hash all ride on the report.
 
 Not run by the test suite (needs Ollama + the cloud key + pgvector). Invoke explicitly:
-`uv run python -m clearway.eval.benchmark_build`. The pure assembly it calls is covered by tests.
+`uv run python -m clearway.eval.offline_build`. The pure assembly it calls is covered by tests.
 """
 
 from __future__ import annotations
@@ -26,11 +26,11 @@ from typing import Any
 
 from clearway.drafter import Drafter, is_fallback_draft
 from clearway.eval.act_gold import _ACT_GOLD, _EXPORT_SHA256, _MANIFEST, _minting_findings
-from clearway.eval.benchmark import build_report
-from clearway.eval.benchmark_inject import RATIONALE_NOTE, conformance_flip, sc_swap
-from clearway.eval.benchmark_tier_b import NoisyFocalResult, tier_b_smoke
 from clearway.eval.noisy_pages import _MANIFEST as _NOISY_MANIFEST
 from clearway.eval.noisy_pages import _NOISY, _page_findings
+from clearway.eval.offline import build_report
+from clearway.eval.offline_inject import RATIONALE_NOTE, conformance_flip, sc_swap
+from clearway.eval.offline_tier_b import NoisyFocalResult, tier_b_smoke
 from clearway.eval.stats import is_flag
 from clearway.judge import Judge
 from clearway.llm import CloudLLMClient, LocalLLMClient

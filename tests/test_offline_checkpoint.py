@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from clearway.drafter import Drafter
-from clearway.eval.benchmark_build import _done_case_ids, _draft_checked, _read_partial, _write_partial
+from clearway.eval.offline_build import _done_case_ids, _draft_checked, _read_partial, _write_partial
 from clearway.llm import FakeLLMClient
 from clearway.schemas.models import Finding
 

@@ -11,17 +11,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from clearway.schemas.models import BenchmarkReport
+from clearway.schemas.models import OfflineEvalReport
 
 _SCORECARD = Path(__file__).resolve().parents[2] / "benchmark" / "reports" / "scorecard.json"
 
 
-def load_report(path: Path = _SCORECARD) -> BenchmarkReport:
-    """The frozen scorecard artifact → a validated `BenchmarkReport` (the baseline, noise floor and all)."""
-    return BenchmarkReport.model_validate(json.loads(path.read_text()))
+def load_report(path: Path = _SCORECARD) -> OfflineEvalReport:
+    """The frozen scorecard artifact → a validated `OfflineEvalReport` (the baseline, noise floor and all)."""
+    return OfflineEvalReport.model_validate(json.loads(path.read_text()))
 
 
-def _print_summary(report: BenchmarkReport) -> None:
+def _print_summary(report: OfflineEvalReport) -> None:
     sc = report.scorecard
     d, j = sc.drafter, sc.judge
     recall, fp = d.recall, d.false_positive_rate

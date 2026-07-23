@@ -146,7 +146,7 @@ def _abstained_n(cases: list[DraftedCase]) -> int:
 @dataclass(frozen=True)
 class DrafterScoring:
     """The drafter's `DrafterScore` (the schema payload) plus the sensitivity/method prose the schema
-    has nowhere to put — the report folds `sensitivity_notes` into `AcceptanceScorecard.notes`."""
+    has nowhere to put — the report folds `sensitivity_notes` into `OfflineEvalScorecard.notes`."""
 
     score: DrafterScore
     sensitivity_notes: str

@@ -427,7 +427,7 @@ class NeedsReview(BaseModel):
 # Eval output  (eval/)
 # ============================================================
 
-class EvalMetrics(BaseModel):
+class OnlineEvalMetrics(BaseModel):
     """Trust metrics for one eval run. The hallucination rate is stratified by whether an
     automated oracle could verify the citation: the verifiable subset (axe-detectable, ~0 by
     construction) vs the unverifiable share (judgment items with no oracle — the honest
@@ -484,7 +484,7 @@ class EvalMetrics(BaseModel):
     )
 
 
-class EvalReport(BaseModel):
+class OnlineEvalReport(BaseModel):
     """Output of eval/ for one run over a fixed eval set."""
     model_config = ConfigDict(extra="forbid")
 
@@ -494,7 +494,7 @@ class EvalReport(BaseModel):
     oracle_regime: OracleRegime = Field(..., description="which oracle regime this run used")
     oracle_version: str
     created_at: datetime
-    metrics: EvalMetrics
+    metrics: OnlineEvalMetrics
     trace_ids: list[str] = Field(default_factory=list, description="per-finding traces this report aggregates")
 
 
@@ -588,7 +588,7 @@ class JudgeResult(BaseModel):
 class ConfidenceBin(BaseModel):
     """One bin of the confidence-vs-correctness calibration curve. `n` and `correct_n` are
     MANDATORY — a bin with n=1 otherwise makes the curve lie. This typed list (on
-    `CalibrationReport`) is the curve's only home; it is never copied onto `EvalMetrics`."""
+    `CalibrationReport`) is the curve's only home; it is never copied onto `OnlineEvalMetrics`."""
     model_config = ConfigDict(extra="forbid")
 
     lower: float = Field(..., ge=0.0, le=1.0, description="bin lower edge (drafter confidence)")
@@ -737,7 +737,7 @@ class NotMeasuredItem(BaseModel):
     why: str = Field(..., description="why it is out of scope for this benchmark")
 
 
-class AcceptanceScorecard(BaseModel):
+class OfflineEvalScorecard(BaseModel):
     """The metrics payload of a benchmark run: the drafter's ACT-gold score (subject #1), the
     judge's confusion against ACT gold (subject #2), the noise floor, the Tier B smoke test, and a
     structured not-measured list. Every rate carries n + a Wilson CI except the two figures
@@ -757,18 +757,18 @@ class AcceptanceScorecard(BaseModel):
     notes: str = Field("", description="methodology / sensitivity notes (e.g. partially_supports scored the other way; NA handling)")
 
 
-class BenchmarkReport(BaseModel):
+class OfflineEvalReport(BaseModel):
     """The frozen, reproducible top-level benchmark artifact — the regression baseline for every
     later iteration. Freeze is by CONTENT HASH, not by a name: it pins the drafter / judge model
     DIGESTS (immutable hashes, not the mutable Ollama tags), the axe-core version, the corpus
-    version, and the vendored ACT export hash. The nested `AcceptanceScorecard` holds the numbers;
+    version, and the vendored ACT export hash. The nested `OfflineEvalScorecard` holds the numbers;
     this shell holds the provenance that makes them reproducible."""
     model_config = ConfigDict(extra="forbid")
 
     run_ids: list[str] = Field(..., description="run(s) this report aggregates — one for a single run, 3–5 for the frozen noise-floor artifact")
     config_id: str = Field(..., description="pinned pipeline config")
     eval_set_id: str = Field(..., description="the acceptance set id — DISTINCT from the dev fixtures, never overlapping")
-    corpus_version: str = Field(..., description="RAG corpus version (lives on CorpusChunk, not EvalReport) — pinned")
+    corpus_version: str = Field(..., description="RAG corpus version (lives on CorpusChunk, not OnlineEvalReport) — pinned")
     drafter_model: str = Field(..., description="drafter model tag, for readability")
     drafter_model_digest: str = Field(..., description="drafter model IMMUTABLE digest — the freeze key, not the mutable tag")
     judge_model: str = Field(..., description="judge model tag, for readability")
@@ -777,7 +777,7 @@ class BenchmarkReport(BaseModel):
     axe_core_version: str = Field(..., description="pinned axe-core version — the coverage gate for every Finding")
     act_export_hash: str = Field(..., description="content hash of the vendored ACT export — the gold is pinned, never fetched live")
     created_at: datetime
-    scorecard: AcceptanceScorecard
+    scorecard: OfflineEvalScorecard
 ```
 
 ---
@@ -808,6 +808,7 @@ Added when their milestone arrives, not before:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-07-23 | 0.17 | Vocabulary rename only — no field, bound, default, or wire change. The per-run eval types are now `OnlineEvalReport` (was `EvalReport`) and `OnlineEvalMetrics` (was `EvalMetrics`); the held-out acceptance types are `OfflineEvalReport` (was `BenchmarkReport`) nesting `OfflineEvalScorecard` (was `AcceptanceScorecard`). The `eval/` modules were renamed to match (`report`→`online`, `benchmark*`→`offline*`). JSON / DB payloads unchanged; §5 unaffected. |
 | 2026-07-15 | 0.16 | Pre-release honesty pass: health-warned `DraftRow.confidence` — the description now states the field is **decorative** (do not gate/route/triage on it), citing the held-out over-confidence gap +0.329 and its pinned ~0.85–1.0 range. Description only, no shape change; §5 unaffected. Pairs with dropping the "confidence-scored" product claim from README/ARCHITECTURE. |
 | 2026-07-14 | 0.15 | Quality-review whitelist grew from four rules to six: added `empty-heading` (SC 2.4.6 — a **new** existence-only judgment rule) and `document-title` (SC 2.4.2 — **reverses** the earlier deferral). Both were empirically confirmed against pinned axe 4.12.1 to PASS on present-but-non-descriptive content, so each mints an `AxeBucket.PASSES` judgment finding. The whitelist is global, so both mint new findings on every frozen fixture carrying a heading/title — versioned anchors moved, so the affected fixture sets were bumped (`quality-gold@1`→`@2`, scoped to its original three rules; the m0/m1 orchestrator counts updated). `button-name` and the alt/name variants stay deferred. No §3 schema change — this records a decision in code (`normalizer/quality_review.py`), not a shape. |
 | 2026-07-14 | 0.14 | Acceptance-benchmark schemas (T0). Added `BenchmarkReport` (frozen, reproducible top-level artifact — pins config/corpus versions, drafter+judge model **digests**, axe-core version, and the vendored ACT export hash; freeze by content hash, not name) nesting `AcceptanceScorecard`, which composes `DrafterScore` (subject #1, scored vs ACT gold — FP rate on true negatives is the headline), `JudgeConfusion` (subject #2, 2×2 vs ACT gold with miss/false-alarm reported separately + injected-bad-draft detection), `NoiseFloor`, `TierBSmoke`, and `NotMeasuredItem`, plus the reusable `MetricCI` (value + n + asymmetric Wilson CI + clustering-aware `effective_n`) and `ExemptMetric` (the two figures that carry no CI, each with a mandatory reason). Extended `GoldLabel` with `source` (`"self"` \| `"w3c-act"`, default `"self"`) and `act_testcase_id` (Optional) — both Optional-with-default so the existing `calibration_set.json` gold still loads under `extra="forbid"`. Removed `BenchmarkReport` / `AcceptanceScorecard` from §5. Additive — existing shapes and reports unchanged. |

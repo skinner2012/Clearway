@@ -12,18 +12,15 @@ from pydantic import BaseModel, ValidationError
 from clearway import schemas
 from clearway.schemas import models
 from clearway.schemas.models import (
-    AcceptanceScorecard,
     AxeBucket,
     AxeNode,
     AxePass,
-    BenchmarkReport,
     CalibrationReport,
     ConfidenceBin,
     Conformance,
     CorpusChunk,
     DrafterScore,
     DraftRow,
-    EvalMetrics,
     EvidenceQuery,
     ExemptMetric,
     Finding,
@@ -36,6 +33,9 @@ from clearway.schemas.models import (
     NeedsReview,
     NoiseFloor,
     NotMeasuredItem,
+    OfflineEvalReport,
+    OfflineEvalScorecard,
+    OnlineEvalMetrics,
     Oracle,
     OracleRegime,
     OracleVerdict,
@@ -173,7 +173,7 @@ def test_evidence_query_is_strict() -> None:
 def test_eval_metrics_has_stratified_fields_defaulting_safely() -> None:
     """M1 stratification is additive: an M0-style construction still validates, the new
     fields default, and the verifiable/unverifiable counts partition citations_total."""
-    m0_style = EvalMetrics(
+    m0_style = OnlineEvalMetrics(
         citation_hallucination_rate=2 / 3, findings_total=3, citations_total=3, hallucinations_total=2
     )
     assert m0_style.citation_hallucination_rate_verifiable == 0.0
@@ -181,7 +181,7 @@ def test_eval_metrics_has_stratified_fields_defaulting_safely() -> None:
     assert m0_style.citations_verifiable_total == 0
     assert m0_style.citations_unverifiable_total == 0
 
-    stratified = EvalMetrics(
+    stratified = OnlineEvalMetrics(
         citation_hallucination_rate=0.0,
         citations_total=5,
         hallucinations_total=0,
@@ -195,7 +195,7 @@ def test_eval_metrics_has_stratified_fields_defaulting_safely() -> None:
 
 def test_eval_metrics_expert_edit_distance_defaults_to_zero() -> None:
     """M2 addition is additive: an M1-style construction still validates and the new field defaults."""
-    m1_style = EvalMetrics(
+    m1_style = OnlineEvalMetrics(
         citation_hallucination_rate=0.2,
         citations_total=5,
         hallucinations_total=1,
@@ -279,7 +279,7 @@ def test_judge_verdict_wire_values_are_stable() -> None:
 def test_eval_metrics_judge_scalars_default_to_none() -> None:
     """M4 additions are additive: an M3-style construction still validates and every judge/
     calibration scalar defaults to None (M0–M3 runs carry no judge)."""
-    m3_style = EvalMetrics(
+    m3_style = OnlineEvalMetrics(
         citation_hallucination_rate=0.0,
         citations_total=5,
         hallucinations_total=0,
@@ -302,12 +302,12 @@ def test_eval_metrics_judge_scalars_default_to_none() -> None:
 def test_kappa_bounds_admit_negative_values(kappa: float) -> None:
     """The κ landmine: judge_kappa spans [-1, 1], NOT [0, 1]. A negative κ (judge worse than
     chance) is the single most important red flag and must validate — not crash the run —
-    on both the report and the flat EvalMetrics scalar."""
+    on both the report and the flat OnlineEvalMetrics scalar."""
     report = CalibrationReport(
         judge_kappa=kappa, judge_agreement=0.5, n=25, kappa_threshold=0.6, judge_trusted=False, created_at=_AT
     )
     assert report.judge_kappa == kappa
-    assert EvalMetrics(citation_hallucination_rate=0.0, judge_kappa=kappa).judge_kappa == kappa
+    assert OnlineEvalMetrics(citation_hallucination_rate=0.0, judge_kappa=kappa).judge_kappa == kappa
 
 
 @pytest.mark.parametrize("kappa", [-1.0001, 1.5, 2.0])
@@ -318,16 +318,16 @@ def test_kappa_out_of_range_is_rejected(kappa: float) -> None:
             judge_kappa=kappa, judge_agreement=0.5, n=1, kappa_threshold=0.6, judge_trusted=False, created_at=_AT
         )
     with pytest.raises(ValidationError):
-        EvalMetrics(citation_hallucination_rate=0.0, judge_kappa=kappa)
+        OnlineEvalMetrics(citation_hallucination_rate=0.0, judge_kappa=kappa)
 
 
 def test_overconfidence_gap_is_signed_ece_is_unsigned() -> None:
     """overconfidence_gap is signed (positive = over-confident), bounded [-1, 1]; ECE is an
     unsigned magnitude, so a negative ECE is invalid."""
-    m = EvalMetrics(citation_hallucination_rate=0.0, overconfidence_gap=-0.3, expected_calibration_error=0.3)
+    m = OnlineEvalMetrics(citation_hallucination_rate=0.0, overconfidence_gap=-0.3, expected_calibration_error=0.3)
     assert m.overconfidence_gap == -0.3
     with pytest.raises(ValidationError):
-        EvalMetrics(citation_hallucination_rate=0.0, expected_calibration_error=-0.1)
+        OnlineEvalMetrics(citation_hallucination_rate=0.0, expected_calibration_error=-0.1)
 
 
 def test_gold_label_is_the_single_gold_shape() -> None:
@@ -461,7 +461,7 @@ def test_existing_calibration_gold_still_loads_unchanged() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Acceptance benchmark: BenchmarkReport / AcceptanceScorecard
+# Acceptance benchmark: OfflineEvalReport / OfflineEvalScorecard
 # ---------------------------------------------------------------------------
 
 
@@ -497,8 +497,8 @@ def _judge_confusion() -> JudgeConfusion:
     )
 
 
-def _benchmark_report(scorecard: AcceptanceScorecard) -> BenchmarkReport:
-    return BenchmarkReport(
+def _benchmark_report(scorecard: OfflineEvalScorecard) -> OfflineEvalReport:
+    return OfflineEvalReport(
         run_ids=["r1"],
         config_id="bench-single@1",
         eval_set_id="act-acceptance@1",
@@ -518,7 +518,7 @@ def _benchmark_report(scorecard: AcceptanceScorecard) -> BenchmarkReport:
 def test_single_run_scorecard_is_complete_without_noise_floor_or_tier_b() -> None:
     """A single run has the drafter + judge scores; the noise floor (needs 3–5 repeats) and Tier B
     (built separately) are Optional and absent, while not_measured and the collapse rule default."""
-    card = AcceptanceScorecard(drafter=_drafter_score(), judge=_judge_confusion())
+    card = OfflineEvalScorecard(drafter=_drafter_score(), judge=_judge_confusion())
     assert card.noise_floor is None
     assert card.tier_b is None
     assert card.not_measured == []
@@ -528,7 +528,7 @@ def test_single_run_scorecard_is_complete_without_noise_floor_or_tier_b() -> Non
 def test_benchmark_report_nests_the_scorecard_and_round_trips() -> None:
     """The frozen artifact nests the scorecard and survives a JSON round-trip unchanged, carrying
     the model digests + ACT export hash that make it reproducible by content, not name."""
-    card = AcceptanceScorecard(
+    card = OfflineEvalScorecard(
         drafter=_drafter_score(),
         judge=_judge_confusion(),
         noise_floor=NoiseFloor(
@@ -545,13 +545,13 @@ def test_benchmark_report_nests_the_scorecard_and_round_trips() -> None:
     report = _benchmark_report(card)
     assert report.scorecard.drafter.false_positive_rate.n == 30
     assert report.drafter_model_digest == "sha256:aaaa"
-    assert BenchmarkReport.model_validate_json(report.model_dump_json()) == report
+    assert OfflineEvalReport.model_validate_json(report.model_dump_json()) == report
 
 
 def test_benchmark_report_is_strict() -> None:
     """Every contract is strict: an unexpected field on the frozen artifact is a validation error."""
     with pytest.raises(ValidationError):
-        BenchmarkReport(
+        OfflineEvalReport(
             run_ids=["r1"],
             config_id="bench-single@1",
             eval_set_id="act-acceptance@1",
@@ -564,7 +564,7 @@ def test_benchmark_report_is_strict() -> None:
             axe_core_version="4.12.1",
             act_export_hash="sha1:cccc",
             created_at=_AT,
-            scorecard=AcceptanceScorecard(drafter=_drafter_score(), judge=_judge_confusion()),
+            scorecard=OfflineEvalScorecard(drafter=_drafter_score(), judge=_judge_confusion()),
             bogus=1,
         )
 

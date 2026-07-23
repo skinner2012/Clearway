@@ -2,7 +2,7 @@
 
 The HITL gate (orchestrator/, T3) lets a reviewer approve, edit, or reject a flagged `DraftRow`.
 An *edit* is the only human-correction signal the pipeline produces, so it is the raw material for
-`EvalMetrics.expert_edit_distance`: the mean, over a run's edited reviews, of how far the human
+`OnlineEvalMetrics.expert_edit_distance`: the mean, over a run's edited reviews, of how far the human
 moved the draft. The trend should fall over time as retrieval/drafting improve.
 
 M2 keeps this deliberately simple and stdlib-only (`difflib`) — no `rapidfuzz`, no semantic/LLM

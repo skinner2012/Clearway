@@ -1,5 +1,5 @@
 """Assemble the calibration snapshot the dashboard reads — κ (judge reliability) + the confidence
-curve — from the two frozen artifacts, and project its scalars onto `EvalMetrics`.
+curve — from the two frozen artifacts, and project its scalars onto `OnlineEvalMetrics`.
 
 This is the one place the two calibration halves meet: `calibration_set.json` (the balanced κ set,
 judge-scored) and `confidence_calibration.json` (the verifiable oracle-scored half). Both are frozen
@@ -8,7 +8,7 @@ reproducible from checked-in data, never re-derived by calling a non-determinist
 
 Two shapes come out, each with a single home for its data (the milestone's "data lives once" rule):
 - `CalibrationReport` — carries κ, the trust gate, and the confidence curve (`confidence_bins`).
-- `EvalMetrics` — carries the calibration SCALARS only (κ, ECE, over-confidence gap, judgment
+- `OnlineEvalMetrics` — carries the calibration SCALARS only (κ, ECE, over-confidence gap, judgment
   correctness); the curve is never copied here.
 
 The gauge push that puts these on the dashboard is a milestone-triggered, point-in-time emit (the
@@ -24,7 +24,7 @@ from typing import Any
 
 from clearway.eval.confidence import CalibrationCurve, build_curve, judgment_points, verifiable_points
 from clearway.eval.kappa import agreements_from_artifact, build_report
-from clearway.schemas.models import CalibrationReport, EvalMetrics
+from clearway.schemas.models import CalibrationReport, OnlineEvalMetrics
 
 _FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 _CALIBRATION = _FIXTURES / "calibration_set.json"
@@ -57,8 +57,8 @@ def assemble(
     return report, curve
 
 
-def calibration_metrics(report: CalibrationReport, curve: CalibrationCurve) -> EvalMetrics:
-    """Project the snapshot onto the `EvalMetrics` calibration SCALARS — the fields the dashboard
+def calibration_metrics(report: CalibrationReport, curve: CalibrationCurve) -> OnlineEvalMetrics:
+    """Project the snapshot onto the `OnlineEvalMetrics` calibration SCALARS — the fields the dashboard
     gauges read. The M0–M3 forward-path fields stay at their schema defaults: this is a
     calibration-only carrier, and the emit pushes ONLY these judge/calibration series (never the
     default rate fields). The confidence curve is deliberately absent — it lives on `CalibrationReport`.
@@ -66,7 +66,7 @@ def calibration_metrics(report: CalibrationReport, curve: CalibrationCurve) -> E
     `judge_gold_n` mirrors `CalibrationReport.n` (the balanced set the judge was calibrated on);
     judgment correctness ships as numerator + denominator, never a bare rate.
     """
-    return EvalMetrics(
+    return OnlineEvalMetrics(
         citation_hallucination_rate=0.0,  # unused: not emitted by the calibration push (see metrics.record_calibration)
         judge_kappa=report.judge_kappa,
         judge_agreement_rate=report.judge_agreement,

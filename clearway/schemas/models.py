@@ -421,7 +421,7 @@ class NeedsReview(BaseModel):
 # ============================================================
 
 
-class EvalMetrics(BaseModel):
+class OnlineEvalMetrics(BaseModel):
     """Trust metrics for one eval run. The hallucination rate is stratified by whether an
     automated oracle could verify the citation: the verifiable subset (axe-detectable, ~0 by
     construction) vs the unverifiable share (judgment items with no oracle — the honest
@@ -501,7 +501,7 @@ class EvalMetrics(BaseModel):
     )
 
 
-class EvalReport(BaseModel):
+class OnlineEvalReport(BaseModel):
     """Output of eval/ for one run over a fixed eval set."""
 
     model_config = ConfigDict(extra="forbid")
@@ -512,7 +512,7 @@ class EvalReport(BaseModel):
     oracle_regime: OracleRegime = Field(..., description="which oracle regime this run used")
     oracle_version: str
     created_at: datetime
-    metrics: EvalMetrics
+    metrics: OnlineEvalMetrics
     trace_ids: list[str] = Field(default_factory=list, description="per-finding traces this report aggregates")
 
 
@@ -619,7 +619,7 @@ class JudgeResult(BaseModel):
 class ConfidenceBin(BaseModel):
     """One bin of the confidence-vs-correctness calibration curve. `n` and `correct_n` are
     MANDATORY — a bin with n=1 otherwise makes the curve lie. This typed list (on
-    `CalibrationReport`) is the curve's only home; it is never copied onto `EvalMetrics`."""
+    `CalibrationReport`) is the curve's only home; it is never copied onto `OnlineEvalMetrics`."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -847,7 +847,7 @@ class NotMeasuredItem(BaseModel):
     why: str = Field(..., description="why it is out of scope for this benchmark")
 
 
-class AcceptanceScorecard(BaseModel):
+class OfflineEvalScorecard(BaseModel):
     """The metrics payload of a benchmark run: the drafter's ACT-gold score (subject #1), the
     judge's confusion against ACT gold (subject #2), the noise floor, the Tier B smoke test, and a
     structured not-measured list. Every rate carries n + a Wilson CI except the two figures
@@ -876,11 +876,11 @@ class AcceptanceScorecard(BaseModel):
     )
 
 
-class BenchmarkReport(BaseModel):
+class OfflineEvalReport(BaseModel):
     """The frozen, reproducible top-level benchmark artifact — the regression baseline for every
     later iteration. Freeze is by CONTENT HASH, not by a name: it pins the drafter / judge model
     DIGESTS (immutable hashes, not the mutable Ollama tags), the axe-core version, the corpus
-    version, and the vendored ACT export hash. The nested `AcceptanceScorecard` holds the numbers;
+    version, and the vendored ACT export hash. The nested `OfflineEvalScorecard` holds the numbers;
     this shell holds the provenance that makes them reproducible."""
 
     model_config = ConfigDict(extra="forbid")
@@ -892,7 +892,9 @@ class BenchmarkReport(BaseModel):
     eval_set_id: str = Field(
         ..., description="the acceptance set id — DISTINCT from the dev fixtures, never overlapping"
     )
-    corpus_version: str = Field(..., description="RAG corpus version (lives on CorpusChunk, not EvalReport) — pinned")
+    corpus_version: str = Field(
+        ..., description="RAG corpus version (lives on CorpusChunk, not OnlineEvalReport) — pinned"
+    )
     drafter_model: str = Field(..., description="drafter model tag, for readability")
     drafter_model_digest: str = Field(
         ..., description="drafter model IMMUTABLE digest — the freeze key, not the mutable tag"
@@ -905,4 +907,4 @@ class BenchmarkReport(BaseModel):
         ..., description="content hash of the vendored ACT export — the gold is pinned, never fetched live"
     )
     created_at: datetime
-    scorecard: AcceptanceScorecard
+    scorecard: OfflineEvalScorecard

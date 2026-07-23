@@ -20,7 +20,7 @@ flowchart TB
     end
     GATE{"flag for review?"}
     ASM["assemble"]
-    REP["EvalReport persisted<br/>+ assembled rows returned"]
+    REP["OnlineEvalReport persisted<br/>+ assembled rows returned"]
     Q[("NeedsReview queue<br/>withheld from report")]:::queue
     REV["clearway review<br/>approve · edit · reject"]:::human
     RES["resume: re-run the SAME target with --run-id"]
@@ -55,7 +55,7 @@ dashed edges are the human-in-the-loop interrupt: a flagged finding waits in the
   replays a completed step from its cached result instead of recomputing it on resume, and runs the
   HITL gate that flags a finding for human review post-validation.
 - [`run.py`](run.py) — thin wrappers, `run()`/`run_set()`: scan → normalize, then one call into
-  `execute()`; aggregate the resulting traces into an `EvalReport` and persist it at completion.
+  `execute()`; aggregate the resulting traces into an `OnlineEvalReport` and persist it at completion.
 
 ## Durable primitives
 
@@ -85,7 +85,7 @@ resume with `run <url> --run-id …`, never `eval`.
 
 ## Run history (persisted reports)
 
-At completion each run persists its `EvalReport` (`CONTRACTS.md` §3) to the `eval_report` table,
+At completion each run persists its `OnlineEvalReport` (`CONTRACTS.md` §3) to the `eval_report` table,
 keyed by `run_id` (PK). The report is stored whole as JSON with `created_at` lifted into its own
 column, so history is queryable by run and by time without exploding every metric into a column.
 
@@ -136,5 +136,5 @@ withheld.
 An `edited` review is also the raw material for the **`expert_edit_distance`** metric
 (`eval/edit_distance.py`): a normalized `[0, 1]` `difflib` ratio over how far the human moved the
 draft's `remediation` text (`0` = an unedited approval). The run mean folds onto
-`EvalMetrics.expert_edit_distance` (`CONTRACTS.md` §3) and exports as a Prometheus gauge alongside the
+`OnlineEvalMetrics.expert_edit_distance` (`CONTRACTS.md` §3) and exports as a Prometheus gauge alongside the
 hallucination rates — the human-correction signal the trust dashboard tracks over time.

@@ -17,7 +17,7 @@ from datetime import datetime
 import pytest
 
 from clearway.observability import record_eval_report, record_rate, shutdown
-from clearway.schemas.models import EvalMetrics, EvalReport, OracleRegime
+from clearway.schemas.models import OnlineEvalMetrics, OnlineEvalReport, OracleRegime
 
 _PROM = "http://localhost:9090"
 
@@ -74,14 +74,14 @@ def _poll(expr: str, want: float) -> list[dict]:
 def test_eval_report_emits_all_stratified_metrics() -> None:
     # A report where the verifiable rate and unverifiable share differ from the overall rate,
     # so a mixed-up gauge assignment would be caught.
-    report = EvalReport(
+    report = OnlineEvalReport(
         run_id="pytest-strat",
         config_id="pytest-strat",
         eval_set_id="pytest-strat",
         oracle_regime=OracleRegime.A_DIGITAL,
         oracle_version="wcag2.2-sc@1",
         created_at=datetime(2026, 7, 8, 12, 0, 0),
-        metrics=EvalMetrics(
+        metrics=OnlineEvalMetrics(
             citation_hallucination_rate=0.25,
             findings_total=4,
             citations_total=4,

@@ -1,4 +1,4 @@
-"""The pure artifact → `BenchmarkReport` assembly: replays a frozen acceptance run into the scored,
+"""The pure artifact → `OfflineEvalReport` assembly: replays a frozen acceptance run into the scored,
 reproducible report. A tiny hand-built artifact with known outcomes so the wiring (drafter per case,
 judge on the conformance axis, provenance passthrough, optional injected/Tier-B sections) is exact.
 """
@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import pytest
 
-from clearway.eval.benchmark import NOT_MEASURED, build_report
-from clearway.schemas.models import BenchmarkReport, NoiseFloor
+from clearway.eval.offline import NOT_MEASURED, build_report
+from clearway.schemas.models import NoiseFloor, OfflineEvalReport
 
 
 def _draft(conformance: str, sc: list[str], *, conf: float, judge_ok: bool) -> dict:
@@ -66,9 +66,9 @@ def _artifact(**overrides) -> dict:
 
 def test_build_report_produces_a_valid_benchmark_report() -> None:
     report = build_report(_artifact())
-    assert isinstance(report, BenchmarkReport)
+    assert isinstance(report, OfflineEvalReport)
     # round-trips through validation → the artifact is a faithful, reproducible freeze
-    assert BenchmarkReport.model_validate(report.model_dump()) == report
+    assert OfflineEvalReport.model_validate(report.model_dump()) == report
 
 
 def test_provenance_is_passed_through_verbatim() -> None:

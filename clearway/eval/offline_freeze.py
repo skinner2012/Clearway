@@ -1,6 +1,6 @@
 """Freeze the held-out acceptance benchmark into its regression baseline.
 
-The baseline is the T5 deliverable: run_1's scored `BenchmarkReport` with the 3-run noise floor bundled
+The baseline is the T5 deliverable: run_1's scored `OfflineEvalReport` with the 3-run noise floor bundled
 in and every run's id listed, written to `benchmark/reports/scorecard.json`. It becomes the frozen
 yardstick every later iteration is measured against.
 
@@ -11,7 +11,7 @@ The judge is the noisy component; its run_1 numbers are frozen as-is and the emb
 discloses their run-to-run SD, rather than inventing an averaging the schema does not model.
 
 Pure and offline: it replays the frozen run artifacts + the frozen noise floor into the report, never
-re-invoking a model. Invoke: `uv run python -m clearway.eval.benchmark_freeze`.
+re-invoking a model. Invoke: `uv run python -m clearway.eval.offline_freeze`.
 """
 
 from __future__ import annotations
@@ -20,9 +20,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from clearway.eval.benchmark import build_report
-from clearway.eval.benchmark_build import _REPORTS_DIR, _RUNS_DIR
-from clearway.schemas.models import BenchmarkReport, NoiseFloor
+from clearway.eval.offline import build_report
+from clearway.eval.offline_build import _REPORTS_DIR, _RUNS_DIR
+from clearway.schemas.models import NoiseFloor, OfflineEvalReport
 
 _NOISE_FLOOR = _REPORTS_DIR / "noise_floor.json"
 _SCORECARD = _REPORTS_DIR / "scorecard.json"
@@ -43,7 +43,7 @@ def _assert_drafter_deterministic(runs: list[dict[str, Any]]) -> None:
             )
 
 
-def freeze_report(runs: list[dict[str, Any]], noise_floor: NoiseFloor) -> BenchmarkReport:
+def freeze_report(runs: list[dict[str, Any]], noise_floor: NoiseFloor) -> OfflineEvalReport:
     """Compose the frozen baseline: run_1's score, the noise floor embedded, and every run's id."""
     if not runs:
         raise ValueError("freeze_report needs at least one run artifact")

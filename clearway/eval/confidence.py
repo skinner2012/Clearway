@@ -131,8 +131,8 @@ def verifiable_points(artifact: dict[str, Any]) -> list[ConfidencePoint]:
 @dataclass(frozen=True)
 class CalibrationCurve:
     """The combined confidence-vs-correctness curve plus the scalars the report + dashboard read from it.
-    `ece` and `overconfidence_gap` map 1:1 to the `EvalMetrics` scalars of the same name; the binned
-    `bins` are the curve's ONLY home (never copied onto `EvalMetrics`). Judgment counts ride along so
+    `ece` and `overconfidence_gap` map 1:1 to the `OnlineEvalMetrics` scalars of the same name; the binned
+    `bins` are the curve's ONLY home (never copied onto `OnlineEvalMetrics`). Judgment counts ride along so
     `judgment_correctness_rate` — a judge ESTIMATE capped by κ — ships with its numerator + denominator,
     never a bare rate."""
 

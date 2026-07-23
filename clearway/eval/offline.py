@@ -1,4 +1,4 @@
-"""Assemble a `BenchmarkReport` from a frozen acceptance-run artifact — pure, no LLM, no network.
+"""Assemble a `OfflineEvalReport` from a frozen acceptance-run artifact — pure, no LLM, no network.
 
 The live builder runs the pipeline over the held-out ACT set ONCE and freezes a raw artifact (drafts +
 judge booleans + provenance); this module replays that artifact into the scored, reproducible report.
@@ -21,11 +21,11 @@ from clearway.eval.drafter_score import DraftedCase, DraftedFinding, score_draft
 from clearway.eval.judge_score import InjectedResult, JudgedDraft, score_judge
 from clearway.eval.stats import COLLAPSE_RULE, is_flag
 from clearway.schemas.models import (
-    AcceptanceScorecard,
-    BenchmarkReport,
     Conformance,
     NoiseFloor,
     NotMeasuredItem,
+    OfflineEvalReport,
+    OfflineEvalScorecard,
     TierBSmoke,
 )
 
@@ -144,7 +144,7 @@ def _tier_b(artifact: dict[str, Any]) -> TierBSmoke | None:
     )
 
 
-def build_scorecard(artifact: dict[str, Any], *, noise_floor: NoiseFloor | None = None) -> AcceptanceScorecard:
+def build_scorecard(artifact: dict[str, Any], *, noise_floor: NoiseFloor | None = None) -> OfflineEvalScorecard:
     """Score both subjects off the frozen artifact → the metrics payload. `noise_floor` is None on a
     single run (it needs the repeat runs a lone artifact does not carry) and is passed in by the freeze
     step once the sweep exists."""
@@ -156,7 +156,7 @@ def build_scorecard(artifact: dict[str, Any], *, noise_floor: NoiseFloor | None 
         sc_swap=_injected(artifact, "sc_swap"),
         rationale_note=_require(injected, "rationale_note", "injected section") if injected is not None else "",
     )
-    return AcceptanceScorecard(
+    return OfflineEvalScorecard(
         drafter=drafter_scoring.score,
         judge=judge,
         noise_floor=noise_floor,
@@ -172,15 +172,15 @@ def build_report(
     *,
     noise_floor: NoiseFloor | None = None,
     run_ids: list[str] | None = None,
-) -> BenchmarkReport:
-    """The frozen artifact → the reproducible `BenchmarkReport`. Provenance (config / corpus versions,
+) -> OfflineEvalReport:
+    """The frozen artifact → the reproducible `OfflineEvalReport`. Provenance (config / corpus versions,
     model digests, axe version, ACT export hash) is read straight off the artifact — the builder is
     responsible for freezing it by content hash, not by a mutable name.
 
     `noise_floor` and `run_ids` are the freeze step's two overrides: a single run has neither, but the
     frozen baseline embeds the 3-run noise floor and lists every run's id (the numbers stay run_1's —
     the drafter is deterministic, so run_1 IS the frozen score)."""
-    return BenchmarkReport(
+    return OfflineEvalReport(
         run_ids=list(run_ids) if run_ids is not None else list(artifact["run_ids"]),
         config_id=artifact["config_id"],
         eval_set_id=artifact["eval_set_id"],

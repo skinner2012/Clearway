@@ -20,7 +20,7 @@ from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
 from clearway.eval.calibration_snapshot import assemble, calibration_metrics
 from clearway.observability import metrics
-from clearway.schemas.models import EvalMetrics
+from clearway.schemas.models import OnlineEvalMetrics
 
 _FIXTURES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures"
 _CALIBRATION = _FIXTURES / "calibration_set.json"
@@ -63,7 +63,7 @@ def _emitted(mem: InMemoryMetricReader) -> dict[str, list[Any]]:
     return out
 
 
-def _snapshot() -> tuple[EvalMetrics, Any]:
+def _snapshot() -> tuple[OnlineEvalMetrics, Any]:
     cal = json.loads(_CALIBRATION.read_text())
     conf = json.loads(_CONFIDENCE.read_text())
     report, curve = assemble(created_at=_AT, calibration=cal, confidence=conf)
@@ -99,6 +99,6 @@ def test_push_emits_the_curve_as_labelled_bins_with_counts(reader: InMemoryMetri
 def test_push_fails_loudly_on_an_unset_scalar(reader: InMemoryMetricReader) -> None:
     """A calibration carrier must set every scalar; a None means mis-assembly, not a real 0 to publish."""
     _, report = _snapshot()
-    incomplete = EvalMetrics(citation_hallucination_rate=0.0)  # judge_kappa etc. left None
+    incomplete = OnlineEvalMetrics(citation_hallucination_rate=0.0)  # judge_kappa etc. left None
     with pytest.raises(ValueError, match="mis-assembled"):
         metrics.record_calibration(incomplete, report, judge_model="x", gold_version="y")

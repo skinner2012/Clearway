@@ -1,7 +1,7 @@
 """Observability — operational LLM + pipeline metrics (ARCHITECTURE §4.5, T2).
 
 Two families, recorded from `orchestrator/machine.py` *during* the run (unlike the trust gauges in
-`metrics.py`, which are set from the finished `EvalReport`):
+`metrics.py`, which are set from the finished `OnlineEvalReport`):
 
 - **GenAI semantic-convention LLM metrics** — `gen_ai.client.operation.duration` (seconds) and
   `gen_ai.client.token.usage` (tokens, split by `gen_ai.token.type` input/output), tagged by

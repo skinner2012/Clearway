@@ -35,12 +35,12 @@ from clearway.observability import (
 )
 from clearway.orchestrator import Retrieve, run, run_set
 from clearway.orchestrator.store import OrchestratorStore
-from clearway.schemas.models import Citation, Conformance, DraftRow, EvalReport, NeedsReview, ReviewStatus
+from clearway.schemas.models import Citation, Conformance, DraftRow, NeedsReview, OnlineEvalReport, ReviewStatus
 
 _FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def _print_metrics(report: EvalReport) -> None:
+def _print_metrics(report: OnlineEvalReport) -> None:
     """Print the stratified trust metrics for one report: the overall hallucination rate plus its
     split by oracle-verifiability (verifiable-subset rate + the honest `unverifiable_share`)."""
     m = report.metrics

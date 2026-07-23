@@ -17,9 +17,9 @@ from clearway.orchestrator.store import InMemoryOrchestratorStore, OrchestratorS
 from clearway.schemas.models import (
     Conformance,
     DraftRow,
-    EvalMetrics,
-    EvalReport,
     NeedsReview,
+    OnlineEvalMetrics,
+    OnlineEvalReport,
     OracleRegime,
     PipelineStep,
     ReviewReason,
@@ -42,15 +42,15 @@ def _draft(finding_id: str = "f1", remediation: str = "add alt text") -> DraftRo
     )
 
 
-def _report(run_id: str = "r1", *, rate: float = 0.2, created_at: datetime = _AT) -> EvalReport:
-    return EvalReport(
+def _report(run_id: str = "r1", *, rate: float = 0.2, created_at: datetime = _AT) -> OnlineEvalReport:
+    return OnlineEvalReport(
         run_id=run_id,
         config_id="m2-single@1",
         eval_set_id="m1-core@1",
         oracle_regime=OracleRegime.A_DIGITAL,
         oracle_version="axe-core@4.9.1",
         created_at=created_at,
-        metrics=EvalMetrics(citation_hallucination_rate=rate),
+        metrics=OnlineEvalMetrics(citation_hallucination_rate=rate),
     )
 
 
@@ -193,7 +193,7 @@ def test_load_reviews_filters_by_status() -> None:
     assert store.load_reviews(status=ReviewStatus.PENDING)[0].finding_id == "f1"
 
 
-# --- EvalReport persistence (offline) -----------------------------------------
+# --- OnlineEvalReport persistence (offline) -----------------------------------------
 
 
 def test_save_and_load_report() -> None:

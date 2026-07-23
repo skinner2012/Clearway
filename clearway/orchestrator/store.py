@@ -21,8 +21,8 @@ from typing import Optional, Protocol, runtime_checkable
 
 from clearway.schemas.models import (
     DraftRow,
-    EvalReport,
     NeedsReview,
+    OnlineEvalReport,
     PipelineStep,
     ReviewReason,
     ReviewStatus,
@@ -83,18 +83,18 @@ class OrchestratorStore(Protocol):
         `clearway review list` shows."""
         ...
 
-    def save_report(self, report: EvalReport) -> None:
-        """Persist one run's `EvalReport` (by `run_id` — its PK). Written once at run completion;
+    def save_report(self, report: OnlineEvalReport) -> None:
+        """Persist one run's `OnlineEvalReport` (by `run_id` — its PK). Written once at run completion;
         a resumed run (post-approval reflow) overwrites its own row with the newer report. This is
         the accuracy-over-time history the trust dashboard (T6) trends — M1's Prometheus gauges
         carry no `run_id`, so they blur runs together; these rows don't."""
         ...
 
-    def load_report(self, run_id: str) -> Optional[EvalReport]:
+    def load_report(self, run_id: str) -> Optional[OnlineEvalReport]:
         """One run's persisted report, or None if this run_id hasn't completed a report."""
         ...
 
-    def load_reports(self) -> list[EvalReport]:
+    def load_reports(self) -> list[OnlineEvalReport]:
         """Every persisted report, oldest first — the accuracy-over-time series."""
         ...
 
@@ -108,7 +108,7 @@ class InMemoryOrchestratorStore:
         self._steps: dict[tuple[str, str, PipelineStep], StepState] = {}
         self._results: dict[tuple[str, str, PipelineStep], str] = {}
         self._reviews: dict[tuple[str, str], NeedsReview] = {}
-        self._reports: dict[str, EvalReport] = {}
+        self._reports: dict[str, OnlineEvalReport] = {}
 
     def ensure_schema(self) -> None:
         return None  # nothing to create in memory; kept for seam parity with PgOrchestratorStore
@@ -140,13 +140,13 @@ class InMemoryOrchestratorStore:
     def load_reviews(self, status: Optional[ReviewStatus] = None) -> list[NeedsReview]:
         return [r for r in self._reviews.values() if status is None or r.status == status]
 
-    def save_report(self, report: EvalReport) -> None:
+    def save_report(self, report: OnlineEvalReport) -> None:
         self._reports[report.run_id] = report
 
-    def load_report(self, run_id: str) -> Optional[EvalReport]:
+    def load_report(self, run_id: str) -> Optional[OnlineEvalReport]:
         return self._reports.get(run_id)
 
-    def load_reports(self) -> list[EvalReport]:
+    def load_reports(self) -> list[OnlineEvalReport]:
         return sorted(self._reports.values(), key=lambda r: r.created_at)
 
 
@@ -314,7 +314,7 @@ class PgOrchestratorStore:
             rows = conn.execute(sql, params).fetchall()
             return [_review_from_row(r) for r in rows]
 
-    def save_report(self, report: EvalReport) -> None:
+    def save_report(self, report: OnlineEvalReport) -> None:
         with self._connect() as conn:
             conn.execute(
                 f"INSERT INTO {_REPORT_TABLE} (run_id, created_at, report_json) "
@@ -324,18 +324,18 @@ class PgOrchestratorStore:
                 (report.run_id, report.created_at, report.model_dump_json()),
             )
 
-    def load_report(self, run_id: str) -> Optional[EvalReport]:
+    def load_report(self, run_id: str) -> Optional[OnlineEvalReport]:
         with self._connect() as conn:
             row = conn.execute(
                 f"SELECT report_json FROM {_REPORT_TABLE} WHERE run_id = %s",
                 (run_id,),
             ).fetchone()
-            return EvalReport.model_validate_json(row[0]) if row else None
+            return OnlineEvalReport.model_validate_json(row[0]) if row else None
 
-    def load_reports(self) -> list[EvalReport]:
+    def load_reports(self) -> list[OnlineEvalReport]:
         with self._connect() as conn:
             rows = conn.execute(f"SELECT report_json FROM {_REPORT_TABLE} ORDER BY created_at").fetchall()
-            return [EvalReport.model_validate_json(r[0]) for r in rows]
+            return [OnlineEvalReport.model_validate_json(r[0]) for r in rows]
 
 
 def _review_from_row(row: tuple) -> NeedsReview:

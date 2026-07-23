@@ -5,7 +5,7 @@ from clearway.eval.edit_distance import (
     expert_edit_distance,
     mean_expert_edit_distance,
 )
-from clearway.eval.report import compute_metrics, evaluate
+from clearway.eval.online import compute_metrics, evaluate
 
 __all__ = [
     "evaluate",

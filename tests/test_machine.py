@@ -267,31 +267,20 @@ def _check(verdict: CitationVerdict) -> CitationCheck:
     return CitationCheck(sc_id="1.1.1", l0_valid=True, l1_status=l1, verdict=verdict)
 
 
-def test_review_reason_low_confidence_wins_over_every_other_trigger() -> None:
-    # low confidence on an axe-incomplete finding with an unverifiable citation → still low_confidence.
-    draft = _draft_ok(_incomplete_finding("f1"), [])
-    draft = draft.model_copy(update={"confidence": 0.4})
-    reason = _review_reason(_incomplete_finding("f1"), draft, [_check(CitationVerdict.UNVERIFIABLE)])
-    assert reason is ReviewReason.LOW_CONFIDENCE
-
-
 def test_review_reason_axe_incomplete_wins_over_unverifiable_judgment() -> None:
-    # confident draft, incomplete bucket, unverifiable citation → axe_incomplete (the broader cause).
-    draft = _draft_ok(_incomplete_finding("f1"), [])  # confidence 0.9
-    reason = _review_reason(_incomplete_finding("f1"), draft, [_check(CitationVerdict.UNVERIFIABLE)])
+    # incomplete bucket, unverifiable citation → axe_incomplete (the broader cause).
+    reason = _review_reason(_incomplete_finding("f1"), [_check(CitationVerdict.UNVERIFIABLE)])
     assert reason is ReviewReason.AXE_INCOMPLETE
 
 
 def test_review_reason_unverifiable_judgment_for_a_violations_finding() -> None:
-    # confident, VIOLATIONS bucket, but a citation with no oracle verdict → unverifiable_judgment.
-    draft = _draft_ok(_finding("f1"), [])  # _finding defaults to the VIOLATIONS bucket
-    reason = _review_reason(_finding("f1"), draft, [_check(CitationVerdict.UNVERIFIABLE)])
+    # VIOLATIONS bucket, but a citation with no oracle verdict → unverifiable_judgment.
+    reason = _review_reason(_finding("f1"), [_check(CitationVerdict.UNVERIFIABLE)])
     assert reason is ReviewReason.UNVERIFIABLE_JUDGMENT
 
 
 def test_review_reason_is_none_for_a_clean_verified_finding() -> None:
-    draft = _draft_ok(_finding("f1"), [])
-    assert _review_reason(_finding("f1"), draft, [_check(CitationVerdict.VERIFIED)]) is None
+    assert _review_reason(_finding("f1"), [_check(CitationVerdict.VERIFIED)]) is None
 
 
 # --- HITL gate: interrupt + durable queue + resume-reflow ------------------------

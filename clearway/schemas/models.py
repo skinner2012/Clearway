@@ -381,10 +381,8 @@ class StepState(BaseModel):
 
 class ReviewReason(str, Enum):
     """Why a finding was flagged for human review. When more than one applies, precedence is
-    LOW_CONFIDENCE > AXE_INCOMPLETE > UNVERIFIABLE_JUDGMENT (orchestrator/, T3) — a single
-    reason is stored, not a set."""
+    AXE_INCOMPLETE > UNVERIFIABLE_JUDGMENT (orchestrator/) — a single reason is stored, not a set."""
 
-    LOW_CONFIDENCE = "low_confidence"
     AXE_INCOMPLETE = "axe_incomplete"
     UNVERIFIABLE_JUDGMENT = "unverifiable_judgment"
 

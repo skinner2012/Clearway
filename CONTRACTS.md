@@ -391,9 +391,7 @@ class StepState(BaseModel):
 
 class ReviewReason(str, Enum):
     """Why a finding was flagged for human review. When more than one applies, precedence is
-    LOW_CONFIDENCE > AXE_INCOMPLETE > UNVERIFIABLE_JUDGMENT (orchestrator/, T3) — a single
-    reason is stored, not a set."""
-    LOW_CONFIDENCE = "low_confidence"
+    AXE_INCOMPLETE > UNVERIFIABLE_JUDGMENT (orchestrator/) — a single reason is stored, not a set."""
     AXE_INCOMPLETE = "axe_incomplete"
     UNVERIFIABLE_JUDGMENT = "unverifiable_judgment"
 
@@ -885,6 +883,7 @@ Added when their milestone arrives, not before:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-07-23 | 0.20 | Removed the `low_confidence` HITL trigger and its `ReviewReason.LOW_CONFIDENCE` member. The `draft.confidence < 0.5` branch is deleted from `orchestrator/machine.py`, reducing gate precedence to `AXE_INCOMPLETE > UNVERIFIABLE_JUDGMENT`. It gated on noise (confidence is decorative — pinned ~0.9 regardless of correctness) and never fired, so no stored `NeedsReview` record can carry the value (grep of every `*.json`/`*.jsonl` is clean) — the enum member is dropped outright, not deprecated. No drafter behaviour changes, no metric moves, and review-queue composition is unchanged. §5 unaffected. |
 | 2026-07-23 | 0.19 | Internal Evaluation metric scaffold on `OnlineEvalMetrics` — schema-only, additive, no builder wiring. Added the composite (report ⊕ queue) hallucination fields (`citation_hallucination_rate_composite`, `hallucinations_queued_total`, `citations_queued_total`) that close the gap where a gated hallucination falls out of the shipped-only `citation_hallucination_rate`; the queue side is structurally absent until M9 routes findings to the review queue. Added the reflection (drafter self-revision) counters (`reflection_iterations_total`, `reflection_caught_repaired_total`), inert until a reflection loop exists. All five are Optional-with-default `None` so they read as "not yet produced", never a measured zero, and existing persisted reports still load under `extra="forbid"`. Fixed `expected_calibration_error` / `overconfidence_gap` as internal calibration receipts only — never a VPAT/ACR column (confidence is decorative; settled). No behavioural change and no currently-reported number moves; §5 unaffected. |
 | 2026-07-23 | 0.18 | Added `VerdictVector` (the frozen per-case drafter verdict vector — M7's paired-comparison baseline, keyed by `act_testcase_id`) nesting `CaseVerdict` (per ACT case: drafter FLAG/CLEAN, gold FLAG/CLEAN, the underlying conformances, the axe_rule class). Carries the offline report's drafter-side provenance (config / eval-set / corpus versions, drafter model **digest**, axe-core version, ACT export hash, run ids, source timestamp) so the vector is reproducible. A κ scalar cannot be paired against, so this vector is what makes M7's most sensitive test exist. Additive — no existing shape changed; §5 unaffected. |
 | 2026-07-23 | 0.17 | Vocabulary rename only — no field, bound, default, or wire change. The per-run eval types are now `OnlineEvalReport` (was `EvalReport`) and `OnlineEvalMetrics` (was `EvalMetrics`); the held-out acceptance types are `OfflineEvalReport` (was `BenchmarkReport`) nesting `OfflineEvalScorecard` (was `AcceptanceScorecard`). The `eval/` modules were renamed to match (`report`→`online`, `benchmark*`→`offline*`). JSON / DB payloads unchanged; §5 unaffected. |

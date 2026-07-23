@@ -103,7 +103,6 @@ flagged when one trigger fires — a single `reason` is stored, by precedence:
 
 | Reason | Fires when | Status |
 |---|---|---|
-| `low_confidence` | `draft.confidence < 0.5` | **dead** — the calibration study found self-reported confidence decorative (pinned ~0.85–1.0 regardless of correctness), so it effectively never fires; a real signal must be *derived*, not calibrated (see the calibration report) |
 | `axe_incomplete` | the finding came from axe's `incomplete` bucket (no oracle verdict) | effective |
 | `unverifiable_judgment` | a citation is `UNVERIFIABLE` (valid SC, no oracle to check it) | effective |
 

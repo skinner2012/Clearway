@@ -50,11 +50,6 @@ from clearway.validator import validate
 
 _tracer = trace.get_tracer("clearway.orchestrator")
 
-# Placeholder confidence floor for the HITL gate (decision #8). DORMANT until M5 calibration: per
-# the M1 weak-spots read, real drafter confidence sits at 0.9–1.0 regardless of correctness, so
-# `axe_incomplete` / `unverifiable_judgment` are the effective M2 triggers, not this one.
-_LOW_CONFIDENCE_THRESHOLD = 0.5
-
 # The retrieve/draft steps are seams. Production builds the real implementations; offline tests
 # inject canned stubs instead. Mirrors the M0/M1 seam already established in run.py.
 Retrieve = Callable[[Finding], list[Citation]]
@@ -243,7 +238,7 @@ def _process_finding(
         # finding's assembly is interrupted (return None) until a human resolves its NeedsReview
         # record — the rest of the run continues. On a resume that carries a human outcome, the
         # approved/edited row is assembled instead. See ARCHITECTURE §4.6 + decisions #5/#6/#8.
-        reason = _review_reason(finding, draft_row, checks)
+        reason = _review_reason(finding, checks)
         if reason is not None:
             gated = _gate(
                 finding,
@@ -278,21 +273,19 @@ def _process_finding(
         )
 
 
-def _review_reason(finding: Finding, draft_row: DraftRow, checks: list[CitationCheck]) -> Optional[ReviewReason]:
-    """Which single review trigger fires for this finding, by precedence `low_confidence` >
-    `axe_incomplete` > `unverifiable_judgment` (decision #5) — or None if none apply. The triggers
-    overlap (an axe-incomplete finding also yields UNVERIFIABLE citations), so precedence collapses
-    them to one stored reason."""
+def _review_reason(finding: Finding, checks: list[CitationCheck]) -> Optional[ReviewReason]:
+    """Which single review trigger fires for this finding, by precedence `axe_incomplete` >
+    `unverifiable_judgment` (decision #5) — or None if none apply. The triggers overlap (an
+    axe-incomplete finding also yields UNVERIFIABLE citations), so precedence collapses them to one
+    stored reason."""
     # A HALLUCINATED citation (the hard oracle proved a cited SC false) is deliberately NOT a trigger.
     # Gating withholds a finding from the report *and* drops its Trace, so a gated hallucination would
-    # fall out of `citation_hallucination_rate` (`eval/report.py` counts only shipped traces) — the same
+    # fall out of `citation_hallucination_rate` (`eval/online.py` counts only shipped traces) — the same
     # understatement the forward-path analysis flagged for `unverifiable_share` on a gated run. So the
     # honest choice today is to keep the hallucination *counted* (it ships, visibly wrong-cited) rather
     # than *hidden* in the queue. Acting on it correctly needs a composite (report ⊕ queue) metric;
     # until that exists, adding HALLUCINATED here would flatter the headline, not improve trust. See
     # this module's README for the full rationale.
-    if draft_row.confidence < _LOW_CONFIDENCE_THRESHOLD:
-        return ReviewReason.LOW_CONFIDENCE
     if finding.source_bucket is AxeBucket.INCOMPLETE:
         return ReviewReason.AXE_INCOMPLETE
     if any(c.verdict is CitationVerdict.UNVERIFIABLE for c in checks):

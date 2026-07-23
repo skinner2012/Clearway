@@ -89,7 +89,6 @@ def _labelled(label: str, value: str) -> str:
 _REASON_LABEL = {
     "unverifiable_judgment": "no automated oracle",
     "axe_incomplete": "axe could not decide",
-    "low_confidence": "low confidence",
 }
 
 

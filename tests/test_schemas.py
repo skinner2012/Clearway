@@ -226,7 +226,7 @@ def test_needs_review_is_strict() -> None:
             finding_id="f1",
             run_id="r1",
             draft=draft,
-            reason=ReviewReason.LOW_CONFIDENCE,
+            reason=ReviewReason.AXE_INCOMPLETE,
             created_at=_AT,
             updated_at=_AT,
             bogus=1,

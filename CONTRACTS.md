@@ -476,11 +476,41 @@ class OnlineEvalMetrics(BaseModel):
     )
     judgment_items_total: Optional[int] = Field(None, ge=0, description="judgment items the judge scored — denominator")
     judgment_correct_total: Optional[int] = Field(None, ge=0, description="judgment items judged correct — numerator")
+    # ECE + overconfidence_gap are INTERNAL calibration receipts only — never surfaced as a
+    # VPAT/ACR column (self-reported confidence is decorative; settled). Kept here as a signal
+    # for calibration bookkeeping, not for gating, routing, or the conformance report.
     expected_calibration_error: Optional[float] = Field(
-        None, ge=0.0, le=1.0, description="ECE — unsigned magnitude of confidence miscalibration"
+        None, ge=0.0, le=1.0, description="ECE — unsigned magnitude of confidence miscalibration (internal receipt only)"
     )
     overconfidence_gap: Optional[float] = Field(
-        None, ge=-1.0, le=1.0, description="signed: mean confidence − mean correctness; positive = systematically over-confident"
+        None, ge=-1.0, le=1.0, description="signed: mean confidence − mean correctness; positive = systematically over-confident (internal receipt only)"
+    )
+
+    # ---- Scaffold: inert fields wired by later milestones, defaulting to None so they read as
+    # "not yet produced", never as a measured zero. All Optional-with-default so existing
+    # persisted reports still load under extra="forbid".
+    #
+    # Composite (report ⊕ queue) hallucination. Today the pipeline routes nothing to a review
+    # queue, so `citation_hallucination_rate` counts only shipped traces and a gated hallucination
+    # would silently fall out of it. These fields close that gap once queue routing exists; until
+    # then None means the queue side has not been produced, not that it was measured as zero.
+    citation_hallucination_rate_composite: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="SCAFFOLD: hallucination rate over shipped ⊕ queued citations; None until the review queue routes findings — never a measured zero"
+    )
+    hallucinations_queued_total: Optional[int] = Field(
+        None, ge=0, description="SCAFFOLD: hallucinated citations withheld to the review queue; None until queue routing exists"
+    )
+    citations_queued_total: Optional[int] = Field(
+        None, ge=0, description="SCAFFOLD: citations on findings withheld to the review queue; None until queue routing exists"
+    )
+
+    # Reflection (drafter self-revision) counters. No reflection loop runs today, so these are
+    # inert; None until the drafter gains a reflection pass, never a measured zero.
+    reflection_iterations_total: Optional[int] = Field(
+        None, ge=0, description="SCAFFOLD: total drafter self-revision iterations across findings; None until a reflection loop runs"
+    )
+    reflection_caught_repaired_total: Optional[int] = Field(
+        None, ge=0, description="SCAFFOLD: findings where a hallucination was caught then repaired by reflection; None until reflection runs"
     )
 
 
@@ -855,6 +885,7 @@ Added when their milestone arrives, not before:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-07-23 | 0.19 | Internal Evaluation metric scaffold on `OnlineEvalMetrics` — schema-only, additive, no builder wiring. Added the composite (report ⊕ queue) hallucination fields (`citation_hallucination_rate_composite`, `hallucinations_queued_total`, `citations_queued_total`) that close the gap where a gated hallucination falls out of the shipped-only `citation_hallucination_rate`; the queue side is structurally absent until M9 routes findings to the review queue. Added the reflection (drafter self-revision) counters (`reflection_iterations_total`, `reflection_caught_repaired_total`), inert until a reflection loop exists. All five are Optional-with-default `None` so they read as "not yet produced", never a measured zero, and existing persisted reports still load under `extra="forbid"`. Fixed `expected_calibration_error` / `overconfidence_gap` as internal calibration receipts only — never a VPAT/ACR column (confidence is decorative; settled). No behavioural change and no currently-reported number moves; §5 unaffected. |
 | 2026-07-23 | 0.18 | Added `VerdictVector` (the frozen per-case drafter verdict vector — M7's paired-comparison baseline, keyed by `act_testcase_id`) nesting `CaseVerdict` (per ACT case: drafter FLAG/CLEAN, gold FLAG/CLEAN, the underlying conformances, the axe_rule class). Carries the offline report's drafter-side provenance (config / eval-set / corpus versions, drafter model **digest**, axe-core version, ACT export hash, run ids, source timestamp) so the vector is reproducible. A κ scalar cannot be paired against, so this vector is what makes M7's most sensitive test exist. Additive — no existing shape changed; §5 unaffected. |
 | 2026-07-23 | 0.17 | Vocabulary rename only — no field, bound, default, or wire change. The per-run eval types are now `OnlineEvalReport` (was `EvalReport`) and `OnlineEvalMetrics` (was `EvalMetrics`); the held-out acceptance types are `OfflineEvalReport` (was `BenchmarkReport`) nesting `OfflineEvalScorecard` (was `AcceptanceScorecard`). The `eval/` modules were renamed to match (`report`→`online`, `benchmark*`→`offline*`). JSON / DB payloads unchanged; §5 unaffected. |
 | 2026-07-15 | 0.16 | Pre-release honesty pass: health-warned `DraftRow.confidence` — the description now states the field is **decorative** (do not gate/route/triage on it), citing the held-out over-confidence gap +0.329 and its pinned ~0.85–1.0 range. Description only, no shape change; §5 unaffected. Pairs with dropping the "confidence-scored" product claim from README/ARCHITECTURE. |

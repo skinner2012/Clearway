@@ -298,6 +298,58 @@ def test_eval_metrics_judge_scalars_default_to_none() -> None:
     assert m3_style.overconfidence_gap is None
 
 
+def test_eval_metrics_composite_and_reflection_scaffold_default_to_none() -> None:
+    """The composite (report ⊕ queue) hallucination fields and the reflection counters are
+    inert scaffold: a construction that omits them still validates and every one defaults to
+    None — 'not yet produced', never a measured zero. Nothing routes findings to the review
+    queue and no reflection loop runs, so None is the only honest reading."""
+    current_style = OnlineEvalMetrics(
+        citation_hallucination_rate=0.0,
+        citations_total=5,
+        hallucinations_total=0,
+        unverifiable_share=0.4,
+        citations_verifiable_total=3,
+        citations_unverifiable_total=2,
+    )
+    assert current_style.citation_hallucination_rate_composite is None
+    assert current_style.hallucinations_queued_total is None
+    assert current_style.citations_queued_total is None
+    assert current_style.reflection_iterations_total is None
+    assert current_style.reflection_caught_repaired_total is None
+
+
+def test_eval_metrics_loads_persisted_payload_without_scaffold_fields() -> None:
+    """A report persisted before the scaffold existed carries none of the new keys; under
+    extra='forbid' it must still deserialise, with the scaffold fields defaulting to None."""
+    persisted = json.dumps(
+        {
+            "citation_hallucination_rate": 0.2,
+            "findings_total": 3,
+            "citations_total": 5,
+            "hallucinations_total": 1,
+        }
+    )
+    m = OnlineEvalMetrics.model_validate_json(persisted)
+    assert m.citation_hallucination_rate == 0.2
+    assert m.citation_hallucination_rate_composite is None
+    assert m.reflection_iterations_total is None
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "hallucinations_queued_total",
+        "citations_queued_total",
+        "reflection_iterations_total",
+        "reflection_caught_repaired_total",
+    ],
+)
+def test_eval_metrics_scaffold_counters_are_non_negative(field: str) -> None:
+    """The queue and reflection counters are counts: a negative value is a validation error."""
+    with pytest.raises(ValidationError):
+        OnlineEvalMetrics(citation_hallucination_rate=0.0, **{field: -1})
+
+
 @pytest.mark.parametrize("kappa", [-1.0, -0.42, 0.0, 0.6, 1.0])
 def test_kappa_bounds_admit_negative_values(kappa: float) -> None:
     """The κ landmine: judge_kappa spans [-1, 1], NOT [0, 1]. A negative κ (judge worse than

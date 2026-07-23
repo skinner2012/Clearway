@@ -490,14 +490,62 @@ class OnlineEvalMetrics(BaseModel):
     )
     judgment_items_total: Optional[int] = Field(None, ge=0, description="judgment items the judge scored — denominator")
     judgment_correct_total: Optional[int] = Field(None, ge=0, description="judgment items judged correct — numerator")
+    # ECE + overconfidence_gap are INTERNAL calibration receipts only — never surfaced as a
+    # VPAT/ACR column (self-reported confidence is decorative; settled). Kept here as a signal
+    # for calibration bookkeeping, not for gating, routing, or the conformance report.
     expected_calibration_error: Optional[float] = Field(
-        None, ge=0.0, le=1.0, description="ECE — unsigned magnitude of confidence miscalibration"
+        None,
+        ge=0.0,
+        le=1.0,
+        description="ECE — unsigned magnitude of confidence miscalibration (internal receipt only)",
     )
     overconfidence_gap: Optional[float] = Field(
         None,
         ge=-1.0,
         le=1.0,
-        description="signed: mean confidence − mean correctness; positive = systematically over-confident",
+        description="signed: mean confidence − mean correctness; positive = systematically over-confident "
+        "(internal receipt only)",
+    )
+
+    # ---- Scaffold: inert fields wired by later milestones, defaulting to None so they read as
+    # "not yet produced", never as a measured zero. All Optional-with-default so existing
+    # persisted reports still load under extra="forbid".
+    #
+    # Composite (report ⊕ queue) hallucination. Today the pipeline routes nothing to a review
+    # queue, so `citation_hallucination_rate` counts only shipped traces and a gated hallucination
+    # would silently fall out of it. These fields close that gap once queue routing exists; until
+    # then None means the queue side has not been produced, not that it was measured as zero.
+    citation_hallucination_rate_composite: Optional[float] = Field(
+        None,
+        ge=0.0,
+        le=1.0,
+        description="SCAFFOLD: hallucination rate over shipped ⊕ queued citations; None until the review queue "
+        "routes findings — never a measured zero",
+    )
+    hallucinations_queued_total: Optional[int] = Field(
+        None,
+        ge=0,
+        description="SCAFFOLD: hallucinated citations withheld to the review queue; None until queue routing exists",
+    )
+    citations_queued_total: Optional[int] = Field(
+        None,
+        ge=0,
+        description="SCAFFOLD: citations on findings withheld to the review queue; None until queue routing exists",
+    )
+
+    # Reflection (drafter self-revision) counters. No reflection loop runs today, so these are
+    # inert; None until the drafter gains a reflection pass, never a measured zero.
+    reflection_iterations_total: Optional[int] = Field(
+        None,
+        ge=0,
+        description="SCAFFOLD: total drafter self-revision iterations across findings; "
+        "None until a reflection loop runs",
+    )
+    reflection_caught_repaired_total: Optional[int] = Field(
+        None,
+        ge=0,
+        description="SCAFFOLD: findings where a hallucination was caught then repaired by reflection; "
+        "None until reflection runs",
     )
 
 

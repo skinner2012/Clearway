@@ -1,0 +1,498 @@
+{
+  "partial_flags": true,
+  "cases": [
+    {
+      "act_testcase_id": "30012df5a74ec5df2f74d8522c451233882d5f3a",
+      "axe_rule": "document-title",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "23ecf6c48bb8c1619c59cdbc5fe2e6def8f80d6e",
+      "axe_rule": "document-title",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "5e5cb1efed740d903d45d885d47363a5b068274f",
+      "axe_rule": "document-title",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "64ad3868e9022dcfa3f8ba5a3ac1943fd1a9a240",
+      "axe_rule": "document-title",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "e53e988e29ce9f96fb282825cc089df9b5b65753",
+      "axe_rule": "document-title",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "30ea3b43777437566f35f235de3fc94a16c87a96",
+      "axe_rule": "empty-heading",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "b81884710c18ce810cbed8a926188609aead5786",
+      "axe_rule": "empty-heading",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "439e4f0379f4b0920aa858fadc663681ec15536b",
+      "axe_rule": "empty-heading",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "49a6b0a208fa118829c6622ffc1dc2ce150a1ce1",
+      "axe_rule": "empty-heading",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "aee358f45b40658fcc5c42d12a6df82dbdf94e0c",
+      "axe_rule": "empty-heading",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "ffb1127189b433a4d64fe895c24db7a8e3816080",
+      "axe_rule": "empty-heading",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "f32765d70e0f730a7a3a859dc8cd396c186bce4a",
+      "axe_rule": "empty-heading",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "680f45d618bff74142de42e6ed6c7ee2e33b0f6c",
+      "axe_rule": "empty-heading",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "b21c77db7674e58bccfe50adfe6ecd6bb715efd9",
+      "axe_rule": "empty-heading",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "5310147eff2036b05df603cd66f32d8ac9163c6b",
+      "axe_rule": "empty-heading",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "14551f2cbf465d95236ef1417e0e2b5fb82249a6",
+      "axe_rule": "empty-heading",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "dce627a3a49f90c4638695e93314b6bad5bf65e2",
+      "axe_rule": "empty-heading",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": []
+    },
+    {
+      "act_testcase_id": "c3ed1f47a0892ce17a390e0953c715e5ed1ae5db",
+      "axe_rule": "empty-heading",
+      "drafter_flag": false,
+      "gold_flag": true,
+      "conformances": []
+    },
+    {
+      "act_testcase_id": "0ed8074a5bee7052a1a28f9fd718b7d35a645cfd",
+      "axe_rule": "label",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "90d77d3e5b2fdc19bce47f9f9362283861d3903b",
+      "axe_rule": "label",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "2a3113551e8b6285b44b1495356235222b75542f",
+      "axe_rule": "label",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "88a1646138c707f4d488ac76215fde0fd398bb94",
+      "axe_rule": "label",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support",
+        "does_not_support",
+        "does_not_support",
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "467ca5a8f029d0f7a099ccf81b19872df5ccd117",
+      "axe_rule": "label",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "94d3003abb03281265a5423caf07d3dc4cc2a190",
+      "axe_rule": "label",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "ec284879633645f114751de5cf1d14978030ab77",
+      "axe_rule": "label",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "80c83d04972e8a4a4127ced657b3d724435d06b0",
+      "axe_rule": "label",
+      "drafter_flag": false,
+      "gold_flag": true,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support",
+        "does_not_support",
+        "does_not_support",
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "925f5da9291c3ff7ee2c98cf43773ff6933be5a9",
+      "axe_rule": "label",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "16d451321559dc35b8c33f0d21b2c7f49175914e",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "b77c97dc01d0cd1fcaaaeb2459f805e8e791cafb",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "515a82f230ab2c1c1d56b60adf92697c80bc25e5",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "partially_supports"
+      ]
+    },
+    {
+      "act_testcase_id": "7155e250f35ee0a290bcf273b5a3ad8a366065ec",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "1221f291a8a94b85a514f743647f3d7f818bef5b",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "1c577f9a1335ead326261aefaa8064f8cc6d240e",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": true,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "48cbc84f4c020393cfb56fd53337827278b2d528",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support",
+        "partially_supports",
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "6fc68d363695e29f480d6a99bbcc7be08f68d1bc",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "d876314b6053a53e45138b7a1aabc4dbdb431bdd",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "5e67cab9c6586318a6186eeca1ac536542e5e437",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "6566c139dc811b5a566a8e58c85d1f7f3c550d04",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support",
+        "partially_supports",
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "970cf7f07cc3acd3d99ac57f73f5e622df0fe19b",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support",
+        "partially_supports",
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "1ba642803c6137b0206c7bc909f3dbb8cfb4a654",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "partially_supports"
+      ]
+    },
+    {
+      "act_testcase_id": "95f35d6374bc2e0fb1852882923fad9601ecd810",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": false,
+      "conformances": [
+        "does_not_support",
+        "partially_supports"
+      ]
+    },
+    {
+      "act_testcase_id": "b476205199c222e357cdfd5930562da3c31b6ec3",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": [
+        "supports",
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "760ba6c011ab590d5d50a186fd237f025c317292",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "f29d1450d6a5f9dbe127b65ce545b2090f25a7e6",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "3bb1986371e1ad785428f87c89a1dd7071604ee0",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": true,
+      "conformances": [
+        "supports"
+      ]
+    },
+    {
+      "act_testcase_id": "0f20115dd3962dc390c9de33df2793a71ef40845",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support",
+        "partially_supports",
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "064d2d8664a3c53a268fc24f5ba33ea4bb777e48",
+      "axe_rule": "link-name",
+      "drafter_flag": true,
+      "gold_flag": true,
+      "conformances": [
+        "does_not_support"
+      ]
+    },
+    {
+      "act_testcase_id": "3e58cd4827d3f80b974af2bdd34f22a137db6c86",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": []
+    },
+    {
+      "act_testcase_id": "4301e64721f3b157fc0859e4887989d476068d86",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": true,
+      "conformances": []
+    },
+    {
+      "act_testcase_id": "bd4aaff1b51fa2fbf5c0f326266aa83844602967",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": false,
+      "conformances": []
+    },
+    {
+      "act_testcase_id": "75db8879bf7db22dcb4455dd0ebc7e244fdde2ae",
+      "axe_rule": "link-name",
+      "drafter_flag": false,
+      "gold_flag": true,
+      "conformances": []
+    }
+  ],
+  "run_ids": [
+    "acceptance-2026-07-15T01:55:47.047521+00:00"
+  ],
+  "config_id": "m1-single@1",
+  "eval_set_id": "act-acceptance@1",
+  "corpus_version": "wcag22-nomic-embed-text-768@1",
+  "drafter_model": "gemma4:31b",
+  "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+  "axe_core_version": "4.12.1",
+  "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "created_at": "2026-07-15T01:55:47.047521Z",
+  "rationale": "A kappa scalar cannot be paired against: keyed by act_testcase_id, this per-case FLAG/CLEAN vector is what lets a future drafter run be compared case-by-case (a McNemar / exact sign test on the discordant pairs) to prove it improved on the same cases rather than merely changed \u2014 the most sensitive regression test M7 has, and one a per-class kappa number cannot support."
+}

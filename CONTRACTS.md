@@ -778,6 +778,53 @@ class OfflineEvalReport(BaseModel):
     act_export_hash: str = Field(..., description="content hash of the vendored ACT export — the gold is pinned, never fetched live")
     created_at: datetime
     scorecard: OfflineEvalScorecard
+
+
+class CaseVerdict(BaseModel):
+    """One ACT case's paired verdict — the unit M7 pairs on. `drafter_flag` is FLAG (any finding on the
+    case alarmed, flag-if-any) vs CLEAN; `gold_flag` is the ACT outcome (failed = FLAG). `conformances`
+    are the case's underlying draft verdicts (empty = an honest miss: the case minted no finding).
+    `axe_rule` is the fix-unit class (the two link rules share `link-name`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    act_testcase_id: str = Field(..., description="the ACT case id — the stable key a future run pairs on")
+    axe_rule: str = Field(..., description="the fix-unit class (axe rule); the two link rules pool as 'link-name'")
+    drafter_flag: bool = Field(
+        ..., description="True = the drafter FLAGGED the case (any finding alarmed), False = CLEAN"
+    )
+    gold_flag: bool = Field(..., description="True = ACT gold says the case FAILED, False = passed")
+    conformances: list[Conformance] = Field(
+        default_factory=list, description="the case's underlying draft conformances — empty for an honest miss"
+    )
+
+
+class VerdictVector(BaseModel):
+    """The frozen per-case drafter verdict vector — M7's paired-comparison baseline. A κ scalar cannot be
+    paired against, so without this vector M7's most sensitive test (case-by-case McNemar against a future
+    run, keyed by `act_testcase_id`) does not exist. It carries the offline report's drafter-side
+    provenance (model DIGEST, axe/corpus versions, ACT export hash) so the vector is reproducible, and the
+    per-case rows keyed by `act_testcase_id` so a future run pairs without re-deriving alignment. Computed
+    under one `partial_flags` reading."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    partial_flags: bool = Field(..., description="the partially_supports reading drafter_flag was computed under")
+    cases: list[CaseVerdict] = Field(
+        ..., description="one row per ACT case (minting cases + honest misses), keyed by act_testcase_id"
+    )
+    run_ids: list[str] = Field(..., description="the run(s) this vector was frozen from")
+    config_id: str = Field(..., description="pinned pipeline config")
+    eval_set_id: str = Field(..., description="the acceptance set id")
+    corpus_version: str = Field(..., description="RAG corpus version — pinned")
+    drafter_model: str = Field(..., description="drafter model tag, for readability")
+    drafter_model_digest: str = Field(..., description="drafter model IMMUTABLE digest — the freeze key")
+    axe_core_version: str = Field(..., description="pinned axe-core version")
+    act_export_hash: str = Field(..., description="content hash of the vendored ACT export — the gold is pinned")
+    created_at: datetime = Field(
+        ..., description="the source run's timestamp (read from the artifact, never generated)"
+    )
+    rationale: str = Field(..., description="why this artifact exists — a κ scalar cannot be paired against")
 ```
 
 ---
@@ -808,6 +855,7 @@ Added when their milestone arrives, not before:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-07-23 | 0.18 | Added `VerdictVector` (the frozen per-case drafter verdict vector — M7's paired-comparison baseline, keyed by `act_testcase_id`) nesting `CaseVerdict` (per ACT case: drafter FLAG/CLEAN, gold FLAG/CLEAN, the underlying conformances, the axe_rule class). Carries the offline report's drafter-side provenance (config / eval-set / corpus versions, drafter model **digest**, axe-core version, ACT export hash, run ids, source timestamp) so the vector is reproducible. A κ scalar cannot be paired against, so this vector is what makes M7's most sensitive test exist. Additive — no existing shape changed; §5 unaffected. |
 | 2026-07-23 | 0.17 | Vocabulary rename only — no field, bound, default, or wire change. The per-run eval types are now `OnlineEvalReport` (was `EvalReport`) and `OnlineEvalMetrics` (was `EvalMetrics`); the held-out acceptance types are `OfflineEvalReport` (was `BenchmarkReport`) nesting `OfflineEvalScorecard` (was `AcceptanceScorecard`). The `eval/` modules were renamed to match (`report`→`online`, `benchmark*`→`offline*`). JSON / DB payloads unchanged; §5 unaffected. |
 | 2026-07-15 | 0.16 | Pre-release honesty pass: health-warned `DraftRow.confidence` — the description now states the field is **decorative** (do not gate/route/triage on it), citing the held-out over-confidence gap +0.329 and its pinned ~0.85–1.0 range. Description only, no shape change; §5 unaffected. Pairs with dropping the "confidence-scored" product claim from README/ARCHITECTURE. |
 | 2026-07-14 | 0.15 | Quality-review whitelist grew from four rules to six: added `empty-heading` (SC 2.4.6 — a **new** existence-only judgment rule) and `document-title` (SC 2.4.2 — **reverses** the earlier deferral). Both were empirically confirmed against pinned axe 4.12.1 to PASS on present-but-non-descriptive content, so each mints an `AxeBucket.PASSES` judgment finding. The whitelist is global, so both mint new findings on every frozen fixture carrying a heading/title — versioned anchors moved, so the affected fixture sets were bumped (`quality-gold@1`→`@2`, scoped to its original three rules; the m0/m1 orchestrator counts updated). `button-name` and the alt/name variants stay deferred. No §3 schema change — this records a decision in code (`normalizer/quality_review.py`), not a shape. |

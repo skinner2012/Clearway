@@ -908,3 +908,50 @@ class OfflineEvalReport(BaseModel):
     )
     created_at: datetime
     scorecard: OfflineEvalScorecard
+
+
+class CaseVerdict(BaseModel):
+    """One ACT case's paired verdict — the unit M7 pairs on. `drafter_flag` is FLAG (any finding on the
+    case alarmed, flag-if-any) vs CLEAN; `gold_flag` is the ACT outcome (failed = FLAG). `conformances`
+    are the case's underlying draft verdicts (empty = an honest miss: the case minted no finding).
+    `axe_rule` is the fix-unit class (the two link rules share `link-name`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    act_testcase_id: str = Field(..., description="the ACT case id — the stable key a future run pairs on")
+    axe_rule: str = Field(..., description="the fix-unit class (axe rule); the two link rules pool as 'link-name'")
+    drafter_flag: bool = Field(
+        ..., description="True = the drafter FLAGGED the case (any finding alarmed), False = CLEAN"
+    )
+    gold_flag: bool = Field(..., description="True = ACT gold says the case FAILED, False = passed")
+    conformances: list[Conformance] = Field(
+        default_factory=list, description="the case's underlying draft conformances — empty for an honest miss"
+    )
+
+
+class VerdictVector(BaseModel):
+    """The frozen per-case drafter verdict vector — M7's paired-comparison baseline. A κ scalar cannot be
+    paired against, so without this vector M7's most sensitive test (case-by-case McNemar against a future
+    run, keyed by `act_testcase_id`) does not exist. It carries the offline report's drafter-side
+    provenance (model DIGEST, axe/corpus versions, ACT export hash) so the vector is reproducible, and the
+    per-case rows keyed by `act_testcase_id` so a future run pairs without re-deriving alignment. Computed
+    under one `partial_flags` reading."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    partial_flags: bool = Field(..., description="the partially_supports reading drafter_flag was computed under")
+    cases: list[CaseVerdict] = Field(
+        ..., description="one row per ACT case (minting cases + honest misses), keyed by act_testcase_id"
+    )
+    run_ids: list[str] = Field(..., description="the run(s) this vector was frozen from")
+    config_id: str = Field(..., description="pinned pipeline config")
+    eval_set_id: str = Field(..., description="the acceptance set id")
+    corpus_version: str = Field(..., description="RAG corpus version — pinned")
+    drafter_model: str = Field(..., description="drafter model tag, for readability")
+    drafter_model_digest: str = Field(..., description="drafter model IMMUTABLE digest — the freeze key")
+    axe_core_version: str = Field(..., description="pinned axe-core version")
+    act_export_hash: str = Field(..., description="content hash of the vendored ACT export — the gold is pinned")
+    created_at: datetime = Field(
+        ..., description="the source run's timestamp (read from the artifact, never generated)"
+    )
+    rationale: str = Field(..., description="why this artifact exists — a κ scalar cannot be paired against")

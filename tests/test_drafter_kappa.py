@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from clearway.eval.drafter_kappa import ClassKappa, class_kappas
+from clearway.eval.drafter_kappa import ClassKappa, ClassKappaCI, class_kappa_cis, class_kappas
 
 _RUNS = Path(__file__).resolve().parent.parent / "benchmark" / "runs"
 
@@ -85,3 +85,50 @@ def test_raw_agreement_reported_beside_kappa() -> None:
 def test_pure_same_artifact_yields_identical_result() -> None:
     a = _artifact()
     assert class_kappas(a) == class_kappas(a)
+
+
+def _ci_by_axe(name: str = "run_1.json", *, partial_flags: bool = True) -> dict[str, ClassKappaCI]:
+    return {c.axe_rule: c for c in class_kappa_cis(_artifact(name), partial_flags=partial_flags)}
+
+
+def test_ci_bounds_reproduce_the_spec() -> None:
+    ci = _ci_by_axe()
+    assert (round(ci["label"].ci_low, 3), round(ci["label"].ci_high, 3)) == (-0.375, 0.633)
+    assert (round(ci["empty-heading"].ci_low, 3), round(ci["empty-heading"].ci_high, 3)) == (0.156, 1.000)
+    assert (round(ci["document-title"].ci_low, 3), round(ci["document-title"].ci_high, 3)) == (0.000, 0.000)
+
+
+def test_document_title_flagged_constant_classifier_zero_width() -> None:
+    dt = _ci_by_axe()["document-title"]
+    assert dt.ci_low == dt.ci_high == 0.0
+    assert dt.constant_classifier is True
+    assert dt.degenerate_share == 1.0  # the drafter stream is constant on every resample
+
+
+def test_only_document_title_is_a_constant_classifier() -> None:
+    ci = _ci_by_axe()
+    assert [axe for axe, c in ci.items() if c.constant_classifier] == ["document-title"]
+
+
+def test_ci_bounds_are_bit_reproducible() -> None:
+    a = _artifact()
+    assert [(c.ci_low, c.ci_high) for c in class_kappa_cis(a)] == [(c.ci_low, c.ci_high) for c in class_kappa_cis(a)]
+
+
+def test_ci_is_not_a_wilson_proportion_interval() -> None:
+    # A Wilson interval for a proportion is bounded to [0, 1]; κ can go negative. label's lower bound is
+    # < 0, which a proportion interval could never produce — proof κ is not routed through Wilson.
+    assert _ci_by_axe()["label"].ci_low < 0.0
+
+
+def test_every_class_records_seed_and_resamples() -> None:
+    for c in class_kappa_cis(_artifact()):
+        assert c.resamples == 10000
+        assert c.seed == 0
+        assert 0.0 <= c.degenerate_share <= 1.0
+
+
+def test_ci_point_kappa_matches_the_class_kappa() -> None:
+    point = {c.axe_rule: round(c.kappa, 6) for c in class_kappas(_artifact())}
+    with_ci = {c.axe_rule: round(c.kappa, 6) for c in class_kappa_cis(_artifact())}
+    assert point == with_ci

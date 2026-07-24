@@ -444,7 +444,7 @@ Found while verifying the above; ordered by consequence.
    gold; judge confusion separated; noise floor with dominant source; frozen scorecard with n + CI
    and a four-item not-measured list; the honest analysis exceeds its ≥3-failure-mode floor). The
    whitelist additions were recorded in the contracts change log with fixture bumps as required
-   (`docs/act-feasibility.md`, "Whitelist cost"). No divergence found in the scoring definitions:
+   (`docs/act-feasibility.md`, "Cost of growing the rule set"). No divergence found in the scoring definitions:
    the FLAGS/CLEAN collapse, honest-miss handling, and abstention cell match the spec
    (`clearway/eval/stats.py:37`, `clearway/eval/drafter_score.py:142,204`).
 

@@ -5,9 +5,9 @@ of the pipeline works per *place* — one issue at one element — so the normal
 explodes each rule result's nodes into individual `Finding`s, assigns a deterministic
 id, and drops duplicates (ARCHITECTURE §6: scanner → normalizer → everything).
 
-Three axe buckets become findings: confirmed `violations`, needs-review `incomplete`, and a
-whitelisted, existence-only subset of `passes` (quality-review judgment items — see
-`quality_review.py` for why). They are structurally identical, so all flow through the same
+Three axe buckets become findings: confirmed `violations`, needs-review `incomplete`, and the
+existence-only subset of `passes` named by `QUALITY_REVIEW_RULES` (quality-review judgment
+items — see `quality_review.py` for why). They are structurally identical, so all flow through the same
 path; each finding records which bucket it came from in `source_bucket` so the oracle knows
 whether it carries hard ground truth (VIOLATIONS) or is oracle-poor (INCOMPLETE / PASSES →
 unverifiable). For a PASSES finding the help is reframed to the quality-review task, because
@@ -98,9 +98,9 @@ def normalize(scan: ScanResult) -> list[Finding]:
     """Flatten a `ScanResult` into deduplicated `Finding[]`, in stable scan order.
 
     Three axe buckets become findings — confirmed `violations` first, then needs-review
-    `incomplete`, then the whitelisted existence-only `passes` (quality-review) — each tagged
-    with its `source_bucket`. Only passes whose rule is in the quality-review whitelist become
-    findings; the rest of axe's (large) passes[] are ignored. Dedup is by `Finding.id` (the
+    `incomplete`, then the existence-only `passes` (quality-review) — each tagged with its
+    `source_bucket`. Only passes whose rule is in `QUALITY_REVIEW_RULES` become findings; the
+    rest of axe's (large) passes[] are ignored. Dedup is by `Finding.id` (the
     (source_url, rule_id, target) hash): if the same rule hits the same place twice, we keep
     the first and drop the rest. Order is preserved (first occurrence wins) so the output is
     deterministic given a deterministic scan.
@@ -115,7 +115,7 @@ def normalize(scan: ScanResult) -> list[Finding]:
     for bucket, rules in rules_by_bucket:
         for rule in rules:
             if bucket is AxeBucket.PASSES and rule.rule_id not in QUALITY_REVIEW_RULES:
-                continue  # only whitelisted existence-only rules are quality-review findings
+                continue  # only the listed existence-only rules are quality-review findings
             for finding in _findings_from_rule(scan.url, rule, bucket):
                 if finding.id in seen:
                     continue

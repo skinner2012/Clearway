@@ -286,7 +286,7 @@ def test_cli_review_approve_then_resume_restores_the_unverifiable_share(shared_s
 def test_cli_review_edit_with_remediation_persists_and_flows_into_the_report(shared_spine, capsys) -> None:  # type: ignore[no-untyped-def]
     """`review edit --remediation` re-drafts a queued row without the editor; it persists as an
     edit and, on resume, the finding assembles into the report (findings_total climbs back to 11:
-    3 violations + 6 whitelist judgment findings + the 2 edited-and-folded incomplete items)."""
+    3 violations + 6 quality-review judgment findings + the 2 edited-and-folded incomplete items)."""
     assert main(["eval", "--no-emit", "--run-id", "cli-edit"]) == 0
     capsys.readouterr()
 
@@ -314,7 +314,7 @@ def test_cli_review_reject_keeps_the_finding_out_of_the_report(shared_spine, cap
     capsys.readouterr()
 
     assert main(["eval", "--no-emit", "--run-id", "cli-reject"]) == 0
-    # 3 violations + 6 whitelist judgment findings stay; the 2 rejected incomplete never rejoin.
+    # 3 violations + 6 quality-review judgment findings stay; the 2 rejected incomplete never rejoin.
     assert "findings=9" in capsys.readouterr().out
 
 

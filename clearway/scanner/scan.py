@@ -91,8 +91,8 @@ def scan(target: str) -> ScanResult:
         tool_version=AXE_VERSION,
         violations=[_to_rule_result(v, AxeViolation) for v in results.get("violations", [])],
         incomplete=[_to_rule_result(i, AxeIncomplete) for i in results.get("incomplete", [])],
-        # Faithful mirror of axe's passes[]; the normalizer surfaces a whitelisted existence-only
-        # subset (clearway/normalizer/quality_review.py) as quality-review judgment findings.
+        # Faithful mirror of axe's passes[]; the normalizer surfaces the existence-only subset named
+        # by QUALITY_REVIEW_RULES (clearway/normalizer/quality_review.py) as quality-review findings.
         passes=[_to_rule_result(p, AxePass) for p in results.get("passes", [])],
         raw=results,
     )

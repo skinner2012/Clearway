@@ -149,8 +149,8 @@ def test_incomplete_items_become_findings_tagged_incomplete_after_violations() -
     assert [f.source_bucket for f in findings] == [AxeBucket.VIOLATIONS, AxeBucket.INCOMPLETE]
 
 
-def test_whitelisted_pass_becomes_a_reframed_quality_review_finding() -> None:
-    """A whitelisted existence-only pass mints a PASSES finding whose help is reframed to the
+def test_quality_review_pass_becomes_a_reframed_finding() -> None:
+    """An existence-only pass named by QUALITY_REVIEW_RULES mints a PASSES finding whose help is reframed to the
     quality-review task — NOT axe's rule-level help, which reads as already-conformant."""
     (finding,) = normalize(_scan_result(passes=[_pass("image-alt", ["img"], tags=["wcag111"])]))
     assert finding.source_bucket is AxeBucket.PASSES
@@ -159,8 +159,8 @@ def test_whitelisted_pass_becomes_a_reframed_quality_review_finding() -> None:
     assert finding.help != "Images must have alternate text"  # the misleading rule-level help is dropped
 
 
-def test_non_whitelisted_pass_is_not_a_finding() -> None:
-    """axe's passes[] is large; only whitelisted existence-only rules become findings. A pass for
+def test_pass_outside_the_quality_review_rules_is_not_a_finding() -> None:
+    """axe's passes[] is large; only the listed existence-only rules become findings. A pass for
     any other rule (here a heading check) is ignored."""
     assert normalize(_scan_result(passes=[_pass("heading-order", ["h2"])])) == []
 
@@ -201,15 +201,15 @@ def test_fixture_scan_normalizes_home_deterministically() -> None:
     assert by_rule["label"].target == "#email"
     # tags carried so the oracle can derive SCs downstream
     assert "wcag412" in by_rule["label"].axe_tags
-    # home also has a <title> and a non-empty <h1>, so the global quality-review whitelist mints
-    # two existence-only judgment findings (measured against ACT gold in the acceptance benchmark).
+    # home also has a <title> and a non-empty <h1>, and the quality-review rule set is global, so it
+    # mints two existence-only judgment findings (measured against ACT gold in the acceptance benchmark).
     assert {f.rule_id for f in findings if f.source_bucket is AxeBucket.PASSES} == {"document-title", "empty-heading"}
 
     # idempotency: normalizing the same scan again yields identical ids
     assert [f.id for f in findings] == [f.id for f in normalize(result)]
 
 
-def test_every_whitelisted_class_carries_a_trust_tier() -> None:
+def test_every_quality_review_class_carries_a_trust_tier() -> None:
     """A new quality-review rule must declare how far its judgment is trusted — so no finding class
     ships as an unlabelled peer of a measured one. The benchmark showed the classes differ sharply:
     empty-heading reliable, document-title ~100% cry-wolf, image-alt never measured."""
@@ -228,8 +228,8 @@ def test_incomplete_fixture_normalizes_to_an_unverifiable_finding() -> None:
     result = scan(str(PAGES / "contrast-gradient.html"))
     findings = normalize(result)
 
-    # the page also has a <title>/<h1>, so scope to the incomplete bucket (the whitelist mints
-    # two judgment findings alongside — see the home normalizer test).
+    # the page also has a <title>/<h1>, so scope to the incomplete bucket (the global quality-review
+    # rule set mints two judgment findings alongside — see the home normalizer test).
     incomplete = [f for f in findings if f.source_bucket is AxeBucket.INCOMPLETE]
     assert len(incomplete) == 1
     (finding,) = incomplete
@@ -243,7 +243,7 @@ def test_incomplete_fixture_normalizes_to_an_unverifiable_finding() -> None:
 
 # Each quality fixture plants three present-but-poor values on a gradient (inadequate ->
 # borderline -> adequate) so that axe PASSES the existence check while the quality stays a
-# judgment call. Map: fixture -> (whitelisted rule it exercises, planted judgment items).
+# judgment call. Map: fixture -> (quality-review rule it exercises, planted judgment items).
 QUALITY_FIXTURES = {
     "alt-product.html": ("image-alt", 3),
     "alt-article.html": ("image-alt", 3),
@@ -258,18 +258,18 @@ QUALITY_FIXTURES = {
 
 
 def test_quality_fixtures_yield_only_reframed_passes_judgment_items() -> None:
-    """Each planted quality fixture lands in axe's passes[] under exactly its whitelisted rule —
+    """Each planted quality fixture lands in axe's passes[] under exactly its quality-review rule —
     present enough to pass existence, never a hard violation — and every minted finding is a
     reframed quality-review task (risk #1), not axe's already-conformant rule help. The 27 findings
     across the set (scoped to each page's own rule) are the gold floor (>= 25). Each page also has a
-    <title>/<h1>, so the global whitelist mints document-title/empty-heading judgment findings too;
+    <title>/<h1>, and the rule set is global, so it mints document-title/empty-heading findings too;
     those are validated against ACT gold, not this set, so we scope to the page's planted rule."""
     total = 0
     for page, (rule, count) in QUALITY_FIXTURES.items():
         findings = normalize(scan(str(QUALITY / page)))
         passes = [f for f in findings if f.source_bucket is AxeBucket.PASSES and f.rule_id == rule]
 
-        # every planted item passed on existence under exactly the expected whitelisted rule
+        # every planted item passed on existence under exactly the expected quality-review rule
         assert [f.rule_id for f in passes] == [rule] * count, page
         # reframed to the quality-review task — NOT axe's rule-level "…has alternate text" help
         assert all(f.help == QUALITY_REVIEW_RULES[rule] for f in passes), page

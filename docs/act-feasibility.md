@@ -2,12 +2,12 @@
 
 Which W3C ACT rules can actually reach this pipeline, and how large the resulting acceptance set
 is. A Clearway `Finding` exists only when axe emits something; judgment items are minted from axe's
-`passes[]` bucket for a whitelist of existence-only rules. So an ACT rule "reaches" the pipeline
+`passes[]` bucket for a global set of existence-only rules (`QUALITY_REVIEW_RULES`). So an ACT rule "reaches" the pipeline
 only if scanning its example page mints a `passes` judgment `Finding` for the axe rule that carries
 its call.
 
 **Method.** Each vendored ACT example (passed + failed) was run through the real `scan → normalize`
-with the production quality-review whitelist, and we recorded whether — and how many — `passes`
+with the production quality-review rule set, and we recorded whether — and how many — `passes`
 findings minted for the rule's axe rule. Everything here is reproducible from the vendored copy
 (`clearway/fixtures/act-gold/`, frozen by `export_sha256 a805d865…`); axe-core is pinned at 4.12.1.
 
@@ -28,8 +28,8 @@ from the totals.
 
 **Reachable n = 40 cases (24 true negatives + 16 true positives).** `empty-heading` and
 `document-title` were confirmed to PASS on present-but-non-descriptive content (i.e. they mint a
-judgment finding rather than a hard violation), so both were added to the whitelist. Two rules were
-added and the change absorbed as described in "Whitelist cost" below.
+judgment finding rather than a hard violation), so both were added to the rule set. Two rules were
+added and the change absorbed as described in "Cost of growing the rule set" below.
 
 ### Two denominators — report both
 
@@ -75,11 +75,11 @@ exclusions and their reasons live in `clearway/eval/act_gold.py` (`EXCLUDED_RULE
 and one regression it stops scoring — are recorded in `docs/drafter-kappa-baseline.md` and on the frozen
 baseline artifact.
 
-## Whitelist cost
+## Cost of growing the rule set
 
 Adding `empty-heading` (SC 2.4.6, a new rule) and `document-title` (SC 2.4.2, a deferral reversal)
-to the **global** quality-review whitelist mints new judgment findings on every fixture carrying a
-heading/title — i.e. all of them. That perturbation was absorbed, not hidden:
+to the quality-review rule set mints new judgment findings on every fixture carrying a
+heading/title — i.e. all of them, because the set is **global**. That perturbation was absorbed, not hidden:
 
 - `quality-gold@1 → @2`, its per-page bijection scoped to each page's own rule (the two new rules are
   validated against ACT gold, not relabelled here; the M4 κ replays a frozen set and is unchanged).

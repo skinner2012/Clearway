@@ -175,7 +175,7 @@ PAGES: list[dict[str, Any]] = [
 
 
 def _page_findings(path: Path) -> list[Finding]:
-    """The whitelisted judgment findings a page mints (passes bucket only — the drafter's real domain)."""
+    """The quality-review judgment findings a page mints (passes bucket only — the drafter's real domain)."""
     return [f for f in normalize(scan(str(path))) if f.source_bucket is AxeBucket.PASSES]
 
 

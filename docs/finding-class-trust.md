@@ -6,7 +6,7 @@ content, and two have never been measured at all. A specialist should read each 
 its class's trust, **not** as an indistinguishable peer of the others.
 
 - **Code SSOT:** `FINDING_CLASS_TRUST` in [`../clearway/normalizer/quality_review.py`](../clearway/normalizer/quality_review.py)
-  — every whitelisted class must carry a tier (enforced by a test), so a new rule cannot ship unlabelled.
+  — every class in `QUALITY_REVIEW_RULES` must carry a tier (enforced by a test), so a new rule cannot ship unlabelled.
 - **The numbers** (kept in one place so they can't drift): the per-rule table in
   [`acceptance-analysis.md`](acceptance-analysis.md).
 

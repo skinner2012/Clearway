@@ -67,8 +67,8 @@ class AxeBucket(str, Enum):
     - INCOMPLETE — axe ran the rule but could NOT decide (needs pixels / render / media
       it can't see): no oracle verdict, feeds `unverifiable_share`.
     - PASSES — axe confirmed something EXISTS (an alt, an accessible name, a title) but
-      does not judge its QUALITY. A whitelist of existence-only rules is surfaced from
-      here as judgment findings ("exists, quality unjudged"); non-whitelisted passes are
+      does not judge its QUALITY. A global set of existence-only rules is surfaced from
+      here as judgment findings ("exists, quality unjudged"); passes outside that set are
       not findings. This is the LLM-judge's real domain — quality IS decidable from the
       DOM the drafter sees (unlike INCOMPLETE, which usually isn't).
     The oracle allowlists VIOLATIONS only: INCOMPLETE and PASSES have no oracle verdict
@@ -77,7 +77,7 @@ class AxeBucket(str, Enum):
 
     VIOLATIONS = "violations"  # confirmed failure — oracle-backed
     INCOMPLETE = "incomplete"  # axe couldn't decide — no oracle verdict
-    PASSES = "passes"  # exists but quality unjudged — whitelisted judgment source, no oracle
+    PASSES = "passes"  # exists but quality unjudged — quality-review judgment source, no oracle
 
 
 class JudgeVerdict(str, Enum):
@@ -115,8 +115,8 @@ class AxeNode(BaseModel):
 
 class AxeRuleResult(BaseModel):
     """One axe rule result over a page (may span multiple nodes). Base for the buckets
-    we consume — `violations` (confirmed), `incomplete` (needs review), and whitelisted
-    `passes` (existence-only → quality-review) — which are structurally identical in the
+    we consume — `violations` (confirmed), `incomplete` (needs review), and the
+    quality-review `passes` (existence-only) — which are structurally identical in the
     axe payload."""
 
     model_config = ConfigDict(extra="forbid")
@@ -144,7 +144,7 @@ class AxeIncomplete(AxeRuleResult):
 
 class AxePass(AxeRuleResult):
     """An axe PASS result (axe's `passes` bucket): the rule's mechanical check succeeded — a
-    name / attribute / title EXISTS. For a whitelist of existence-only rules, passing means only
+    name / attribute / title EXISTS. For a global set of existence-only rules, passing means only
     "present", never "meaningful", so the normalizer surfaces those as quality-review judgment
     findings (`AxeBucket.PASSES`). Same shape as a violation, but a PASS, not a failure."""
 
@@ -164,7 +164,7 @@ class ScanResult(BaseModel):
     )
     passes: list[AxePass] = Field(
         default_factory=list,
-        description="axe's passes[] bucket (faithful mirror); the normalizer surfaces a whitelisted "
+        description="axe's passes[] bucket (faithful mirror); the normalizer surfaces a global "
         "existence-only subset as quality-review judgment findings",
     )
     raw: dict = Field(default_factory=dict, description="full axe payload passthrough (untyped)")

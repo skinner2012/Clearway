@@ -1,5 +1,6 @@
-"""The quality-review whitelist: which axe `passes[]` rules the normalizer surfaces as
-judgment findings, and the task-honest help each one carries.
+"""The quality-review rule set (`QUALITY_REVIEW_RULES`): which axe `passes[]` rules the normalizer
+surfaces as judgment findings, and the task-honest help each one carries. The set is GLOBAL — a rule
+listed here mints findings on EVERY page, so adding one is never a local change (see the cost note).
 
 Why this module exists — the empirical finding behind the judgment gold set
 --------------------------------------------------------------------------
@@ -18,8 +19,8 @@ never checks whether it is MEANINGFUL — `image-alt` passes `alt="DSC_0042.jpg"
 passes "click here", `label` passes a placeholder-only input. Those are precisely the
 "axe confirms it exists; an expert judges whether it's any good" calls that make up the
 oracle-poor share of a real audit — and they are decidable from the DOM, so the judge can make
-them too. The normalizer therefore mints a judgment `Finding` (`AxeBucket.PASSES`) for each
-whitelisted pass.
+them too. The normalizer therefore mints a judgment `Finding` (`AxeBucket.PASSES`) for each pass of
+a rule in this set.
 
 Why these six rules — and why one is still deliberately deferred
 ----------------------------------------------------------------
@@ -36,14 +37,14 @@ usually reads as adequate, so a clean "present-but-inadequate" case is hard to p
 not confirmed to pass on poor content. The alt/name variants (`svg-img-alt`, `object-alt`,
 `role-img-alt`, `input-image-alt`, `select-name`) remain deferred on the same empirical bar.
 
-Note the cost paid for `empty-heading` / `document-title`: the whitelist is GLOBAL, so both mint
-new judgment findings on every frozen fixture that has a heading/title (all of them). That moved
+Note the cost paid for `empty-heading` / `document-title`: the set is GLOBAL, so both mint new
+judgment findings on every frozen fixture that has a heading/title (all of them). That moved
 versioned anchors and required a fixture version bump — the mechanism this module already
-prescribes for any whitelist change.
+prescribes for any change to the set.
 
 The reframe (the VALUES)
 ------------------------
-The KEYS are the whitelist. The VALUES REPLACE axe's rule-level help — which for a pass reads
+The KEYS are the rule set. The VALUES REPLACE axe's rule-level help — which for a pass reads
 misleadingly, e.g. "Images must have alternate text" — with the actual quality-review task, so
 the finding is self-describing to the drafter and the judge. Without this, a passes-sourced
 finding reads as already-conformant and the drafter would draft "supports", producing a gold
@@ -94,7 +95,7 @@ class FindingClassTrust(str, Enum):
     UNMEASURED = "unmeasured"  # never validated against gold — no trust signal exists for the class
 
 
-# Every whitelisted class MUST carry a trust tier (enforced by test): a new quality-review rule has to
+# Every class in QUALITY_REVIEW_RULES MUST carry a trust tier (enforced by test): a new rule has to
 # state how far its judgment is trusted, so no class ships as an unlabelled peer of a measured one.
 FINDING_CLASS_TRUST: dict[str, FindingClassTrust] = {
     "empty-heading": FindingClassTrust.RELIABLE,

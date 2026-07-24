@@ -105,8 +105,8 @@ class AxeBucket(str, Enum):
     - INCOMPLETE — axe ran the rule but could NOT decide (needs pixels / render / media
       it can't see): no oracle verdict, feeds `unverifiable_share`.
     - PASSES — axe confirmed something EXISTS (an alt, an accessible name, a title) but
-      does not judge its QUALITY. A whitelist of existence-only rules is surfaced from
-      here as judgment findings ("exists, quality unjudged"); non-whitelisted passes are
+      does not judge its QUALITY. A global set of existence-only rules is surfaced from
+      here as judgment findings ("exists, quality unjudged"); passes outside that set are
       not findings. This is the LLM-judge's real domain — quality IS decidable from the
       DOM the drafter sees (unlike INCOMPLETE, which usually isn't).
     The oracle allowlists VIOLATIONS only: INCOMPLETE and PASSES have no oracle verdict
@@ -114,7 +114,7 @@ class AxeBucket(str, Enum):
     payload keys."""
     VIOLATIONS = "violations"  # confirmed failure — oracle-backed
     INCOMPLETE = "incomplete"  # axe couldn't decide — no oracle verdict
-    PASSES = "passes"          # exists but quality unjudged — whitelisted judgment source, no oracle
+    PASSES = "passes"          # exists but quality unjudged — quality-review judgment source, no oracle
 
 
 class JudgeVerdict(str, Enum):
@@ -148,8 +148,8 @@ class AxeNode(BaseModel):
 
 class AxeRuleResult(BaseModel):
     """One axe rule result over a page (may span multiple nodes). Base for the buckets
-    we consume — `violations` (confirmed), `incomplete` (needs review), and whitelisted
-    `passes` (existence-only → quality-review) — which are structurally identical in the
+    we consume — `violations` (confirmed), `incomplete` (needs review), and the
+    quality-review `passes` (existence-only) — which are structurally identical in the
     axe payload."""
     model_config = ConfigDict(extra="forbid")
 
@@ -176,7 +176,7 @@ class AxeIncomplete(AxeRuleResult):
 
 class AxePass(AxeRuleResult):
     """An axe PASS result (axe's `passes` bucket): the rule's mechanical check succeeded — a
-    name / attribute / title EXISTS. For a whitelist of existence-only rules, passing means only
+    name / attribute / title EXISTS. For a global set of existence-only rules, passing means only
     "present", never "meaningful", so the normalizer surfaces those as quality-review judgment
     findings (`AxeBucket.PASSES`). Same shape as a violation, but a PASS, not a failure."""
 
@@ -195,7 +195,7 @@ class ScanResult(BaseModel):
     )
     passes: list[AxePass] = Field(
         default_factory=list,
-        description="axe's passes[] bucket (faithful mirror); the normalizer surfaces a whitelisted "
+        description="axe's passes[] bucket (faithful mirror); the normalizer surfaces a global "
         "existence-only subset as quality-review judgment findings",
     )
     raw: dict = Field(default_factory=dict, description="full axe payload passthrough (untyped)")
@@ -1081,6 +1081,7 @@ Added when their milestone arrives, not before:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-07-23 | 0.23 | Vocabulary sweep only — no field, bound, default, or wire change. The quality-review pass set is referred to by its code name, `QUALITY_REVIEW_RULES`, everywhere it is described in prose; the older "whitelist" wording is retired from §3 (the `AxeBucket.PASSES` and `AxeRuleResult` / `AxePass` docstrings and the `ScanResult.passes` field description) and from the live code, docs and comments that mirrored it. The meaning that wording carried is preserved explicitly: the set is **global**, so a rule added to it mints findings on *every* page. Entries below are historical and keep their original wording. No prompt, no drafted output and no frozen number moves — `benchmark/reports/{scorecard,drafter_kappa_baseline,verdict_vector}.json` re-derive bit-identical, and `tests/test_terminology_sweep.py` pins the assembled `passes`-bucket prompt byte-for-byte. §5 unaffected. |
 | 2026-07-23 | 0.22 | M7 (T0): gold correction + reachable-ceiling pre-registration. Scoped the `link-name` class to *Link in context is descriptive* (SC 2.4.4, **Level A**) and moved *Link is descriptive* (SC 2.4.9, **Level AAA only** — outside the A/AA conformance target) into `act_gold.EXCLUDED_RULES`; the acceptance set goes 53 → **44** cases (40 minting + 4 honest misses, 54 findings). Extended `DrafterKappaClass` with the reachable-error ledger (`unreachable` — a new `UnreachableError` nesting the new `UnreachableErrorKind` enum — plus `honest_miss_errors`, `contradictory_gold_errors`, `reachable_errors`, `reachable_error_ids`, `reachable_p_value`, `reachable_certifiable`, `tolerated_regressions`): the old `errors`/`p_value` ceiling counted errors no prompt-input change can reach, so it was optimistic. Extended `DrafterKappaBaseline` with `one_sided` and four new nested shapes — `PooledEndpoint` (the PRIMARY endpoint; per-class certification is zero-margin at these n), `ScopeCorrection` (nesting `ExclusionSideEffect` ×2 and `SupersededClassReading`, disclosing the one manufactured win and the one unscored regression the exclusion causes), `PreregisteredPrediction` ×2, and `ScopedDenominators`. **Not additive:** re-deriving the `link-name` row necessarily moves it (n 24 → 15, errors 9 → 6, p 0.001953125 → 0.015625, κ 0.250 → 0.211); `document-title`, `empty-heading` and `label` are bit-identical. The superseded reading is preserved as a declared field, not a parallel artifact. `verdict_vector.json` re-frozen at 44 cases, every surviving verdict bit-identical. No drafter behaviour changes and no model was invoked; §5 unaffected. |
 | 2026-07-23 | 0.21 | Added `DrafterKappaBaseline` (the frozen per-class **drafter**-κ baseline — the reference every future drafter claim is measured against; drafter-only by design, the judge enters no number) nesting `DrafterKappaClass` (per fix-unit class: 2×2, raw agreement, κ under **both** `partial_flags` readings, seeded bootstrap CI + degenerate share + constant-classifier flag, and the pre-registered ceiling — `errors`/`p_value`/`certifiable`). Carries the drafter-side provenance (config / eval-set / corpus versions, drafter model **digest**, axe-core version, ACT export hash, run ids, source timestamp), the pre-registration string, α, and the bootstrap seed/resamples so every number reproduces bit-for-bit. Assembled by the pure `eval/drafter_kappa_baseline.py::build_drafter_kappa_baseline` from the frozen run artifact — no model, scored against ACT gold only. Additive — no existing shape changed; §5 unaffected. |
 | 2026-07-23 | 0.20 | Removed the `low_confidence` HITL trigger and its `ReviewReason.LOW_CONFIDENCE` member. The `draft.confidence < 0.5` branch is deleted from `orchestrator/machine.py`, reducing gate precedence to `AXE_INCOMPLETE > UNVERIFIABLE_JUDGMENT`. It gated on noise (confidence is decorative — pinned ~0.9 regardless of correctness) and never fired, so no stored `NeedsReview` record can carry the value (grep of every `*.json`/`*.jsonl` is clean) — the enum member is dropped outright, not deprecated. No drafter behaviour changes, no metric moves, and review-queue composition is unchanged. §5 unaffected. |

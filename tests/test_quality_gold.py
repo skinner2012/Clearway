@@ -17,7 +17,7 @@ from clearway.schemas.models import AxeBucket, Conformance, GoldLabel, Severity
 FIXTURES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures"
 MANIFEST = FIXTURES / "expected_quality.json"
 
-# the residual quality criterion per whitelisted rule (see the manifest note for why link-name
+# the residual quality criterion per quality-review rule (see the manifest note for why link-name
 # is 2.4.4 and not 4.1.2)
 RULE_SC = {"image-alt": "1.1.1", "link-name": "2.4.4", "frame-title": "4.1.2"}
 
@@ -60,7 +60,7 @@ def test_gold_maps_one_to_one_onto_findings_and_every_label_validates() -> None:
     conformances: set[str] = set()
     for page in m["pages"]:
         findings = normalize(scan(str(FIXTURES / page["path"])))
-        # Scope to this page's own rule: the global whitelist now also mints empty-heading /
+        # Scope to this page's own rule: the global rule set now also mints empty-heading /
         # document-title judgment findings on every fixture's <h1>/<title>, but this set
         # calibrates only image-alt / link-name / frame-title (the two new rules are validated
         # against ACT gold, not relabelled here — see the manifest note).

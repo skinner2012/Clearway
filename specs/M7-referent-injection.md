@@ -179,17 +179,18 @@ estimand is the pool: **10 reachable errors**, with real margin.
 ### Two frozen runs, and the rule that makes the second one mean something
 
 A **run** is one complete pass of the pipeline over the 44-case acceptance set: scan → normalize →
-retrieve → **call the drafter** → call the judge → freeze to `benchmark/runs/run_N.json`. The model is
+retrieve → **call the drafter** → freeze to `benchmark/runs/`. The model is
 called only there; every downstream number is a pure function of that file. A run is the unit because
 it is the only place non-determinism can enter, and freezing it is what makes the numbers reproducible
-without re-running the model.
+without re-running the model. *(M5/M6 also called the judge at this step; **M7's Run A and Run B are
+drafter-only** — the judge is out of scope for every M7 acceptance number, so it is not called. See T7.)*
 
 **Run A — referent injection only. This is the experiment.** Per-class injection is **disjoint by
 class**: the `label` branch alters only `label` prompts. The control's prompt stays byte-identical,
 asserted by test, so one run yields clean per-class attribution.
 
-**Run B — T7 only.** It confirms T7 did not undo what Run A showed, produces the final remediation text
-T9 scores, and becomes the baseline M8 pairs against.
+**Run B — T7 only, drafter-only.** It confirms T7 did not undo what Run A showed, produces the final
+remediation text T9 scores, and becomes the baseline M8 pairs against.
 
 > ## ⚠️ The one-prompt-change rule
 > **A run may carry at most ONE prompt-touching change.** This is what makes a regression attributable,
@@ -695,10 +696,20 @@ here — both are single coherent changes that cannot be split without leaving t
   report-layer and T9 only *scores* existing text, so any regression Run B shows is attributable to
   **T7** without ambiguity. **Do not add a second prompt-touching ticket to this run** — that is
   precisely the contradiction an earlier draft carried, and it is why abstention is dropped.
-- **⚠️ Acceptance — and its honest limit.** Citation hallucination rate does not rise; per-class
-  verdicts re-measured against Run A so any regression is attributed here. But state plainly: at n=44,
-  one run, with no noise floor for this metric, *"does not rise"* is a weak instrument. Watch prompt
-  length — this is the change most likely to bloat it, and long prompts degrade.
+- **⚠️ Run B is DRAFTER-ONLY — the judge is dropped, by design (decided during Run A).** No M7
+  acceptance number reads a judge field, and the standing rule is *score against ACT gold, never the
+  judge*. The judge sits at chance (κ 0.79 → ~0 on external gold; it co-signs drafter FPs), so validating
+  a citation change through its "citation hallucination rate" is Goodhart and contradicts this spec's own
+  principle (*"the judge is absent from every M7 acceptance number"*). Measure T7's citation effect
+  **deterministically against ACT gold** instead: the SC-match of `cited_sc_ids` against
+  `gold_success_criteria` (precision/recall). This makes Run B a drafter-only pass — **reuse the Run A
+  runner (`referent_injection_build.py`)**, no cloud spend, no judge integration.
+- **⚠️ Acceptance — and its honest limit.** The gold **SC-match does not fall**; per-class verdicts
+  re-measured against Run A so any regression is attributed here. State plainly: at n=44, one run,
+  deterministic SC-match is a **strict** proxy — it counts a real-but-not-gold citation as wrong — so it
+  is reported as a *direction/floor*, never as proof a citation is *useful*; a strict-but-trustworthy
+  ruler beats the lenient-but-broken judge. Watch prompt length — this is the change most likely to bloat
+  it, and long prompts degrade.
 - **Depends on:** T6
 
 ### T8 — Derived confidence signal *(post-Run-A)*
@@ -736,9 +747,14 @@ here — both are single coherent changes that cannot be split without leaving t
   ACT's canonical technique codes. The technique metadata is already in the vendored export
   (`wcag-technique` namespace, 42 keys). The real constraint is **coverage**: only `label` (G131) and
   `document-title` (G88/H25) carry technique requirements; `link-name` and `empty-heading` carry none.
-  Classification uses a **different model from the drafter**, scored **deterministically against ACT
-  gold** — classification, not LLM-as-judge. **Confirm that second model is available locally at
-  acceptable cost before starting** (CLAUDE.md: ask before adding a dependency).
+  Classification uses a **different model from the drafter** — **`gpt-5.6-sol`** (distinct from both the
+  gemma drafter and the dropped `gpt-5.6-luna` judge) — scored **deterministically against ACT gold**:
+  classification, not LLM-as-judge, so the classifier's output is *checked against gold, never trusted*,
+  and it does **not** inherit the judge's Goodhart problem even though it is a sibling model. Cost is
+  negligible (~16 scoreable cases → ~16 one-shot classifications at scoring time, not per-finding), so the
+  cloud call is acceptable here; confirm `gpt-5.6-sol` is reachable under the existing key and add its
+  config before starting (CLAUDE.md: ask before adding a dependency). *(A fully-local alternative —
+  `qwen3.6:27b`, already in Ollama — is equally valid if zero-cloud is preferred.)*
 - **⚠️ Acceptance:** scored **chance-corrected**, never as a raw match rate. Technique gold is
   *rule-level* — all eleven `label` cases share gold G131 — so a constant classifier scores 100% on raw
   match. That is exactly the failure κ was built to catch, and repeating it here would have the

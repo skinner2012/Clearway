@@ -6,6 +6,10 @@ Loads a page, injects a pinned, vendored axe-core (`vendor/axe.min.js`), runs
 axe-core is our oracle, so its version is pinned and recorded in every
 `ScanResult.tool_version` for reproducibility. Bumping it is a deliberate,
 reviewed change (swap the vendored file + `AXE_VERSION`, re-run fixtures).
+
+A second `page.evaluate` then captures per-node **referent material** — the context a
+judgment about a node needs and that the element snippet cannot carry (`referent.py`).
+It runs here, in the same page session, because after `browser.close()` the DOM is gone.
 """
 
 from __future__ import annotations
@@ -17,12 +21,14 @@ from urllib.parse import urlparse
 
 from playwright.sync_api import sync_playwright
 
+from clearway.scanner.referent import extract_referents
 from clearway.schemas.models import (
     AxeIncomplete,
     AxeNode,
     AxePass,
     AxeRuleResult,
     AxeViolation,
+    NodeReferent,
     ScanResult,
     Severity,
 )
@@ -45,21 +51,39 @@ def _to_url(target: str) -> str:
     return Path(target).resolve().as_uri()
 
 
-def _to_rule_result(raw: dict, cls: type[_RuleResultT]) -> _RuleResultT:
+def _node_target(node: dict) -> list[str]:
+    """axe's `node.target` as the flat string list `AxeNode.target` carries. Used for both the
+    model and the referent lookup key, so the two can never disagree."""
+    return [str(t) for t in node.get("target", [])]
+
+
+def _to_rule_result(raw: dict, cls: type[_RuleResultT], referents: dict[tuple[str, ...], NodeReferent]) -> _RuleResultT:
     """Map one axe rule-result payload (from either the `violations` or `incomplete`
-    bucket — they share a shape) into the given typed model."""
+    bucket — they share a shape) into the given typed model, attaching the referent material
+    captured for each node (absent for a node that could not be re-resolved)."""
     impact = raw.get("impact")
+    nodes = []
+    for node in raw.get("nodes", []):
+        target = _node_target(node)
+        nodes.append(AxeNode(target=target, html=node.get("html", ""), referent=referents.get(tuple(target))))
     return cls(
         rule_id=raw["id"],
         tags=list(raw.get("tags", [])),
         impact=Severity(impact) if impact else None,
         help=raw.get("help", ""),
         help_url=raw.get("helpUrl", ""),
-        nodes=[
-            AxeNode(target=[str(t) for t in node.get("target", [])], html=node.get("html", ""))
-            for node in raw.get("nodes", [])
-        ],
+        nodes=nodes,
     )
+
+
+def _all_node_targets(results: dict) -> list[list[str]]:
+    """Every node target axe reported, across every bucket we consume, in stable scan order."""
+    return [
+        _node_target(node)
+        for bucket in ("violations", "incomplete", "passes")
+        for rule in results.get(bucket, [])
+        for node in rule.get("nodes", [])
+    ]
 
 
 def scan(target: str) -> ScanResult:
@@ -81,6 +105,11 @@ def scan(target: str) -> ScanResult:
                     f"constant deliberately, don't let provenance rot."
                 )
             results: dict = page.evaluate("() => axe.run()")
+            # Second evaluate, deliberately after axe.run() has returned: the referent lives in
+            # the DOM around the node, and this is the only moment it exists. Once the browser
+            # closes it is gone, and re-fetching the page later would break the freeze every
+            # downstream number is a pure function of.
+            referents = extract_referents(page, _all_node_targets(results))
         finally:
             browser.close()
 
@@ -89,10 +118,10 @@ def scan(target: str) -> ScanResult:
         scanned_at=datetime.now(timezone.utc),
         tool="axe-core",
         tool_version=AXE_VERSION,
-        violations=[_to_rule_result(v, AxeViolation) for v in results.get("violations", [])],
-        incomplete=[_to_rule_result(i, AxeIncomplete) for i in results.get("incomplete", [])],
+        violations=[_to_rule_result(v, AxeViolation, referents) for v in results.get("violations", [])],
+        incomplete=[_to_rule_result(i, AxeIncomplete, referents) for i in results.get("incomplete", [])],
         # Faithful mirror of axe's passes[]; the normalizer surfaces the existence-only subset named
         # by QUALITY_REVIEW_RULES (clearway/normalizer/quality_review.py) as quality-review findings.
-        passes=[_to_rule_result(p, AxePass) for p in results.get("passes", [])],
+        passes=[_to_rule_result(p, AxePass, referents) for p in results.get("passes", [])],
         raw=results,
     )

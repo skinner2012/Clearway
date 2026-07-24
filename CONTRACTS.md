@@ -134,9 +134,79 @@ class UnreachableErrorKind(str, Enum):
     CONTRADICTORY_GOLD = "contradictory_gold"  # byte-identical fixtures, opposite ACT outcomes
 
 
+class ReferentSource(str, Enum):
+    """The named DOM source one referent excerpt was read from.
+
+    Every extractor names its source, so a downstream reader never has to guess where a
+    string came from — and so a fallback tier is never mistaken for the primary one.
+    `page_topic` is the only field whose source varies at runtime (it resolves through a
+    fixed tier order), which is exactly why the source rides on the excerpt rather than
+    being implied by the field name."""
+    ACCESSIBLE_NAME = "accessible_name"    # axe.commons.text.accessibleText on the node itself
+    DOCUMENT_TITLE = "document_title"      # document.title, when a <title> element exists
+    H1 = "h1"                              # topic tier 1 — the first <h1>'s rendered text
+    MAIN = "main"                          # topic tier 2 — the main landmark (native or role="main")
+    META_DESCRIPTION = "meta_description"  # topic tier 3 — <meta name="description"> content
+    RENDERED_BODY_TEXT = "rendered_body_text"  # topic tier 4 — last resort, body innerText
+    NEAREST_SECTION_HEADING = "nearest_section_heading"  # nearest heading preceding the node
+    ANCESTOR_TEXT = "ancestor_text"        # bounded rendered text of a nearby ancestor
+
+
 # ============================================================
 # Scanner output  (scanner/ -> normalizer/)
 # ============================================================
+
+class ReferentExcerpt(BaseModel):
+    """One bounded piece of referent material, with the provenance needed to audit it.
+
+    `text` is already whitespace-normalized and already truncated to its extractor's pinned
+    character budget (`scanner/referent.py`), so a consumer never has to re-bound it. `truncated`
+    says whether anything was dropped — an injected excerpt that was cut should be presented as
+    cut, not as the whole thing."""
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(..., description="normalized, budget-bounded text; '' means the source was empty")
+    source: ReferentSource = Field(..., description="which named DOM source this was read from")
+    truncated: bool = Field(False, description="True iff the source text exceeded the pinned budget")
+    in_accessibility_tree: Optional[bool] = Field(
+        None,
+        description="whether the element this was read from is exposed to screen readers; None where "
+        "the source is not a single element or the check could not run",
+    )
+    ancestor_depth: Optional[int] = Field(
+        None,
+        description="how many parentElement steps above the node the excerpt was read from; None "
+        "where the source is not ancestor-relative",
+    )
+
+
+class NodeReferent(BaseModel):
+    """The referent material captured for ONE DOM node — the context a judgment about that node
+    needs and that the element snippet alone cannot carry.
+
+    Every field is Optional and defaults to `None`, and `None` means exactly one thing: **the
+    source was not available for this node**. A source that WAS available but held no text is a
+    `ReferentExcerpt` with `text=""`. The two are different facts ("this page has no heading above
+    the field" vs "the heading above the field is blank") and a consumer must be able to tell them
+    apart, so they are never collapsed.
+
+    Captured deterministically at scan time, never by a model."""
+    model_config = ConfigDict(extra="forbid")
+
+    accessible_name: Optional[ReferentExcerpt] = Field(
+        None, description="the node's accessible name, as axe itself computes it"
+    )
+    document_title: Optional[ReferentExcerpt] = Field(None, description="the page's resolved <title>")
+    page_topic: Optional[ReferentExcerpt] = Field(
+        None, description="what the page is about, resolved through a fixed source tier order"
+    )
+    section_heading: Optional[ReferentExcerpt] = Field(
+        None, description="the nearest heading preceding the node in document order"
+    )
+    surrounding_context: Optional[ReferentExcerpt] = Field(
+        None, description="bounded rendered text of a nearby ancestor — the node's neighbourhood"
+    )
+
 
 class AxeNode(BaseModel):
     """One offending DOM node inside an axe violation."""
@@ -144,6 +214,12 @@ class AxeNode(BaseModel):
 
     target: list[str] = Field(..., description="CSS selector path(s) to the node")
     html: str = Field("", description="outer HTML snippet of the node")
+    referent: Optional[NodeReferent] = Field(
+        None,
+        description="deterministic referent material captured in the same page session; None when "
+        "the node could not be re-resolved (a frame/shadow path, or an element axe reported that "
+        "no longer matches its selector)",
+    )
 
 
 class AxeRuleResult(BaseModel):
@@ -225,6 +301,12 @@ class Finding(BaseModel):
         AxeBucket.VIOLATIONS,
         description="axe provenance; the oracle only grounds VIOLATIONS. Not part of the id "
         "(a place is never in two buckets at once).",
+    )
+    referent: Optional[NodeReferent] = Field(
+        None,
+        description="referent material carried from the scan (AxeNode.referent). Deliberately NOT "
+        "part of the id — the id is the place, and a place must hash the same however much context "
+        "the scanner learns to capture about it.",
     )
 
 
@@ -1075,6 +1157,8 @@ Added when their milestone arrives, not before:
 | `RoutingConfig` (frozen, versioned model/config artifact) | Lands when multi-model routing is built. |
 | Full ACR/VPAT document assembly schema (beyond per-finding `DraftRow`) | Not yet needed. |
 | L2 retrieval-faithfulness fields on `CitationCheck` | The judge produces `JudgeResult`, not L2 fields; per-citation faithfulness stays a distinct, deferred concern. |
+| Non-textual referent material on `NodeReferent` (image bitmaps / rendered-region captures) | `NodeReferent` is deliberately **text-only**: everything in it is a string read from the DOM. The referent for an image or a rendered region is not text and cannot be represented by a `ReferentExcerpt`; it arrives with the multimodal milestone, as new fields on the same shape. |
+| The link **destination** as referent material | Structurally unavailable: it is not in a single-page DOM. `surrounding_context` is a proxy for it and must never be documented as the thing itself. |
 
 ---
 
@@ -1084,6 +1168,7 @@ Added when their milestone arrives, not before:
 
 | Date | Version | Change |
 |---|---|---|
+| 2026-07-23 | 0.25 | Scanner captures **per-node referent material** — the context a node-level judgment needs and that the element snippet alone cannot carry. Added `ReferentSource` (the named DOM source an excerpt was read from, including the four ordered page-topic tiers), `ReferentExcerpt` (bounded text + source + `truncated` + optional `in_accessibility_tree` / `ancestor_depth`) and `NodeReferent` (the five per-node extractors: `accessible_name`, `document_title`, `page_topic`, `section_heading`, `surrounding_context`). Carried by a new `AxeNode.referent` and a new `Finding.referent`, both `Optional[NodeReferent] = None` — **additive**: every payload written before this still validates under `extra="forbid"`, and the frozen run artifacts are untouched. **`Finding.id` is deliberately unchanged** — it still hashes `(source_url, rule_id, target)`, so the same place keeps the same id however much context the scanner captures about it, and per-case paired comparisons against the frozen verdict vector still hold. Extraction is deterministic code in a second `page.evaluate` after `axe.run()` returns, never a model; the accessible name is axe's own computation (`axe.commons.text.accessibleText` under a guarded `setup`/`teardown`), not a reimplementation of ARIA name resolution. Each extractor has a named source, a pinned character budget and a deterministic truncation rule (`scanner/referent.py`), reviewed against a vendored snapshot of a named real page with the extracted output committed beside it (`clearway/fixtures/real-page/`), because this repo's own fixtures have 2-220 character bodies and would not test a budget at all. **`None` means the source was not available; a `ReferentExcerpt` with `text=""` means it was available and empty** — different facts, never collapsed. No prompt changes and no drafter behaviour changes: this ticket captures the material, it does not inject it. §5 gains two rows (non-textual referent material; the link destination). |
 | 2026-07-23 | 0.24 | Reworded `DraftRow.confidence` to state its now-split provenance: self-reported by the model on a **judgment** draft, **code-assembled at 1.0** on a confirmed axe violation, where conformance and citations are derived from axe's own tags (`tag_to_sc_ids`) instead of asked of the model, which writes only `remediation`. **Description only — no shape, bound, default, or wire change**, and no shape is added; §5 unaffected. Two consequences are recorded rather than left to be discovered: an assembled violation citation is **VERIFIED by construction** (drafter and `AxeCoreOracle` now read the same tags through the same function), so `citation_hallucination_rate` and the oracle-scored half of the confidence curve measure nothing on that bucket any more — they graded a guess that no longer happens; and the change **ships unmeasured** for want of violations-bucket gold, so its benefit is mechanical, not demonstrated. Violations whose tags decode to no success criterion (axe's `best-practice` rules) keep the judgment path unchanged, which keeps the oracle returning `None` for them and the human-review gate firing. No `passes`-bucket or `incomplete`-bucket prompt changes (asserted byte-for-byte by test) and no frozen number moves. |
 | 2026-07-23 | 0.23 | Vocabulary sweep only — no field, bound, default, or wire change. The quality-review pass set is referred to by its code name, `QUALITY_REVIEW_RULES`, everywhere it is described in prose; the older "whitelist" wording is retired from §3 (the `AxeBucket.PASSES` and `AxeRuleResult` / `AxePass` docstrings and the `ScanResult.passes` field description) and from the live code, docs and comments that mirrored it. The meaning that wording carried is preserved explicitly: the set is **global**, so a rule added to it mints findings on *every* page. Entries below are historical and keep their original wording. No prompt, no drafted output and no frozen number moves — `benchmark/reports/{scorecard,drafter_kappa_baseline,verdict_vector}.json` re-derive bit-identical, and `tests/test_terminology_sweep.py` pins the assembled `passes`-bucket prompt byte-for-byte. §5 unaffected. |
 | 2026-07-23 | 0.22 | M7 (T0): gold correction + reachable-ceiling pre-registration. Scoped the `link-name` class to *Link in context is descriptive* (SC 2.4.4, **Level A**) and moved *Link is descriptive* (SC 2.4.9, **Level AAA only** — outside the A/AA conformance target) into `act_gold.EXCLUDED_RULES`; the acceptance set goes 53 → **44** cases (40 minting + 4 honest misses, 54 findings). Extended `DrafterKappaClass` with the reachable-error ledger (`unreachable` — a new `UnreachableError` nesting the new `UnreachableErrorKind` enum — plus `honest_miss_errors`, `contradictory_gold_errors`, `reachable_errors`, `reachable_error_ids`, `reachable_p_value`, `reachable_certifiable`, `tolerated_regressions`): the old `errors`/`p_value` ceiling counted errors no prompt-input change can reach, so it was optimistic. Extended `DrafterKappaBaseline` with `one_sided` and four new nested shapes — `PooledEndpoint` (the PRIMARY endpoint; per-class certification is zero-margin at these n), `ScopeCorrection` (nesting `ExclusionSideEffect` ×2 and `SupersededClassReading`, disclosing the one manufactured win and the one unscored regression the exclusion causes), `PreregisteredPrediction` ×2, and `ScopedDenominators`. **Not additive:** re-deriving the `link-name` row necessarily moves it (n 24 → 15, errors 9 → 6, p 0.001953125 → 0.015625, κ 0.250 → 0.211); `document-title`, `empty-heading` and `label` are bit-identical. The superseded reading is preserved as a declared field, not a parallel artifact. `verdict_vector.json` re-frozen at 44 cases, every surviving verdict bit-identical. No drafter behaviour changes and no model was invoked; §5 unaffected. |

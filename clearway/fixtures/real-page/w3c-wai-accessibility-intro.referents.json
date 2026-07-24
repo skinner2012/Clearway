@@ -1,0 +1,4693 @@
+{
+ "page": {
+  "url": "https://www.w3.org/WAI/fundamentals/accessibility-intro/",
+  "retrieved": "2026-07-23",
+  "snapshot_sha256": "81dfcea9d8c5756bb4323ccbf6ed61ba1838f9a749c196e90c3d564c1a4776a1",
+  "axe_core_version": "4.12.1",
+  "budgets": {
+   "accessible_name": 300,
+   "document_title": 300,
+   "page_topic": 500,
+   "section_heading": 300,
+   "surrounding_context": 500,
+   "context_ancestor_max_depth": 3
+  },
+  "stylesheets_inlined": 1,
+  "html_chars": 170720,
+  "rendered_body_chars": 10107,
+  "findings": 135
+ },
+ "referents": {
+  "landmark-no-duplicate-contentinfo blockquote > footer": {
+   "accessible_name": {
+    "text": "Tim Berners-Lee, W3C Director and inventor of the World Wide Web",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Accessibility in Context",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "The power of the Web is in its universality. Access by everyone regardless of disability is an essential aspect. Tim Berners-Lee, W3C Director and inventor of the World Wide Web",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "landmark-unique .box-full:nth-child(2)": {
+   "accessible_name": {
+    "text": "",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Introduction to Web Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Introduction to Web Accessibility Summary When websites and web tools are properly designed and coded, people with disabilities can use them. However, currently many sites and tools are developed with accessibility barriers that make them difficult or impossible for some people to use. Making the web accessible benefits individuals, businesses, and society. International web standards define what is needed for accessibility. Page Contents Accessibility in Context What is Web Accessibility Access",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "document-title html": {
+   "accessible_name": {
+    "text": "Skip Link and Language Selector W3C homepage Web Accessibility Initiative (WAI) homepage Strategies, standards, resources to make the Web accessible to people with disabilities Meta & Search Main Breadcrumb Secondary Languages/Translations Introduction to Web Accessibility Summary When websites and ",
+    "source": "accessible_name",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": null
+  },
+  "empty-heading h1": {
+   "accessible_name": {
+    "text": "Introduction to Web Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Introduction to Web Accessibility",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading .box-h-full.box-h > h2": {
+   "accessible_name": {
+    "text": "Summary",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Introduction to Web Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Summary When websites and web tools are properly designed and coded, people with disabilities can use them. However, currently many sites and tools are developed with accessibility barriers that make them difficult or impossible for some people to use. Making the web accessible benefits individuals, businesses, and society. International web standards define what is needed for accessibility.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "empty-heading #context": {
+   "accessible_name": {
+    "text": "Accessibility in Context",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "ssibility barriers that make them difficult or impossible for some people to use. Making the web accessible benefits individuals, businesses, and society. International web standards define what is needed for accessibility. Page Contents Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C S",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading #what": {
+   "accessible_name": {
+    "text": "What is Web Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Accessibility in Context",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "ake them difficult or impossible for some people to use. Making the web accessible benefits individuals, businesses, and society. International web standards define what is needed for accessibility. Page Contents Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes) Acce",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading .box-aside.box-simple:nth-child(17) > .box-h-aside.box-h-simple.box-h > h3": {
+   "accessible_name": {
+    "text": "More Info on What is Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "What is Web Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "More Info on What is Accessibility",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading #important": {
+   "accessible_name": {
+    "text": "Accessibility is Important for Individuals, Businesses, Society",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on What is Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "ple to use. Making the web accessible benefits individuals, businesses, and society. International web standards define what is needed for accessibility. Page Contents Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes) Accessibility in Context The power of the Web is ",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading .box-aside.box-simple:nth-child(25) > .box-h-aside.box-h-simple.box-h > h3": {
+   "accessible_name": {
+    "text": "More Info on Accessibility is Important",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Accessibility is Important for Individuals, Businesses, Society",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "More Info on Accessibility is Important General information on business benefits is in The Business Case for Digital Accessibility. Examples of the benefits of making audio and video media accessible is in the section Benefits to Organizations. Guidance on figuring out legal requirements is in the archived Legal and Policy Factors.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "empty-heading #making": {
+   "accessible_name": {
+    "text": "Making the Web Accessible",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Accessibility is Important",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "s individuals, businesses, and society. International web standards define what is needed for accessibility. Page Contents Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes) Accessibility in Context The power of the Web is in its universality. Access by everyone regar",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading .box-aside.box-simple:nth-child(29) > .box-h-aside.box-h-simple.box-h > h3": {
+   "accessible_name": {
+    "text": "More Info on Making the Web Accessible",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Making the Web Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "More Info on Making the Web Accessible",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading #website": {
+   "accessible_name": {
+    "text": "Making Your Website Accessible",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making the Web Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "ces are introduced in W3C Accessibility Standards Overview. To learn more about how W3C WAI develops material through multi-stakeholder, international participation and how you can contribute, see About W3C WAI and Participate in WAI. Making Your Website Accessible Many aspects of accessibility are fairly easy to understand and implement. Some accessibility solutions are more complex and take more knowledge to implement. It is most efficient and effective to incorporate accessibility from the ve",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading .box-aside.box-simple:nth-child(33) > .box-h-aside.box-h-simple.box-h > h3": {
+   "accessible_name": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading #evaluate": {
+   "accessible_name": {
+    "text": "Evaluating Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": " and society. International web standards define what is needed for accessibility. Page Contents Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes) Accessibility in Context The power of the Web is in its universality. Access by everyone regardless of disability is an ",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading .box-aside.box-simple:nth-child(37) > .box-h-aside.box-h-simple.box-h > h3": {
+   "accessible_name": {
+    "text": "More Info on Evaluating Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Evaluating Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "More Info on Evaluating Accessibility Resources to help with accessibility evaluation are described in Evaluating Web Accessibility Overview.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "empty-heading summary > h2": {
+   "accessible_name": {
+    "text": "Examples",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Evaluating Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Examples",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "empty-heading #more-info": {
+   "accessible_name": {
+    "text": "For More Information",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": false,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "standards define what is needed for accessibility. Page Contents Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes) Accessibility in Context The power of the Web is in its universality. Access by everyone regardless of disability is an essential aspect. Tim Berners-Le",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "empty-heading .box-h-icon > h2": {
+   "accessible_name": {
+    "text": "Help improve this page",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "For More Information",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Help improve this page Please share your ideas, suggestions, or comments via e-mail to the publicly-archived list wai@w3.org or via GitHub. E-mail Fork & Edit on GitHub New GitHub Issue",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "image-alt .box-i > p > .video-link > img[alt=\"\"]": {
+   "accessible_name": {
+    "text": "",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "image-alt p:nth-child(16) > .video-link > img[alt=\"\"]": {
+   "accessible_name": {
+    "text": "",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "What is Web Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "For a 7-minute video with examples of how accessibility is essential for people with disabilities and useful for everyone in a variety of situations, see: Web Accessibility Perspectives Video (YouTube)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "label #header-search": {
+   "accessible_name": {
+    "text": "Search",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Search:",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"#main\"]": {
+   "accessible_name": {
+    "text": "Skip to Content",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Skip to Content Change Text Size or Colors This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Hide Options",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"customize/\"]": {
+   "accessible_name": {
+    "text": "Change Text Size or Colors",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Skip to Content Change Text Size or Colors This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Hide Options",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(2) > a[lang=\"ar\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "العربية",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(3) > a[lang=\"cs\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "čeština",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(4) > a[lang=\"de\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "Deutsch",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(5) > a[lang=\"el\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "Ελληνικά",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(6) > a[lang=\"es\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "español",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(7) > a[lang=\"fr\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "français",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(8) > a[lang=\"id\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "Bahasa Indonesia",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(9) > a[lang=\"ko\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "한국어",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(10) > a[lang=\"pl\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "polski",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(11) > a[lang=\"pt-BR\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "Português do Brasil",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(12) > a[lang=\"ru\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "русский язык",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .languagelistul > li:nth-child(13) > a[lang=\"zh-hans\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "简体中文",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .opt:nth-child(4) > a[href$=\"translations/\"]": {
+   "accessible_name": {
+    "text": "All Translations",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Skip to Content Change Text Size or Colors This page in: Englishالعربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Hide Options",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .w3c": {
+   "accessible_name": {
+    "text": "W3C homepage",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Strategies, standards, resources to make the Web accessible to people with disabilities Get Involved About W3C WAI Search:",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "link-name .wai": {
+   "accessible_name": {
+    "text": "Web Accessibility Initiative (WAI) homepage",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Strategies, standards, resources to make the Web accessible to people with disabilities Get Involved About W3C WAI Search:",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "link-name li:nth-child(1) > a[href$=\"participating/\"]": {
+   "accessible_name": {
+    "text": "Get Involved",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Get Involved About W3C WAI Search:",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name li:nth-child(2) > a[href$=\"about/\"]": {
+   "accessible_name": {
+    "text": "About W3C WAI",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Get Involved About W3C WAI Search:",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .mainnav > ul > li:nth-child(1) > a[href$=\"fundamentals/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Accessibility Fundamentals",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Planning & Policies Design & Develop Test & Evaluate Teach & Advocate Standards/Guidelines",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"planning/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Planning & Policies",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Planning & Policies Design & Develop Test & Evaluate Teach & Advocate Standards/Guidelines",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"design-develop/\"]": {
+   "accessible_name": {
+    "text": "Design & Develop",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Planning & Policies Design & Develop Test & Evaluate Teach & Advocate Standards/Guidelines",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"test-evaluate/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Test & Evaluate",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Planning & Policies Design & Develop Test & Evaluate Teach & Advocate Standards/Guidelines",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"teach-advocate/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Teach & Advocate",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Planning & Policies Design & Develop Test & Evaluate Teach & Advocate Standards/Guidelines",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"standards-guidelines/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Standards/Guidelines",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Planning & Policies Design & Develop Test & Evaluate Teach & Advocate Standards/Guidelines",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name li:nth-child(1) > a[href$=\"WAI/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Home",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Home Accessibility Fundamentals Introduction to Accessibility",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name li:nth-child(2) > a[href$=\"fundamentals/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Accessibility Fundamentals",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Home Accessibility Fundamentals Introduction to Accessibility",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name li:nth-child(3) > a[aria-current=\"page\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Introduction to Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Home Accessibility Fundamentals Introduction to Accessibility",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .page-link[href$=\"fundamentals/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Accessibility Fundamentals",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .page-link[aria-current=\"page\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Introduction to Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name li:nth-child(2) > ul > li > .page-link[lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Video Introduction",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Introduction to Accessibility Video Introduction",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"people/\"]": {
+   "accessible_name": {
+    "text": "Accessibility is About People",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .page-link[href$=\"components/\"][lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Components of Web Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .sidenav--list > li:nth-child(5) > .page-link[lang=\"en\"]": {
+   "accessible_name": {
+    "text": "Accessibility Principles",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"research/\"]": {
+   "accessible_name": {
+    "text": "Research",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"courses/\"]": {
+   "accessible_name": {
+    "text": "Digital Accessibility Courses",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(2) > a[lang=\"ar\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "العربية",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(3) > a[lang=\"cs\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "čeština",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(4) > a[lang=\"de\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "Deutsch",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(5) > a[lang=\"el\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "Ελληνικά",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(6) > a[lang=\"es\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "español",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(7) > a[lang=\"fr\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "français",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(8) > a[lang=\"id\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "Bahasa Indonesia",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(9) > a[lang=\"ko\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "한국어",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(10) > a[lang=\"pl\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "polski",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(11) > a[lang=\"pt-BR\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "Português do Brasil",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(12) > a[lang=\"ru\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "русский язык",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .langlist > li:nth-child(13) > a[lang=\"zh-hans\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "简体中文",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name p:nth-child(3) > a[href$=\"translations/\"]": {
+   "accessible_name": {
+    "text": "All Translations",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"translating/\"]": {
+   "accessible_name": {
+    "text": "Translating WAI Resources",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": null,
+   "surrounding_context": {
+    "text": "Accessibility Fundamentals Introduction to Accessibility Video Introduction Accessibility is About People Components of Web Accessibility Accessibility Principles Research Digital Accessibility Courses Languages/Translations English (Original) العربية Čeština Deutsch Ελληνικά Español Français Bahasa Indonesia 한국어 Polski Português Do Brasil Русский Язык 简体中文 All Translations Translating WAI Resources",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name #markdown-toc-context": {
+   "accessible_name": {
+    "text": "Accessibility in Context",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name #markdown-toc-what": {
+   "accessible_name": {
+    "text": "What is Web Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name #markdown-toc-important": {
+   "accessible_name": {
+    "text": "Accessibility is Important for Individuals, Businesses, Society",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name #markdown-toc-making": {
+   "accessible_name": {
+    "text": "Making the Web Accessible",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name #markdown-toc-evaluate": {
+   "accessible_name": {
+    "text": "Evaluating Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name #markdown-toc-examples": {
+   "accessible_name": {
+    "text": "Examples",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name #markdown-toc-more-info": {
+   "accessible_name": {
+    "text": "For More Information",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .box-i > p > .video-link": {
+   "accessible_name": {
+    "text": "Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Summary",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Page Contents Accessibility in Context What is Web Accessibility Accessibility is Important for Individuals, Businesses, Society Making the Web Accessible Evaluating Accessibility Examples For More Information Related Resource Video Introduction to Web Accessibility and W3C Standards (4 minutes)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name p:nth-child(16) > .video-link": {
+   "accessible_name": {
+    "text": "Web Accessibility Perspectives Video (YouTube)",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "What is Web Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "For a 7-minute video with examples of how accessibility is essential for people with disabilities and useful for everyone in a variety of situations, see: Web Accessibility Perspectives Video (YouTube)",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name li:nth-child(1) > a[href$=\"people-use-web/\"]": {
+   "accessible_name": {
+    "text": "How People with Disabilities Use the Web",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on What is Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "When you want to learn more about how different disabilities affect Web use, and read about scenarios of people with disabilities using the Web, see How People with Disabilities Use the Web.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name .box-aside.box-simple:nth-child(17) > .box-i > ul > li:nth-child(2) > a:nth-child(1)": {
+   "accessible_name": {
+    "text": "Used by People With and Without Disabilities",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on What is Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "If you want more examples of benefits for others, see the multimedia resource Used by People With and Without Disabilities, the archived resource Web Accessibility Benefits People With and Without Disabilities and the archived mobile resource Shared Web Experiences: Barriers Common to Mobile Device Users and People with Disabilities.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name .box-i > ul > li:nth-child(2) > a:nth-child(2)": {
+   "accessible_name": {
+    "text": "Web Accessibility Benefits People With and Without Disabilities",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on What is Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "If you want more examples of benefits for others, see the multimedia resource Used by People With and Without Disabilities, the archived resource Web Accessibility Benefits People With and Without Disabilities and the archived mobile resource Shared Web Experiences: Barriers Common to Mobile Device Users and People with Disabilities.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name li:nth-child(2) > a:nth-child(3)": {
+   "accessible_name": {
+    "text": "Shared Web Experiences: Barriers Common to Mobile Device Users and People with Disabilities",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on What is Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "If you want more examples of benefits for others, see the multimedia resource Used by People With and Without Disabilities, the archived resource Web Accessibility Benefits People With and Without Disabilities and the archived mobile resource Shared Web Experiences: Barriers Common to Mobile Device Users and People with Disabilities.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name p:nth-child(19) > a": {
+   "accessible_name": {
+    "text": "CRPD",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Accessibility is Important for Individuals, Businesses, Society",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "The Web is an increasingly important resource in many aspects of life: education, employment, government, commerce, health care, recreation, and more. It is essential that the Web be accessible in order to provide equal access and equal opportunity to people with diverse abilities. Access to information and communications technologies, including the Web, is defined as a basic human right in the United Nations Convention on the Rights of Persons with Disabilities (UN CRPD).",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name a[href$=\"business-case/\"]": {
+   "accessible_name": {
+    "text": "The Business Case for Digital Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Accessibility is Important",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "General information on business benefits is in The Business Case for Digital Accessibility. Examples of the benefits of making audio and video media accessible is in the section Benefits to Organizations. Guidance on figuring out legal requirements is in the archived Legal and Policy Factors.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"av/\"]": {
+   "accessible_name": {
+    "text": "making audio and video media accessible",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Accessibility is Important",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "General information on business benefits is in The Business Case for Digital Accessibility. Examples of the benefits of making audio and video media accessible is in the section Benefits to Organizations.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name li:nth-child(1) > ul > li > a:nth-child(2)": {
+   "accessible_name": {
+    "text": "Benefits to Organizations",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Accessibility is Important",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "General information on business benefits is in The Business Case for Digital Accessibility. Examples of the benefits of making audio and video media accessible is in the section Benefits to Organizations.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .box-aside.box-simple:nth-child(25) > .box-i > ul > li:nth-child(2) > a": {
+   "accessible_name": {
+    "text": "Legal and Policy Factors",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Accessibility is Important",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "General information on business benefits is in The Business Case for Digital Accessibility. Examples of the benefits of making audio and video media accessible is in the section Benefits to Organizations. Guidance on figuring out legal requirements is in the archived Legal and Policy Factors.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name p:nth-child(28) > a[href$=\"participating/\"]": {
+   "accessible_name": {
+    "text": "WAI",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Making the Web Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "The W3C Web Accessibility Initiative (WAI) develops technical specifications, guidelines, techniques, and supporting resources that describe accessibility solutions. These are considered international standards for web accessibility; for example, WCAG 2.2 is also an ISO standard: ISO/IEC 40500.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name li:nth-child(1) > a[href$=\"components/\"]": {
+   "accessible_name": {
+    "text": "Essential Components of Web Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making the Web Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "More about these aspects of accessibility working together is in Essential Components of Web Accessibility.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name li:nth-child(2) > a[href$=\"standards-guidelines/\"]": {
+   "accessible_name": {
+    "text": "W3C Accessibility Standards Overview",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making the Web Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Web Content Accessibility Guidelines (WCAG), Authoring Tool Accessibility Guidelines (ATAG), ARIA for Accessible Rich Internet Applications, and other important resources are introduced in W3C Accessibility Standards Overview.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name li:nth-child(3) > a[href$=\"about/\"]": {
+   "accessible_name": {
+    "text": "About W3C WAI",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making the Web Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "To learn more about how W3C WAI develops material through multi-stakeholder, international participation and how you can contribute, see About W3C WAI and Participate in WAI.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name li:nth-child(3) > a[href$=\"participating/\"]": {
+   "accessible_name": {
+    "text": "Participate in WAI",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making the Web Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "To learn more about how W3C WAI develops material through multi-stakeholder, international participation and how you can contribute, see About W3C WAI and Participate in WAI.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name .box-aside.box-simple:nth-child(33) > .box-i > ul > li:nth-child(1) > a": {
+   "accessible_name": {
+    "text": "Accessibility Principles",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "For an introduction to accessibility requirements and international standards, see Accessibility Principles.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name .box-aside.box-simple:nth-child(33) > .box-i > ul > li:nth-child(2) > a": {
+   "accessible_name": {
+    "text": "Easy Checks – A First Review of Web Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "To understand some common accessibility barriers from the perspective of testing, see Easy Checks – A First Review of Web Accessibility.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name li:nth-child(3) > a[href$=\"tips/\"]": {
+   "accessible_name": {
+    "text": "Tips for Getting Started",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "For some basic considerations on designing, writing, and developing for accessibility, see Tips for Getting Started.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name .box-i > ul > li:nth-child(4) > ul > li:nth-child(1) > a": {
+   "accessible_name": {
+    "text": "How to Meet WCAG (Quick Reference)",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "When you’re ready to know more about developing and designing, you’ll probably use resources such as: How to Meet WCAG (Quick Reference) Web Accessibility Tutorials",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"tutorials/\"]": {
+   "accessible_name": {
+    "text": "Web Accessibility Tutorials",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "When you’re ready to know more about developing and designing, you’ll probably use resources such as: How to Meet WCAG (Quick Reference) Web Accessibility Tutorials",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"planning-and-managing/\"]": {
+   "accessible_name": {
+    "text": "Planning and Managing Web Accessibility",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "For project management and organizational considerations, see Planning and Managing Web Accessibility. If you need to make quick fixes now, see Web Accessibility First Aid: Approaches for Interim Repairs.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name a[href$=\"interim-repairs/\"]": {
+   "accessible_name": {
+    "text": "Web Accessibility First Aid: Approaches for Interim Repairs",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Making Your Website Accessible",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "For project management and organizational considerations, see Planning and Managing Web Accessibility. If you need to make quick fixes now, see Web Accessibility First Aid: Approaches for Interim Repairs.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name .box-i > ul > li > a[href$=\"test-evaluate/\"]": {
+   "accessible_name": {
+    "text": "Evaluating Web Accessibility Overview",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "More Info on Evaluating Accessibility",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Resources to help with accessibility evaluation are described in Evaluating Web Accessibility Overview.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name p:nth-child(40) > a[href$=\"standards-guidelines/\"]": {
+   "accessible_name": {
+    "text": "standards",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "For More Information",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C WAI provides a wide range of resources on different aspects of web accessibility standards, education, testing/evaluation, project management, and policy. We encourage you to explore this website, or look through the WAI Resources list.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name p:nth-child(40) > a[href$=\"teach-advocate/\"]": {
+   "accessible_name": {
+    "text": "education",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "For More Information",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C WAI provides a wide range of resources on different aspects of web accessibility standards, education, testing/evaluation, project management, and policy. We encourage you to explore this website, or look through the WAI Resources list.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name p:nth-child(40) > a[href$=\"test-evaluate/\"]": {
+   "accessible_name": {
+    "text": "testing/evaluation",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "For More Information",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C WAI provides a wide range of resources on different aspects of web accessibility standards, education, testing/evaluation, project management, and policy. We encourage you to explore this website, or look through the WAI Resources list.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name p:nth-child(40) > a[href$=\"planning/\"]": {
+   "accessible_name": {
+    "text": "project management, and policy",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "For More Information",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C WAI provides a wide range of resources on different aspects of web accessibility standards, education, testing/evaluation, project management, and policy. We encourage you to explore this website, or look through the WAI Resources list.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name a[href$=\"resources/\"]": {
+   "accessible_name": {
+    "text": "WAI Resources",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "For More Information",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C WAI provides a wide range of resources on different aspects of web accessibility standards, education, testing/evaluation, project management, and policy. We encourage you to explore this website, or look through the WAI Resources list.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name strong > a": {
+   "accessible_name": {
+    "text": "Digital Accessibility Foundations - Free Online Course",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "For More Information",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Digital Accessibility Foundations - Free Online Course provides the foundation you need to make your digital technology accessible.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 2
+   }
+  },
+  "link-name #helpimprove > .box-i > p > a": {
+   "accessible_name": {
+    "text": "wai@w3.org",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Help improve this page Please share your ideas, suggestions, or comments via e-mail to the publicly-archived list wai@w3.org or via GitHub. E-mail Fork & Edit on GitHub New GitHub Issue",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .button:nth-child(1)": {
+   "accessible_name": {
+    "text": "E-mail",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Help improve this page Please share your ideas, suggestions, or comments via e-mail to the publicly-archived list wai@w3.org or via GitHub. E-mail Fork & Edit on GitHub New GitHub Issue",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .button-group > .button:nth-child(2)": {
+   "accessible_name": {
+    "text": "Fork & Edit on GitHub",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Help improve this page Please share your ideas, suggestions, or comments via e-mail to the publicly-archived list wai@w3.org or via GitHub. E-mail Fork & Edit on GitHub New GitHub Issue",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .button:nth-child(3)": {
+   "accessible_name": {
+    "text": "New GitHub Issue",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Help improve this page Please share your ideas, suggestions, or comments via e-mail to the publicly-archived list wai@w3.org or via GitHub. E-mail Fork & Edit on GitHub New GitHub Issue",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .button-backtotop": {
+   "accessible_name": {
+    "text": "Back to Top",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": " accessibility standards, education, testing/evaluation, project management, and policy. We encourage you to explore this website, or look through the WAI Resources list. Digital Accessibility Foundations - Free Online Course provides the foundation you need to make your digital technology accessible. Help improve this page Please share your ideas, suggestions, or comments via e-mail to the publicly-archived list wai@w3.org or via GitHub. E-mail Fork & Edit on GitHub New GitHub Issue Back to Top",
+    "source": "ancestor_text",
+    "truncated": true,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 1
+   }
+  },
+  "link-name .inner > p:nth-child(1) > a": {
+   "accessible_name": {
+    "text": "Latest changes",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Updated: 3 February 2026. Latest changes. First published February 2005. Editor: Shawn Lawton Henry. Developed by the Education and Outreach Working Group (EOWG).",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .inner > p:nth-child(2) > a": {
+   "accessible_name": {
+    "text": "Shawn Lawton Henry",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Updated: 3 February 2026. Latest changes. First published February 2005. Editor: Shawn Lawton Henry. Developed by the Education and Outreach Working Group (EOWG).",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"EO/\"]": {
+   "accessible_name": {
+    "text": "EOWG",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Updated: 3 February 2026. Latest changes. First published February 2005. Editor: Shawn Lawton Henry. Developed by the Education and Outreach Working Group (EOWG).",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"WAI/\"][dir=\"auto\"][translate=\"no\"]": {
+   "accessible_name": {
+    "text": "W3C Web Accessibility Initiative (WAI)",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C Web Accessibility Initiative (WAI) Strategies, standards, resources to make the Web accessible to people with disabilities Get News in Email LinkedIn Mastodon YouTube Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles Copyright © 2026 World Wide Web Consortium. W3C® liability, trademark and permissive license rules apply unless otherwise noted. See Permission to Use WAI Material.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"subscribe/\"]": {
+   "accessible_name": {
+    "text": "Get News in Email",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Get News in Email LinkedIn Mastodon YouTube",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .w3c-with-icon--before.w3c-with-icon--larger:nth-child(2) > a[translate=\"no\"]": {
+   "accessible_name": {
+    "text": "LinkedIn",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Get News in Email LinkedIn Mastodon YouTube",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"@wai\"]": {
+   "accessible_name": {
+    "text": "Mastodon",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Get News in Email LinkedIn Mastodon YouTube",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .w3c-with-icon--before.w3c-with-icon--larger:nth-child(4) > a[translate=\"no\"]": {
+   "accessible_name": {
+    "text": "YouTube",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Get News in Email LinkedIn Mastodon YouTube",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .w3c-clean-list[role=\"list\"] > li:nth-child(1) > a[href$=\"WAI/\"]": {
+   "accessible_name": {
+    "text": "Home",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"contacting/\"]": {
+   "accessible_name": {
+    "text": "Contact",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"sitemap/\"]": {
+   "accessible_name": {
+    "text": "Site map",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"support/\"]": {
+   "accessible_name": {
+    "text": "Support WAI",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"news/\"]": {
+   "accessible_name": {
+    "text": "News",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .w3c-clean-list[role=\"list\"] > li:nth-child(6) > a": {
+   "accessible_name": {
+    "text": "Accessibility statement",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name li:nth-child(7) > a[href$=\"translations/\"]": {
+   "accessible_name": {
+    "text": "All Translations",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"roles/\"]": {
+   "accessible_name": {
+    "text": "Resources for roles",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .w3c-copyright > a[href$=\"w3.org/\"]": {
+   "accessible_name": {
+    "text": "World Wide Web Consortium",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C Web Accessibility Initiative (WAI) Strategies, standards, resources to make the Web accessible to people with disabilities Get News in Email LinkedIn Mastodon YouTube Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles Copyright © 2026 World Wide Web Consortium. W3C® liability, trademark and permissive license rules apply unless otherwise noted. See Permission to Use WAI Material.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name .w3c-copyright > a:nth-child(5)": {
+   "accessible_name": {
+    "text": "liability",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C Web Accessibility Initiative (WAI) Strategies, standards, resources to make the Web accessible to people with disabilities Get News in Email LinkedIn Mastodon YouTube Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles Copyright © 2026 World Wide Web Consortium. W3C® liability, trademark and permissive license rules apply unless otherwise noted. See Permission to Use WAI Material.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a:nth-child(6)": {
+   "accessible_name": {
+    "text": "trademark",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C Web Accessibility Initiative (WAI) Strategies, standards, resources to make the Web accessible to people with disabilities Get News in Email LinkedIn Mastodon YouTube Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles Copyright © 2026 World Wide Web Consortium. W3C® liability, trademark and permissive license rules apply unless otherwise noted. See Permission to Use WAI Material.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[rel=\"license\"]": {
+   "accessible_name": {
+    "text": "permissive license",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C Web Accessibility Initiative (WAI) Strategies, standards, resources to make the Web accessible to people with disabilities Get News in Email LinkedIn Mastodon YouTube Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles Copyright © 2026 World Wide Web Consortium. W3C® liability, trademark and permissive license rules apply unless otherwise noted. See Permission to Use WAI Material.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  },
+  "link-name a[href$=\"using-wai-material/\"]": {
+   "accessible_name": {
+    "text": "Permission to Use WAI Material",
+    "source": "accessible_name",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "document_title": {
+    "text": "Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C",
+    "source": "document_title",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "page_topic": {
+    "text": "Introduction to Web Accessibility",
+    "source": "h1",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": null
+   },
+   "section_heading": {
+    "text": "Help improve this page",
+    "source": "nearest_section_heading",
+    "truncated": false,
+    "in_accessibility_tree": true,
+    "ancestor_depth": null
+   },
+   "surrounding_context": {
+    "text": "W3C Web Accessibility Initiative (WAI) Strategies, standards, resources to make the Web accessible to people with disabilities Get News in Email LinkedIn Mastodon YouTube Home Contact Site map Support WAI News Accessibility statement All Translations Resources for roles Copyright © 2026 World Wide Web Consortium. W3C® liability, trademark and permissive license rules apply unless otherwise noted. See Permission to Use WAI Material.",
+    "source": "ancestor_text",
+    "truncated": false,
+    "in_accessibility_tree": null,
+    "ancestor_depth": 3
+   }
+  }
+ }
+}

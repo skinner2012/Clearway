@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from clearway.scanner import AXE_VERSION, scan
-from clearway.schemas.models import AxeIncomplete, AxePass, ScanResult, Severity
+from clearway.schemas.models import AxeIncomplete, AxePass, ReferentSource, ScanResult, Severity
 
 PAGES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures" / "pages"
 FIXTURE = PAGES / "home.html"
@@ -95,6 +95,32 @@ def test_each_violation_carries_expected_sc_tag_and_impact() -> None:
         assert violation.impact is want["impact"]
         assert violation.nodes, f"{rule_id} should carry at least one offending node"
         assert violation.nodes[0].target, f"{rule_id} node should have a target selector"
+
+
+def test_scan_captures_referent_material_alongside_the_element_snippet() -> None:
+    """The scan captures the context a node-level judgment needs, in the same page session —
+    after the browser closes the DOM is gone, and re-fetching would break the freeze every
+    downstream number is a pure function of. It rides `AxeNode.referent`, next to `html`, and
+    it does not disturb what axe reported."""
+    result = _scan()
+    nodes = [node for rule in result.violations + result.incomplete + result.passes for node in rule.nodes]
+    assert nodes and all(node.referent is not None for node in nodes), "every same-document node resolves"
+
+    title_rule = next(p for p in result.passes if p.rule_id == "document-title")
+    referent = title_rule.nodes[0].referent
+    assert referent is not None and referent.document_title is not None
+    assert referent.document_title.text == "Clearway fixture — home"
+    assert referent.document_title.source is ReferentSource.DOCUMENT_TITLE
+    assert not referent.document_title.truncated
+
+
+def test_scan_leaves_the_axe_engine_torn_down_so_extraction_cannot_wedge_a_scan() -> None:
+    """Extraction sets axe up a second time to borrow its accessible-name computation. `setup()`
+    re-entry throws, so it tears down first and always tears down after — otherwise a partial
+    prior state would wedge the scan rather than degrade it. Two scans in one process is the
+    cheapest evidence that the guard holds."""
+    first, second = _scan(), _scan()
+    assert {v.rule_id for v in first.violations} == {v.rule_id for v in second.violations} == set(EXPECTED)
 
 
 @pytest.mark.parametrize("page,want", list(INCOMPLETE_FIXTURES.items()), ids=list(INCOMPLETE_FIXTURES))

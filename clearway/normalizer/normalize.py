@@ -89,6 +89,9 @@ def _findings_from_rule(source_url: str, rule: AxeRuleResult, bucket: AxeBucket)
                 help=help_text,
                 help_url=rule.help_url,
                 source_bucket=bucket,
+                # Carried, not hashed: the id above is the place's identity, and the same place
+                # must keep the same id however much context the scanner captures about it.
+                referent=node.referent,
             )
         )
     return findings

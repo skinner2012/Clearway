@@ -31,6 +31,7 @@ from clearway.schemas.models import (
     L1Status,
     MetricCI,
     NeedsReview,
+    NodeReferent,
     NoiseFloor,
     NotMeasuredItem,
     OfflineEvalReport,
@@ -40,6 +41,8 @@ from clearway.schemas.models import (
     OracleRegime,
     OracleVerdict,
     PipelineStep,
+    ReferentExcerpt,
+    ReferentSource,
     ReviewReason,
     ReviewStatus,
     RunState,
@@ -101,6 +104,15 @@ def test_enum_wire_values_are_stable() -> None:
     assert StepStatus.NEEDS_REVIEW.value == "needs_review"
     assert ReviewReason.UNVERIFIABLE_JUDGMENT.value == "unverifiable_judgment"
     assert ReviewStatus.EDITED.value == "edited"
+    # Referent provenance: each value names the DOM source an excerpt was read from, and the
+    # four page-topic tiers are distinguishable so a fallback is never read as the primary.
+    assert ReferentSource.ACCESSIBLE_NAME.value == "accessible_name"
+    assert ReferentSource.DOCUMENT_TITLE.value == "document_title"
+    assert [t.value for t in (ReferentSource.H1, ReferentSource.MAIN)] == ["h1", "main"]
+    assert ReferentSource.META_DESCRIPTION.value == "meta_description"
+    assert ReferentSource.RENDERED_BODY_TEXT.value == "rendered_body_text"
+    assert ReferentSource.NEAREST_SECTION_HEADING.value == "nearest_section_heading"
+    assert ReferentSource.ANCESTOR_TEXT.value == "ancestor_text"
 
 
 def test_finding_defaults_to_the_violations_bucket() -> None:
@@ -123,6 +135,40 @@ def test_scan_result_passes_bucket_is_additive() -> None:
     )
     assert scan.passes[0].rule_id == "image-alt"
     assert ScanResult.model_validate_json(scan.model_dump_json()).passes[0].rule_id == "image-alt"
+
+
+def test_referent_material_is_additive_and_rides_the_node_to_the_finding() -> None:
+    """Referent material is Optional-with-default on both `AxeNode` and `Finding`, so a scan or
+    a finding written before extraction existed still validates under `extra="forbid"` — and it
+    round-trips, since the drafter reads it from a persisted finding, not from a live scan."""
+    assert AxeNode(target=["img"]).referent is None
+    assert Finding(id="x", source_url="u", rule_id="image-alt", target="img").referent is None
+
+    excerpt = ReferentExcerpt(text="Apple harvesting season", source=ReferentSource.DOCUMENT_TITLE, truncated=False)
+    finding = Finding(
+        id="x", source_url="u", rule_id="document-title", target="html", referent=NodeReferent(document_title=excerpt)
+    )
+    restored = Finding.model_validate_json(finding.model_dump_json())
+    assert restored.referent is not None and restored.referent.document_title == excerpt
+    assert restored.referent.page_topic is None
+
+
+def test_an_absent_referent_source_is_distinguishable_from_an_empty_one() -> None:
+    """Two different facts: "this page has no title" and "this page's title is blank". `None`
+    is the first, `text=""` is the second, and collapsing them would hide a gap in our input
+    behind what looks like a finding about the page."""
+    absent = NodeReferent()
+    empty = NodeReferent(document_title=ReferentExcerpt(text="", source=ReferentSource.DOCUMENT_TITLE))
+    assert absent.document_title is None
+    assert empty.document_title is not None and empty.document_title.text == ""
+    assert absent.model_dump()["document_title"] is None
+
+
+def test_referent_shapes_are_strict() -> None:
+    with pytest.raises(ValidationError):
+        NodeReferent(link_destination="https://example.org")
+    with pytest.raises(ValidationError):
+        ReferentExcerpt(text="t", source=ReferentSource.H1, chars=3)
 
 
 def test_corpus_chunk_embedding_is_optional_and_excluded_from_serialization() -> None:

@@ -1,0 +1,89 @@
+Vendored real-page snapshot — NOTICE and provenance
+===================================================
+
+Why this directory exists
+-------------------------
+Referent extraction has to be written for real pages. Every other page in
+`clearway/fixtures/` is synthetic and tiny — the vendored ACT cases have rendered
+bodies of 2 to 220 characters — so an extractor that simply returned the whole
+document body would score perfectly against them and be useless on a production
+page. Fitting extraction to the fixtures would relocate this project's own
+overfitting lesson into the input pipeline.
+
+So the extractors are reviewed against a snapshot of a named, real page, and the
+extracted output is committed next to it. That makes the review auditable: a
+reader can see exactly what each extractor produced on a 170,000-character
+document, rather than being asked to trust that someone checked.
+
+Source
+------
+  URL:        https://www.w3.org/WAI/fundamentals/accessibility-intro/
+  Title:      Introduction to Web Accessibility | Web Accessibility Initiative (WAI) | W3C
+  Retrieved:  2026-07-23
+  Publisher:  W3C Web Accessibility Initiative
+
+Why this page is representative
+-------------------------------
+It is a real, hand-authored production page — not a generated test case — and it
+exercises every extractor in this module at once:
+
+  * 170,720 characters of DOM and 10,107 characters of *rendered* body text
+    (roughly 46x the largest ACT fixture body), so budgets and truncation are
+    genuinely tested rather than never reached;
+  * a `<title>`, an `<h1>`, a `<main>` landmark and a `<meta name="description">`
+    — all four page-topic tiers exist on one page, so tier precedence is
+    observable instead of theoretical;
+  * 20 headings, so "nearest preceding heading" has to actually choose;
+  * 162 links in prose, lists and tables — the in-context link case;
+  * a labelled search field — the accessible-name case;
+  * deep, real nesting, so the ancestor-depth cap and the context window are
+    exercised on structures nobody wrote for a test.
+
+It is also in this project's own subject domain and on a site whose material this
+repository already vendors under the same licence (see `../act-gold/NOTICE`).
+
+Licence and attribution
+-----------------------
+W3C material is published under the W3C Software and Document Notice and License
+(https://www.w3.org/copyright/software-license/).
+
+This software or document includes material copied from or derived from
+"Introduction to Web Accessibility"
+(https://www.w3.org/WAI/fundamentals/accessibility-intro/).
+Copyright (c) W3C(R) (MIT, ERCIM, Keio, Beihang).
+
+The material is provided "AS IS" and the copyright holders disclaim all
+warranties and liability, as stated in the licence.
+
+What was captured, and what was changed
+---------------------------------------
+`scripts/capture_real_page_snapshot.py` reproduces both files. It makes one
+request, sends the project's explicit User-Agent, and checks the path against
+w3.org/robots.txt before fetching (the path is allowed).
+
+The snapshot is the DOM **after** load, serialized, with two deliberate edits:
+
+  1. The one same-origin stylesheet is inlined as a `<style>` element. Every
+     extractor here reads *rendered* text, so the CSS has to travel with the
+     snapshot or the file would extract differently offline than the page did
+     live. This is why the snapshot (170,878 bytes) is larger than the page's
+     original markup (57,170 characters).
+  2. All `<script>` elements are removed, *after* they have already run. The DOM
+     they built is preserved; the file stays static and deterministic.
+
+Images and fonts keep their absolute URLs. They affect neither rendered text nor
+the accessibility tree, so they cannot move an extracted referent; they simply
+fail to load when the snapshot is scanned offline.
+
+Freeze
+------
+  w3c-wai-accessibility-intro.html
+    sha256: 81dfcea9d8c5756bb4323ccbf6ed61ba1838f9a749c196e90c3d564c1a4776a1
+
+  w3c-wai-accessibility-intro.referents.json
+    The extracted referent material for all 135 findings this snapshot mints
+    under the pinned axe-core 4.12.1, keyed by "<axe rule id> <target>", with the
+    budgets in force recorded in its `page` block. Regenerated only by the
+    capture script above, never by hand.
+
+This copy is scanned from disk. Nothing in the test suite fetches the live URL.

@@ -99,9 +99,81 @@ class UnreachableErrorKind(str, Enum):
     CONTRADICTORY_GOLD = "contradictory_gold"  # byte-identical fixtures carry opposite ACT outcomes
 
 
+class ReferentSource(str, Enum):
+    """The named DOM source one referent excerpt was read from.
+
+    Every extractor names its source, so a downstream reader never has to guess where a string
+    came from — and so a fallback tier is never mistaken for the primary one. `page_topic` is the
+    only field whose source varies at runtime (it resolves through a fixed tier order), which is
+    exactly why the source rides on the excerpt rather than being implied by the field name."""
+
+    ACCESSIBLE_NAME = "accessible_name"  # axe.commons.text.accessibleText on the node itself
+    DOCUMENT_TITLE = "document_title"  # document.title, when a <title> element exists
+    H1 = "h1"  # topic tier 1 — the first <h1>'s rendered text
+    MAIN = "main"  # topic tier 2 — the main landmark's rendered text (native or role="main")
+    META_DESCRIPTION = "meta_description"  # topic tier 3 — <meta name="description"> content
+    RENDERED_BODY_TEXT = "rendered_body_text"  # topic tier 4 — last resort, body innerText
+    NEAREST_SECTION_HEADING = "nearest_section_heading"  # nearest heading preceding the node
+    ANCESTOR_TEXT = "ancestor_text"  # bounded rendered text of a nearby ancestor
+
+
 # ============================================================
 # Scanner output  (scanner/ -> normalizer/)
 # ============================================================
+
+
+class ReferentExcerpt(BaseModel):
+    """One bounded piece of referent material, with the provenance needed to audit it.
+
+    `text` is already whitespace-normalized and already truncated to its extractor's pinned
+    character budget (`scanner/referent.py`), so a consumer never has to re-bound it. `truncated`
+    says whether anything was dropped — an injected excerpt that was cut should be presented as
+    cut, not as the whole thing."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(..., description="normalized, budget-bounded text; '' means the source was empty")
+    source: ReferentSource = Field(..., description="which named DOM source this was read from")
+    truncated: bool = Field(False, description="True iff the source text exceeded the pinned budget")
+    in_accessibility_tree: Optional[bool] = Field(
+        None,
+        description="whether the element this was read from is exposed to screen readers; None where "
+        "the source is not a single element or the check could not run",
+    )
+    ancestor_depth: Optional[int] = Field(
+        None,
+        description="how many parentElement steps above the node the excerpt was read from; None "
+        "where the source is not ancestor-relative",
+    )
+
+
+class NodeReferent(BaseModel):
+    """The referent material captured for ONE DOM node — the context a judgment about that node
+    needs and that the element snippet alone cannot carry.
+
+    Every field is Optional and defaults to `None`, and `None` means exactly one thing: **the
+    source was not available for this node**. A source that WAS available but held no text is a
+    `ReferentExcerpt` with `text=""`. The two are different facts ("this page has no heading above
+    the field" vs "the heading above the field is blank") and a consumer must be able to tell them
+    apart, so they are never collapsed.
+
+    Captured deterministically at scan time, never by a model."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    accessible_name: Optional[ReferentExcerpt] = Field(
+        None, description="the node's accessible name, as axe itself computes it"
+    )
+    document_title: Optional[ReferentExcerpt] = Field(None, description="the page's resolved <title>")
+    page_topic: Optional[ReferentExcerpt] = Field(
+        None, description="what the page is about, resolved through a fixed source tier order"
+    )
+    section_heading: Optional[ReferentExcerpt] = Field(
+        None, description="the nearest heading preceding the node in document order"
+    )
+    surrounding_context: Optional[ReferentExcerpt] = Field(
+        None, description="bounded rendered text of a nearby ancestor — the node's neighbourhood"
+    )
 
 
 class AxeNode(BaseModel):
@@ -111,6 +183,12 @@ class AxeNode(BaseModel):
 
     target: list[str] = Field(..., description="CSS selector path(s) to the node")
     html: str = Field("", description="outer HTML snippet of the node")
+    referent: Optional[NodeReferent] = Field(
+        None,
+        description="deterministic referent material captured in the same page session; None when "
+        "the node could not be re-resolved (a frame/shadow path, or an element axe reported that "
+        "no longer matches its selector)",
+    )
 
 
 class AxeRuleResult(BaseModel):
@@ -196,6 +274,12 @@ class Finding(BaseModel):
         AxeBucket.VIOLATIONS,
         description="axe provenance; the oracle only grounds VIOLATIONS. Not part of the id "
         "(a place is never in two buckets at once).",
+    )
+    referent: Optional[NodeReferent] = Field(
+        None,
+        description="referent material carried from the scan (AxeNode.referent). Deliberately NOT "
+        "part of the id — the id is the place, and a place must hash the same however much context "
+        "the scanner learns to capture about it.",
     )
 
 

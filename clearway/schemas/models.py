@@ -283,9 +283,12 @@ class DraftRow(BaseModel):
         ...,
         ge=0.0,
         le=1.0,
-        description="model's self-reported confidence. DECORATIVE — do NOT gate, route, or triage on it: "
+        description="on a judgment draft, the model's self-reported confidence; on a confirmed axe violation "
+        "it is code-assembled at 1.0, because the verdict there is axe's confirmed finding and not a model "
+        "guess. DECORATIVE either way — do NOT gate, route, or triage on it: the self-reported half is "
         "measured to carry no usable signal (held-out over-confidence gap +0.329; values pinned ~0.85-1.0 "
-        "regardless of correctness). Derive a real trust signal elsewhere — see docs/acceptance-analysis.md.",
+        "regardless of correctness), and the assembled half is calibrated by construction, so neither "
+        "discriminates. Derive a real trust signal elsewhere — see docs/acceptance-analysis.md.",
     )
 
 

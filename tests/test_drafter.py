@@ -157,6 +157,18 @@ def test_draft_is_a_thin_row_only_view_of_draft_with_usage() -> None:
     assert Drafter(client).draft(_finding(), [_cite("1.1.1")]).finding_id == "h:image-alt"
 
 
+def test_confirmed_violation_threads_usage_the_same_way() -> None:
+    """The remediation-only branch is a second call site, so the `Trace` quartet must be filled from
+    it too — a cheaper prompt that silently stopped reporting tokens would hide its own saving."""
+    usage = LLMUsage(tokens_in=60, tokens_out=12, cost_usd=0.0, latency_ms=21.0)
+    confirmed = _finding().model_copy(update={"axe_tags": ["wcag2a", "wcag111"]})
+    result = Drafter(FakeLLMClient('{"remediation":"Add alt text."}', usage=usage)).draft_with_usage(
+        confirmed, [_cite("1.1.1", "https://example/1.1.1")]
+    )
+    assert result.usage == usage
+    assert result.row.remediation == "Add alt text."
+
+
 # --- gated integration: real Ollama ------------------------------------------
 
 
@@ -182,3 +194,17 @@ def test_real_drafter_returns_schema_valid_row_citing_the_retrieved_sc() -> None
     assert isinstance(row.conformance, Conformance)
     assert 0.0 <= row.confidence <= 1.0
     assert "1.1.1" in [c.sc_id for c in row.citations]
+
+
+@ollama_up
+def test_real_drafter_honors_the_remediation_only_contract_on_a_confirmed_violation() -> None:
+    """The remediation-only branch against the real model: a one-field response schema is a different
+    structured-output ask than the four-field one, so the contract has to be proven, not assumed.
+    Asserts the shape and that the row is not the fallback — never the wording."""
+    confirmed = _finding(impact=Severity.CRITICAL).model_copy(update={"axe_tags": ["wcag2a", "wcag111"]})
+    row = Drafter(LocalLLMClient()).draft(confirmed, [_cite("1.1.1", "https://www.w3.org/TR/WCAG22/#non-text-content")])
+    assert is_fallback_draft(row) is False  # the model produced a real, parseable remediation
+    assert row.remediation.strip() != ""
+    assert row.conformance == Conformance.DOES_NOT_SUPPORT  # code's, from axe's confirmation
+    assert [c.sc_id for c in row.citations] == ["1.1.1"]  # code's, from the wcag111 tag
+    assert row.confidence == 1.0

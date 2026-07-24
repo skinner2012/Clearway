@@ -10,6 +10,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from clearway.eval.drafter_kappa import (
     CEILING_PREREGISTRATION,
     ClassCeiling,
@@ -18,6 +20,9 @@ from clearway.eval.drafter_kappa import (
     class_ceilings,
     class_kappa_cis,
     class_kappas,
+    minimum_wins,
+    sign_test_p,
+    tolerated_regressions,
 )
 
 _RUNS = Path(__file__).resolve().parent.parent / "benchmark" / "runs"
@@ -189,3 +194,35 @@ def test_partial_flags_false_shifts_only_the_link_ceiling() -> None:
     for axe in ("document-title", "empty-heading", "label"):
         assert false_[axe].errors == true_[axe].errors
         assert false_[axe].certifiable == true_[axe].certifiable
+
+
+# --- the pre-registered test arithmetic ------------------------------------------------------------
+
+
+def test_sign_test_reproduces_the_pre_registered_table() -> None:
+    """The exact one-sided sign-test p on discordant pairs, at the values the ceilings turn on. These
+    rationals were fixed before any result existed; the code must reproduce them, not approximate them."""
+    assert sign_test_p(5, 0) == 1 / 32  # 0.03125 — clears α
+    assert sign_test_p(4, 0) == 1 / 16  # 0.0625  — does not
+    assert sign_test_p(5, 1) == 7 / 64  # 0.109   — one regression is fatal at 5 wins
+    assert sign_test_p(6, 1) == 1 / 16  # 0.0625
+    assert sign_test_p(7, 1) == 9 / 256  # 0.0352 — the pooled test tolerates a regression here
+    assert sign_test_p(9, 2) == pytest.approx(0.03271, abs=1e-5)
+    assert sign_test_p(8, 2) == pytest.approx(0.05469, abs=1e-5)
+
+
+def test_ceiling_form_is_the_zero_regression_sign_test() -> None:
+    # p = 0.5^errors is not a separate formula — it is the same test with c = 0.
+    assert all(sign_test_p(b, 0) == 0.5**b for b in range(0, 12))
+
+
+def test_the_bar_is_five_wins_at_zero_regressions() -> None:
+    assert minimum_wins(0.05) == 5
+
+
+def test_zero_margin_at_five_reachable_errors_real_margin_at_ten() -> None:
+    # Five reachable errors admit no regression at all; ten absorb three.
+    assert tolerated_regressions(5, 0.05) == 0
+    assert tolerated_regressions(10, 0.05) == 3
+    # a count that cannot clear α at any fix quality tolerates nothing by definition
+    assert tolerated_regressions(3, 0.05) == 0

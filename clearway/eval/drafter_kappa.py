@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
+from math import comb
 from typing import Any
 
 from clearway.eval.drafter_score import FAILED, DraftedCase, _flagged
@@ -67,6 +68,39 @@ CEILING_PREREGISTRATION = (
     "clear alpha. This is the per-class analogue of M5's run-to-run noise floor — one yardstick: you "
     "cannot detect an improvement the class lacks the statistical room to show."
 )
+
+
+def sign_test_p(b: int, c: int) -> float:
+    """The one-sided exact sign-test p on discordant pairs: `b` improved, `c` regressed.
+
+    P(X >= b) under Bin(b + c, 1/2) — the probability of at least this many improvements if the change
+    were a coin flip. Exact, never normal-approximated: at these n the approximation is not usable. With
+    c = 0 it reduces to 0.5^b, which is the ceiling form."""
+    n = b + c
+    if n == 0:
+        return 1.0
+    tail = sum(comb(n, k) for k in range(b, n + 1))
+    return tail / 2.0**n
+
+
+def minimum_wins(alpha: float = _ALPHA) -> int:
+    """The fewest fixed cases that clear `alpha` at zero regressions — the bar a perfect run must reach."""
+    b = 0
+    while sign_test_p(b, 0) > alpha:
+        b += 1
+    return b
+
+
+def tolerated_regressions(reachable_errors: int, alpha: float = _ALPHA) -> int:
+    """How many newly-broken cases a ceiling absorbs and still clears `alpha`, given every reachable error
+    is fixed. 0 means a perfect run is the only passing run — the margin stated, rather than assumed.
+    `sign_test_p` is monotone in `c`, so the first failure ends the search."""
+    if sign_test_p(reachable_errors, 0) > alpha:
+        return 0
+    c = 0
+    while sign_test_p(reachable_errors, c + 1) <= alpha:
+        c += 1
+    return c
 
 
 @dataclass(frozen=True)

@@ -332,90 +332,6 @@
       "expected_finding_count": 1
     },
     {
-      "act_testcase_id": "16d451321559dc35b8c33f0d21b2c7f49175914e",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/16d451321559dc35b8c33f0d21b2c7f49175914e.html",
-      "expected": "passed",
-      "gold_conformance": "supports",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 1
-    },
-    {
-      "act_testcase_id": "b77c97dc01d0cd1fcaaaeb2459f805e8e791cafb",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/b77c97dc01d0cd1fcaaaeb2459f805e8e791cafb.html",
-      "expected": "passed",
-      "gold_conformance": "supports",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 1
-    },
-    {
-      "act_testcase_id": "515a82f230ab2c1c1d56b60adf92697c80bc25e5",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/515a82f230ab2c1c1d56b60adf92697c80bc25e5.html",
-      "expected": "passed",
-      "gold_conformance": "supports",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 1
-    },
-    {
-      "act_testcase_id": "7155e250f35ee0a290bcf273b5a3ad8a366065ec",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/7155e250f35ee0a290bcf273b5a3ad8a366065ec.html",
-      "expected": "failed",
-      "gold_conformance": "does_not_support",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 1
-    },
-    {
-      "act_testcase_id": "1221f291a8a94b85a514f743647f3d7f818bef5b",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/1221f291a8a94b85a514f743647f3d7f818bef5b.html",
-      "expected": "failed",
-      "gold_conformance": "does_not_support",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 1
-    },
-    {
-      "act_testcase_id": "1c577f9a1335ead326261aefaa8064f8cc6d240e",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/1c577f9a1335ead326261aefaa8064f8cc6d240e.html",
-      "expected": "failed",
-      "gold_conformance": "does_not_support",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 1
-    },
-    {
-      "act_testcase_id": "48cbc84f4c020393cfb56fd53337827278b2d528",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/48cbc84f4c020393cfb56fd53337827278b2d528.html",
-      "expected": "failed",
-      "gold_conformance": "does_not_support",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 3
-    },
-    {
       "act_testcase_id": "6fc68d363695e29f480d6a99bbcc7be08f68d1bc",
       "rule_name": "Link in context is descriptive",
       "axe_rule": "link-name",
@@ -611,30 +527,6 @@
       "expected_finding_count": 0
     },
     {
-      "act_testcase_id": "3e58cd4827d3f80b974af2bdd34f22a137db6c86",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/3e58cd4827d3f80b974af2bdd34f22a137db6c86.html",
-      "expected": "passed",
-      "gold_conformance": "supports",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 0
-    },
-    {
-      "act_testcase_id": "4301e64721f3b157fc0859e4887989d476068d86",
-      "rule_name": "Link is descriptive",
-      "axe_rule": "link-name",
-      "path": "html/4301e64721f3b157fc0859e4887989d476068d86.html",
-      "expected": "failed",
-      "gold_conformance": "does_not_support",
-      "gold_success_criteria": [
-        "2.4.9"
-      ],
-      "expected_finding_count": 0
-    },
-    {
       "act_testcase_id": "bd4aaff1b51fa2fbf5c0f326266aa83844602967",
       "rule_name": "Link in context is descriptive",
       "axe_rule": "link-name",
@@ -666,6 +558,7 @@
     "Image not in the accessibility tree is decorative": "same — the pipeline cannot see the image; needs a multimodal drafter (a future iteration)",
     "Links with identical accessible names have equivalent purpose": "the ACT outcome is defined over a SET of links; Clearway mints one independent per-element Finding and judges each link in isolation, so it structurally cannot represent the judgment",
     "Links with identical accessible names and same context serve equivalent purpose": "same cross-element reason — a set-level judgment a per-element Finding cannot carry",
-    "Error message describes invalid form field value": "no axe rule confirms the error message EXISTS, so it never mints a Finding"
+    "Error message describes invalid form field value": "no axe rule confirms the error message EXISTS, so it never mints a Finding",
+    "Link is descriptive": "conformance level: it maps to SC 2.4.9 ONLY, which is Level AAA, and Clearway drafts VPAT/ACR rows against a Level A/AA target — ordinary scoping, independent of any result. Its sibling 'Link in context is descriptive' carries the Level A criterion (2.4.4) and is retained, so the link judgment stays scored. Consequence, not the reason: the two rules assign opposite outcomes to byte-identical fixture files, a contradiction a one-Finding-per-element pipeline cannot represent; dropping the AAA-only rule removes it"
   }
 }

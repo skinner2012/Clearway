@@ -1,10 +1,11 @@
 """Convert the vendored W3C ACT test cases into `GoldLabel`s, and load them for scoring.
 
 External, expert-authored gold: each ACT case carries W3C's expected outcome (passed / failed)
-and its WCAG success criteria. This module converts ONLY the five ACT *descriptiveness* rules
-whose judgment axe can actually surface (confirmed empirically — see `docs/act-feasibility.md`),
-and loads them as `(Finding, GoldLabel)` pairs for a deterministic comparison against gold. No
-LLM scores anything here.
+and its WCAG success criteria. This module converts ONLY the four ACT *descriptiveness* rules
+whose judgment axe can surface (confirmed empirically — see `docs/act-feasibility.md`) AND whose
+success criteria fall inside the Level A/AA conformance target Clearway drafts against, and loads
+them as `(Finding, GoldLabel)` pairs for a deterministic comparison against gold. No LLM scores
+anything here.
 
 Design (mirrors the self-built quality gold in `calibration_build.load_gold_pairs`):
   - The `finding_id` is NOT stored — it hashes an absolute `file://` URL and is not portable, so
@@ -21,6 +22,7 @@ Regenerate the manifest with `uv run python -m clearway.eval.act_gold` (scans th
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -40,10 +42,10 @@ GOLD_VERSION = f"act-gold@{_EXPORT_SHA256[:8]}"
 LABELLER = "ACT Rules Community Group"
 SOURCE = "w3c-act"
 
-# The five ACT judgment rules whose call axe can surface, and the axe rule that mints the Finding.
+# The four ACT judgment rules whose call axe can surface at Level A/AA, and the axe rule that mints
+# the Finding. One ACT rule per axe rule — a class is one rule's cases, never a pool of two.
 RULE_TO_AXE: dict[str, str] = {
     "Link in context is descriptive": "link-name",
-    "Link is descriptive": "link-name",
     "Form field label is descriptive": "label",
     "Heading is descriptive": "empty-heading",
     "HTML page title is descriptive": "document-title",
@@ -67,6 +69,14 @@ EXCLUDED_RULES: dict[str, str] = {
     ),
     "Error message describes invalid form field value": (
         "no axe rule confirms the error message EXISTS, so it never mints a Finding"
+    ),
+    "Link is descriptive": (
+        "conformance level: it maps to SC 2.4.9 ONLY, which is Level AAA, and Clearway drafts VPAT/ACR "
+        "rows against a Level A/AA target — ordinary scoping, independent of any result. Its sibling "
+        "'Link in context is descriptive' carries the Level A criterion (2.4.4) and is retained, so the "
+        "link judgment stays scored. Consequence, not the reason: the two rules assign opposite outcomes "
+        "to byte-identical fixture files, a contradiction a one-Finding-per-element pipeline cannot "
+        "represent; dropping the AAA-only rule removes it"
     ),
 }
 
@@ -163,6 +173,40 @@ def load_act_gold_pairs() -> list[tuple[Finding, GoldLabel]]:
             )
             pairs.append((finding, gold))
     return pairs
+
+
+def rule_success_criteria(rule_name: str) -> list[str]:
+    """The WCAG SC ids an ACT rule maps to, read from the vendored export. Derived rather than restated,
+    so a scoping rationale that rests on conformance level can be audited against the frozen gold."""
+    export = json.loads(_EXPORT.read_text())
+    for t in export["testcases"]:
+        if t["ruleName"] == rule_name:
+            return _success_criteria(t["ruleAccessibilityRequirements"] or {})
+    raise KeyError(f"no ACT rule named {rule_name!r} in the vendored export")
+
+
+def contradictory_gold_twins() -> dict[str, list[str]]:
+    """Each in-scope case whose fixture file is byte-identical to another in-scope case's carrying the
+    OPPOSITE ACT outcome, mapped to those counterparts.
+
+    Same bytes → same DOM → same referent → same prompt → same drafter verdict, so exactly one member of
+    such a pair is permanently wrong here and no change to what the drafter *receives* can reach it.
+    Deterministic and offline: it hashes the vendored fixture bytes, invokes no model and reads no run
+    artifact. Under the current scope the result is EMPTY — the AAA-only link rule that carried both
+    contradictory pairs is out of scope — but the term stays in the reachable-error ledger so the ledger
+    reads the same before and after the scoping.
+    """
+    manifest = json.loads(_MANIFEST.read_text())
+    by_content: dict[str, list[dict[str, Any]]] = {}
+    for case in [*manifest["cases"], *manifest["honest_misses"]]:
+        digest = hashlib.sha256((_ACT_GOLD / case["path"]).read_bytes()).hexdigest()
+        by_content.setdefault(digest, []).append(case)
+    return {
+        case["act_testcase_id"]: [c["act_testcase_id"] for c in group if c["expected"] != case["expected"]]
+        for group in by_content.values()
+        if len({c["expected"] for c in group}) > 1
+        for case in group
+    }
 
 
 def main() -> None:

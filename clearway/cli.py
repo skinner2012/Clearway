@@ -35,7 +35,17 @@ from clearway.observability import (
 )
 from clearway.orchestrator import Retrieve, run, run_set
 from clearway.orchestrator.store import OrchestratorStore
-from clearway.schemas.models import Citation, Conformance, DraftRow, NeedsReview, OnlineEvalReport, ReviewStatus
+from clearway.schemas.models import (
+    Citation,
+    CitationCheck,
+    CitationVerdict,
+    Conformance,
+    DraftRow,
+    NeedsReview,
+    OnlineEvalReport,
+    ReviewStatus,
+    Trace,
+)
 
 _FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -62,6 +72,14 @@ def _print_metrics(report: OnlineEvalReport) -> None:
 # plain-text rows a specialist reads. `confidence` is deliberately omitted — the field is
 # decorative (see its schema note) — and each row is drafted evidence, never a final decision:
 # Clearway does not render the conformance verdict, the specialist does.
+#
+# Write-all-in: every assembled row goes into the block. The ONLY rows that never reach it are the
+# ones the HITL gate holds back — a `NeedsReview` still PENDING, or one a specialist REJECTED
+# (`orchestrator/machine._gate`). Nothing else filters: a contradicted citation, a weak finding
+# class, and a low-confidence draft all still ship. The reader is told how far to trust a row (the
+# per-row verification-state label below) rather than having it silently removed — a row dropped
+# from the report is also dropped from the trust metrics, which flatters the headline instead of
+# improving it.
 
 _ROW_LABEL_W = 11  # widest label ("Conformance" / "Remediation"), so the value columns align
 _VALUE_COL = 2 + _ROW_LABEL_W + 3  # "  " + label + " : "
@@ -70,9 +88,63 @@ _RULE_W = 72
 _WRAP_W = _RULE_W - _VALUE_COL
 
 
+# --- per-row verification-state ("trust") label -------------------------------
+# What actually stands behind one row, in three states, derived from verification state ONLY: the
+# validator's `CitationVerdict`s (did the oracle confirm every criterion this row cites?) and the
+# reviewer's `ReviewStatus` (did a specialist sign it?).
+#
+# `DraftRow.confidence` is deliberately NOT an input and must never become one. It is measured to
+# carry no usable signal — one populated bin, values pinned ~0.85-1.0 regardless of correctness —
+# so a label sourced from it would launder a broken number into a client-facing assurance. See the
+# field's own schema note and docs/acceptance-analysis.md.
+
+_TRUST_ORACLE_VERIFIED = "oracle-verified"
+_TRUST_HUMAN_REVIEWED = "human-reviewed"
+_TRUST_DRAFTER_JUDGED = "drafter-judged, unverified"
+
+_TRUST_LEGEND = (
+    f"Trust labels -- {_TRUST_ORACLE_VERIFIED}: an automated oracle confirmed every criterion the "
+    f"row cites. {_TRUST_HUMAN_REVIEWED}: a specialist approved or edited it. "
+    f"{_TRUST_DRAFTER_JUDGED}: model output that nothing has confirmed."
+)
+
+# A `supports` verdict is a "no problem here" claim, and it arises on the quality-review classes
+# whose referent is weakest. The oracle grounds cited criteria, never a conformance verdict — and on
+# the one bucket it does ground (`violations`) it positively contradicts a `supports` claim. So it
+# never renders as a bare verdict, and never as oracle-verified.
+_SUPPORTS_CAVEAT = "unverified claim, not a certified pass"
+
+
+def _trust_label(row: DraftRow, checks: list[CitationCheck], review_status: ReviewStatus | None) -> str:
+    """Which of the three verification states this row is in.
+
+    Precedence is `human-reviewed` > `oracle-verified` > `drafter-judged, unverified`:
+
+    - A specialist's APPROVED or EDITED resolution outranks everything. It is the later and stronger
+      attestation, and on an EDITED row the remediation prose is the human's — the oracle never
+      grounded a word of it, so naming the oracle would misattribute what the reader is reading.
+    - `oracle-verified` requires at least one citation and EVERY citation VERIFIED. One
+      HALLUCINATED (the oracle contradicted it) or UNVERIFIABLE (no oracle verdict to check against)
+      citation leaves an unproven claim in the shipped row, and zero citations verify nothing at all.
+    - Everything else is the honest floor: the drafter said it, nothing confirmed it.
+    """
+    if review_status in (ReviewStatus.APPROVED, ReviewStatus.EDITED):
+        return _TRUST_HUMAN_REVIEWED
+    if row.conformance is Conformance.SUPPORTS:
+        return _TRUST_DRAFTER_JUDGED
+    if checks and all(c.verdict is CitationVerdict.VERIFIED for c in checks):
+        return _TRUST_ORACLE_VERIFIED
+    return _TRUST_DRAFTER_JUDGED
+
+
 def _fmt_conformance(conformance: Conformance) -> str:
-    """The Conformance enum in standard VPAT/ACR wording: `does_not_support` -> 'Does Not Support'."""
-    return conformance.value.replace("_", " ").title()
+    """The Conformance enum in standard VPAT/ACR wording: `does_not_support` -> 'Does Not Support'.
+    `supports` alone never renders bare — it carries `_SUPPORTS_CAVEAT`, so the least-trustworthy
+    row in the report cannot be read as a certified pass."""
+    text = conformance.value.replace("_", " ").title()
+    if conformance is Conformance.SUPPORTS:
+        return f"{text} -- {_SUPPORTS_CAVEAT}"
+    return text
 
 
 def _fmt_citation(citation: Citation) -> list[str]:
@@ -103,10 +175,25 @@ def _withheld_line(withheld: list[NeedsReview]) -> str | None:
     return f"{len(withheld)} withheld for specialist review ({parts}) -- see: clearway review list --status pending"
 
 
-def _render_drafts(target: str, drafts: list[DraftRow], withheld: list[NeedsReview]) -> str:
+def _render_drafts(
+    target: str,
+    drafts: list[DraftRow],
+    withheld: list[NeedsReview],
+    *,
+    traces: Sequence[Trace] = (),
+    reviewed: Sequence[NeedsReview] = (),
+) -> str:
     """Render the assembled DraftRows as one plain-text ACR/VPAT evidence block — pure ASCII, no
     colour or box-drawing, so it survives a copy-paste into an article. Returns the whole block; the
-    caller prints it."""
+    caller prints it.
+
+    Every row in `drafts` is rendered (see the write-all-in note above). `traces` carries the
+    authoritative per-finding `CitationCheck`s and `reviewed` the human-resolved records that DID
+    ship, which together are the only inputs to each row's verification-state label. Both default to
+    empty, and a row with no verification evidence labels DOWN, never up — an absent trace can only
+    understate what stands behind a row."""
+    checks_by_finding = {t.finding_id: t.checks for t in traces}
+    status_by_finding = {r.finding_id: r.status for r in reviewed}
     rule = "=" * _RULE_W
     out: list[str] = [rule, f"ACR / VPAT evidence -- {target}", rule, ""]
     withheld_line = _withheld_line(withheld)
@@ -119,9 +206,12 @@ def _render_drafts(target: str, drafts: list[DraftRow], withheld: list[NeedsRevi
     out.append(f"{len(drafts)} finding(s) drafted for evidence -- not a final conformance decision.")
     if withheld_line is not None:
         out.append(withheld_line)
+    out.extend(textwrap.wrap(_TRUST_LEGEND, width=_RULE_W))
     out.append("")
     for i, row in enumerate(drafts, start=1):
         out.append(f"[{i}] {row.finding_id}")
+        label = _trust_label(row, checks_by_finding.get(row.finding_id, []), status_by_finding.get(row.finding_id))
+        out.append(_labelled("Trust", label))
         out.append(_labelled("Conformance", _fmt_conformance(row.conformance)))
         out.append(_labelled("Severity", row.severity.value if row.severity is not None else "unspecified"))
         if row.citations:
@@ -399,7 +489,15 @@ def _run_cmd(args: argparse.Namespace) -> int:
         )
         if args.emit:
             record_eval_report(result.report)
-    print(_render_drafts(args.target, result.drafts, result.withheld))
+    print(
+        _render_drafts(
+            args.target,
+            result.drafts,
+            result.withheld,
+            traces=result.traces,
+            reviewed=result.reviewed,
+        )
+    )
     print()
     _print_metrics(result.report)
     if args.emit:

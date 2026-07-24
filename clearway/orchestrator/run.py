@@ -41,12 +41,15 @@ class RunResult:
     """Everything one `clearway run` produced: the aggregated report, its per-finding traces, and
     the assembled `DraftRow`s the run ships — the ACR/VPAT-shaped rows the CLI renders (one per
     non-withheld finding, in trace order). `drafts` excludes findings withheld at the review gate;
-    `withheld` is those held-back records (pending/rejected) so the caller can report the gap."""
+    `withheld` is those held-back records (pending/rejected) so the caller can report the gap.
+    `reviewed` is the complement — the human-resolved records (approved/edited) whose rows DID ship,
+    so the renderer can say which rows carry a specialist's signature."""
 
     report: OnlineEvalReport
     traces: list[Trace]
     drafts: list[DraftRow] = field(default_factory=list)
     withheld: list[NeedsReview] = field(default_factory=list)
+    reviewed: list[NeedsReview] = field(default_factory=list)
 
 
 def _default_retrieve() -> Retrieve:
@@ -185,7 +188,8 @@ def run(
     )
     do_store.save_report(report)
     withheld = [r for r in run_reviews if r.status in (ReviewStatus.PENDING, ReviewStatus.REJECTED)]
-    return RunResult(report=report, traces=traces, drafts=drafts, withheld=withheld)
+    reviewed = [r for r in run_reviews if r.status in (ReviewStatus.APPROVED, ReviewStatus.EDITED)]
+    return RunResult(report=report, traces=traces, drafts=drafts, withheld=withheld, reviewed=reviewed)
 
 
 def run_set(
@@ -244,4 +248,5 @@ def run_set(
     )
     do_store.save_report(report)
     withheld = [r for r in run_reviews if r.status in (ReviewStatus.PENDING, ReviewStatus.REJECTED)]
-    return RunResult(report=report, traces=traces, drafts=drafts, withheld=withheld)
+    reviewed = [r for r in run_reviews if r.status in (ReviewStatus.APPROVED, ReviewStatus.EDITED)]
+    return RunResult(report=report, traces=traces, drafts=drafts, withheld=withheld, reviewed=reviewed)

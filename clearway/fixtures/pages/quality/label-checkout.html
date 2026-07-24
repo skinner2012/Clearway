@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Checkout</title>
+</head>
+<body>
+  <main>
+    <h1>Checkout</h1>
+    <!-- Judgment fixtures (label quality): every field has a programmatic <label>, so axe's label
+         rule PASSES on existence — no field is a hard violation. The judgment is whether the label
+         identifies the field's PURPOSE (3.3.2). Unlike the older snippet-alone gold, these items are
+         labelled CONTEXT-AWARE: the drafter now also sees the resolved accessible name and the
+         nearest section heading ("Shipping address"), which is exactly the referent injected here. -->
+    <h2>Shipping address</h2>
+    <label for="ship_name">Name</label>
+    <input id="ship_name" type="text">
+    <label for="ship_street">Street</label>
+    <input id="ship_street" type="text">
+    <label for="ship_field">Field 3</label>
+    <input id="ship_field" type="text">
+  </main>
+</body>
+</html>

@@ -17,9 +17,16 @@ from clearway.schemas.models import AxeBucket, Conformance, GoldLabel, Severity
 FIXTURES = Path(__file__).resolve().parent.parent / "clearway" / "fixtures"
 MANIFEST = FIXTURES / "expected_quality.json"
 
-# the residual quality criterion per quality-review rule (see the manifest note for why link-name
-# is 2.4.4 and not 4.1.2)
-RULE_SC = {"image-alt": "1.1.1", "link-name": "2.4.4", "frame-title": "4.1.2"}
+# the residual quality criterion per quality-review rule (see the manifest note for why link-name is
+# 2.4.4 and not 4.1.2, why label is 3.3.2 and not 1.3.1, and why document-title is labelled from the
+# resolved title + topic signal)
+RULE_SC = {
+    "image-alt": "1.1.1",
+    "link-name": "2.4.4",
+    "frame-title": "4.1.2",
+    "label": "3.3.2",
+    "document-title": "2.4.2",
+}
 
 
 def _manifest() -> dict:
@@ -29,13 +36,17 @@ def _manifest() -> dict:
 def test_manifest_is_well_formed_and_versioned() -> None:
     m = _manifest()
     assert m["set_id"] == "quality-gold"
-    assert m["gold_version"] == "quality-gold@2"
+    assert m["gold_version"] == "quality-gold@3"
     assert m["labeller"], "a single labeller must be named — kappa is judge-vs-this-one-labeller"
-    assert len(m["pages"]) == 9
+    assert len(m["pages"]) == 18
     for page in m["pages"]:
         assert page["sc"] == RULE_SC[page["rule_id"]], page["path"]
         for item in page["items"]:
-            assert item["target"].startswith("#")
+            # the page-level <title> lives on <html>; every other quality-review rule targets an id
+            if page["rule_id"] == "document-title":
+                assert item["target"] == "html", page["path"]
+            else:
+                assert item["target"].startswith("#")
             # conformance is binary for these single-element quality calls
             assert item["conformance"] in {"supports", "does_not_support"}
             assert item["notes"], f"{page['path']} {item['target']}: labelling basis required"
@@ -86,6 +97,6 @@ def test_gold_maps_one_to_one_onto_findings_and_every_label_validates() -> None:
             conformances.add(label.gold_conformance.value)
             total += 1
 
-    assert total == 27  # >= the 25 gold floor
+    assert total == 42  # >= the 25 gold floor
     # both polarities present -> a balanced calibration draft set is constructible in calibration
     assert conformances == {"supports", "does_not_support"}

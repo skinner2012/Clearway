@@ -1,9 +1,9 @@
 {
   "set_id": "quality-gold",
-  "version": 2,
-  "gold_version": "quality-gold@2",
+  "version": 3,
+  "gold_version": "quality-gold@3",
   "labeller": "clearway-maintainer",
-  "note": "Self-built digital judgment gold set. Source: existence-only axe rules that PASS on present-but-poor values (image-alt / link-name / frame-title), surfaced as quality-review judgment findings (AxeBucket.PASSES). SCOPE: this set calibrates the judge on those three rules only. The global quality-review rule set later grew to six (adding empty-heading / document-title, both of which now also mint judgment findings on these fixtures' <h1>/<title>); those two are validated against external W3C ACT expert gold, not relabelled here, so the per-page bijection below is scoped to each page's own rule and the @1->@2 bump records that growth. The M4 calibration (kappa) is unchanged — it replays the frozen calibration set, not these fixtures. Each item is labelled from the element snippet ALONE — the same input the drafter and judge receive, no page context. Conformance is binary: supports = the value adequately serves its success criterion; does_not_support = present but inadequate (a quality failure axe cannot decide). Borderline calls are flagged in notes — single-labeller honesty; kappa is judge-vs-this-one-labeller. Every label was spot-checked against WCAG 2.2 Understanding (1.1.1, 2.4.4, 4.1.2) and its techniques; the per-item notes cite the governing technique/failure. Two grounding caveats recorded honestly: (a) LINK-NAME is labelled on the link text ALONE, i.e. 2.4.9 Link-Only semantics, since the pipeline passes the judge only the <a> element with no enclosing list item or heading; we cite 2.4.4 because that is the criterion axe surfaces (wcag244) and the level-A one, and the fixtures supply no disambiguating context so the calls hold under 2.4.4-in-context too. (b) FRAME-TITLE quality is the softest grounding: 4.1.2's letter is met once a name EXISTS (all titles do), so 'is the title descriptive?' is a best-practice reading of H64, not a black-letter 4.1.2 failure. SC assignment: image-alt -> 1.1.1; link-name -> 2.4.4 (the accessible name exists, so 4.1.2 is satisfied — the residual defect is link purpose); frame-title -> 4.1.2 (H64; no dedicated purpose SC exists for frames). gold_severity is informational and per-category (the judge does not score severity). finding_id is not stored: it hashes an absolute file:// URL, so it is derived at load time by matching each item's target to the scanned finding. Both conformance polarities are present so a balanced calibration draft set is constructible.",
+  "note": "Self-built digital judgment gold set. Source: existence-only axe rules that PASS on present-but-poor values (image-alt / link-name / frame-title / label), surfaced as quality-review judgment findings (AxeBucket.PASSES). SCOPE: this set calibrates the judge on image-alt / link-name / frame-title, and additionally carries dedicated DEV fixtures for two M7 referent-injection classes — label (label-checkout / label-contact / label-signup) and document-title (title-* pages) — added to iterate those prompts with the referent present. The label and document-title items are a development set, never a held-out score: external W3C ACT expert gold remains the held-out oracle for both classes. The global quality-review rule set grew to six (adding empty-heading / document-title, both of which also mint judgment findings on the other fixtures' <h1>/<title>); empty-heading is validated against ACT gold and is NOT relabelled here. The per-page bijection below is scoped to each page's own rule; the @1->@2 bump recorded the six-rule growth and the @2->@3 bump adds the label + document-title dev fixtures. The M4 calibration (kappa) is unchanged — it replays the frozen calibration set, not these fixtures. Conformance is binary: supports = the value adequately serves its success criterion; does_not_support = present but inadequate (a quality failure axe cannot decide). Borderline calls are flagged in notes — single-labeller honesty; kappa is judge-vs-this-one-labeller. Every label was spot-checked against WCAG 2.2 Understanding (1.1.1, 2.4.4, 4.1.2, 3.3.2, 2.4.2) and its techniques; the per-item notes cite the governing technique/failure. GROUNDING BASIS DIFFERS BY RULE, stated honestly: image-alt / link-name / frame-title items are labelled from the element snippet ALONE — the same input the judge historically received, no page context. The @3 label items are labelled CONTEXT-AWARE: the drafter now also receives the resolved accessible name and the nearest section heading (referent injection), so a label like 'Name' under a 'Shipping address' heading is scored on the field's purpose GIVEN that section context, not on the bare <input>; does_not_support items ('Field 3', 'Info', 'Value', 'Text') fail on purpose even WITH the section context. The @3 document-title items are labelled from the RESOLVED <title> plus the page-topic signal (the h1 tier on these fixtures), because a document-title finding's element snippet is only <html lang=...>, which carries neither the title nor the topic — the call is 'does the resolved title describe the page's topic or purpose' per 2.4.2. Both are deliberately, and honestly, a different basis from the other five rules, because that is what the drafter actually receives for these classes post-injection. Two grounding caveats recorded honestly: (a) LINK-NAME is labelled on the link text ALONE, i.e. 2.4.9 Link-Only semantics, since the pipeline passes the judge only the <a> element with no enclosing list item or heading; we cite 2.4.4 because that is the criterion axe surfaces (wcag244) and the level-A one, and the fixtures supply no disambiguating context so the calls hold under 2.4.4-in-context too. (b) FRAME-TITLE quality is the softest grounding: 4.1.2's letter is met once a name EXISTS (all titles do), so 'is the title descriptive?' is a best-practice reading of H64, not a black-letter 4.1.2 failure. SC assignment: image-alt -> 1.1.1; link-name -> 2.4.4 (the accessible name exists, so 4.1.2 is satisfied — the residual defect is link purpose); frame-title -> 4.1.2 (H64; no dedicated purpose SC exists for frames); label -> 3.3.2 (the programmatic association exists, so 1.3.1 is satisfied — the residual defect is whether the visible label clearly identifies the field's purpose, which is 3.3.2 Labels or Instructions, Level A; G131); document-title -> 2.4.2 (H25/G88 for a descriptive title; F25 when the title does not identify the page). gold_severity is informational and per-category (the judge does not score severity). finding_id is not stored: it hashes an absolute file:// URL, so it is derived at load time by matching each item's target to the scanned finding. Both conformance polarities are present so a balanced calibration draft set is constructible.",
   "pages": [
     {
       "path": "pages/quality/alt-product.html",
@@ -93,6 +93,84 @@
         {"target": "#f_iframe", "value": "iframe", "conformance": "does_not_support", "severity": "moderate", "notes": "generic; describes nothing"},
         {"target": "#f_ad", "value": "Advertisement", "conformance": "supports", "severity": null, "notes": "borderline; names the frame's purpose adequately — a user knows it is an ad (H64 reading)"},
         {"target": "#f_chat", "value": "Customer support chat widget", "conformance": "supports", "severity": null, "notes": "describes the frame's content"}
+      ]
+    },
+    {
+      "path": "pages/quality/label-checkout.html",
+      "rule_id": "label",
+      "sc": "3.3.2",
+      "items": [
+        {"target": "#ship_name", "value": "Name", "conformance": "supports", "severity": null, "notes": "context-aware: 'Name' alone is ambiguous, but under the injected section heading 'Shipping address' it identifies the recipient's name — G131 (a label that describes purpose) is satisfied once the section context is in view; a snippet-insufficient / context-sufficient case by design, mirroring the ACT context-aware pattern"},
+        {"target": "#ship_street", "value": "Street", "conformance": "supports", "severity": null, "notes": "context-aware: 'Street' under 'Shipping address' names the street line of the shipping address — G131 satisfied with the section referent present"},
+        {"target": "#ship_field", "value": "Field 3", "conformance": "does_not_support", "severity": "moderate", "notes": "a bare positional label names the field's position, not its purpose — fails 3.3.2 (H90/G131 want a descriptive label); the section context does not rescue it"}
+      ]
+    },
+    {
+      "path": "pages/quality/label-contact.html",
+      "rule_id": "label",
+      "sc": "3.3.2",
+      "items": [
+        {"target": "#c_email", "value": "Email address", "conformance": "supports", "severity": null, "notes": "clearly identifies the field's purpose — 3.3.2 satisfied (G131)"},
+        {"target": "#c_phone", "value": "Phone number", "conformance": "supports", "severity": null, "notes": "clearly identifies the field's purpose — 3.3.2 satisfied (G131)"},
+        {"target": "#c_info", "value": "Info", "conformance": "does_not_support", "severity": "moderate", "notes": "vague single word — purpose (info about what?) not determinable even under the 'Contact details' heading; fails 3.3.2"}
+      ]
+    },
+    {
+      "path": "pages/quality/label-signup.html",
+      "rule_id": "label",
+      "sc": "3.3.2",
+      "items": [
+        {"target": "#s_user", "value": "Username", "conformance": "supports", "severity": null, "notes": "identifies the field's purpose — 3.3.2 satisfied (G131)"},
+        {"target": "#s_val", "value": "Value", "conformance": "does_not_support", "severity": "moderate", "notes": "generic placeholder-style label naming nothing about the field's purpose — fails 3.3.2"},
+        {"target": "#s_text", "value": "Text", "conformance": "does_not_support", "severity": "moderate", "notes": "names the input's data type, not its purpose — fails 3.3.2 (G131 wants a label that describes what to enter)"}
+      ]
+    },
+    {
+      "path": "pages/quality/title-home.html",
+      "rule_id": "document-title",
+      "sc": "2.4.2",
+      "items": [
+        {"target": "html", "value": "Home", "conformance": "does_not_support", "severity": "serious", "notes": "generic navigation label; names nothing about this page (a summer reading program) — F25 (title does not identify the page's contents); G88/H25 want a title that describes the topic/purpose"}
+      ]
+    },
+    {
+      "path": "pages/quality/title-untitled.html",
+      "rule_id": "document-title",
+      "sc": "2.4.2",
+      "items": [
+        {"target": "html", "value": "Untitled Document", "conformance": "does_not_support", "severity": "serious", "notes": "boilerplate editor default; describes nothing about the page (a bulb-planting guide) — F25 failure of 2.4.2"}
+      ]
+    },
+    {
+      "path": "pages/quality/title-products.html",
+      "rule_id": "document-title",
+      "sc": "2.4.2",
+      "items": [
+        {"target": "html", "value": "Products", "conformance": "does_not_support", "severity": "serious", "notes": "borderline; a category/section label, not this specific page's contents (a page about one office chair) — F25 (the title must identify the page, not just its section)"}
+      ]
+    },
+    {
+      "path": "pages/quality/title-recipe.html",
+      "rule_id": "document-title",
+      "sc": "2.4.2",
+      "items": [
+        {"target": "html", "value": "Sourdough bread recipe - Northgate Bakery", "conformance": "supports", "severity": null, "notes": "descriptive title in the canonical 'page topic - site name' form; identifies the page's contents — G88/H25 satisfied"}
+      ]
+    },
+    {
+      "path": "pages/quality/title-pricing.html",
+      "rule_id": "document-title",
+      "sc": "2.4.2",
+      "items": [
+        {"target": "html", "value": "Pricing plans - Meridian CRM", "conformance": "supports", "severity": null, "notes": "names the page's topic (pricing plans) plus the site — G88/H25 satisfied"}
+      ]
+    },
+    {
+      "path": "pages/quality/title-contact.html",
+      "rule_id": "document-title",
+      "sc": "2.4.2",
+      "items": [
+        {"target": "html", "value": "Contact the support team - Meridian CRM", "conformance": "supports", "severity": null, "notes": "describes the page's purpose (contacting support) plus the site — G88/H25 satisfied"}
       ]
     }
   ]

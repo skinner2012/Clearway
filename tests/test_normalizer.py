@@ -241,9 +241,11 @@ def test_incomplete_fixture_normalizes_to_an_unverifiable_finding() -> None:
 
 # --- the planted judgment-item fixtures (each yields reframed passes[] items) -
 
-# Each quality fixture plants three present-but-poor values on a gradient (inadequate ->
-# borderline -> adequate) so that axe PASSES the existence check while the quality stays a
-# judgment call. Map: fixture -> (quality-review rule it exercises, planted judgment items).
+# Each quality fixture plants present-but-poor values so that axe PASSES the existence check while
+# the quality stays a judgment call. The alt / link / frame / label pages plant three values on a
+# gradient (inadequate -> borderline -> adequate). The title pages plant ONE value each: a page has a
+# single <title>, so document-title mints one judgment finding (on <html>) per page, its quality
+# varying across the six pages. Map: fixture -> (quality-review rule it exercises, planted items).
 QUALITY_FIXTURES = {
     "alt-product.html": ("image-alt", 3),
     "alt-article.html": ("image-alt", 3),
@@ -254,16 +256,27 @@ QUALITY_FIXTURES = {
     "frame-embeds.html": ("frame-title", 3),
     "frame-media.html": ("frame-title", 3),
     "frame-widgets.html": ("frame-title", 3),
+    "label-checkout.html": ("label", 3),
+    "label-contact.html": ("label", 3),
+    "label-signup.html": ("label", 3),
+    "title-home.html": ("document-title", 1),
+    "title-untitled.html": ("document-title", 1),
+    "title-products.html": ("document-title", 1),
+    "title-recipe.html": ("document-title", 1),
+    "title-pricing.html": ("document-title", 1),
+    "title-contact.html": ("document-title", 1),
 }
 
 
 def test_quality_fixtures_yield_only_reframed_passes_judgment_items() -> None:
     """Each planted quality fixture lands in axe's passes[] under exactly its quality-review rule —
     present enough to pass existence, never a hard violation — and every minted finding is a
-    reframed quality-review task (risk #1), not axe's already-conformant rule help. The 27 findings
-    across the set (scoped to each page's own rule) are the gold floor (>= 25). Each page also has a
-    <title>/<h1>, and the rule set is global, so it mints document-title/empty-heading findings too;
-    those are validated against ACT gold, not this set, so we scope to the page's planted rule."""
+    reframed quality-review task (risk #1), not axe's already-conformant rule help. The 42 findings
+    across the set (scoped to each page's own rule) are the gold floor (>= 25). Every page also has a
+    <title>/<h1>, and the rule set is global, so pages mint incidental document-title/empty-heading
+    findings; those are not counted here (empty-heading is validated against ACT gold; label and
+    document-title are labelled only on their own label-* / title-* pages), so we scope to each page's
+    planted rule."""
     total = 0
     for page, (rule, count) in QUALITY_FIXTURES.items():
         findings = normalize(scan(str(QUALITY / page)))
@@ -277,4 +290,4 @@ def test_quality_fixtures_yield_only_reframed_passes_judgment_items() -> None:
         assert not any(f.source_bucket is AxeBucket.VIOLATIONS for f in findings), page
         total += len(passes)
 
-    assert total == 27
+    assert total == 42

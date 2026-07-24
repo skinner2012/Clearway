@@ -1,5 +1,13 @@
 # Clearway — M6: Turn the ruler on the drafter
 
+> ## ⚠️ Every `link ×2` number in this document is SUPERSEDED. Read it as a historical record.
+> M7-T0 scoped the class to *Link in context is descriptive* — *Link is descriptive* maps to
+> **SC 2.4.9 only, Level AAA**, outside the A/AA conformance target — and re-derived the ceilings over
+> the errors a drafter-input change can actually reach. The set is **44 cases**, not 53, and the class
+> is **n = 15, κ 0.211, errors 6, reachable 5, ceiling p = 0.031** — not n = 24 / κ 0.250 / p 0.0020.
+> The other three classes are unchanged and bit-identical. **Current numbers:**
+> `benchmark/reports/drafter_kappa_baseline.json` and `docs/drafter-kappa-baseline.md`.
+
 > **Scope note.** M6 is a **measurement milestone**. It changes no drafter behaviour and fixes no
 > finding-class. Its output is an honest baseline plus a statement of what that baseline can and
 > cannot prove. Every drafter fix is M7 — *eval before iteration*, so no fix ships on faith.
@@ -83,6 +91,13 @@ inflates exactly as recall would. κ is reported under **both** readings of `par
 every other M5 rate is.
 
 ### ⚠️ Stratify by fix unit, not by ACT rule
+
+> **⚠️ Superseded by M7-T0 — the pooling below no longer holds.** *Link is descriptive* maps to
+> **SC 2.4.9 only (Level AAA)**, outside the A/AA conformance target, and is now in `EXCLUDED_RULES`.
+> `link-name` is scoped to *Link in context is descriptive* alone: **n = 15, κ = 0.211, errors 6,
+> reachable 5, ceiling p = 0.031** — not the n = 24 / κ 0.250 / p 0.002 stated here. The whole section
+> is kept as the historical record of what M6 measured. Current numbers:
+> `benchmark/reports/drafter_kappa_baseline.json` and `docs/drafter-kappa-baseline.md`.
 
 The two link rules — *Link is descriptive* and *Link in context is descriptive* — share one missing
 referent (the destination lies outside a single-page DOM) and receive **one** M7 fix (feed surrounding

@@ -107,32 +107,45 @@ def test_the_finding_id_of_a_real_scan_is_unchanged_by_extraction() -> None:
 
 
 def test_the_drafter_prompts_are_byte_identical_with_and_without_a_referent() -> None:
-    """Capturing the material is not injecting it. Injection is a separate, measured change;
-    if it leaked in here it would land inside the frozen baseline unattributed."""
+    """Capturing the material is not injecting it. Referent injection is per-class and lands in a
+    sibling change; the CONTROL class `empty-heading` is never injected, so its prompt must stay
+    byte-identical whether or not a referent rides along — the anchor that proves the instrument
+    works (M7: if injection leaks into the control, the comparison means nothing). The classes that
+    ARE injected are pinned verbatim in their own injection tests (test_referent_injection_label)."""
     citations = [Citation(sc_id="2.4.6", url="https://www.w3.org/WAI/WCAG22/#headings-and-labels")]
-    bare = Finding(id="x", source_url="file:///p.html", rule_id="label", target="#fname", html='<input id="fname">')
+    bare = Finding(
+        id="x",
+        source_url="file:///p.html",
+        rule_id="empty-heading",
+        target="#fname",
+        html='<input id="fname">',
+        source_bucket=AxeBucket.PASSES,
+    )
     carrying = bare.model_copy(update={"referent": _referent()})
     assert _user_prompt(bare, citations) == _user_prompt(carrying, citations)
 
 
 def test_the_drafter_prompt_text_is_pinned() -> None:
-    """Byte-identity asserted against a hash of the assembled prompts, not against the fact
-    that two calls agree — an injection applied unconditionally would pass that weaker test."""
+    """The CONTROL (`empty-heading`) prompt pinned to a hash of its exact bytes, carrying a full
+    referent. A hash catches what two-calls-agree cannot: an injection that leaked into the control
+    would move this even while the with/without comparison stayed internally consistent — so this is
+    M7's "the control holds, byte-identical by test" as a byte-exact pin. The injected `label`
+    prompt's bytes are checked verbatim in test_referent_injection_label, not here."""
     citations = [Citation(sc_id="2.4.6", url="https://www.w3.org/WAI/WCAG22/#headings-and-labels")]
     finding = Finding(
         id="x",
         source_url="file:///p.html",
-        rule_id="label",
+        rule_id="empty-heading",
         target="#fname",
         html='<input id="fname">',
-        help="Assess whether the label is meaningful",
+        help="Assess whether the heading is meaningful",
         source_bucket=AxeBucket.PASSES,
         referent=_referent(),
     )
     system = hashlib.sha256(_system_prompt().encode()).hexdigest()
     user = hashlib.sha256(_user_prompt(finding, citations).encode()).hexdigest()
     assert system == "61863e4570cd6b80bc9c48bf9fecd7f61e15835794793c29ddae70046dbed2ad"
-    assert user == "2cb8627486eae2c651057cfd31126c465f7ad3ba1de3b2acc7c9d56f92b9eec5"
+    assert user == "1e1de624d83f54fbc96215c4a71d47ac0b47641fa499e03fdd96a5d03b4ecaa6"
 
 
 # ---------------------------------------------------------------------------

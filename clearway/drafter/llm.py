@@ -225,6 +225,108 @@ def _remediation_user_prompt(finding: Finding, sc_ids: list[str]) -> str:
     )
 
 
+def _label_referent_block(finding: Finding) -> str:
+    """The `label` referent block appended after the prompt body: the resolved accessible name and
+    the nearest section heading, each as one short labelled line.
+
+    `''` for any class other than `label`, or when no referent rode in on the finding — so the block
+    is disjoint by class (the sibling injections append their own) and gated on presence: no
+    referent, no change, which keeps every no-referent prompt byte-identical to the pre-injection one.
+
+    `None` on a source means the source was absent (nothing to say, so no line); a source that WAS
+    present but resolved to empty text is a `ReferentExcerpt` with `text == ""` and is rendered as
+    empty quotes, because "no heading above the field" and "the heading is blank" are different facts.
+    The heading carries its accessibility-tree flag verbatim, `unknown` where the check could not run.
+    """
+    if finding.rule_id != "label" or finding.referent is None:
+        return ""
+    ref = finding.referent
+    lines: list[str] = []
+    if ref.accessible_name is not None:
+        lines.append(f'Resolved accessible name: "{ref.accessible_name.text}"')
+    if ref.section_heading is not None:
+        in_tree = ref.section_heading.in_accessibility_tree
+        note = "unknown" if in_tree is None else ("yes" if in_tree else "no")
+        lines.append(f'Nearest section heading: "{ref.section_heading.text}" (in accessibility tree: {note})')
+    if not lines:
+        return ""
+    return "\n" + "\n".join(lines)
+
+
+def _document_title_referent_block(finding: Finding) -> str:
+    """The `document-title` referent block appended to the user prompt, or '' for any other class and
+    for a finding that carries no referent.
+
+    Two facts axe never puts in the prompt, on their own labelled lines: the **resolved <title>** the
+    drafter is being asked to judge (for a `document-title` finding the target is `html`, so the
+    element snippet is just `<html lang=…>` — the title itself is nowhere in the base prompt), and the
+    **page-topic signal** it is compared against, tagged with the DOM tier that produced it
+    (`ref.page_topic.source`) so a reader always knows whether the topic came from an `<h1>`, the main
+    landmark, a meta description or the rendered body.
+
+    The resolved title is load-bearing: a topic signal alone cannot decide whether a title describes
+    its page, so an absent title (`document_title is None`) gates the whole block out — the topic is
+    never injected without the title it is judged against. `text == ""` (a present-but-empty source)
+    is a different fact from absent and is carried through verbatim rather than gated.
+    """
+    if finding.rule_id != "document-title" or finding.referent is None:
+        return ""
+    ref = finding.referent
+    if ref.document_title is None:
+        return ""
+    lines = [f'Resolved page title: "{ref.document_title.text}"']
+    if ref.page_topic is not None:
+        topic = ref.page_topic
+        lines.append(f'Page topic signal (source: {topic.source.value}): "{topic.text}"')
+    return "\n" + "\n".join(lines)
+
+
+def _link_name_referent_block(finding: Finding) -> str:
+    """The `link-name` referent block: '' for any other class or when no usable referent is present.
+
+    `link-name` is an INSUFFICIENCY class — every case already gets its own prompt, but none carries
+    the deciding fact (what the link is *for*). This appends that fact where the scan captured it,
+    matching the referent to the gap:
+
+    * the resolved **accessible name**, where the name is computed elsewhere (an `aria-labelledby`
+      link has no link text of its own), and
+    * the bounded **surrounding context** with its ancestor depth, where the name is present but
+      ambiguous ("EPUB" under a "Download Ulysses" cell).
+
+    The extent is pinned by the scanner (`scanner/referent.py`): context climbs at most
+    `CONTEXT_ANCESTOR_MAX_DEPTH = 3` ancestors and is bounded to `SURROUNDING_CONTEXT_CHARS = 500`;
+    that bound is stated in the prompt so an injected window is never read as the whole neighbourhood.
+    The block is honest that the link **destination** is outside the DOM and unavailable, so the model
+    judges purpose from the referent rather than inventing a target URL.
+
+    `None` (source absent) drops the line; a present-but-empty excerpt (`text == ""`) keeps its line,
+    because "the surrounding text is blank" is a different fact from "there was none". If neither the
+    accname nor the surrounding context is present, there is nothing this class can use — return ''.
+    """
+    if finding.rule_id != "link-name" or finding.referent is None:
+        return ""
+    ref = finding.referent
+    lines: list[str] = []
+    if ref.accessible_name is not None:
+        lines.append(f'Resolved accessible name: "{ref.accessible_name.text}"')
+    if ref.surrounding_context is not None:
+        depth = ref.surrounding_context.ancestor_depth
+        depth_label = depth if depth is not None else "unknown"
+        lines.append(
+            f"Surrounding context (ancestor depth {depth_label}, bounded to at most 3 ancestor levels "
+            f'and 500 characters): "{ref.surrounding_context.text}"'
+        )
+    if not lines:
+        return ""
+    lines.insert(0, "Referent (captured deterministically at scan time, not by a model):")
+    lines.append(
+        "Link destination: not available — the surrounding context is a proxy for it, not the "
+        "destination; judge the link's purpose from the accessible name and surrounding context only, "
+        "and do not invent a target URL."
+    )
+    return "\n" + "\n".join(lines)
+
+
 def _user_prompt(finding: Finding, citations: list[Citation]) -> str:
     # Three-way framing by provenance. PASSES is the subtle one: axe *passed* the mechanical
     # check (a name/attribute/title EXISTS) but never judged its quality — so without this branch
@@ -244,12 +346,22 @@ def _user_prompt(finding: Finding, citations: list[Citation]) -> str:
     else:
         bucket = "a NEEDS-REVIEW item the scanner could not decide"
     candidates = "\n".join(f"- {c.sc_id} ({c.url})" for c in citations) or "- (none retrieved)"
-    return (
+    base = (
         f"Finding ({bucket}): axe rule '{finding.rule_id}' — {finding.help or '(no description)'}\n"
         f"Target element: {finding.target}\n"
         f"HTML: {finding.html or '(not captured)'}\n"
         f"Candidate WCAG success criteria you may cite:\n{candidates}\n"
         "Draft the conformance verdict, the SC ids you cite, a one-sentence remediation, and your confidence."
+    )
+    # Per-class referent injection: each block is disjoint by class and returns "" for every other
+    # class (and for a finding that carries no referent), so `base` stays byte-identical wherever the
+    # block does not apply — the property the control's byte-identity guard rests on. The appends
+    # compose in class order and the run keeps clean per-class attribution.
+    return (
+        base
+        + _label_referent_block(finding)
+        + _document_title_referent_block(finding)
+        + _link_name_referent_block(finding)
     )
 
 

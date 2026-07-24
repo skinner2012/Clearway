@@ -22,7 +22,19 @@
       "errors": 3,
       "errors_partial_false": 3,
       "p_value": 0.125,
-      "certifiable": false
+      "certifiable": false,
+      "unreachable": [],
+      "honest_miss_errors": 0,
+      "contradictory_gold_errors": 0,
+      "reachable_errors": 3,
+      "reachable_error_ids": [
+        "30012df5a74ec5df2f74d8522c451233882d5f3a",
+        "23ecf6c48bb8c1619c59cdbc5fe2e6def8f80d6e",
+        "5e5cb1efed740d903d45d885d47363a5b068274f"
+      ],
+      "reachable_p_value": 0.125,
+      "reachable_certifiable": false,
+      "tolerated_regressions": 0
     },
     {
       "axe_rule": "empty-heading",
@@ -46,7 +58,23 @@
       "errors": 2,
       "errors_partial_false": 2,
       "p_value": 0.25,
-      "certifiable": false
+      "certifiable": false,
+      "unreachable": [
+        {
+          "act_testcase_id": "c3ed1f47a0892ce17a390e0953c715e5ed1ae5db",
+          "kind": "honest_miss",
+          "reason": "the case minted no finding, so the drafter was never invoked — no change to its input reaches it"
+        }
+      ],
+      "honest_miss_errors": 1,
+      "contradictory_gold_errors": 0,
+      "reachable_errors": 1,
+      "reachable_error_ids": [
+        "aee358f45b40658fcc5c42d12a6df82dbdf94e0c"
+      ],
+      "reachable_p_value": 0.5,
+      "reachable_certifiable": false,
+      "tolerated_regressions": 0
     },
     {
       "axe_rule": "label",
@@ -70,37 +98,174 @@
       "errors": 5,
       "errors_partial_false": 5,
       "p_value": 0.03125,
-      "certifiable": true
+      "certifiable": true,
+      "unreachable": [],
+      "honest_miss_errors": 0,
+      "contradictory_gold_errors": 0,
+      "reachable_errors": 5,
+      "reachable_error_ids": [
+        "0ed8074a5bee7052a1a28f9fd718b7d35a645cfd",
+        "90d77d3e5b2fdc19bce47f9f9362283861d3903b",
+        "e419548ab0986f9d71f073253193a66178191536",
+        "467ca5a8f029d0f7a099ccf81b19872df5ccd117",
+        "80c83d04972e8a4a4127ced657b3d724435d06b0"
+      ],
+      "reachable_p_value": 0.03125,
+      "reachable_certifiable": true,
+      "tolerated_regressions": 0
     },
     {
       "axe_rule": "link-name",
       "rule_names": [
-        "Link in context is descriptive",
-        "Link is descriptive"
+        "Link in context is descriptive"
       ],
-      "n": 24,
-      "failed": 11,
-      "passed": 13,
-      "tp": 7,
-      "fp": 5,
-      "fn": 4,
-      "tn": 8,
-      "raw_agreement": 0.625,
-      "kappa": 0.25,
-      "kappa_partial_false": 0.40845070422535223,
-      "ci_low": -0.15862068965517226,
-      "ci_high": 0.6000000000000001,
-      "degenerate_share": 0.0,
+      "n": 15,
+      "failed": 6,
+      "passed": 9,
+      "tp": 4,
+      "fp": 4,
+      "fn": 2,
+      "tn": 5,
+      "raw_agreement": 0.6,
+      "kappa": 0.2105263157894737,
+      "kappa_partial_false": 0.3243243243243242,
+      "ci_low": -0.25000000000000006,
+      "ci_high": 0.6153846153846155,
+      "degenerate_share": 0.0006,
       "constant_classifier": false,
-      "errors": 9,
-      "errors_partial_false": 7,
-      "p_value": 0.001953125,
-      "certifiable": true
+      "errors": 6,
+      "errors_partial_false": 5,
+      "p_value": 0.015625,
+      "certifiable": true,
+      "unreachable": [
+        {
+          "act_testcase_id": "75db8879bf7db22dcb4455dd0ebc7e244fdde2ae",
+          "kind": "honest_miss",
+          "reason": "the case minted no finding, so the drafter was never invoked — no change to its input reaches it"
+        }
+      ],
+      "honest_miss_errors": 1,
+      "contradictory_gold_errors": 0,
+      "reachable_errors": 5,
+      "reachable_error_ids": [
+        "6566c139dc811b5a566a8e58c85d1f7f3c550d04",
+        "970cf7f07cc3acd3d99ac57f73f5e622df0fe19b",
+        "1ba642803c6137b0206c7bc909f3dbb8cfb4a654",
+        "95f35d6374bc2e0fb1852882923fad9601ecd810",
+        "3bb1986371e1ad785428f87c89a1dd7071604ee0"
+      ],
+      "reachable_p_value": 0.03125,
+      "reachable_certifiable": true,
+      "tolerated_regressions": 0
     }
   ],
   "headline_partial_flags": true,
   "alpha": 0.05,
-  "preregistration": "Pre-registered before any M7 result exists: the detectable-improvement test is ONE-SIDED (M7's hypothesis is directional — a fix should improve, not merely change) at alpha = 0.05, and p = 0.5^errors is the MOST GENEROUS outcome available — a hypothetical fix that corrects every current error (FP + miss) and introduces none. Fixing the direction and alpha here, before any fixed run, is what separates this from p-hacking. A class marked NOT certifiable is limited by the GOLD SET'S SIZE, never by the drafter or any future fix: at n this small even a perfect fix cannot clear alpha. This is the per-class analogue of M5's run-to-run noise floor — one yardstick: you cannot detect an improvement the class lacks the statistical room to show.",
+  "one_sided": true,
+  "preregistration": "Pre-registered before any fixed run exists: the detectable-improvement test is ONE-SIDED (the hypothesis is directional — a fix should improve, not merely change) at alpha = 0.05, scored on DISCORDANT PAIRS against the frozen per-case verdict vector, keyed by act_testcase_id, with ACT gold as the oracle and the judge absent from every number. The ceiling is the MOST GENEROUS outcome available — a hypothetical fix that corrects every error it can reach and introduces none. Only STRUCTURALLY unreachable errors are subtracted (a case that minted no finding, so the drafter was never invoked; a case whose fixture is byte-identical to one carrying the opposite ACT outcome, so one of the pair is permanently wrong): a PREDICTED failure stays in the count, because subtracting predictions is how a ceiling stops being falsifiable. Fixing the direction, alpha and the subtraction rule here, before any fixed run, is what separates this from p-hacking. A class marked NOT certifiable is limited by the GOLD SET'S SIZE, never by the drafter or any future fix: at n this small even a perfect fix cannot clear alpha. Per-class certification carries zero margin at these n, so the PRIMARY endpoint is the pooled test across the classes a fix treats and the per-class results are secondary — both are computed and both are reported. One yardstick: you cannot detect an improvement the class lacks the statistical room to show.",
+  "pooled_endpoint": {
+    "axe_rules": [
+      "label",
+      "link-name"
+    ],
+    "hypothesis": "Accuracy on the classes whose deciding fact is absent from the drafter's input is governed by whether that fact is PRESENT, not by model strength — same model, same weights, same temperature. The claim is about referent presence rather than about either class, so the estimand is the pool of both classes' reachable errors and the per-class tests are secondary. Per-class certification requires a perfect run twice over (tolerated_regressions = 0 on each), which is a property of the gold set's size; resting the answer there would report failure for a fix that worked.",
+    "reachable_errors": 10,
+    "p_value": 0.0009765625,
+    "certifiable": true,
+    "minimum_wins": 5,
+    "tolerated_regressions": 3,
+    "failure_definition": "Pooled improvements b <= 2, with the referent verifiably present in every prompt, the control class byte-identical and determinism holding, is reported as THESIS NOT SUPPORTED — in those words. It is a publishable result, not a setback to be reframed. If instead the referent is not verifiably present, the thesis was never tested and the run says nothing about it."
+  },
+  "scope_correction": {
+    "excluded_rule": "Link is descriptive",
+    "excluded_rule_success_criteria": [
+      "2.4.9"
+    ],
+    "excluded_rule_levels": [
+      "AAA"
+    ],
+    "retained_rule": "Link in context is descriptive",
+    "retained_rule_success_criteria": [
+      "2.4.4",
+      "2.4.9"
+    ],
+    "retained_rule_levels": [
+      "A",
+      "AAA"
+    ],
+    "conformance_target": "WCAG 2.2 Level A/AA — the target a VPAT/ACR row is drafted against",
+    "rationale": "'Link is descriptive' maps to SC 2.4.9 only, which is Level AAA, and every conformance row Clearway drafts is scored against a Level A/AA target; its sibling 'Link in context is descriptive' carries the Level A criterion 2.4.4 and stays scored, so the link judgment is not dropped, only narrowed to the level being claimed. This ground existed before any fixed run and does not depend on how one turns out, which is what makes the correction a pre-registration rather than a choice made after seeing a result.",
+    "consequence": "It also removes a contradiction the pipeline cannot represent: two of the excluded rule's fixtures are byte-identical to retained ones while carrying the opposite ACT outcome, so one member of each pair was permanently wrong under a one-Finding-per-element design. That is a consequence of the scoping, NOT its reason — unlike the other exclusions, which each hold for a rule in isolation, this contradiction dissolves under a different grouping key and so cannot carry an exclusion on its own.",
+    "cases_before": 53,
+    "cases_after": 44,
+    "manufactured_win": {
+      "act_testcase_id": "6566c139dc811b5a566a8e58c85d1f7f3c550d04",
+      "twin_act_testcase_id": "48cbc84f4c020393cfb56fd53337827278b2d528",
+      "content_sha256": "73a8392cf8cb1e9a37b45909da45baf3ab18ecb869b5365db3e7e3641f9d200e",
+      "effect": "Retained, and currently a false positive. Before the correction it was unwinnable: its byte-identical twin carries the opposite gold, so any input change that fixed one broke the other. With the twin out of scope it becomes one of the five wins the class now needs — an error converted to winnable by the scoping itself, not by any fix."
+    },
+    "unscored_regression": {
+      "act_testcase_id": "48cbc84f4c020393cfb56fd53337827278b2d528",
+      "twin_act_testcase_id": "6566c139dc811b5a566a8e58c85d1f7f3c550d04",
+      "content_sha256": "73a8392cf8cb1e9a37b45909da45baf3ab18ecb869b5365db3e7e3641f9d200e",
+      "effect": "Dropped, and currently CORRECT. Fixing its byte-identical twin flips this case from correct to wrong, because both receive the same input — and that regression is no longer scored anywhere. One manufactured win and one hidden regression: a reader who cannot see this pair cannot audit the improvement the class reports."
+    },
+    "superseded": [
+      {
+        "axe_rule": "link-name",
+        "rule_names": [
+          "Link in context is descriptive",
+          "Link is descriptive"
+        ],
+        "n": 24,
+        "failed": 11,
+        "passed": 13,
+        "tp": 7,
+        "fp": 5,
+        "fn": 4,
+        "tn": 8,
+        "kappa": 0.25,
+        "errors": 9,
+        "p_value": 0.001953125,
+        "note": "This class pooled 2 ACT rules over 24 cases before the scoping, and its ceiling was read off all 9 of its errors — optimistic on both counts. Its kappa is NOT comparable to the current one: the class has a different n and a different membership. What survives the correction is the PAIRED per-case comparison on the surviving act_testcase_ids, which is what a later run is scored on."
+      }
+    ]
+  },
+  "predictions": [
+    {
+      "prediction_id": "accname-trailing-colon",
+      "axe_rule": "label",
+      "act_testcase_ids": [
+        "e419548ab0986f9d71f073253193a66178191536",
+        "5d11716ba4bcb2c9804cbea517e2382b51d89217"
+      ],
+      "claim": "Supplying the resolved accessible name will NOT separate these two cases: the drafter will either leave the gold-passed one wrong, or fix it by breaking the gold-failed one.",
+      "reasoning": "Their accessible names differ only by a trailing colon ('Name'/'Street' against 'Name:'/'Street:') while their gold outcomes are opposite, so the accname alone cannot distinguish them for any rater that treats a trailing colon as immaterial.",
+      "epistemic_status": "argued",
+      "consequence_if_held": "The class lands at 4 of 5 reachable errors fixed (p = 0.0625) or 5 fixed with 1 broken (p = 0.109) — neither clears alpha. The consequence is arithmetic; the antecedent is a claim about model behaviour, and models distinguish on a trailing colon routinely."
+    },
+    {
+      "prediction_id": "destination-outside-dom",
+      "axe_rule": "link-name",
+      "act_testcase_ids": [
+        "3bb1986371e1ad785428f87c89a1dd7071604ee0"
+      ],
+      "claim": "Surrounding-context injection will not fix this case, and may move it the wrong way.",
+      "reasoning": "Its gold turns on the link's DESTINATION — the linked resource is a report, not the workshop the link text names — and the destination lies outside a single-page DOM. The surrounding paragraph describes the workshop, so injected context makes the existing link text look MORE justified, not less.",
+      "epistemic_status": "argued",
+      "consequence_if_held": "The class lands at 4 of 5 and is not certified. It stays INSIDE the reachable count: subtracting a predicted failure from the denominator is how a ceiling becomes unfalsifiable, and a confirmed prediction of failure is still an error not fixed."
+    }
+  ],
+  "denominators": {
+    "cases": 44,
+    "minting_cases": 40,
+    "honest_misses": 4,
+    "failed_cases": 18,
+    "passed_cases": 26,
+    "findings": 54,
+    "superseded_cases": 53,
+    "superseded_findings": 63
+  },
   "bootstrap_seed": 0,
   "bootstrap_resamples": 10000,
   "run_ids": [

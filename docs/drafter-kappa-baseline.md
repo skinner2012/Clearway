@@ -16,15 +16,65 @@ is chance-corrected, so a rater with no variance scores 0 however the marginals 
 ## The four fix-unit classes
 
 The unit is one ACT case (honest-misses carried in as CLEAN); the stratum is the **fix unit** (`axe_rule`),
-so the two link rules pool into `link-name` — one shared missing referent, one future fix. The 2×2, CI and
-ceiling are the headline reading (`partial_flags=True`); `κ (alt)` is the `partial_flags=False` reading.
+and each one carries exactly one scored ACT rule. The 2×2, CI and ceiling are the headline reading
+(`partial_flags=True`); `κ (alt)` is the `partial_flags=False` reading. **The ceiling column is the
+*reachable* one** — see the ledger below for why the all-errors ceiling is not the number to read.
 
-| Class | n (fail/pass) | 2×2 tp·fp·fn·tn | raw agr. | κ | κ (alt) | 95% CI | degen. | ceiling p | certifiable |
-|---|---|---|---|---|---|---|---|---|---|
-| **document-title** | 5 (2/3) | 2·3·0·0 | 0.40 | **0.000** | 0.000 | **[0.000, 0.000]** | **1.00** | 0.125 | **No** |
-| **empty-heading** *(control)* | 13 (5/8) | 4·1·1·7 | 0.85 | **0.675** | 0.675 | [0.156, 1.000] | 0.003 | 0.250 | No — control, must not move |
-| **label** | 11 (5/6) | 4·4·1·2 | 0.55 | 0.127 | 0.127 | [−0.375, 0.633] | 0.030 | 0.031 | Yes |
-| **link-name** *(pooled ×2)* | 24 (11/13) | 7·5·4·8 | 0.63 | 0.250 | 0.408 | [−0.159, 0.600] | 0.000 | 0.002 | Yes |
+| Class | n (fail/pass) | 2×2 tp·fp·fn·tn | raw agr. | κ | κ (alt) | 95% CI | degen. | errors | reachable | ceiling p | certifiable |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **document-title** | 5 (2/3) | 2·3·0·0 | 0.40 | **0.000** | 0.000 | **[0.000, 0.000]** | **1.00** | 3 | 3 | 0.125 | **No** |
+| **empty-heading** *(control)* | 13 (5/8) | 4·1·1·7 | 0.85 | **0.675** | 0.675 | [0.156, 1.000] | 0.003 | 2 | 1 | 0.500 | No — control, must not move |
+| **label** | 11 (5/6) | 4·4·1·2 | 0.55 | 0.127 | 0.127 | [−0.375, 0.633] | 0.030 | 5 | 5 | 0.031 | Yes |
+| **link-name** | 15 (6/9) | 4·4·2·5 | 0.60 | 0.211 | 0.324 | [−0.250, 0.615] | 0.001 | 6 | 5 | 0.031 | Yes |
+
+## The scoped set, and what the scoping bought
+
+The set is **44 ACT cases** (40 minting + 4 honest misses, 54 findings). It was 53 (47 + 6, 63 findings):
+the ACT rule *Link is descriptive* is out of scope because it maps to **SC 2.4.9 only, which is Level
+AAA**, and every conformance row Clearway drafts is scored against a **Level A/AA** target. Its sibling
+*Link in context is descriptive* carries the Level A criterion 2.4.4 and stays scored, so the link judgment
+is narrowed, not dropped. That ground existed before any fixed run and does not depend on how one turns
+out — which is what makes it a pre-registration rather than a choice made after seeing a result.
+
+**Two things the exclusion did to the arithmetic, both of which a reader needs in order to audit any later
+improvement.** Two of the excluded rule's fixtures are *byte-identical* to retained ones while carrying the
+opposite ACT outcome:
+
+- **One manufactured win.** `6566c139dc…` is retained and is currently a false positive. Before the
+  scoping it was unwinnable — its byte-identical twin carries the opposite gold, so fixing one broke the
+  other. It is now one of the five wins the class needs, converted by the scoping itself and by no fix.
+- **One unscored regression.** That twin, `48cbc84f4c…`, is currently *correct* and is now dropped. Fixing
+  `6566c139dc…` predictably flips it to wrong, and that regression is no longer scored anywhere.
+
+`κ` for `link-name` is **not** comparable to its pre-scoping value (different n, different membership); the
+superseded reading is kept on the artifact under `scope_correction.superseded`. What *is* comparable across
+the correction is the **paired per-case** comparison on the surviving `act_testcase_id`s, which is what a
+later run is scored on.
+
+## The reachable-error ledger — why the old ceilings were optimistic
+
+A ceiling read off a class's *total* errors assumes a fix can reach all of them. Some errors are
+**structurally** out of reach of anything the drafter is given, and only two kinds qualify:
+
+- **Honest misses** — the case minted no finding, so the drafter was never invoked. `link-name`
+  `75db8879bf…`, `empty-heading` `c3ed1f47a0…`. Both gold-failed, hence errors.
+- **Contradictory gold** — byte-identical fixtures with opposite ACT outcomes. **After the scoping this
+  term is identically zero**; it stays in the formula so the ledger reads the same before and after.
+
+A **predicted** failure is never subtracted. It is a claim about model behaviour, and removing it from the
+denominator is how a ceiling stops being falsifiable.
+
+## Per-class certification has no margin; the pooled endpoint does
+
+At α = 0.05 the one-sided sign test needs **5 improvements with 0 regressions**. Both certifiable classes
+have exactly 5 reachable errors, so `tolerated_regressions = 0` on each: only a perfect run passes, twice,
+independently. That is a property of the gold set's size, not of any fix — staking a result on it would
+report failure for a fix that worked.
+
+So the **primary endpoint is pooled** across `label` + `link-name`: **10 reachable errors**, ceiling
+p = 0.00098, and `tolerated_regressions = 3` — real margin. Per-class results are computed and reported as
+secondary. Numerically pre-committed now: pooled improvements **b ≤ 2** is reported as *thesis not
+supported*, in those words.
 
 ## The read
 
@@ -43,16 +93,29 @@ reports `certifiable: false` for it (2 errors → best-case p = 0.25) — but th
 control, not a fix target, and **it must not move**. Its "certifiable" cell is read as n/a for that reason.
 
 **Two classes have room to prove a future fix; `document-title` does not — at any fix quality.** The
-ceiling is the one-sided exact sign-test p a *perfect* fix could reach (`p = 0.5^errors`, direction and
-α = 0.05 pre-registered on the artifact before any fixed run exists). `link-name` (p = 0.002) and `label`
-(p = 0.031) clear α. `document-title` cannot: with 3 errors the most generous attainable p is **0.125 >
-0.05**, so no fix, however good, can reach significance here. That is a property of the **gold set's size
-(n = 5)**, not of the drafter or of any future fix. Its eventual fix must be argued on *mechanism*
-(constant stamp → discriminating, visible in the frozen verdict vector) and on its contribution to the
-pooled false-positive rate, never on a per-class p-value.
+ceiling is the one-sided exact sign-test p a *perfect* fix could reach over the errors it can reach
+(`p = 0.5^reachable_errors`, direction and α = 0.05 pre-registered on the artifact before any fixed run
+exists). `link-name` and `label` both sit at p = 0.031 and clear α — with zero margin. `document-title`
+cannot: with 3 reachable errors the most generous attainable p is **0.125 > 0.05**, so no fix, however
+good, can reach significance here. That is a property of the **gold set's size (n = 5)**, not of the
+drafter or of any future fix. Its eventual fix must be argued on *mechanism* (constant stamp →
+discriminating, visible in the frozen verdict vector) and on its contribution to the pooled false-positive
+rate, never on a per-class p-value.
 
 **The second reading changes nothing that matters.** Under `partial_flags=False` only `link-name` moves
-(κ 0.250 → 0.408, errors 9 → 7); every other class is identical and **no certifiability verdict flips**.
+(κ 0.211 → 0.324, errors 6 → 5); every other class is identical and **no certifiability verdict flips**.
+
+## Two predictions, recorded before the run that scores them
+
+Both are **argued**, not arithmetic — each rests on a claim about how the model will behave, and a
+confirmed prediction of failure is still an error not fixed.
+
+1. **`e419548ab0…` will not be separated from `5d11716ba4…` by the accessible name.** Their accnames differ
+   only by a trailing colon while their gold outcomes are opposite. If it holds, `label` lands at 4 of 5
+   (p = 0.0625) or 5 fixed with 1 broken (p = 0.109) — neither certifies.
+2. **`3bb1986371…` resists surrounding-context injection.** Its gold turns on the link's *destination*,
+   which lies outside a single-page DOM; the surrounding paragraph makes the existing link text look *more*
+   justified. It stays **inside** the reachable count regardless.
 
 ## What this baseline does not prove
 

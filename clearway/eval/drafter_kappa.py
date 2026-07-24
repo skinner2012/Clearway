@@ -15,11 +15,11 @@ the same discipline `offline.py` and the judge-κ replay follow.
 counts them, so κ cannot inflate the way a miss-dropping recall would, and the drafter FLAG/CLEAN
 collapse is identical to the one every other rate uses.
 
-**The fix unit is `axe_rule`, not the ACT rule.** The two link rules (*Link is descriptive*, *Link in
-context is descriptive*) share one missing referent — the destination lies outside a single-page DOM —
-and receive ONE M7 fix, and both already carry axe_rule `link-name`, so grouping by axe_rule pools
-them automatically. The estimand must match the intervention: splitting one fix across two
-underpowered samples would measure nothing twice.
+**The fix unit is `axe_rule`, and each one carries exactly one scored ACT rule.** The class definition
+is the gold's own scope (`act_gold.RULE_TO_AXE`), so a rule scoped out of the gold leaves the classes
+here too — a frozen run artifact still holds its cases, and scoring them would measure something the
+gold no longer claims. `_grouped(..., scoped=False)` recovers the unscoped reading, which is what the
+superseded row on the baseline is built from.
 
 **The interval is a seeded case-level bootstrap** (`class_kappa_cis`), never Wilson: Wilson is the
 contract for proportions and κ is not one, so κ is never routed through `metric_ci`. The bounds are
@@ -29,20 +29,29 @@ degenerate-resample share (resamples where a stream came out constant, so κ was
 0.0 by convention), and a constant-classifier flag on any ZERO-WIDTH interval — document-title's
 `[0.0, 0.0]` is no variance because no signal, and must never read as precision.
 
-**The ceiling** (`class_ceilings`) is what a class could prove even under a PERFECT future fix:
-p = 0.5^errors, the one-sided exact sign-test p if a fix corrected every current error and introduced
-none. Its direction and α are pre-registered before any M7 result exists (`CEILING_PREREGISTRATION`), so
-they cannot be chosen after the fact. A class that cannot clear α at any fix quality is limited by the
-gold set's SIZE — the per-class analogue of M5's run-to-run noise floor, not a verdict on the drafter.
+**The ceiling** (`class_ceilings`) is what a class could prove even under a PERFECT future fix: the
+one-sided exact sign-test p if a fix corrected every error it can reach and introduced none. Its
+direction and α are pre-registered before any fixed run exists (`CEILING_PREREGISTRATION`), so they
+cannot be chosen after the fact. A class that cannot clear α at any fix quality is limited by the gold
+set's SIZE — the per-class analogue of the run-to-run noise floor, not a verdict on the drafter.
+
+**Two ceilings, and only one of them is honest about a prompt-input fix.** `errors` counts every
+discordant case; some of those are STRUCTURALLY out of reach of anything the drafter is given — the case
+minted no finding so the drafter was never invoked, or two byte-identical fixtures carry opposite ACT
+outcomes so one of them is permanently wrong. Subtracting exactly those named cases gives
+`reachable_errors`, and the ceiling over them is what a fix is measured against. A *predicted* failure is
+never subtracted: it is a claim about model behaviour, and removing it would make the ceiling
+unfalsifiable. `tolerated_regressions` states the margin plainly — 0 means only a perfect run passes.
 """
 
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from math import comb
 from typing import Any
 
+from clearway.eval.act_gold import RULE_TO_AXE, contradictory_gold_twins
 from clearway.eval.drafter_score import FAILED, DraftedCase, _flagged
 from clearway.eval.kappa import cohen_kappa, raw_agreement
 from clearway.eval.offline import _drafted_cases
@@ -52,21 +61,29 @@ from clearway.eval.offline import _drafted_cases
 _BOOTSTRAP_SEED = 0
 _RESAMPLES = 10_000
 
-# PRE-REGISTERED, here in code, before any M7 result exists: the ceiling test is ONE-SIDED (M7's
+# PRE-REGISTERED, here in code, before any fixed run exists: the ceiling test is ONE-SIDED (the
 # hypothesis is directional — a fix should improve, not merely change) at α = 0.05. Fixing the direction
 # and the level now — the same discipline as the pre-committed KAPPA_THRESHOLD — is what separates the
 # ceiling from choosing a test after seeing the result.
 _ALPHA = 0.05
+ONE_SIDED = True
 
 CEILING_PREREGISTRATION = (
-    "Pre-registered before any M7 result exists: the detectable-improvement test is ONE-SIDED (M7's "
-    "hypothesis is directional — a fix should improve, not merely change) at alpha = 0.05, and "
-    "p = 0.5^errors is the MOST GENEROUS outcome available — a hypothetical fix that corrects every "
-    "current error (FP + miss) and introduces none. Fixing the direction and alpha here, before any "
-    "fixed run, is what separates this from p-hacking. A class marked NOT certifiable is limited by the "
-    "GOLD SET'S SIZE, never by the drafter or any future fix: at n this small even a perfect fix cannot "
-    "clear alpha. This is the per-class analogue of M5's run-to-run noise floor — one yardstick: you "
-    "cannot detect an improvement the class lacks the statistical room to show."
+    "Pre-registered before any fixed run exists: the detectable-improvement test is ONE-SIDED (the "
+    "hypothesis is directional — a fix should improve, not merely change) at alpha = 0.05, scored on "
+    "DISCORDANT PAIRS against the frozen per-case verdict vector, keyed by act_testcase_id, with ACT "
+    "gold as the oracle and the judge absent from every number. The ceiling is the MOST GENEROUS outcome "
+    "available — a hypothetical fix that corrects every error it can reach and introduces none. Only "
+    "STRUCTURALLY unreachable errors are subtracted (a case that minted no finding, so the drafter was "
+    "never invoked; a case whose fixture is byte-identical to one carrying the opposite ACT outcome, so "
+    "one of the pair is permanently wrong): a PREDICTED failure stays in the count, because subtracting "
+    "predictions is how a ceiling stops being falsifiable. Fixing the direction, alpha and the "
+    "subtraction rule here, before any fixed run, is what separates this from p-hacking. A class marked "
+    "NOT certifiable is limited by the GOLD SET'S SIZE, never by the drafter or any future fix: at n this "
+    "small even a perfect fix cannot clear alpha. Per-class certification carries zero margin at these n, "
+    "so the PRIMARY endpoint is the pooled test across the classes a fix treats and the per-class results "
+    "are secondary — both are computed and both are reported. One yardstick: you cannot detect an "
+    "improvement the class lacks the statistical room to show."
 )
 
 
@@ -153,13 +170,26 @@ class ClassKappaCI:
 
 
 @dataclass(frozen=True)
+class UnreachableErrorRow:
+    """One current error a change to the drafter's INPUT provably cannot fix, named to its ACT case and
+    to the structural reason. These, and only these, are subtracted from a ceiling."""
+
+    act_testcase_id: str
+    kind: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class ClassCeiling:
-    """The most generous detectable improvement for a class: if a future fix corrected EVERY current
-    error (`errors` = FP + miss) and introduced none, the one-sided exact sign-test p-value it could
-    reach — p = 0.5^errors (every discordant pair improving). `certifiable` = p <= the pre-registered
-    `alpha`. A NOT-certifiable class is limited by the GOLD SET'S SIZE, never by the drafter or any future
-    fix: at n this small even a perfect fix cannot clear alpha. See `CEILING_PREREGISTRATION` for the
-    standing pre-registration and the lineage to M5's noise floor."""
+    """The most generous detectable improvement for a class, in both readings.
+
+    `errors` = FP + miss is every current discordant case, and `p_value` / `certifiable` are the ceiling
+    over all of them — the arithmetic a class would reach if a fix corrected literally everything. That
+    ceiling is OPTIMISTIC: `unreachable` names the errors no drafter-input change can touch, and
+    `reachable_errors` is what remains. `reachable_p_value` / `reachable_certifiable` are the ceiling a
+    fix is actually measured against, and `tolerated_regressions` is its margin — 0 means only a perfect
+    run clears alpha. A NOT-certifiable class is limited by the GOLD SET'S SIZE, never by the drafter or
+    any future fix. See `CEILING_PREREGISTRATION` for the standing pre-registration."""
 
     axe_rule: str
     n: int
@@ -169,6 +199,12 @@ class ClassCeiling:
     p_value: float
     alpha: float
     certifiable: bool
+    reachable_errors: int
+    reachable_error_ids: tuple[str, ...]
+    reachable_p_value: float
+    reachable_certifiable: bool
+    tolerated_regressions: int
+    unreachable: tuple[UnreachableErrorRow, ...] = field(default_factory=tuple)
 
 
 def _rule_to_axe(artifact: dict[str, Any]) -> dict[str, str]:
@@ -179,12 +215,19 @@ def _rule_to_axe(artifact: dict[str, Any]) -> dict[str, str]:
     return {c["rule_name"]: c["axe_rule"] for c in artifact["cases"]}
 
 
-def _grouped(artifact: dict[str, Any]) -> dict[str, list[DraftedCase]]:
-    """The scorer's own case stream (honest-misses carried in) grouped by fix unit (`axe_rule`); the two
-    link rules pool into `link-name`. Raises on a case whose rule has no axe_rule rather than dropping it."""
+def _grouped(artifact: dict[str, Any], *, scoped: bool = True) -> dict[str, list[DraftedCase]]:
+    """The scorer's own case stream (honest-misses carried in) grouped by fix unit (`axe_rule`).
+
+    `scoped=True` keeps only the ACT rules the gold currently scores (`act_gold.RULE_TO_AXE`) — a frozen
+    artifact predating a scope correction still holds the dropped rule's cases, and scoring them would
+    measure something the gold no longer claims. `scoped=False` recovers the unscoped reading, which is
+    what the superseded row on the baseline is built from. Raises on a case whose rule has no axe_rule
+    rather than dropping it."""
     rule_to_axe = _rule_to_axe(artifact)
     by_class: dict[str, list[DraftedCase]] = {}
     for case in _drafted_cases(artifact):
+        if scoped and case.rule_name not in RULE_TO_AXE:
+            continue
         if case.rule_name not in rule_to_axe:
             raise KeyError(f"case rule {case.rule_name!r} has no axe_rule in the artifact — cannot classify it")
         by_class.setdefault(rule_to_axe[case.rule_name], []).append(case)
@@ -199,17 +242,18 @@ def _streams(group: list[DraftedCase], *, partial_flags: bool) -> tuple[list[str
     return drafter, gold
 
 
-def class_kappas(artifact: dict[str, Any], *, partial_flags: bool = True) -> list[ClassKappa]:
+def class_kappas(artifact: dict[str, Any], *, partial_flags: bool = True, scoped: bool = True) -> list[ClassKappa]:
     """Frozen offline-eval run artifact → per-fix-unit drafter κ vs ACT gold, sorted by `axe_rule`.
 
     Pure: no model, no network, no clock — a deterministic replay of the checked-in artifact. Reuses the
     scorer's own case stream (`_drafted_cases`, so honest-misses are carried in identically to recall/FP)
     and `_flagged` (flag-if-any), so κ inherits the exact scoring convention rather than inventing a
-    second one. Groups by `axe_rule` (the fix unit; the two link rules pool into `link-name`). Reported
-    under one `partial_flags` reading — call twice to get both, as every other rate does.
+    second one. Groups by `axe_rule` (the fix unit), over the rules the gold currently scores unless
+    `scoped=False`. Reported under one `partial_flags` reading — call twice to get both, as every other
+    rate does.
     """
     results: list[ClassKappa] = []
-    for axe_rule, group in sorted(_grouped(artifact).items()):
+    for axe_rule, group in sorted(_grouped(artifact, scoped=scoped).items()):
         drafter, gold = _streams(group, partial_flags=partial_flags)
         tp = sum(1 for d, g in zip(drafter, gold) if d == "FLAG" and g == "FLAG")
         fp = sum(1 for d, g in zip(drafter, gold) if d == "FLAG" and g == "CLEAN")
@@ -265,6 +309,7 @@ def class_kappa_cis(
     partial_flags: bool = True,
     seed: int = _BOOTSTRAP_SEED,
     resamples: int = _RESAMPLES,
+    scoped: bool = True,
 ) -> list[ClassKappaCI]:
     """Per-class κ with a seeded case-level bootstrap percentile CI, sorted by `axe_rule`.
 
@@ -274,7 +319,7 @@ def class_kappa_cis(
     NOT Wilson: κ is not a proportion, so it never travels through `metric_ci`.
     """
     results: list[ClassKappaCI] = []
-    for axe_rule, group in sorted(_grouped(artifact).items()):
+    for axe_rule, group in sorted(_grouped(artifact, scoped=scoped).items()):
         drafter, gold = _streams(group, partial_flags=partial_flags)
         ci_low, ci_high, degenerate = _bootstrap_ci(drafter, gold, seed=seed, resamples=resamples)
         results.append(
@@ -293,19 +338,72 @@ def class_kappa_cis(
     return results
 
 
+def _error_cases(group: list[DraftedCase], *, partial_flags: bool) -> list[DraftedCase]:
+    """The class's current errors — cases where the drafter's FLAG/CLEAN disagrees with ACT gold."""
+    return [c for c in group if _flagged(c, partial_flags=partial_flags) != (c.expected == FAILED)]
+
+
+def _unreachable(group: list[DraftedCase], *, partial_flags: bool) -> tuple[UnreachableErrorRow, ...]:
+    """The structurally unreachable errors in a class, named to their ACT cases.
+
+    Two kinds, both provable from the artifacts and neither a judgement call: a case that minted no
+    finding was never put to the drafter, and a case whose fixture is byte-identical to one carrying the
+    opposite ACT outcome receives the same input as its twin, so exactly one of them is permanently
+    wrong. Nothing else is subtracted — a predicted failure is a claim about the model and stays in."""
+    twins = contradictory_gold_twins()
+    rows: list[UnreachableErrorRow] = []
+    for case in _error_cases(group, partial_flags=partial_flags):
+        if not case.drafts:
+            rows.append(
+                UnreachableErrorRow(
+                    act_testcase_id=case.act_testcase_id,
+                    kind="honest_miss",
+                    reason=(
+                        "the case minted no finding, so the drafter was never invoked — "
+                        "no change to its input reaches it"
+                    ),
+                )
+            )
+        elif case.act_testcase_id in twins:
+            counterparts = ", ".join(twins[case.act_testcase_id])
+            rows.append(
+                UnreachableErrorRow(
+                    act_testcase_id=case.act_testcase_id,
+                    kind="contradictory_gold",
+                    reason=(
+                        f"byte-identical fixture to {counterparts}, which carries the opposite ACT outcome — "
+                        "same input, so exactly one of the pair is permanently wrong"
+                    ),
+                )
+            )
+    return tuple(rows)
+
+
 def class_ceilings(
-    artifact: dict[str, Any], *, partial_flags: bool = True, alpha: float = _ALPHA
+    artifact: dict[str, Any], *, partial_flags: bool = True, alpha: float = _ALPHA, scoped: bool = True
 ) -> list[ClassCeiling]:
-    """Per-class detectable-improvement ceiling, sorted by `axe_rule`. Pure — deterministic arithmetic on
-    the frozen artifact's error counts, no model. For each class, `errors` = current FP + miss; `p_value`
-    = 0.5^errors is the one-sided exact sign-test p a fix correcting all of them (and introducing none)
-    could reach — the most generous outcome. `certifiable` = p_value <= `alpha`. The one-sided direction
-    and alpha are PRE-REGISTERED (`CEILING_PREREGISTRATION`), before any M7 result exists; 'not
-    certifiable' is a property of the gold set's size, not of the drafter or any fix."""
+    """Per-class detectable-improvement ceiling, sorted by `axe_rule`, in both readings.
+
+    Deterministic and offline: arithmetic on the frozen artifact's error counts plus a sha256 over the
+    vendored fixture bytes — no model, no network, no clock. `errors` = current FP + miss and `p_value` =
+    0.5^errors is the ceiling over ALL of them; `reachable_errors` subtracts the named structural
+    exclusions and `reachable_p_value` is the ceiling a drafter-input fix is measured against.
+    `tolerated_regressions` states the margin. The one-sided direction, alpha and the subtraction rule are
+    PRE-REGISTERED (`CEILING_PREREGISTRATION`) before any fixed run exists; 'not certifiable' is a
+    property of the gold set's size, not of the drafter or any fix."""
+    groups = _grouped(artifact, scoped=scoped)
     ceilings: list[ClassCeiling] = []
-    for c in class_kappas(artifact, partial_flags=partial_flags):
+    for c in class_kappas(artifact, partial_flags=partial_flags, scoped=scoped):
         errors = c.fp + c.fn
-        p_value = 0.5**errors
+        p_value = sign_test_p(errors, 0)
+        unreachable = _unreachable(groups[c.axe_rule], partial_flags=partial_flags)
+        excluded = {row.act_testcase_id for row in unreachable}
+        reachable_ids = tuple(
+            case.act_testcase_id
+            for case in _error_cases(groups[c.axe_rule], partial_flags=partial_flags)
+            if case.act_testcase_id not in excluded
+        )
+        reachable_p = sign_test_p(len(reachable_ids), 0)
         ceilings.append(
             ClassCeiling(
                 axe_rule=c.axe_rule,
@@ -316,6 +414,12 @@ def class_ceilings(
                 p_value=p_value,
                 alpha=alpha,
                 certifiable=p_value <= alpha,
+                reachable_errors=len(reachable_ids),
+                reachable_error_ids=reachable_ids,
+                reachable_p_value=reachable_p,
+                reachable_certifiable=reachable_p <= alpha,
+                tolerated_regressions=tolerated_regressions(len(reachable_ids), alpha),
+                unreachable=unreachable,
             )
         )
     return ceilings

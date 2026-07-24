@@ -13,8 +13,8 @@ Pure — no LLM, no network, no clock. Every verdict replays from the frozen off
 artifact, never generated, so the vector is a deterministic function of its source run.
 
 **The verdict is the scorer's own**, reused rather than re-derived: `_grouped` supplies the exact case
-stream κ measures — grouped by fix unit (`axe_rule`, the two link rules pooled into `link-name`), with
-the honest-misses carried in as drafts-less cases — and `_flagged` (flag-if-any) supplies the identical
+stream κ measures — grouped by fix unit (`axe_rule`), scoped to the ACT rules the gold currently scores,
+with the honest-misses carried in as drafts-less cases — and `_flagged` (flag-if-any) supplies the identical
 FLAG/CLEAN collapse every other rate uses. So a case's `drafter_flag` here is bit-identical to the value
 that entered its class κ, and an honest miss (no conformances) is CLEAN exactly as it is a recall miss.
 
@@ -40,7 +40,7 @@ _RATIONALE = (
     "A kappa scalar cannot be paired against: keyed by act_testcase_id, this per-case FLAG/CLEAN vector "
     "is what lets a future drafter run be compared case-by-case (a McNemar / exact sign test on the "
     "discordant pairs) to prove it improved on the same cases rather than merely changed — the most "
-    "sensitive regression test M7 has, and one a per-class kappa number cannot support."
+    "sensitive regression test available here, and one a per-class kappa number cannot support."
 )
 
 
@@ -49,7 +49,7 @@ def build_verdict_vector(artifact: dict[str, Any], *, partial_flags: bool = True
 
     Pure: no model, no network, no clock — a deterministic replay of the checked-in artifact, `created_at`
     included (read off the artifact, never generated). Reuses the scorer's own grouped case stream
-    (`_grouped`, so honest-misses ride in and the two link rules pool into `link-name`) and `_flagged`
+    (`_grouped`, so honest-misses ride in and only the currently-scored ACT rules do) and `_flagged`
     (flag-if-any), so each case's `drafter_flag` is bit-identical to the value that entered its class κ.
     One `CaseVerdict` per ACT case — minting cases and honest misses alike — sorted by fix unit then by
     the group's own order. Computed under one `partial_flags` reading; call twice to freeze both.

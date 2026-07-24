@@ -41,7 +41,7 @@ def test_reproduces_the_pre_registered_kappa_anchors() -> None:
     assert round(k["document-title"].kappa, 3) == 0.000  # the constant classifier — κ exposes it
     assert round(k["empty-heading"].kappa, 3) == 0.675  # the control — real signal, clearly positive
     assert round(k["label"].kappa, 3) == 0.127
-    assert round(k["link-name"].kappa, 3) == 0.250
+    assert round(k["link-name"].kappa, 3) == 0.211
 
 
 def test_class_sizes_and_failed_passed_splits() -> None:
@@ -49,7 +49,7 @@ def test_class_sizes_and_failed_passed_splits() -> None:
     assert (k["document-title"].n, k["document-title"].failed, k["document-title"].passed) == (5, 2, 3)
     assert (k["empty-heading"].n, k["empty-heading"].failed, k["empty-heading"].passed) == (13, 5, 8)
     assert (k["label"].n, k["label"].failed, k["label"].passed) == (11, 5, 6)
-    assert (k["link-name"].n, k["link-name"].failed, k["link-name"].passed) == (24, 11, 13)
+    assert (k["link-name"].n, k["link-name"].failed, k["link-name"].passed) == (15, 6, 9)
 
 
 def test_error_split_fp_and_miss_per_class() -> None:
@@ -57,13 +57,14 @@ def test_error_split_fp_and_miss_per_class() -> None:
     assert (k["document-title"].fp, k["document-title"].fn) == (3, 0)
     assert (k["empty-heading"].fp, k["empty-heading"].fn) == (1, 1)
     assert (k["label"].fp, k["label"].fn) == (4, 1)
-    assert (k["link-name"].fp, k["link-name"].fn) == (5, 4)
+    assert (k["link-name"].fp, k["link-name"].fn) == (4, 2)
 
 
-def test_link_class_pools_the_two_link_rules() -> None:
+def test_link_class_is_scoped_to_the_level_a_rule() -> None:
+    # The AAA-only rule is out of scope, so the class carries one ACT rule: 13 minting + 2 honest misses.
     link = _by_axe()["link-name"]
-    assert link.rule_names == ("Link in context is descriptive", "Link is descriptive")
-    assert link.n == 24  # 20 minting cases + 4 honest misses, both link rules pooled
+    assert link.rule_names == ("Link in context is descriptive",)
+    assert link.n == 15
 
 
 def test_honest_misses_are_carried_in() -> None:
@@ -84,8 +85,8 @@ def test_partial_flags_false_moves_only_the_link_class() -> None:
     true_ = _by_axe()
     false_ = _by_axe(partial_flags=False)
     # only the link class carries partially_supports drafts, so only it moves
-    assert round(false_["link-name"].kappa, 3) == 0.408
-    assert false_["link-name"].fp == 3  # two partially_supports cry-wolves become clean
+    assert round(false_["link-name"].kappa, 3) == 0.324
+    assert false_["link-name"].fp == 3  # one partially_supports cry-wolf becomes clean
     for axe in ("document-title", "empty-heading", "label"):
         assert round(false_[axe].kappa, 3) == round(true_[axe].kappa, 3)
 
@@ -153,7 +154,7 @@ def _ceil_by_axe(name: str = "run_1.json", *, partial_flags: bool = True) -> dic
 
 def test_ceiling_rows_reproduce_the_pre_registered_table() -> None:
     ceil = _ceil_by_axe()
-    assert (ceil["link-name"].errors, ceil["link-name"].p_value) == (9, 0.5**9)  # 0.0020
+    assert (ceil["link-name"].errors, ceil["link-name"].p_value) == (6, 0.5**6)  # 0.0156
     assert (ceil["label"].errors, ceil["label"].p_value) == (5, 0.5**5)  # 0.0312
     assert (ceil["document-title"].errors, ceil["document-title"].p_value) == (3, 0.5**3)  # 0.1250
     assert (ceil["empty-heading"].errors, ceil["empty-heading"].p_value) == (2, 0.5**2)  # 0.2500
@@ -182,14 +183,18 @@ def test_pre_registration_prose_states_the_limits() -> None:
     text = CEILING_PREREGISTRATION.lower()
     assert "one-sided" in text
     assert "gold set" in text
-    assert "noise floor" in text
+    assert "discordant pairs" in text
+    # the subtraction rule is fixed here, before any result — including what may NOT be subtracted
+    assert "structurally unreachable" in text
+    assert "predicted" in text
+    assert "pooled" in text
 
 
 def test_partial_flags_false_shifts_only_the_link_ceiling() -> None:
     true_ = _ceil_by_axe()
     false_ = _ceil_by_axe(partial_flags=False)
-    # link's two partially_supports cry-wolves vanish → errors 9→7, still certifiable; no verdict flips
-    assert false_["link-name"].errors == 7
+    # link's partially_supports cry-wolf vanishes → errors 6→5, still certifiable; no verdict flips
+    assert false_["link-name"].errors == 5
     assert false_["link-name"].certifiable is True
     for axe in ("document-title", "empty-heading", "label"):
         assert false_[axe].errors == true_[axe].errors
@@ -220,9 +225,73 @@ def test_the_bar_is_five_wins_at_zero_regressions() -> None:
     assert minimum_wins(0.05) == 5
 
 
-def test_zero_margin_at_five_reachable_errors_real_margin_at_ten() -> None:
-    # Five reachable errors admit no regression at all; ten absorb three.
+def test_zero_margin_per_class_and_real_margin_pooled() -> None:
+    # Five reachable errors admit no regression at all; the pooled ten absorb three.
     assert tolerated_regressions(5, 0.05) == 0
     assert tolerated_regressions(10, 0.05) == 3
-    # a count that cannot clear α at any fix quality tolerates nothing by definition
+    # a class that cannot clear α at any fix quality tolerates nothing by definition
     assert tolerated_regressions(3, 0.05) == 0
+
+
+# --- the reachable-error ledger --------------------------------------------------------------------
+
+
+def test_reachable_counts_reproduce_the_pre_registration() -> None:
+    """The four pre-registered reachable counts, using STRUCTURAL exclusions only."""
+    ceil = _ceil_by_axe()
+    assert ceil["link-name"].reachable_errors == 5
+    assert ceil["label"].reachable_errors == 5
+    assert ceil["document-title"].reachable_errors == 3
+    assert ceil["empty-heading"].reachable_errors == 1
+
+
+def test_reachable_ceiling_is_stricter_than_the_all_errors_ceiling() -> None:
+    # link-name's raw 6 errors read p = 0.0156; only 5 are reachable, so the honest ceiling is 0.031.
+    link = _ceil_by_axe()["link-name"]
+    assert (link.errors, link.p_value) == (6, 0.5**6)
+    assert (link.reachable_errors, link.reachable_p_value) == (5, 0.5**5)
+    assert link.reachable_certifiable is True
+    assert link.tolerated_regressions == 0  # certifiable, but only on a perfect run
+
+
+def test_every_unreachable_error_is_named_and_structural() -> None:
+    for c in class_ceilings(_artifact()):
+        for row in c.unreachable:
+            assert row.act_testcase_id
+            assert row.kind in {"honest_miss", "contradictory_gold"}
+            assert row.reason
+        # the ledger is exactly errors − exclusions, and the two sets are disjoint
+        assert c.reachable_errors == c.errors - len(c.unreachable)
+        assert not {r.act_testcase_id for r in c.unreachable} & set(c.reachable_error_ids)
+
+
+def test_the_two_honest_miss_errors_are_the_subtracted_ones() -> None:
+    # Both are gold-failed cases that minted nothing, so the drafter was never invoked on them.
+    ceil = _ceil_by_axe()
+    assert [(r.act_testcase_id[:10], r.kind) for r in ceil["link-name"].unreachable] == [("75db8879bf", "honest_miss")]
+    assert [(r.act_testcase_id[:10], r.kind) for r in ceil["empty-heading"].unreachable] == [
+        ("c3ed1f47a0", "honest_miss")
+    ]
+    assert ceil["label"].unreachable == ()
+    assert ceil["document-title"].unreachable == ()
+
+
+def test_no_ceiling_subtracts_a_contradictory_gold_error() -> None:
+    # The term stays in the ledger formula so it reads the same before and after the scoping that
+    # emptied it (the gold-set side of that is asserted in test_act_gold.py).
+    assert all(r.kind != "contradictory_gold" for c in class_ceilings(_artifact()) for r in c.unreachable)
+
+
+def test_a_predicted_failure_stays_inside_the_reachable_count() -> None:
+    # 3bb1986371 is pre-registered as likely to resist the fix (its gold turns on a destination outside
+    # the DOM). Subtracting a prediction would make the ceiling unfalsifiable, so it stays in.
+    link = _ceil_by_axe()["link-name"]
+    assert any(tid.startswith("3bb1986371") for tid in link.reachable_error_ids)
+
+
+def test_scoping_drops_the_aaa_rule_and_nothing_else() -> None:
+    scoped = _by_axe()
+    unscoped = {c.axe_rule: c for c in class_kappas(_artifact(), scoped=False)}
+    assert unscoped["link-name"].n == 24 and scoped["link-name"].n == 15
+    for axe in ("document-title", "empty-heading", "label"):
+        assert scoped[axe] == unscoped[axe]

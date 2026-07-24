@@ -89,6 +89,16 @@ class JudgeVerdict(str, Enum):
     PARTIAL = "partial"
 
 
+class UnreachableErrorKind(str, Enum):
+    """Why a current drafter error is STRUCTURALLY out of reach of any change to the drafter's input.
+    Only these two kinds may be subtracted from a class's detectable-improvement ceiling — a *predicted*
+    failure is a claim about model behaviour and stays in the count, or the ceiling stops being
+    falsifiable."""
+
+    HONEST_MISS = "honest_miss"  # the case minted no finding, so the drafter was never invoked
+    CONTRADICTORY_GOLD = "contradictory_gold"  # byte-identical fixtures carry opposite ACT outcomes
+
+
 # ============================================================
 # Scanner output  (scanner/ -> normalizer/)
 # ============================================================
@@ -957,15 +967,15 @@ class OfflineEvalReport(BaseModel):
 
 
 class CaseVerdict(BaseModel):
-    """One ACT case's paired verdict — the unit M7 pairs on. `drafter_flag` is FLAG (any finding on the
-    case alarmed, flag-if-any) vs CLEAN; `gold_flag` is the ACT outcome (failed = FLAG). `conformances`
-    are the case's underlying draft verdicts (empty = an honest miss: the case minted no finding).
-    `axe_rule` is the fix-unit class (the two link rules share `link-name`)."""
+    """One ACT case's paired verdict — the unit a later run pairs on. `drafter_flag` is FLAG (any finding
+    on the case alarmed, flag-if-any) vs CLEAN; `gold_flag` is the ACT outcome (failed = FLAG).
+    `conformances` are the case's underlying draft verdicts (empty = an honest miss: the case minted no
+    finding). `axe_rule` is the fix-unit class — one scored ACT descriptiveness rule each."""
 
     model_config = ConfigDict(extra="forbid")
 
     act_testcase_id: str = Field(..., description="the ACT case id — the stable key a future run pairs on")
-    axe_rule: str = Field(..., description="the fix-unit class (axe rule); the two link rules pool as 'link-name'")
+    axe_rule: str = Field(..., description="the fix-unit class (axe rule) — one scored ACT rule each")
     drafter_flag: bool = Field(
         ..., description="True = the drafter FLAGGED the case (any finding alarmed), False = CLEAN"
     )
@@ -976,9 +986,9 @@ class CaseVerdict(BaseModel):
 
 
 class VerdictVector(BaseModel):
-    """The frozen per-case drafter verdict vector — M7's paired-comparison baseline. A κ scalar cannot be
-    paired against, so without this vector M7's most sensitive test (case-by-case McNemar against a future
-    run, keyed by `act_testcase_id`) does not exist. It carries the offline report's drafter-side
+    """The frozen per-case drafter verdict vector — the paired-comparison baseline. A κ scalar cannot be
+    paired against, so without this vector the most sensitive available test (case-by-case McNemar against
+    a future run, keyed by `act_testcase_id`) does not exist. It carries the offline report's drafter-side
     provenance (model DIGEST, axe/corpus versions, ACT export hash) so the vector is reproducible, and the
     per-case rows keyed by `act_testcase_id` so a future run pairs without re-deriving alignment. Computed
     under one `partial_flags` reading."""
@@ -1003,6 +1013,20 @@ class VerdictVector(BaseModel):
     rationale: str = Field(..., description="why this artifact exists — a κ scalar cannot be paired against")
 
 
+class UnreachableError(BaseModel):
+    """One current error that no change to what the drafter RECEIVES can fix, named to its ACT case.
+
+    Subtracted from a class's error count to give the `reachable_errors` a fix is actually measured
+    against. Only the two structural kinds qualify (`UnreachableErrorKind`); a predicted failure is a
+    claim about model behaviour and stays inside the reachable count."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    act_testcase_id: str = Field(..., description="the ACT case this unreachable error belongs to")
+    kind: UnreachableErrorKind = Field(..., description="which structural reason puts it out of reach")
+    reason: str = Field(..., description="why this specific case cannot be reached by a drafter-input change")
+
+
 class DrafterKappaClass(BaseModel):
     """One fix-unit class's row in the frozen drafter-κ baseline. The 2×2 (`tp/fp/fn/tn`), `raw_agreement`,
     `kappa`, the bootstrap interval and the ceiling are all the HEADLINE reading (`partial_flags=True`,
@@ -1012,13 +1036,20 @@ class DrafterKappaClass(BaseModel):
     dominates — the constant-classifier tell. `constant_classifier` marks a ZERO-WIDTH interval (no
     variance because no signal — never precision); `degenerate_share` is the fraction of resamples with a
     single-valued stream (κ undefined → 0.0), disclosed because unreported it drags the lower bound down.
-    `certifiable` = `p_value <= alpha`; NOT certifiable is a property of the gold set's SIZE, not the
-    drafter or any future fix."""
+
+    Two ceilings ride on every row and they are NOT interchangeable. `errors` / `p_value` / `certifiable`
+    are the ceiling over ALL current errors — the most generous arithmetic. `reachable_errors` /
+    `reachable_p_value` / `reachable_certifiable` are the ceiling over the errors a change to the
+    drafter's INPUT can actually reach, i.e. after the structurally unreachable ones (`unreachable`) are
+    subtracted. **The reachable ceiling is the one a fix is measured against**; the all-errors ceiling is
+    optimistic by exactly the named exclusions. `tolerated_regressions` is how many newly-broken cases the
+    reachable ceiling can absorb and still clear α — 0 means a perfect run is the only passing run. NOT
+    certifiable is a property of the gold set's SIZE, not the drafter or any future fix."""
 
     model_config = ConfigDict(extra="forbid")
 
-    axe_rule: str = Field(..., description="the fix-unit class (axe rule); the two link rules pool as 'link-name'")
-    rule_names: list[str] = Field(..., description="the ACT rule(s) this class pools")
+    axe_rule: str = Field(..., description="the fix-unit class (axe rule) — one scored ACT rule each")
+    rule_names: list[str] = Field(..., description="the ACT rule(s) scored in this class")
     n: int = Field(..., ge=0, description="ACT cases in the class, honest-misses included")
     failed: int = Field(..., ge=0, description="cases whose ACT gold outcome is failed (gold FLAG)")
     passed: int = Field(..., ge=0, description="cases whose ACT gold outcome is not failed (gold CLEAN)")
@@ -1047,6 +1078,161 @@ class DrafterKappaClass(BaseModel):
         ..., ge=0.0, le=1.0, description="0.5^errors — the one-sided exact sign-test p a perfect fix could reach"
     )
     certifiable: bool = Field(..., description="p_value <= alpha — whether the class has room to prove an improvement")
+    unreachable: list[UnreachableError] = Field(
+        default_factory=list, description="the structurally unreachable errors, each named to its ACT case"
+    )
+    honest_miss_errors: int = Field(..., ge=0, description="errors on cases that minted no finding — never drafted")
+    contradictory_gold_errors: int = Field(
+        ..., ge=0, description="errors on byte-identical fixtures carrying opposite ACT outcomes"
+    )
+    reachable_errors: int = Field(
+        ..., ge=0, description="errors − honest_miss_errors − contradictory_gold_errors — what a fix can reach"
+    )
+    reachable_error_ids: list[str] = Field(
+        ..., description="the ACT cases making up reachable_errors — a fix is scored on exactly these"
+    )
+    reachable_p_value: float = Field(
+        ..., ge=0.0, le=1.0, description="0.5^reachable_errors — the ceiling a drafter-input fix is measured against"
+    )
+    reachable_certifiable: bool = Field(
+        ..., description="reachable_p_value <= alpha — whether the class can be certified at all"
+    )
+    tolerated_regressions: int = Field(
+        ..., ge=0, description="newly-broken cases the reachable ceiling absorbs and still clears alpha; 0 = no margin"
+    )
+
+
+class SupersededClassReading(BaseModel):
+    """A class as it was scored BEFORE a scope correction, kept on the artifact so the correction is
+    auditable in place rather than only in version history.
+
+    κ across the two readings is NOT comparable — the class has a different n — so this row exists to show
+    what changed and why, never to be set beside the current κ as a movement in the drafter. The PAIRED
+    per-case comparison does survive the correction, on the surviving cases, and is what a later run
+    uses."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    axe_rule: str = Field(..., description="the fix-unit class this superseded reading belongs to")
+    rule_names: list[str] = Field(..., description="the ACT rule(s) scored in the superseded reading")
+    n: int = Field(..., ge=0, description="cases in the superseded reading")
+    failed: int = Field(..., ge=0, description="gold-FLAG cases in the superseded reading")
+    passed: int = Field(..., ge=0, description="gold-CLEAN cases in the superseded reading")
+    tp: int = Field(..., ge=0, description="superseded 2×2: drafter FLAG ∧ gold FLAG")
+    fp: int = Field(..., ge=0, description="superseded 2×2: drafter FLAG ∧ gold CLEAN")
+    fn: int = Field(..., ge=0, description="superseded 2×2: drafter CLEAN ∧ gold FLAG")
+    tn: int = Field(..., ge=0, description="superseded 2×2: drafter CLEAN ∧ gold CLEAN")
+    kappa: float = Field(..., ge=-1.0, le=1.0, description="the superseded κ — NOT comparable to the current one")
+    errors: int = Field(..., ge=0, description="fp + fn in the superseded reading")
+    p_value: float = Field(..., ge=0.0, le=1.0, description="the superseded, optimistic ceiling — 0.5^errors")
+    note: str = Field(..., description="what this reading was, why it no longer holds, and what is comparable")
+
+
+class ExclusionSideEffect(BaseModel):
+    """One arithmetic consequence a scope correction has on the errors that remain scored.
+
+    A scope correction is legitimate on its own grounds and still moves the numbers it is later judged by.
+    Both directions are recorded — the error it makes winnable AND the regression it stops scoring — so a
+    reader can audit the improvement instead of inheriting it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    act_testcase_id: str = Field(..., description="the affected ACT case")
+    twin_act_testcase_id: str = Field(..., description="its byte-identical counterpart on the other side of the scope")
+    content_sha256: str = Field(..., description="sha256 of the fixture bytes the two cases share")
+    effect: str = Field(..., description="what the correction does to this case, stated so it can be audited")
+
+
+class ScopeCorrection(BaseModel):
+    """A recorded, outcome-independent narrowing of what the baseline scores, with everything it moves.
+
+    Pre-registered: it lands before any fixed run exists, on grounds available before one existed. Its
+    rationale is the CONFORMANCE LEVEL of the excluded rule — the target Clearway drafts against — and the
+    contradiction it also removes is recorded as a consequence, never as the reason."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    excluded_rule: str = Field(..., description="the ACT rule removed from scoring")
+    excluded_rule_success_criteria: list[str] = Field(..., description="the excluded rule's WCAG SC ids")
+    excluded_rule_levels: list[ConformanceLevel] = Field(..., description="the excluded rule's WCAG levels")
+    retained_rule: str = Field(..., description="the sibling ACT rule that stays scored")
+    retained_rule_success_criteria: list[str] = Field(..., description="the retained rule's WCAG SC ids")
+    retained_rule_levels: list[ConformanceLevel] = Field(..., description="the retained rule's WCAG levels")
+    conformance_target: str = Field(..., description="the conformance target that makes the exclusion ordinary scoping")
+    rationale: str = Field(..., description="the reason — conformance level, independent of any result")
+    consequence: str = Field(..., description="what the exclusion also removes, recorded as a consequence not a reason")
+    cases_before: int = Field(..., ge=0, description="scored ACT cases before the correction")
+    cases_after: int = Field(..., ge=0, description="scored ACT cases after the correction")
+    manufactured_win: ExclusionSideEffect = Field(
+        ..., description="the error the correction converts from unwinnable to winnable"
+    )
+    unscored_regression: ExclusionSideEffect = Field(
+        ..., description="the regression the same fix predictably causes and the correction stops scoring"
+    )
+    superseded: list[SupersededClassReading] = Field(
+        ..., description="the affected classes as they read before the correction"
+    )
+
+
+class PooledEndpoint(BaseModel):
+    """The PRIMARY endpoint: one hypothesis tested once, pooled across the classes a fix treats.
+
+    Per-class certification here is zero-margin by construction — a property of the gold set's size, not
+    of any fix — so staking the result on it would report failure for a fix that worked. The hypothesis is
+    about the fixed classes sharing a cause, not about either class individually, so the estimand is the
+    pool and per-class results are secondary. This is NOT pooling to estimate one class's effect, which
+    would require a shared referent and a shared fix; it is pooling to test one hypothesis across classes,
+    and the two are kept distinct so neither is mistaken for the other."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    axe_rules: list[str] = Field(..., description="the classes pooled into the primary endpoint")
+    hypothesis: str = Field(..., description="the single claim the pooled test evaluates")
+    reachable_errors: int = Field(..., ge=0, description="the pooled reachable-error count — the estimand")
+    p_value: float = Field(..., ge=0.0, le=1.0, description="0.5^reachable_errors — the pooled ceiling")
+    certifiable: bool = Field(..., description="p_value <= alpha")
+    minimum_wins: int = Field(..., ge=0, description="fixed cases needed at zero regressions to clear alpha")
+    tolerated_regressions: int = Field(..., ge=0, description="newly-broken cases the pooled ceiling can absorb")
+    failure_definition: str = Field(..., description="the pre-committed numeric definition of 'not supported'")
+
+
+class PreregisteredPrediction(BaseModel):
+    """A named, falsifiable prediction recorded BEFORE the run that could confirm or refute it.
+
+    `epistemic_status` separates arithmetic from argument: a prediction whose antecedent is a claim about
+    model behaviour is `argued`, however clean its consequence. A confirmed prediction of failure is still
+    a failure — it is an error not fixed, and is reported that way, outcome first and forecast second."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    prediction_id: str = Field(..., description="stable handle so the scored result points back here")
+    axe_rule: str = Field(..., description="the class the prediction concerns")
+    act_testcase_ids: list[str] = Field(..., description="the ACT cases the prediction is about")
+    claim: str = Field(..., description="what is predicted to happen, stated so it can be refuted")
+    reasoning: str = Field(..., description="why — the argument the prediction rests on")
+    epistemic_status: str = Field(..., description="'argued' or 'arithmetic' — how the claim is grounded")
+    consequence_if_held: str = Field(..., description="what it costs the class if the prediction holds")
+
+
+class ScopedDenominators(BaseModel):
+    """The denominators every pooled rate runs on after a scope correction, beside the ones it replaces.
+
+    Recall, false-positive rate, SC-match and ECE are all pooled over the scored set. When the scored set
+    shrinks, a later run's rates are not like-for-like against the earlier ones unless both denominators
+    are stated — so both are."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    cases: int = Field(..., ge=0, description="scored ACT cases — the unit κ and the paired test use")
+    minting_cases: int = Field(..., ge=0, description="cases that mint at least one finding")
+    honest_misses: int = Field(..., ge=0, description="cases that mint nothing — carried in, never dropped")
+    failed_cases: int = Field(..., ge=0, description="gold-FLAG cases — the recall denominator")
+    passed_cases: int = Field(..., ge=0, description="gold-CLEAN cases — the false-positive denominator")
+    findings: int = Field(..., ge=0, description="minted findings — the per-finding denominator (SC-match, ECE)")
+    superseded_cases: int = Field(..., ge=0, description="cases the superseded rates were pooled over")
+    superseded_findings: int = Field(
+        ..., ge=0, description="findings the superseded per-finding rates were pooled over"
+    )
 
 
 class DrafterKappaBaseline(BaseModel):
@@ -1056,8 +1242,14 @@ class DrafterKappaBaseline(BaseModel):
     drafter-side provenance (model DIGEST, axe/corpus versions, ACT export hash) so it is reproducible,
     and the pre-registered ceiling test (`preregistration`, `alpha`) so the detectable-improvement limit
     travels with the numbers. The bootstrap `seed`/`resamples` are recorded so every interval reproduces
-    bit-for-bit. Its authority rests on honest method — external gold, deterministic replay, degeneracy
-    disclosed, ceilings stated — not on narrow intervals."""
+    bit-for-bit.
+
+    The whole pre-registration is carried here, in the artifact rather than only in prose: the
+    `pooled_endpoint` that is the primary result, the `scope_correction` with both of its arithmetic
+    side-effects disclosed, the named `predictions` a later run scores, and the `denominators` that keep
+    a later run's pooled rates like-for-like. Its authority rests on honest method — external gold,
+    deterministic replay, degeneracy disclosed, ceilings stated before any fixed run exists — not on
+    narrow intervals."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -1066,7 +1258,18 @@ class DrafterKappaBaseline(BaseModel):
         ..., description="the partially_supports reading the 2×2/CI/ceiling use; both κ readings are on each row"
     )
     alpha: float = Field(..., gt=0.0, lt=1.0, description="the PRE-REGISTERED one-sided significance level")
+    one_sided: bool = Field(
+        ..., description="the pre-registered test direction — a fix should improve, not merely change"
+    )
     preregistration: str = Field(..., description="the standing pre-registration of the ceiling test — direction + α")
+    pooled_endpoint: PooledEndpoint = Field(..., description="the PRIMARY endpoint; per-class rows are secondary")
+    scope_correction: ScopeCorrection = Field(
+        ..., description="what this baseline stopped scoring, and what that moved"
+    )
+    predictions: list[PreregisteredPrediction] = Field(
+        ..., description="named falsifiable predictions, recorded before the run that scores them"
+    )
+    denominators: ScopedDenominators = Field(..., description="the pooled denominators, beside the ones they replace")
     bootstrap_seed: int = Field(..., description="the pinned bootstrap seed — bounds reproduce exactly")
     bootstrap_resamples: int = Field(..., ge=1, description="the bootstrap resample count")
     run_ids: list[str] = Field(..., description="the run(s) this baseline was frozen from")

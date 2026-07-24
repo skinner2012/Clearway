@@ -265,71 +265,6 @@
       ]
     },
     {
-      "act_testcase_id": "16d451321559dc35b8c33f0d21b2c7f49175914e",
-      "axe_rule": "link-name",
-      "drafter_flag": false,
-      "gold_flag": false,
-      "conformances": [
-        "supports"
-      ]
-    },
-    {
-      "act_testcase_id": "b77c97dc01d0cd1fcaaaeb2459f805e8e791cafb",
-      "axe_rule": "link-name",
-      "drafter_flag": false,
-      "gold_flag": false,
-      "conformances": [
-        "supports"
-      ]
-    },
-    {
-      "act_testcase_id": "515a82f230ab2c1c1d56b60adf92697c80bc25e5",
-      "axe_rule": "link-name",
-      "drafter_flag": true,
-      "gold_flag": false,
-      "conformances": [
-        "partially_supports"
-      ]
-    },
-    {
-      "act_testcase_id": "7155e250f35ee0a290bcf273b5a3ad8a366065ec",
-      "axe_rule": "link-name",
-      "drafter_flag": true,
-      "gold_flag": true,
-      "conformances": [
-        "does_not_support"
-      ]
-    },
-    {
-      "act_testcase_id": "1221f291a8a94b85a514f743647f3d7f818bef5b",
-      "axe_rule": "link-name",
-      "drafter_flag": true,
-      "gold_flag": true,
-      "conformances": [
-        "does_not_support"
-      ]
-    },
-    {
-      "act_testcase_id": "1c577f9a1335ead326261aefaa8064f8cc6d240e",
-      "axe_rule": "link-name",
-      "drafter_flag": false,
-      "gold_flag": true,
-      "conformances": [
-        "supports"
-      ]
-    },
-    {
-      "act_testcase_id": "48cbc84f4c020393cfb56fd53337827278b2d528",
-      "axe_rule": "link-name",
-      "drafter_flag": true,
-      "gold_flag": true,
-      "conformances": [
-        "does_not_support",
-        "partially_supports",
-        "does_not_support"
-      ]
-    },
-    {
       "act_testcase_id": "6fc68d363695e29f480d6a99bbcc7be08f68d1bc",
       "axe_rule": "link-name",
       "drafter_flag": false,
@@ -455,20 +390,6 @@
       ]
     },
     {
-      "act_testcase_id": "3e58cd4827d3f80b974af2bdd34f22a137db6c86",
-      "axe_rule": "link-name",
-      "drafter_flag": false,
-      "gold_flag": false,
-      "conformances": []
-    },
-    {
-      "act_testcase_id": "4301e64721f3b157fc0859e4887989d476068d86",
-      "axe_rule": "link-name",
-      "drafter_flag": false,
-      "gold_flag": true,
-      "conformances": []
-    },
-    {
       "act_testcase_id": "bd4aaff1b51fa2fbf5c0f326266aa83844602967",
       "axe_rule": "link-name",
       "drafter_flag": false,
@@ -494,5 +415,5 @@
   "axe_core_version": "4.12.1",
   "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
   "created_at": "2026-07-15T01:55:47.047521Z",
-  "rationale": "A kappa scalar cannot be paired against: keyed by act_testcase_id, this per-case FLAG/CLEAN vector is what lets a future drafter run be compared case-by-case (a McNemar / exact sign test on the discordant pairs) to prove it improved on the same cases rather than merely changed \u2014 the most sensitive regression test M7 has, and one a per-class kappa number cannot support."
+  "rationale": "A kappa scalar cannot be paired against: keyed by act_testcase_id, this per-case FLAG/CLEAN vector is what lets a future drafter run be compared case-by-case (a McNemar / exact sign test on the discordant pairs) to prove it improved on the same cases rather than merely changed — the most sensitive regression test available here, and one a per-class kappa number cannot support."
 }

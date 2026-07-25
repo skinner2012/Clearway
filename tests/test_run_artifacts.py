@@ -16,6 +16,7 @@ from clearway.eval.run_artifacts import (
     dry_gate_path,
     partial_path,
     passes_in,
+    prior_label,
     refuse_to_overwrite,
     require_label,
     result_path,
@@ -107,6 +108,16 @@ def test_passes_in_is_empty_when_the_run_has_not_been_built(tmp_path: Path) -> N
 @pytest.mark.parametrize("label", RUN_LABELS)
 def test_every_declared_label_is_accepted(label: str) -> None:
     assert require_label(label) == label
+
+
+def test_the_first_run_has_no_prior_to_be_attributed_against() -> None:
+    assert prior_label(REFERENT_INJECTION) is None
+
+
+def test_a_later_run_names_the_run_it_must_be_attributed_against() -> None:
+    """Declared rather than passed in at the call site: a missing attribution and a clean one read the
+    same in a report, so the scorer has to be able to demand it instead of accepting its absence."""
+    assert prior_label(CITATION_GROUNDING) == REFERENT_INJECTION
 
 
 def test_an_unknown_label_is_refused_rather_than_opening_a_new_namespace() -> None:

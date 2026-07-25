@@ -36,6 +36,13 @@ CITATION_GROUNDING = "citation_grounding"
 
 RUN_LABELS = (REFERENT_INJECTION, CITATION_GROUNDING)
 
+# Which run each run must be attributed against — the one immediately before it. A run carrying a further
+# prompt change has to answer "did this give back what the previous run bought?", and that question is
+# only answerable against the previous run's frozen vector. Recorded here so the scorer can REQUIRE the
+# comparison rather than accept its silent absence: a missing attribution and a clean one look identical
+# in a report, and only one of them is true.
+_PRIOR_RUN = {CITATION_GROUNDING: REFERENT_INJECTION}
+
 _PASS_INFIX = "_run_"
 
 
@@ -57,6 +64,11 @@ def require_label(label: str) -> str:
             "files rather than the run you meant, and every scorer would report that run as missing."
         )
     return label
+
+
+def prior_label(label: str) -> str | None:
+    """The run this one must be attributed against, or None for the first run in the sequence."""
+    return _PRIOR_RUN.get(require_label(label))
 
 
 def _runs_dir() -> Path:

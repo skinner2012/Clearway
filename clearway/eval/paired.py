@@ -1,19 +1,26 @@
-"""Pair a Run A drafter verdict vector against the frozen baseline, case by case → the pre-registered sign tests.
+"""Pair frozen drafter verdict vectors case by case — the pre-registered sign tests, and run attribution.
 
-The per-class κ scalar cannot be paired; the frozen `VerdictVector` can. This module sets Run A's per-case
-FLAG/CLEAN vector beside the baseline's, keyed by `act_testcase_id`, and reads off the discordant pairs the
-pre-registration is scored on: `b` = a case the baseline got wrong and Run A got right (an improvement),
-`c` = a case the baseline got right and Run A got wrong (a regression). The one-sided exact sign test on
-`(b, c)` is the same `sign_test_p` the ceiling pre-registration uses — reused, not re-derived, so the run is
-measured against exactly the test that was fixed before it existed.
+The per-class κ scalar cannot be paired; the frozen `VerdictVector` can. This module sets one run's per-case
+FLAG/CLEAN vector beside another's, keyed by `act_testcase_id`, and reads off the discordant pairs: `b` = a
+case the earlier vector got wrong and the later got right (an improvement), `c` = the reverse (a regression).
 
-**The primary endpoint is the POOLED test** across the classes the referent fix treats (`label` + `link-name`): the
-hypothesis is about referent PRESENCE, not about either class, so the estimand is the pooled reachable
-errors and the per-class tests are secondary. Both are computed; both are reported.
+**Two different questions are asked of those pairs, and they are kept apart.**
 
-Pure — no LLM, no network, no clock. Every number is a deterministic function of the two frozen vectors.
-ACT gold is the oracle in both (`gold_flag`), and a case whose gold disagrees between the two vectors is a
-hard error, never silently scored: the whole point is that only the drafter's input changed between them.
+1. **`pair_verdicts` — the pre-registered hypothesis test**, against the frozen pre-change baseline. The
+   one-sided exact sign test on `(b, c)` is the same `sign_test_p` the ceiling pre-registration uses —
+   reused, not re-derived, so a run is measured against exactly the test that was fixed before it existed.
+   **The primary endpoint is the POOLED test** across the classes the referent fix treats (`label` +
+   `link-name`): the hypothesis is about referent PRESENCE, not about either class, so the estimand is the
+   pooled reachable errors and the per-class tests are secondary. Both are computed; both are reported.
+2. **`attribute_against_prior` — did this run give back what the run before it bought?** A later run
+   carrying one further prompt change has to answer that separately, and it is NOT a hypothesis test: it
+   carries no certified/failed vocabulary, because the remedy it feeds (roll the change back, or make it
+   class-conditional) is a decision, not a result.
+
+Pure — no LLM, no network, no clock. Every number is a deterministic function of the frozen vectors. ACT
+gold is the oracle throughout (`gold_flag`), no judge field is read anywhere, and a case whose gold disagrees
+between two vectors is a hard error, never silently scored: the whole point is that only the drafter's input
+changed between them.
 
 **Verdicts follow the pre-committed definitions, and the arithmetic self-enforces them.** A class is
 `certified` only when its sign-test p clears α; `document-title` cannot reach that at any fix quality (3
@@ -37,7 +44,7 @@ _POOLED_AXE_RULES = ("label", "link-name")
 
 @dataclass(frozen=True)
 class ClassVerdict:
-    """One fix-unit class paired Run-A-vs-baseline: the discordant counts, the sign-test p, and the verdict.
+    """One fix-unit class paired run-vs-baseline: the discordant counts, the sign-test p, and the verdict.
 
     `improved` (b) and `regressed` (c) are the discordant pairs against ACT gold — baseline-wrong→right and
     baseline-right→wrong. `improved_ids` / `regressed_ids` name exactly which cases moved, so a reader can
@@ -93,6 +100,58 @@ class PooledVerdict:
 
 
 @dataclass(frozen=True)
+class ClassAttribution:
+    """One class compared against the PREVIOUS run rather than against the frozen baseline.
+
+    `improved` / `regressed` are the discordant pairs prior-run → this run. `prior_gains_lost` is the
+    stricter and more consequential quantity: the cases the baseline got wrong, the prior run fixed, and
+    this run breaks again — the earlier fix, given back. A class can regress without losing a prior gain
+    (it broke something the earlier run never fixed) and can net flat while losing one, so the two are
+    reported separately and never collapsed."""
+
+    axe_rule: str
+    improved: int
+    regressed: int
+    improved_ids: tuple[str, ...]
+    regressed_ids: tuple[str, ...]
+    prior_gains_lost: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "axe_rule": self.axe_rule,
+            "improved": self.improved,
+            "regressed": self.regressed,
+            "improved_ids": list(self.improved_ids),
+            "regressed_ids": list(self.regressed_ids),
+            "prior_gains_lost": list(self.prior_gains_lost),
+        }
+
+
+@dataclass(frozen=True)
+class RunAttribution:
+    """Whether this run's change consumed the previous run's fix, named to the class and the case.
+
+    `eats_prior_run` is the decision input, not a verdict: when it is true the change is rolled back or
+    made class-conditional, and the per-class `prior_gains_lost` says which class would have to be
+    carved out. Deliberately carries no certified/failed string — this is an attribution check between
+    two runs, not the pre-registered hypothesis test, and dressing it in the test's vocabulary would
+    invite reading it as one."""
+
+    classes: tuple[ClassAttribution, ...]
+    eats_prior_run: bool
+    prior_run_ids: tuple[str, ...]
+    run_run_ids: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "classes": [c.to_dict() for c in self.classes],
+            "eats_prior_run": self.eats_prior_run,
+            "prior_run_ids": list(self.prior_run_ids),
+            "run_run_ids": list(self.run_run_ids),
+        }
+
+
+@dataclass(frozen=True)
 class PairedThesis:
     """The full paired result: every class's discordant verdict plus the pooled primary endpoint."""
 
@@ -123,6 +182,99 @@ def _class_verdict(b: int, c: int, p: float, alpha: float) -> str:
     return "worked_but_uncertifiable"
 
 
+def _by_class(
+    earlier_vec: VerdictVector, later_vec: VerdictVector, *, earlier: str, later: str
+) -> dict[str, list[tuple[Any, Any]]]:
+    """Two verdict vectors aligned by `act_testcase_id` and grouped by class.
+
+    Both alignment failures are hard errors rather than silently-scored ones, because both mean the two
+    vectors are no longer measuring the same thing: a differing case set would pair on the overlap and
+    quietly drop the rest, and a drifted `gold_flag` would compare two different questions. Only the
+    drafter's input may change between two runs."""
+    earlier_by_id = {c.act_testcase_id: c for c in earlier_vec.cases}
+    later_by_id = {c.act_testcase_id: c for c in later_vec.cases}
+    if set(earlier_by_id) != set(later_by_id):
+        only_earlier = sorted(set(earlier_by_id) - set(later_by_id))
+        only_later = sorted(set(later_by_id) - set(earlier_by_id))
+        raise ValueError(
+            f"{earlier} and {later} case sets differ — cannot pair. "
+            f"only in {earlier}: {only_earlier}; only in {later}: {only_later}"
+        )
+
+    by_class: dict[str, list[tuple[Any, Any]]] = {}
+    for tid, ec in earlier_by_id.items():
+        lc = later_by_id[tid]
+        if ec.gold_flag != lc.gold_flag:
+            raise ValueError(
+                f"gold_flag drifted for case {tid} ({earlier} {ec.gold_flag}, {later} {lc.gold_flag}) — "
+                "the gold oracle must be identical across the two runs; only the drafter's input may change"
+            )
+        by_class.setdefault(ec.axe_rule, []).append((ec, lc))
+    return by_class
+
+
+def _discordant(pairs: list[tuple[Any, Any]]) -> tuple[list[str], list[str]]:
+    """The two discordant sets of one class: cases the earlier vector got wrong and the later got right,
+    and the reverse. Correctness is against ACT gold on both sides."""
+    improved_ids: list[str] = []
+    regressed_ids: list[str] = []
+    for ec, lc in pairs:
+        earlier_right = ec.drafter_flag == ec.gold_flag
+        later_right = lc.drafter_flag == lc.gold_flag
+        if not earlier_right and later_right:
+            improved_ids.append(ec.act_testcase_id)
+        elif earlier_right and not later_right:
+            regressed_ids.append(ec.act_testcase_id)
+    return sorted(improved_ids), sorted(regressed_ids)
+
+
+def attribute_against_prior(baseline: VerdictVector, prior: VerdictVector, run: VerdictVector) -> RunAttribution:
+    """Three frozen vectors → whether this run's change consumed the previous run's fix.
+
+    The pooled thesis asks whether a change helped, measured against the frozen pre-change baseline. This
+    asks a different question that a run carrying one further prompt change has to answer separately: did
+    that change give back what the run before it bought? A case counts as a lost gain only when all three
+    line up — baseline **wrong**, prior run **right**, this run **wrong again** — which is why the
+    baseline is needed here and a straight prior-vs-run pairing is not enough. A case this run breaks that
+    the prior run never fixed is a regression but not a lost gain, and the two are never collapsed.
+
+    Pure and deterministic. ACT gold is the oracle throughout; no judge field is read."""
+    by_class = _by_class(prior, run, earlier="prior run", later="run")
+    baseline_by_id = {c.act_testcase_id: c for c in baseline.cases}
+
+    classes: list[ClassAttribution] = []
+    for axe_rule in sorted(by_class):
+        pairs = by_class[axe_rule]
+        improved_ids, regressed_ids = _discordant(pairs)
+        lost: list[str] = []
+        for pc, rc in pairs:
+            bc = baseline_by_id.get(pc.act_testcase_id)
+            if bc is None:
+                continue
+            baseline_right = bc.drafter_flag == bc.gold_flag
+            prior_right = pc.drafter_flag == pc.gold_flag
+            run_right = rc.drafter_flag == rc.gold_flag
+            if not baseline_right and prior_right and not run_right:
+                lost.append(pc.act_testcase_id)
+        classes.append(
+            ClassAttribution(
+                axe_rule=axe_rule,
+                improved=len(improved_ids),
+                regressed=len(regressed_ids),
+                improved_ids=tuple(improved_ids),
+                regressed_ids=tuple(regressed_ids),
+                prior_gains_lost=tuple(sorted(lost)),
+            )
+        )
+
+    return RunAttribution(
+        classes=tuple(classes),
+        eats_prior_run=any(c.prior_gains_lost for c in classes),
+        prior_run_ids=tuple(prior.run_ids),
+        run_run_ids=tuple(run.run_ids),
+    )
+
+
 def _pooled_thesis(b: int, c: int, p: float, alpha: float) -> str:
     if p <= alpha:
         return "supported"
@@ -138,44 +290,19 @@ def pair_verdicts(
     pooled_axe_rules: tuple[str, ...] = _POOLED_AXE_RULES,
     alpha: float = _ALPHA,
 ) -> PairedThesis:
-    """Frozen baseline + Run A `VerdictVector` → the per-class and pooled discordant sign tests.
+    """Frozen baseline + a run's `VerdictVector` → the per-class and pooled discordant sign tests.
 
     Pairs by `act_testcase_id`: the two vectors must cover the identical case set (only the drafter's input
     changed between them), so a differing set or a per-case `gold_flag` drift is a hard error rather than a
-    silently-scored one. For each class, `improved` = baseline wrong → Run A right, `regressed` = baseline
-    right → Run A wrong, both against ACT gold; the per-class p is the one-sided exact sign test on those.
+    silently-scored one. For each class, `improved` = baseline wrong → run right, `regressed` = baseline
+    right → run wrong, both against ACT gold; the per-class p is the one-sided exact sign test on those.
     The pooled endpoint sums the discordant pairs over `pooled_axe_rules` and tests once — the primary
     result. Pure and deterministic."""
-    base_by_id = {c.act_testcase_id: c for c in baseline.cases}
-    run_by_id = {c.act_testcase_id: c for c in run.cases}
-    if set(base_by_id) != set(run_by_id):
-        only_base = sorted(set(base_by_id) - set(run_by_id))
-        only_run = sorted(set(run_by_id) - set(base_by_id))
-        raise ValueError(
-            f"baseline and Run A case sets differ — cannot pair. only in baseline: {only_base}; only in run: {only_run}"
-        )
-
-    by_class: dict[str, list[tuple[Any, Any]]] = {}
-    for tid, bc in base_by_id.items():
-        rc = run_by_id[tid]
-        if bc.gold_flag != rc.gold_flag:
-            raise ValueError(
-                f"gold_flag drifted for case {tid} (baseline {bc.gold_flag}, run {rc.gold_flag}) — "
-                "the gold oracle must be identical across the two runs; only the drafter's input may change"
-            )
-        by_class.setdefault(bc.axe_rule, []).append((bc, rc))
+    by_class = _by_class(baseline, run, earlier="baseline", later="run")
 
     classes: list[ClassVerdict] = []
     for axe_rule in sorted(by_class):
-        improved_ids: list[str] = []
-        regressed_ids: list[str] = []
-        for bc, rc in by_class[axe_rule]:
-            base_right = bc.drafter_flag == bc.gold_flag
-            run_right = rc.drafter_flag == rc.gold_flag
-            if not base_right and run_right:
-                improved_ids.append(bc.act_testcase_id)
-            elif base_right and not run_right:
-                regressed_ids.append(bc.act_testcase_id)
+        improved_ids, regressed_ids = _discordant(by_class[axe_rule])
         b, c = len(improved_ids), len(regressed_ids)
         p = sign_test_p(b, c)
         classes.append(
@@ -184,8 +311,8 @@ def pair_verdicts(
                 n_paired=len(by_class[axe_rule]),
                 improved=b,
                 regressed=c,
-                improved_ids=tuple(sorted(improved_ids)),
-                regressed_ids=tuple(sorted(regressed_ids)),
+                improved_ids=tuple(improved_ids),
+                regressed_ids=tuple(regressed_ids),
                 p_value=p,
                 verdict=_class_verdict(b, c, p, alpha),
             )

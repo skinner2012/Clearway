@@ -31,7 +31,7 @@ from typing import Any
 
 from clearway.eval.drafter_kappa import class_ceilings, class_kappa_cis, class_kappas
 from clearway.eval.drafter_kappa_baseline import _assert_deterministic
-from clearway.eval.paired import pair_verdicts
+from clearway.eval.paired import attribute_against_prior, pair_verdicts
 from clearway.eval.verdict_vector import build_verdict_vector
 from clearway.schemas.models import VerdictVector
 
@@ -104,6 +104,7 @@ def score_run(
     baseline_reachable: dict[str, list[str]],
     distinct_after: dict[str, int],
     predictions: list[dict[str, Any]] | None = None,
+    prior_vec: VerdictVector | None = None,
 ) -> tuple[VerdictVector, dict[str, Any]]:
     """One run's frozen passes + the frozen baseline → (that run's verdict vector, the result dict).
 
@@ -111,7 +112,11 @@ def score_run(
     would be read as one drifting run. Asserts determinism first (pass 1 is canonical only if they agree),
     builds the verdict vector from pass 1, pairs it against the baseline, and assembles the paired thesis +
     per-class mechanism. `document-title` reported as certified is a spec violation, asserted before
-    returning."""
+    returning.
+
+    `prior_vec` is the preceding run's frozen vector, where one exists. It answers a question the baseline
+    pairing cannot: whether this run's further prompt change gave back what the previous run bought. The
+    caller decides whether it is required — see `run_artifacts.prior_label`."""
     if len(runs) < 2:
         raise ValueError("determinism needs at least two passes of the same run to compare")
     _assert_deterministic(runs)
@@ -142,6 +147,8 @@ def score_run(
         "held_out_model_run_count": len(runs),
         "judge_absent": True,
     }
+    if prior_vec is not None:
+        result["attribution"] = attribute_against_prior(baseline_vec, prior_vec, run_vec).to_dict()
     return run_vec, result
 
 
@@ -165,6 +172,16 @@ def _print_read(result: dict[str, Any], label: str) -> None:
             f"const={m['constant_classifier']}  2x2 tp/fp/fn/tn={m['tp']}/{m['fp']}/{m['fn']}/{m['tn']}  "
             f"κ={m['kappa']:+.3f}"
         )
+    attribution = result.get("attribution")
+    if attribution is not None:
+        verdict = "EATS THE PRIOR RUN" if attribution["eats_prior_run"] else "prior run intact"
+        print(f"attribution vs the prior run ({', '.join(attribution['prior_run_ids'])}): {verdict}")
+        for a in attribution["classes"]:
+            lost = a["prior_gains_lost"]
+            print(
+                f"  {a['axe_rule']:<15} b={a['improved']} c={a['regressed']}  "
+                f"prior gains lost={len(lost)}{' ' + str(lost) if lost else ''}"
+            )
     print("pre-registered predictions (mechanical outcome; interpretation is a reviewer's):")
     for p in result.get("predictions_scored", []):
         print(f"  {p['prediction_id']:<24} held={p['held_mechanically']}  {p['per_case_movement']}")
@@ -179,6 +196,7 @@ def main() -> None:
         RUN_LABELS,
         dry_gate_path,
         frozen_pass_paths,
+        prior_label,
         result_path,
         verdict_vector_path,
     )
@@ -212,8 +230,28 @@ def main() -> None:
     if dg.exists():
         distinct_after = json.loads(dg.read_text()).get("distinct_prompts_by_class", {})
 
+    # A run with a predecessor MUST be attributed against it — a missing attribution reads exactly like a
+    # clean one, so its absence is refused rather than tolerated.
+    prior_vec: VerdictVector | None = None
+    prior = prior_label(args.run)
+    if prior is not None:
+        prior_path = verdict_vector_path(prior)
+        if not prior_path.exists():
+            raise SystemExit(
+                f"{args.run} has to be attributed against {prior}, whose verdict vector is not frozen at "
+                f"{prior_path}. Without it there is no way to tell whether this run gave back what {prior} "
+                f"bought, and an absent attribution is indistinguishable from a clean one. Score {prior} "
+                "first."
+            )
+        prior_vec = VerdictVector.model_validate_json(prior_path.read_text())
+
     run_vec, result = score_run(
-        runs, baseline_vec, baseline_reachable, distinct_after, predictions=baseline_kappa.get("predictions", [])
+        runs,
+        baseline_vec,
+        baseline_reachable,
+        distinct_after,
+        predictions=baseline_kappa.get("predictions", []),
+        prior_vec=prior_vec,
     )
     verdict_vector_path(args.run).write_text(run_vec.model_dump_json(indent=2) + "\n")
     result_path(args.run).write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")

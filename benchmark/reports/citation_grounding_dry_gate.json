@@ -1,0 +1,13 @@
+{
+  "green": true,
+  "referent_failures": [],
+  "control_failures": [],
+  "case_set_failures": [],
+  "env_failures": [],
+  "distinct_prompts_by_class": {
+    "label": 14,
+    "empty-heading": 9,
+    "document-title": 3,
+    "link-name": 19
+  }
+}

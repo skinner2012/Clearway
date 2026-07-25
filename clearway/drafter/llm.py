@@ -38,9 +38,11 @@ on this bucket — and neither does the oracle-scored half of the confidence cur
 that no longer happens; a re-freeze of those artifacts will be degenerate, by design and not by
 accident.
 
-Grounding note: the retrieved `Citation`s carry sc_id + url but not the SC's normative text, so the
-prompt names the *relevant SC ids* and the model supplies their meaning from its own knowledge.
-Passing the SC text into the prompt for stronger grounding is a fast-follow.
+Grounding note: a retrieved `Citation` carries the criterion's **normative text**, so the candidate
+block shows the model what each candidate actually requires instead of naming an id and leaving it
+to supply the meaning from memory. The text is bounded here rather than at retrieval — see
+`NORMATIVE_TEXT_CHARS`. A candidate with no text (an SC named but never retrieved) renders exactly
+the id/url line it always rendered, so grounding appears only where there is grounding to show.
 """
 
 from __future__ import annotations
@@ -71,6 +73,27 @@ _CONFIRMED_VIOLATION_CONFORMANCE = Conformance.DOES_NOT_SUPPORT
 # axe's confirmed finding, so 1.0 is the calibrated value rather than a boast: any lower number would
 # be miscalibrated by construction. It says nothing about the remediation, which stays unmeasured.
 _ORACLE_GROUNDED_CONFIDENCE = 1.0
+
+# --------------------------------------------------------------------------------------
+# The normative-text budget. Same house rule as the scanner's referent extractors: a named
+# source, a pinned character budget, one deterministic truncation rule.
+# --------------------------------------------------------------------------------------
+#
+# The candidate criteria's normative text is corpus prose, and prose is the input most likely to
+# bloat a prompt. Measured over the 86 criteria of WCAG 2.2 as the corpus stores them, that text
+# runs 41-1759 characters (median 253), so five unbounded candidates could add ~8,800 characters to
+# a ~830-character prompt — a 10x input for a one-sentence answer, on a local model whose quality
+# falls away as the prompt grows.
+#
+# 400 is ~1.6x the corpus median and leaves 54 of the 86 criteria whole. At the default k=5 it caps
+# what grounding adds at 2,330 characters however retrieval lands — pinned by test, so the bound is
+# checked rather than asserted here. **Truncation is prefix-only**, and
+# that is the whole reason the cut is safe: WCAG states the requirement first and its exceptions,
+# notes and enumerated cases after, so a prefix keeps the rule and drops the qualifications — a
+# suffix cut would keep the footnotes and lose the rule. A truncated candidate says so in the
+# prompt, with the budget named, so a bounded excerpt is never read as the whole criterion.
+NORMATIVE_TEXT_CHARS = 400
+_TRUNCATION_NOTE = f" (normative text truncated at {NORMATIVE_TEXT_CHARS} characters)"
 
 
 class DraftResult(NamedTuple):
@@ -185,12 +208,23 @@ class Drafter:
 
 
 def _system_prompt() -> str:
+    """The judgment system prompt.
+
+    The `cited_sc_ids` rule carries a **citation budget**: cite the single most applicable criterion.
+    Without one, "only ids that genuinely apply" reads as permission to cite the whole candidate list,
+    and a row that cites five criteria is not five times as grounded — it is one answer diluted, and
+    it scores as one hit however loosely each id fits. The budget is stated with an explicit escape in
+    both directions (a second id where the finding independently fails it; none where none applies),
+    so it narrows the citation set without forcing a citation the model does not believe.
+    """
     return (
         "You are an accessibility specialist drafting ONE conformance row for a VPAT/ACR. "
         "Output ONLY a single JSON object matching the schema — no prose, no markdown, no code fences.\n"
         "Rules:\n"
         "- conformance: EXACTLY one of supports | partially_supports | does_not_support | not_applicable\n"
-        "- cited_sc_ids: only WCAG SC ids from the provided candidates that genuinely apply (may be empty)\n"
+        "- cited_sc_ids: only WCAG SC ids from the provided candidates, and cite the SINGLE most "
+        "applicable one — the criterion this finding most directly fails. Add a second only if the "
+        "finding independently fails that one too; cite none if none of the candidates applies\n"
         "- confidence: a DECIMAL number between 0 and 1 (e.g. 0.85), never a word\n"
         "- remediation: one concrete sentence on how to fix it\n"
         'Example: {"conformance":"does_not_support","cited_sc_ids":["1.1.1"],'
@@ -327,6 +361,24 @@ def _link_name_referent_block(finding: Finding) -> str:
     return "\n" + "\n".join(lines)
 
 
+def _candidate_lines(citations: list[Citation]) -> str:
+    """The candidate-criteria block: the id/url line each citation has always rendered, plus — where
+    the corpus supplied one — the criterion's bounded normative text on an indented line beneath it.
+
+    Gated on presence, exactly like the referent blocks: a citation carrying no text renders the one
+    line and nothing else, so a bare `Citation(sc_id=…)` (an SC named but never retrieved) produces
+    the pre-grounding block byte-for-byte. Truncation is prefix-only and announced — see
+    `NORMATIVE_TEXT_CHARS` for the budget and why the cut runs that way.
+    """
+    lines: list[str] = []
+    for citation in citations:
+        lines.append(f"- {citation.sc_id} ({citation.url})")
+        if citation.text:
+            note = _TRUNCATION_NOTE if len(citation.text) > NORMATIVE_TEXT_CHARS else ""
+            lines.append(f"  What it requires: {citation.text[:NORMATIVE_TEXT_CHARS]}{note}")
+    return "\n".join(lines) or "- (none retrieved)"
+
+
 def _user_prompt(finding: Finding, citations: list[Citation]) -> str:
     # Three-way framing by provenance. PASSES is the subtle one: axe *passed* the mechanical
     # check (a name/attribute/title EXISTS) but never judged its quality — so without this branch
@@ -345,7 +397,7 @@ def _user_prompt(finding: Finding, citations: list[Citation]) -> str:
         )
     else:
         bucket = "a NEEDS-REVIEW item the scanner could not decide"
-    candidates = "\n".join(f"- {c.sc_id} ({c.url})" for c in citations) or "- (none retrieved)"
+    candidates = _candidate_lines(citations)
     base = (
         f"Finding ({bucket}): axe rule '{finding.rule_id}' — {finding.help or '(no description)'}\n"
         f"Target element: {finding.target}\n"
@@ -370,9 +422,17 @@ def _resolve_citations(citations: list[Citation], sc_ids: list[str]) -> list[Cit
     `Citation` for any that was NOT retrieved. On the judgment path an unretrieved id is a citation
     the corpus never supported — exactly the hallucination the validator/oracle is built to catch, so
     we keep it, not drop it. On the assembled path it means retrieval missed an SC axe named; the
-    criterion is still true of the finding, so it still ships, just without a url."""
+    criterion is still true of the finding, so it still ships, just without a url.
+
+    The normative text is dropped on the way out. It is a drafting *input* — what the prompt shows the
+    model — whereas a drafted row is a **reference**: id, title, level, url, the fields a report
+    renders. Carrying the corpus prose through would copy the same paragraph into every row citing
+    that criterion, inflating every persisted checkpoint, review record and frozen run artifact with
+    text no consumer reads. Dropped here rather than never set, so the retriever's contract stays
+    faithful and exactly one boundary makes the choice.
+    """
     by_id = {c.sc_id: c for c in citations}
-    return [(by_id.get(sc_id) or Citation(sc_id=sc_id)).model_copy() for sc_id in sc_ids]
+    return [(by_id.get(sc_id) or Citation(sc_id=sc_id)).model_copy(update={"text": ""}) for sc_id in sc_ids]
 
 
 def _assemble(finding: Finding, citations: list[Citation], out: _LLMDraft) -> DraftRow:

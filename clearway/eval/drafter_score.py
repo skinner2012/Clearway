@@ -15,8 +15,16 @@ and a passed honest-miss as trivially clean. The caller MUST include them, or re
 Calibration (ECE, over-confidence gap) is the one measure kept PER FINDING — confidence is a
 per-draft signal — reusing the frozen-set curve math. Everything the schema exempts or reports
 separately (the NA abstention count, the partially_supports sensitivity, the non-trivial FP
-denominator, the SC∩ACT construct-validity read) is computed here and travels in `sensitivity_notes`,
-since `DrafterScore` is `extra="forbid"` and has no home for them.
+denominator, the SC∩ACT construct-validity read, the SC-citation precision) is computed here and
+travels in `sensitivity_notes`, since `DrafterScore` is `extra="forbid"` and has no home for them.
+
+**The SC∩ACT reads are the whole citation measurement, and they are judge-free by construction** —
+`cited_sc_ids` intersected with `gold_success_criteria`, nothing else consulted. `sc_citation_match`
+(the schema field) is the case-level hit rate: did the drafter cite *any* gold criterion. It is a
+one-sided ruler — a row that cites broadly wins it for free — so `sensitivity_notes` carries its
+other side, the id-level precision, computed over the same subset. Both are strict: a real but
+not-gold citation counts as wrong, so the pair is a *direction and a floor*, never evidence that a
+citation is useful.
 """
 
 from __future__ import annotations
@@ -113,6 +121,28 @@ def _sc_match_counts(cases: list[DraftedCase]) -> tuple[int, int]:
     return matched, len(flagged_failed)
 
 
+def _sc_precision_counts(cases: list[DraftedCase]) -> tuple[int, int]:
+    """(cited-and-gold, cited) over the SAME subset `_sc_match_counts` scores — the correctly-flagged
+    failed cases — micro-averaged over SC ids rather than over cases.
+
+    `sc_citation_match` asks *did any cited id land in gold*, which a broad citer wins for free: cite
+    five criteria and one of them is likely right. Precision asks *what share of what it cited was
+    right*, and moves the other way under the same behaviour. The two together are what make a
+    citation-budget change legible — narrowing the citation set can only lower the first and can only
+    raise the second, so reporting either alone reads as a win or a loss that isn't there.
+
+    Deterministic, gold-only, no judge — the same ruler as every other number here.
+    """
+    matched = cited_total = 0
+    for c in cases:
+        if c.expected != FAILED or not _flagged(c):
+            continue
+        cited = {sc for d in c.drafts if is_flag(d.conformance) for sc in d.cited_sc_ids}
+        matched += len(cited & set(c.gold_success_criteria))
+        cited_total += len(cited)
+    return matched, cited_total
+
+
 def _construct_validity_counts(cases: list[DraftedCase]) -> tuple[int, int]:
     """(conformance-correct, total) over the failed cases whose cited SC intersects the ACT SC — the
     construct-validity read: when the drafter cites the right criterion, does it also get conformance
@@ -162,6 +192,8 @@ def _sensitivity_notes(cases: list[DraftedCase]) -> str:
     r2_k, r2_n = _recall_counts(cases, partial_flags=False)
     f2_k, f2_n = _fp_counts(cases, partial_flags=False)
     cv_k, cv_n = _construct_validity_counts(cases)
+    sp_k, sp_n = _sc_precision_counts(cases)
+    sc_k, sc_cases = _sc_match_counts(cases)
     abstained = _abstained_n(cases)
     return (
         f"FP over the {fp_nt_n} non-trivial true negatives (dropping the passed honest-misses that mint "
@@ -169,7 +201,12 @@ def _sensitivity_notes(cases: list[DraftedCase]) -> str:
         f"true negatives. partially_supports scored as CLEAN instead of FLAGS → recall {r2_k}/{r2_n} = "
         f"{_rate(r2_k, r2_n):.3f}, FP {f2_k}/{f2_n} = {_rate(f2_k, f2_n):.3f}. Construct-validity: among "
         f"failed cases whose cited SC intersects the ACT SC (n={cv_n}), conformance-correct on {cv_k} "
-        f"({_rate(cv_k, cv_n):.3f}). not_applicable drafts (n={abstained}) are CLEAN under the primary "
+        f"({_rate(cv_k, cv_n):.3f}). SC-citation PRECISION over the same {sc_cases} correctly-flagged failed "
+        f"cases the headline sc_citation_match ({sc_k}/{sc_cases}) is taken over, micro-averaged over ids "
+        f"instead of cases: {sp_k}/{sp_n} = {_rate(sp_k, sp_n):.3f} of the SC ids cited are in the ACT gold "
+        f"set, {_rate(sp_n, sc_cases):.2f} ids cited per case. Report the pair — the headline alone rewards "
+        f"citing broadly, precision alone rewards citing nothing. not_applicable drafts (n={abstained}) are "
+        f"CLEAN under the primary "
         f"collapse but reported separately as abstained_n, never folded silently. remediation_technique_"
         f"match is not wired (ACT G/F technique metadata is not vendored) — see the not-measured list."
     )

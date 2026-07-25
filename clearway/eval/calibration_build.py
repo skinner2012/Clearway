@@ -22,10 +22,20 @@ is always the human verdict derived mechanically from gold. The shipped drafter 
 
 Not run by the test suite (it needs Ollama + the cloud key + pgvector). Invoke explicitly:
 `uv run python -m clearway.eval.calibration_build`.
+
+⚠️ **A rebuild is guarded, because this script reads a prompt it does not own.** The natural drafts
+come from the shipped `Drafter` and the elicited negatives reuse `_system_prompt()`, so κ frozen here
+describes the drafter prompt *as it was on the day of the build*. Nothing in the artifact used to say
+which day that was, so a prompt change elsewhere in the repo could — months later, silently — have a
+re-run overwrite the frozen number with one that is not comparable to it. The artifact now records
+the sha256 of the system prompt it was built under, and `assert_rebuild_is_comparable` refuses to
+overwrite a frozen artifact the current prompt no longer matches. See that function for what happens
+to an artifact that predates the pin, which is not treated as a match.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -55,6 +65,83 @@ _GOLD_MANIFEST = _FIXTURES / "expected_quality.json"
 _ARTIFACT = _FIXTURES / "calibration_set.json"
 
 _CALIBRATION_VERSION = "calibration@1"
+
+# The artifact key holding the sha256 of the drafter system prompt the build ran under. Named on the
+# artifact rather than kept here alone, so a reader can tell which prompt produced a κ from the file
+# in front of them instead of from git history.
+SYSTEM_PROMPT_SHA256_KEY = "drafter_system_prompt_sha256"
+
+
+class IncomparableRebuild(RuntimeError):
+    """A rebuild that would overwrite the frozen calibration artifact with one not comparable to it."""
+
+
+def system_prompt_sha256() -> str:
+    """The sha256 of the drafter system prompt a build would run under, right now.
+
+    Hashed from the live `_system_prompt()` rather than a second frozen copy of its text: two copies
+    of a prompt drift, and the copy that drifts is always the one nobody reads.
+    """
+    return hashlib.sha256(_system_prompt().encode()).hexdigest()
+
+
+def provenance_pin() -> dict[str, str]:
+    """What a build stamps on its artifact to say which prompt it ran under.
+
+    One function, so the value the build writes and the value the guard reads cannot drift apart —
+    and so the loop (build stamps → next build is checked against the stamp) is testable without a
+    forty-minute model run.
+    """
+    return {SYSTEM_PROMPT_SHA256_KEY: system_prompt_sha256()}
+
+
+def assert_rebuild_is_comparable(artifact_path: Path = _ARTIFACT) -> None:
+    """Refuse to overwrite a frozen calibration artifact that this rebuild would not be comparable to.
+
+    κ is a measurement of the judge against drafts, and those drafts were produced under a particular
+    drafter prompt. Change the prompt and a rebuild answers a different question — but the file it
+    writes has the same name, the same shape and the same authority, so the substitution is invisible.
+    That is the "stale trusted surface" failure with a delay on it: the trap arms today and fires on
+    whoever re-runs this months from now.
+
+    Four states, and the third is the one that needs saying out loud:
+
+    * **No frozen artifact.** Nothing to be incomparable with — a first build proceeds.
+    * **Recorded hash matches.** The prompt is the one the frozen κ was measured under; proceed.
+    * **No recorded hash.** The artifact predates the pin, so it cannot state which prompt produced
+      it. That is not a match — it is an unanswerable question, and answering it "yes" by default is
+      exactly the silent inheritance this guard exists to stop. It refuses.
+    * **Recorded hash differs.** The prompt moved; refuse, naming both hashes.
+
+    The escape hatch is deliberate rather than a flag: to supersede a frozen artifact, delete it and
+    rebuild. That is a visible, reviewable, version-controlled act, where a `--force` is a reflex.
+
+    Scope, stated so it is not over-read: this pins the system prompt, which is a constant. The
+    per-finding user prompt is not a constant and is not pinned here — a change to *its* assembly is
+    caught by the drafter's own byte-pinned prompt tests, not by this guard.
+    """
+    if not artifact_path.is_file():
+        return
+    recorded = json.loads(artifact_path.read_text()).get(SYSTEM_PROMPT_SHA256_KEY)
+    current = system_prompt_sha256()
+    if recorded == current:
+        return
+    if recorded is None:
+        raise IncomparableRebuild(
+            f"{artifact_path.name} predates the system-prompt pin: it records no "
+            f"{SYSTEM_PROMPT_SHA256_KEY}, so it cannot state which drafter prompt produced its κ. "
+            f"That is an unanswerable question, not a match, and a rebuild would replace a frozen "
+            f"measurement with one nobody can compare against it. The current prompt hashes to "
+            f"{current}. To supersede the frozen artifact, delete it deliberately and rebuild — the "
+            f"new one records its pin, and every rebuild after that is checked against it."
+        )
+    raise IncomparableRebuild(
+        f"the drafter system prompt has changed since {artifact_path.name} was frozen: the artifact "
+        f"records {recorded}, the current prompt hashes to {current}. A κ measured on drafts written "
+        f"under the old prompt does not describe drafts written under the new one, so rebuilding here "
+        f"would overwrite a measurement with an incomparable one under the same name. To supersede "
+        f"the frozen artifact, delete it deliberately and rebuild."
+    )
 
 
 def load_gold_pairs() -> list[tuple[Finding, GoldLabel]]:
@@ -187,6 +274,7 @@ def build_calibration_set(created_at: str) -> dict[str, Any]:
         "judge_model": judge_client.model,
         "judge_version": judge.judge_version,
         "corpus_version": retriever.corpus_version,
+        **provenance_pin(),
         "kappa_threshold": KAPPA_THRESHOLD,
         "created_at": created_at,
         "drafts": rows,
@@ -217,6 +305,9 @@ def _print_summary(artifact: dict[str, Any]) -> None:
 
 
 def main() -> None:
+    # Before the ~40-minute, cloud-billed run, not after: a guard that fires at write time has
+    # already spent the money and the operator's afternoon on an artifact it then refuses to keep.
+    assert_rebuild_is_comparable()
     artifact = build_calibration_set(created_at=datetime.now(timezone.utc).isoformat())
     _ARTIFACT.write_text(json.dumps(artifact, indent=2, ensure_ascii=False) + "\n")
     print(f"wrote {_ARTIFACT.relative_to(Path.cwd())} — {len(artifact['drafts'])} drafts")

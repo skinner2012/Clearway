@@ -78,7 +78,9 @@ _JUDGMENT_SYSTEM_PROMPT = (
     "Output ONLY a single JSON object matching the schema — no prose, no markdown, no code fences.\n"
     "Rules:\n"
     "- conformance: EXACTLY one of supports | partially_supports | does_not_support | not_applicable\n"
-    "- cited_sc_ids: only WCAG SC ids from the provided candidates that genuinely apply (may be empty)\n"
+    "- cited_sc_ids: only WCAG SC ids from the provided candidates, and cite the SINGLE most "
+    "applicable one — the criterion this finding most directly fails. Add a second only if the "
+    "finding independently fails that one too; cite none if none of the candidates applies\n"
     "- confidence: a DECIMAL number between 0 and 1 (e.g. 0.85), never a word\n"
     "- remediation: one concrete sentence on how to fix it\n"
     'Example: {"conformance":"does_not_support","cited_sc_ids":["1.1.1"],'

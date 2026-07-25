@@ -5,6 +5,9 @@ Skips until the artifact exists (the live build in `clearway.eval.calibration_bu
 committed, it runs on every suite — `calibration_set.json` is a data contract, like the gold manifest.
 The verdicts are RECOMPUTED from raw and compared to the stored ones, so the frozen data is proven
 self-consistent, never merely trusted.
+
+The last section pins something different: not that the artifact replays, but that a *rebuild* of it
+cannot quietly answer a different question under the same filename.
 """
 
 from __future__ import annotations
@@ -16,6 +19,13 @@ from typing import Any
 
 import pytest
 
+from clearway.eval.calibration_build import (
+    SYSTEM_PROMPT_SHA256_KEY,
+    IncomparableRebuild,
+    assert_rebuild_is_comparable,
+    provenance_pin,
+    system_prompt_sha256,
+)
 from clearway.eval.kappa import KAPPA_THRESHOLD, agreements_from_artifact, build_report, human_verdict
 from clearway.judge import verdict_from
 from clearway.schemas.models import Citation, Conformance, DraftRow, GoldLabel
@@ -90,3 +100,80 @@ def test_kappa_replays_and_the_judge_clears_the_bar() -> None:
     assert report.judge_trusted == (balanced.kappa >= KAPPA_THRESHOLD)
     assert report.judge_trusted is True  # the frozen set represents a calibrated, TRUSTED judge
     assert report.confidence_bins == []  # κ-only build leaves the curve empty; the confidence assembly supplies it
+
+
+# ---------------------------------------------------------------------------
+# The rebuild guard: a re-run cannot quietly replace this artifact with an
+# incomparable one
+# ---------------------------------------------------------------------------
+#
+# κ here was measured on drafts written under a particular drafter system prompt. The build script
+# reads that prompt but does not own it, so a prompt change elsewhere in the repo could have a re-run
+# months from now overwrite the frozen number with one that answers a different question — under the
+# same filename, with the same apparent authority. These pin the guard that stops it.
+
+
+def _frozen(tmp_path: Path, **fields: Any) -> Path:
+    """A stand-in frozen artifact carrying only what the guard reads."""
+    path = tmp_path / "calibration_set.json"
+    path.write_text(json.dumps({"set_id": "calibration", **fields}))
+    return path
+
+
+def test_a_first_build_proceeds_because_there_is_nothing_to_be_incomparable_with(tmp_path: Path) -> None:
+    """No frozen artifact, nothing to overwrite — the guard must not block the build that creates the
+    very thing it protects."""
+    assert assert_rebuild_is_comparable(tmp_path / "calibration_set.json") is None
+
+
+def test_a_matching_prompt_hash_proceeds(tmp_path: Path) -> None:
+    """The artifact names the prompt it was built under and the prompt still hashes to it — the
+    rebuild answers the same question, so it is allowed."""
+    path = _frozen(tmp_path, **{SYSTEM_PROMPT_SHA256_KEY: system_prompt_sha256()})
+    assert assert_rebuild_is_comparable(path) is None
+
+
+def test_a_changed_prompt_refuses_loudly_and_names_both_hashes(tmp_path: Path) -> None:
+    """The failure the guard exists for. It must name what moved and what to do — an error that only
+    says "mismatch" gets overridden by whoever hits it."""
+    path = _frozen(tmp_path, **{SYSTEM_PROMPT_SHA256_KEY: "0" * 64})
+    with pytest.raises(IncomparableRebuild) as excinfo:
+        assert_rebuild_is_comparable(path)
+    message = str(excinfo.value)
+    assert "0" * 64 in message and system_prompt_sha256() in message
+    assert "delete" in message  # the deliberate, reviewable way to supersede a frozen measurement
+
+
+def test_a_missing_prompt_hash_is_its_own_case_and_is_not_read_as_a_match(tmp_path: Path) -> None:
+    """⚠️ The case that must never default to "fine". An artifact predating the pin cannot state
+    which prompt produced it; that is an unanswerable question, not agreement, and answering it by
+    omission is the silent inheritance the guard exists to prevent."""
+    path = _frozen(tmp_path, drafter_model="gemma")
+    with pytest.raises(IncomparableRebuild) as excinfo:
+        assert_rebuild_is_comparable(path)
+    message = str(excinfo.value)
+    assert "predates" in message
+    assert SYSTEM_PROMPT_SHA256_KEY in message
+    assert "0" * 64 not in message, "a missing hash must not be reported as a mismatch against a value"
+
+
+def test_what_a_build_stamps_is_exactly_what_the_guard_reads(tmp_path: Path) -> None:
+    """The loop closes: a build stamps its prompt onto the artifact, and the next build is checked
+    against that stamp. Proven by writing the stamp the build writes and handing it to the guard —
+    a mechanism where the two halves agreed only by coincidence would pass a source-grep and fail
+    here."""
+    pin = provenance_pin()
+    assert len(pin[SYSTEM_PROMPT_SHA256_KEY]) == 64
+    assert assert_rebuild_is_comparable(_frozen(tmp_path, **pin)) is None
+
+
+def test_the_shipped_artifact_either_states_its_prompt_or_cannot_be_rebuilt_over() -> None:
+    """The invariant, on the real file: there is no third state in which a reader silently inherits a
+    κ whose prompt nobody can name. Today the shipped artifact predates the pin and takes the second
+    branch — that is a disclosure, not a defect, and it is deliberately visible here rather than left
+    in a comment. A rebuilt artifact records its pin and takes the first branch instead."""
+    if SYSTEM_PROMPT_SHA256_KEY in _artifact():
+        assert len(_artifact()[SYSTEM_PROMPT_SHA256_KEY]) == 64
+    else:
+        with pytest.raises(IncomparableRebuild):
+            assert_rebuild_is_comparable(_ARTIFACT)

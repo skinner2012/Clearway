@@ -87,9 +87,23 @@ def _chunks_to_citations(chunks: list[CorpusChunk], sc_meta: dict[str, ScMeta]) 
     """Map retrieved chunks to citations: one `Citation` per SC id across the top-k, deduped,
     nearest-first order preserved.
 
-    `title`/`level` are joined in from the corpus's `sc_meta` reference table (T1); an SC absent
-    from it degrades to empty title / `None` level rather than failing. `sc_id` + `source` + `url`
+    `title`/`level` are joined in from the corpus's `sc_meta` reference table; an SC absent from it
+    degrades to empty title / `None` level rather than failing. `sc_id` + `source` + `url` + `text`
     come from the chunk; `technique_id` stays None until the Techniques corpus is ingested.
+
+    **How the normative text is selected when several chunks ground the same SC.** The top-k can hold
+    more than one chunk for a criterion (its own SC chunk plus, later, an Understanding or Technique
+    chunk). The dedupe already keeps the FIRST — the nearest — and the text follows exactly that rule,
+    so `source`, `url` and `text` on a citation always describe one and the same chunk. The two
+    alternatives were rejected: concatenating the chunks would build a passage that exists in no
+    document and whose length is bounded only by `k`, and preferring a particular `source` would make
+    the citation's text and its own `source`/`url` describe different chunks.
+
+    **It is not bounded here.** The text is the corpus's own, and this boundary also feeds the MCP
+    reuse client, which asked for the criterion, not for an excerpt of it. The one consumer with a
+    length problem is the drafter prompt, and it carries its own pinned budget and truncation rule
+    (`drafter/llm.py`) — bounding here would ship a lossy criterion to every consumer to solve a
+    prompt's problem.
     """
     citations: list[Citation] = []
     seen: set[str] = set()
@@ -106,6 +120,7 @@ def _chunks_to_citations(chunks: list[CorpusChunk], sc_meta: dict[str, ScMeta]) 
                     level=meta.level if meta else None,
                     source=chunk.source,
                     url=chunk.url,
+                    text=chunk.text,
                 )
             )
     return citations

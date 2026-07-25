@@ -39,7 +39,8 @@ _tracer = trace.get_tracer("clearway.mcp.server")
 _TOOL_DESCRIPTION = (
     "Retrieve the applicable WCAG 2.2 success criteria for a described accessibility problem. "
     "Given an EvidenceQuery (an optional axe rule id plus a human-readable description), returns "
-    "the grounding success criteria as complete Citations (sc_id, title, level, source, url), "
+    "the grounding success criteria as complete Citations (sc_id, title, level, source, url, and the "
+    "criterion's normative text), "
     "nearest-first. Read-only: it embeds the query and vector-searches a frozen WCAG corpus; it "
     "has no side effects."
 )

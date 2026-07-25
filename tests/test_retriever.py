@@ -81,11 +81,54 @@ def test_citation_degrades_to_empty_title_level_when_sc_meta_absent() -> None:
     assert citation.level is None
 
 
+def test_the_chunks_normative_text_reaches_the_citation_verbatim_and_unbounded() -> None:
+    """The text was being retrieved and then dropped at this boundary. It is carried whole: this is
+    the corpus's own wording, and the one consumer with a length problem — the drafter prompt — has
+    its own budget. Bounding here would ship a lossy criterion to every consumer, the MCP reuse
+    client included."""
+    long_text = "Non-text Content. " + "detail " * 500
+    embedder, store = _seed(
+        _chunk("sc:1.1.1", ["1.1.1"], url="https://www.w3.org/TR/WCAG22/#non-text-content").model_copy(
+            update={"text": long_text}
+        )
+    )
+    (citation,) = Retriever(embedder, store, _VERSION, k=1).retrieve(_finding("image-alt"))
+    assert citation.text == long_text
+
+
+def test_a_citation_for_an_sc_with_no_chunk_text_carries_an_empty_string() -> None:
+    """`''` is "no grounding chunk supplied one", and it must stay distinguishable from prose — a
+    consumer renders nothing for it rather than an empty claim about the criterion."""
+    embedder, store = _seed(_chunk("sc:1.1.1", ["1.1.1"]).model_copy(update={"text": ""}))
+    (citation,) = Retriever(embedder, store, _VERSION, k=1).retrieve(_finding("image-alt"))
+    assert citation.text == ""
+
+
 def test_dedups_to_one_citation_per_sc_across_chunks() -> None:
     # two chunks grounding the same SC (e.g. an SC chunk + a technique chunk) → one citation.
     embedder, store = _seed(_chunk("sc:1.1.1", ["1.1.1"]), _chunk("tech:H37", ["1.1.1"], source="Technique"))
     citations = Retriever(embedder, store, _VERSION, k=5).retrieve(_finding("image-alt"))
     assert [c.sc_id for c in citations] == ["1.1.1"]
+
+
+def test_the_nearest_chunk_supplies_source_url_and_text_together() -> None:
+    """The merge rule when several chunks ground one SC: nearest wins, and it wins the WHOLE citation.
+    Concatenating would build a passage that exists in no document and whose length is bounded only by
+    `k`; preferring a particular source would leave `text` describing a different chunk from the
+    `source`/`url` beside it."""
+    finding = _finding("image-alt")
+    embedder, store = _seed(
+        _chunk("sc:1.1.1", ["1.1.1"], url="https://sc").model_copy(update={"text": "the criterion"}),
+        _chunk("tech:H37", ["1.1.1"], source="Technique", url="https://tech").model_copy(
+            update={"text": "how to satisfy it"}
+        ),
+    )
+    (citation,) = Retriever(embedder, store, _VERSION, k=5).retrieve(finding)
+
+    # whichever chunk the store ranked first is the one the whole citation must come from
+    nearest = store.query(embedder.embed_query(f"{finding.rule_id} {finding.help}".strip()), 5, _VERSION)[0]
+    assert (citation.source, citation.url, citation.text) == (nearest.source, nearest.url, nearest.text)
+    assert citation.text in ("the criterion", "how to satisfy it"), "never a concatenation of both"
 
 
 def test_k_bounds_the_number_of_chunks_pulled() -> None:

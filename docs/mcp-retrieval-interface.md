@@ -84,6 +84,7 @@ lookup. Nearest-first.
 | `level`        | `"A" \| "AA" \| "AAA" \| null` | Conformance level. |
 | `source`       | `str`                  | Corpus origin, e.g. `"WCAG-SC"` / `"Understanding"`. |
 | `url`          | `str`                  | Link to the SC's Understanding page. |
+| `text`         | `str`                  | The criterion's normative text, verbatim from the grounding chunk — `source`, `url` and `text` always describe the same chunk (the nearest). Unbounded: a consumer that needs a shorter one bounds it itself. `""` means no grounding chunk supplied one, never that the criterion has no normative text. |
 | `technique_id` | `str \| null`          | Fix technique id — reserved; currently `null`. |
 
 Canonical definition: [`CONTRACTS.md`](../CONTRACTS.md) §3 (`Citation`).
@@ -113,6 +114,7 @@ as MCP **structured content** under `result`:
       "level": "A",
       "source": "WCAG-SC",
       "url": "https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html",
+      "text": "Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. …",
       "technique_id": null
     }
   ]

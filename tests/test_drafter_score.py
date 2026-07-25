@@ -10,6 +10,7 @@ import pytest
 from clearway.eval.drafter_score import (
     DraftedCase,
     DraftedFinding,
+    _sc_precision_counts,
     score_drafter,
 )
 from clearway.schemas.models import Conformance
@@ -70,6 +71,35 @@ def test_sc_match_is_over_correctly_flagged_failed_only() -> None:
     finding) — so SC-match is 1/2, computed only where the drafter actually flagged."""
     sc = score_drafter(_sample()).score.sc_citation_match
     assert (sc.value, sc.n) == (pytest.approx(0.5), 2)
+
+
+def test_sc_precision_is_id_level_over_the_same_subset_as_the_hit_rate() -> None:
+    """The other side of the SC∩ACT read, and the reason it exists. The two correctly-flagged failed
+    cases cite one id each — "2.4.6" (gold) and "1.3.1" (not gold for a 2.4.9 case) — so precision is
+    1/2 over 2 cited IDS, where the headline hit rate is 1/2 over 2 CASES. They come apart the moment
+    a row cites broadly, which is what a citation budget changes."""
+    assert _sc_precision_counts(_sample()) == (1, 2)
+
+    broad = _sample() + [_case("heading", "failed", ("2.4.6",), _f(DNS, "2.4.6", "1.3.1", "4.1.2", "2.4.2"))]
+    assert _sc_precision_counts(broad) == (2, 6), "citing four ids to hit one buys the hit rate, costs precision"
+    assert score_drafter(broad).score.sc_citation_match.value == pytest.approx(2 / 3)
+
+
+def test_sc_precision_reads_only_the_flagging_findings_and_never_a_judge_field() -> None:
+    """A clean draft's citations are not evidence about a flag, so a non-flagging draft on a flagged
+    case contributes nothing — the same subset rule the hit rate uses. And nothing here consults a
+    judge: `cited_sc_ids` against `gold_success_criteria` is the whole computation."""
+    cases = [_case("heading", "failed", ("2.4.6",), _f(DNS, "2.4.6"), _f(SUP, "1.3.1", "4.1.2"))]
+    assert _sc_precision_counts(cases) == (1, 1)
+
+
+def test_sensitivity_notes_report_precision_beside_the_headline_hit_rate() -> None:
+    """Both sides travel together, or a narrowed citation set reads as a pure loss (hit rate down)
+    and a broadened one as a pure win."""
+    notes = score_drafter(_sample()).sensitivity_notes
+    assert "SC-citation PRECISION" in notes
+    assert "1/2 = 0.500" in notes  # 1 of 2 cited ids in gold
+    assert "1.00 ids cited per case" in notes
 
 
 def test_abstentions_counted_separately_not_as_flags() -> None:

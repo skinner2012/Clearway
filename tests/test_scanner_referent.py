@@ -129,8 +129,14 @@ def test_the_drafter_prompt_text_is_pinned() -> None:
     """The CONTROL (`empty-heading`) prompt pinned to a hash of its exact bytes, carrying a full
     referent. A hash catches what two-calls-agree cannot: an injection that leaked into the control
     would move this even while the with/without comparison stayed internally consistent — so this is
-    M7's "the control holds, byte-identical by test" as a byte-exact pin. The injected `label`
-    prompt's bytes are checked verbatim in test_referent_injection_label, not here."""
+    "the control holds, byte-identical by test" as a byte-exact pin. The injected `label` prompt's
+    bytes are checked verbatim in test_referent_injection_label, not here.
+
+    The **user** hash is the original one and has never moved: the citation here carries no normative
+    text, so the candidate block renders exactly as it did before grounding existed. The **system**
+    hash moved once, when the `cited_sc_ids` rule gained its citation budget — that rule is shared by
+    every judgment prompt, so it moves this pin by design rather than by leak. The grounded candidate
+    block has its own byte pins in test_drafter_citation_grounding."""
     citations = [Citation(sc_id="2.4.6", url="https://www.w3.org/WAI/WCAG22/#headings-and-labels")]
     finding = Finding(
         id="x",
@@ -144,7 +150,7 @@ def test_the_drafter_prompt_text_is_pinned() -> None:
     )
     system = hashlib.sha256(_system_prompt().encode()).hexdigest()
     user = hashlib.sha256(_user_prompt(finding, citations).encode()).hexdigest()
-    assert system == "61863e4570cd6b80bc9c48bf9fecd7f61e15835794793c29ddae70046dbed2ad"
+    assert system == "0df2d394e8b79713aea0c42629435287e465c6967ea47b16ed99ecf85cc14b9e"
     assert user == "1e1de624d83f54fbc96215c4a71d47ac0b47641fa499e03fdd96a5d03b4ecaa6"
 
 

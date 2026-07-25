@@ -344,6 +344,15 @@ class Citation(BaseModel):
     level: Optional[ConformanceLevel] = None
     source: str = Field("", description="corpus origin: 'WCAG-SC' | 'Understanding' | 'Technique' | 'ARIA-APG'")
     url: str = ""
+    text: str = Field(
+        "",
+        description="the criterion's normative text, carried verbatim from the grounding CorpusChunk — "
+        "`source`, `url` and `text` always describe the SAME chunk, the nearest one. Unbounded here: it "
+        "is the corpus's own text, and a consumer that needs a shorter one bounds it at its own boundary "
+        "(the drafter prompt does). `''` means no grounding chunk supplied one — an SC named but never "
+        "retrieved — never that the criterion has no normative text. Optional-with-default, so a payload "
+        'written before this field existed still validates under `extra="forbid"`.',
+    )
     technique_id: Optional[str] = None
 
 

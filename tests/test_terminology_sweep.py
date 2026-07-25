@@ -15,6 +15,11 @@ Two properties make the freeze meaningful rather than circular:
 
 A failure here does not mean "update the literal" — it means a prose-only change reached the model
 input, and the numbers frozen under the old prompt no longer describe the new one.
+
+The system literal has moved once deliberately since, when the `cited_sc_ids` rule gained its
+citation budget. The four user literals have not: `_CITATION` carries no normative text, so the
+candidate block renders exactly what it always rendered. What a *grounded* candidate block renders
+is pinned separately, in `test_drafter_citation_grounding`.
 """
 
 from __future__ import annotations
@@ -33,7 +38,9 @@ _EXPECTED_SYSTEM = (
     "object matching the schema — no prose, no markdown, no code fences.\n"
     "Rules:\n"
     "- conformance: EXACTLY one of supports | partially_supports | does_not_support | not_applicable\n"
-    "- cited_sc_ids: only WCAG SC ids from the provided candidates that genuinely apply (may be empty)\n"
+    "- cited_sc_ids: only WCAG SC ids from the provided candidates, and cite the SINGLE most applicable one — the "
+    "criterion this finding most directly fails. Add a second only if the finding independently fails that one too; "
+    "cite none if none of the candidates applies\n"
     "- confidence: a DECIMAL number between 0 and 1 (e.g. 0.85), never a word\n"
     "- remediation: one concrete sentence on how to fix it\n"
     'Example: {"conformance":"does_not_support","cited_sc_ids":["1.1.1"],"remediation":"Add a descriptive alt '

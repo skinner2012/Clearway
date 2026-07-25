@@ -210,12 +210,12 @@ def test_fixture_scan_normalizes_home_deterministically() -> None:
 
 
 def test_every_quality_review_class_carries_a_trust_tier() -> None:
-    """A new quality-review rule must declare how far its judgment is trusted — so no finding class
-    ships as an unlabelled peer of a measured one. The benchmark showed the classes differ sharply:
-    empty-heading reliable, document-title ~100% cry-wolf, image-alt never measured."""
+    """Every quality-review rule carries a tier, so no finding class ships as an unlabelled peer of a
+    measured one. The tiers themselves are derived from the frozen per-class κ — that rule, and the
+    values it is applied to, are guarded in `test_finding_class_trust.py`."""
     assert set(FINDING_CLASS_TRUST) == set(QUALITY_REVIEW_RULES)
     assert FINDING_CLASS_TRUST["empty-heading"] is FindingClassTrust.RELIABLE
-    assert FINDING_CLASS_TRUST["document-title"] is FindingClassTrust.WEAK
+    assert FINDING_CLASS_TRUST["link-name"] is FindingClassTrust.WEAK
     assert FINDING_CLASS_TRUST["image-alt"] is FindingClassTrust.UNMEASURED
 
 

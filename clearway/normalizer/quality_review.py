@@ -53,7 +53,9 @@ set of non-issues.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from enum import Enum
+from typing import NamedTuple
 
 QUALITY_REVIEW_RULES: dict[str, str] = {
     "image-alt": (
@@ -84,24 +86,75 @@ QUALITY_REVIEW_RULES: dict[str, str] = {
 
 
 class FindingClassTrust(str, Enum):
-    """Per-class trust status from the held-out acceptance benchmark, so a specialist can tell a
-    measured-reliable class from a measured-weak or a never-measured one instead of receiving them as
-    indistinguishable peers. Qualitative by design — the exact per-rule numbers live in
-    `docs/acceptance-analysis.md` / `docs/finding-class-trust.md`, not duplicated here where they
-    could drift."""
+    """How far a finding class's judgment is trusted — DERIVED from that class's Cohen's κ against
+    W3C ACT expert gold on the latest frozen scored run, never hand-assigned. A specialist can then
+    tell a measured-reliable class from a measured-weak or a never-measured one instead of receiving
+    them as indistinguishable peers.
 
-    RELIABLE = "reliable"  # measured vs ACT gold, decent (empty-heading: recall 4/5, FP 1/8)
-    WEAK = "weak"  # measured, high cry-wolf (document-title ~100% FP; label / link-name ~50%)
-    UNMEASURED = "unmeasured"  # never validated against gold — no trust signal exists for the class
+    ⚠️ A tier is not a certification, and the tiers are not equally well established. `document-title`
+    reaches RELIABLE on κ = 1.00 over **n = 5** cases — a sample too small to certify anything: its
+    structural ceiling is p = 0.125, so it cannot reach statistical significance at that n however
+    good the drafter is. Read it as "no measured errors on five cases", NOT as standing on the same
+    evidence as `empty-heading` (κ 0.675 over n = 13). `docs/finding-class-trust.md` carries the
+    caveat in full, per class, with n."""
+
+    RELIABLE = "reliable"  # measured vs ACT gold at or above the threshold below
+    WEAK = "weak"  # measured vs ACT gold, below the threshold — expect false alarms
+    UNMEASURED = "unmeasured"  # never scored against gold — no trust signal exists for the class
 
 
-# Every class in QUALITY_REVIEW_RULES MUST carry a trust tier (enforced by test): a new rule has to
-# state how far its judgment is trusted, so no class ships as an unlabelled peer of a measured one.
-FINDING_CLASS_TRUST: dict[str, FindingClassTrust] = {
-    "empty-heading": FindingClassTrust.RELIABLE,
-    "document-title": FindingClassTrust.WEAK,
-    "label": FindingClassTrust.WEAK,
-    "link-name": FindingClassTrust.WEAK,
-    "image-alt": FindingClassTrust.UNMEASURED,
-    "frame-title": FindingClassTrust.UNMEASURED,
+# The tier boundary, stated ONCE so the mapping is auditable and re-runnable rather than negotiated
+# per class after the numbers are seen: κ >= 0.60 is RELIABLE, a measured κ below it is WEAK, and a
+# class that was never scored against gold is UNMEASURED. 0.60 is Landis & Koch "substantial
+# agreement" — the same bar the judge's trust gate uses (`KAPPA_THRESHOLD` in `clearway/eval/kappa.py`),
+# restated here rather than imported because the normalizer does not depend on `eval/`.
+TRUST_KAPPA_THRESHOLD = 0.60
+
+
+class ClassKappa(NamedTuple):
+    """One class's frozen reading: Cohen's κ against ACT gold, and how many scored cases stand behind
+    it. `n` travels with κ because a tier alone hides sample size, and two of these samples are tiny."""
+
+    kappa: float
+    n: int
+
+
+# Per-class κ from the latest frozen run scored against W3C ACT expert gold —
+# `benchmark/reports/referent_injection_result.json`, `mechanism[]` (three passes, κ identical on
+# every pass). A class ABSENT from this table has never been scored against gold. The values are
+# pinned against that artifact by test, so they cannot drift from the run they quote.
+#
+# What moved since the earlier reading in `benchmark/reports/drafter_kappa_baseline.json`, once the
+# resolved referent was injected into the drafter's input: document-title 0.00 -> 1.00 (its constant
+# classifier broke); label 0.13 -> 0.82; link-name 0.21 -> 0.05 (a NET REGRESSION — its referent is
+# the link destination, which is not in the DOM the drafter sees); empty-heading unchanged at 0.675
+# (the untouched control).
+FROZEN_CLASS_KAPPA: dict[str, ClassKappa] = {
+    "document-title": ClassKappa(kappa=1.0, n=5),
+    "empty-heading": ClassKappa(kappa=0.675, n=13),
+    "label": ClassKappa(kappa=0.8197, n=11),
+    "link-name": ClassKappa(kappa=0.0541, n=15),
 }
+
+
+def trust_tier(kappa: float | None) -> FindingClassTrust:
+    """Apply the threshold rule to one class's κ. `None` means the class was never scored against
+    gold — which is NOT the same as scoring badly, so it gets its own tier rather than defaulting to
+    WEAK."""
+    if kappa is None:
+        return FindingClassTrust.UNMEASURED
+    return FindingClassTrust.RELIABLE if kappa >= TRUST_KAPPA_THRESHOLD else FindingClassTrust.WEAK
+
+
+def derive_class_trust(kappa_by_class: Mapping[str, ClassKappa], rules: Iterable[str]) -> dict[str, FindingClassTrust]:
+    """The tier table for `rules`, derived by applying `trust_tier` to a frozen run's per-class κ.
+    Re-run it against a later frozen run to refresh the tiers without re-litigating the mapping —
+    that is the point of deriving them instead of writing them down."""
+    return {rule: trust_tier(m.kappa if (m := kappa_by_class.get(rule)) is not None else None) for rule in rules}
+
+
+# Every class in QUALITY_REVIEW_RULES carries a trust tier (enforced by test): a new rule is
+# UNMEASURED until it is scored against gold, so no class ships as an unlabelled peer of a measured
+# one. This is the single source of truth for tiers — the prose copies in
+# `docs/finding-class-trust.md` and the dashboard panel are mirrors, guarded against it by test.
+FINDING_CLASS_TRUST: dict[str, FindingClassTrust] = derive_class_trust(FROZEN_CLASS_KAPPA, QUALITY_REVIEW_RULES)

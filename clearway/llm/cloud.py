@@ -22,6 +22,13 @@ from clearway.llm.client import Completion, LLMUsage
 _DEFAULT_MODEL = "gpt-5.6-luna"
 _DEFAULT_EFFORT = "medium"
 
+# The technique classifier is a SEPARATE role with its own pin, never the judge's. Three model roles
+# exist and are never conflated: the local drafter writes the evidence, the judge grades no-oracle
+# judgment items, and this one infers which WCAG technique a drafted remediation implies — a
+# classification scored against ACT gold, not a verdict anyone trusts.
+_TECHNIQUE_MODEL = "gpt-5.6-sol"
+_TECHNIQUE_EFFORT = "medium"
+
 
 class CloudLLMClient:
     """Real cloud client: an OpenAI reasoning model via LiteLLM's Responses API, structured output
@@ -60,6 +67,21 @@ class CloudLLMClient:
         latency_ms = (time.perf_counter() - start) * 1000.0
         content: str = getattr(response, "output_text", "") or ""
         return Completion(content, _usage_from_responses(response, latency_ms))
+
+
+def technique_classifier_client() -> CloudLLMClient:
+    """The technique classifier as its own configured role — `CLEARWAY_TECHNIQUE_MODEL` /
+    `CLEARWAY_TECHNIQUE_EFFORT`, falling back to the pins above.
+
+    Deliberately a different model from BOTH the drafter (which wrote the remediation being classified,
+    so grading its own output would be self-preference) and the judge (a distinct role that still exists
+    and keeps its own config — the two are never merged). Passing the model explicitly also stops the
+    constructor falling back to the judge's environment variables.
+    """
+    return CloudLLMClient(
+        model=os.getenv("CLEARWAY_TECHNIQUE_MODEL") or _TECHNIQUE_MODEL,
+        reasoning_effort=os.getenv("CLEARWAY_TECHNIQUE_EFFORT") or _TECHNIQUE_EFFORT,
+    )
 
 
 def _usage_from_responses(response: object, latency_ms: float) -> LLMUsage:

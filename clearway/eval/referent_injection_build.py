@@ -54,14 +54,22 @@ def _write_partial(path: Path, state: dict[str, Any]) -> None:
 
 
 def _draft_record(finding: Any, draft: Any) -> dict[str, Any]:
-    """One drafted finding — drafter-side only, no judge booleans. The verdict-vector and κ builders read
-    exactly these fields (`conformance` for the FLAG/CLEAN collapse; the rest for provenance/scoring)."""
+    """One drafted finding — drafter-side only, no judge booleans.
+
+    `conformance` drives the FLAG/CLEAN collapse the verdict-vector and κ builders score; the rest is
+    provenance. `remediation` is the drafted fix sentence, recorded because it is the whole input to the
+    fix-direction metric (`technique_match`) and dropping it made that metric uncomputable from a run —
+    the sentence cannot be recovered afterwards without re-drafting, which would be a fresh model pass.
+    Artifacts written before it was added simply lack the key; every reader here takes the fields it
+    needs by name, so old and new artifacts both load and nothing is re-frozen to add it.
+    """
     return {
         "finding_id": finding.id,
         "target": finding.target,
         "conformance": draft.conformance.value,
         "cited_sc_ids": [c.sc_id for c in draft.citations],
         "confidence": draft.confidence,
+        "remediation": draft.remediation,
     }
 
 

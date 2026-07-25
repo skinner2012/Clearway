@@ -870,6 +870,57 @@ class ExemptMetric(BaseModel):
     )
 
 
+class TechniqueMatch(BaseModel):
+    """Fix DIRECTION: the chance-corrected agreement between the technique a drafted remediation implies
+    and the technique ACT canonically requires for the case.
+
+    Carried as κ and NOT as a `MetricCI`, for two reasons that are the same reason: κ lives in `[-1, 1]`
+    and is not a proportion, so it never travels through a Wilson interval (`ci_method` is a seeded
+    case-level percentile bootstrap), and the raw match rate a `MetricCI` would invite is exactly the
+    number this metric must not report — the technique gold is RULE-LEVEL, so a constant classifier
+    answering one id for every case scores high on raw match while carrying no signal. `raw_agreement`
+    rides along as that constant-classifier tell, never as the headline; `constant_classifier` marks a
+    ZERO-WIDTH interval (no variance because no signal — never precision).
+
+    **A floor, not a validation.** It says a fix points at the right technique; whether the fix is USEFUL
+    to an implementer is not measured by this or anything else in the pipeline. `covered_classes` /
+    `uncovered_classes` ship the coverage limit on the shape itself so it cannot be lost in prose: only
+    the classes whose ACT rule declares a technique requirement are scoreable, and the rest are ABSENT
+    from the number, not passing it. `classifier_model` records the third model role — a technique
+    classifier distinct from both the drafter and the judge, whose output is scored against ACT gold
+    rather than trusted, which is why it is a classification and not an LLM-as-judge."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kappa: float = Field(..., ge=-1.0, le=1.0, description="Cohen's κ, inferred technique vs ACT technique gold")
+    n: int = Field(..., ge=0, description="classified remediations scored — the covered classes only")
+    ci_low: float = Field(..., ge=-1.0, le=1.0, description="2.5th-percentile bootstrap bound")
+    ci_high: float = Field(..., ge=-1.0, le=1.0, description="97.5th-percentile bootstrap bound")
+    ci_method: str = Field(
+        "bootstrap-percentile", description="seeded case-level percentile bootstrap — κ is not a proportion"
+    )
+    seed: int = Field(..., ge=0, description="bootstrap seed — recorded so the bounds reproduce bit-for-bit")
+    resamples: int = Field(..., ge=0, description="bootstrap resamples behind the interval")
+    degenerate_share: float = Field(
+        ..., ge=0.0, le=1.0, description="fraction of resamples with a single-valued stream (κ undefined → 0.0)"
+    )
+    constant_classifier: bool = Field(
+        ...,
+        description="True iff the classifier answered the same category on every case — no variance, no signal; read "
+        "from the stream, not from a zero-width interval (perfect agreement collapses that too)",
+    )
+    raw_agreement: float = Field(
+        ..., ge=0.0, le=1.0, description="raw match rate — CONTEXT and the constant-classifier tell, never the metric"
+    )
+    covered_classes: list[str] = Field(..., description="scored classes carrying ACT technique gold")
+    uncovered_classes: list[str] = Field(
+        ..., description="scored classes carrying NO technique gold — absent from this number, not passing it"
+    )
+    classifier_model: str = Field(
+        ..., description="the technique classifier — a third role, distinct from the drafter and the judge"
+    )
+
+
 class DrafterScore(BaseModel):
     """Subject #1: the drafter's `DraftRow` scored ENTIRELY by deterministic comparison against
     ACT gold — never via the judge. `false_positive_rate` (on the ACT-passed true negatives) is
@@ -895,8 +946,10 @@ class DrafterScore(BaseModel):
     overconfidence_gap: float = Field(
         ..., ge=-1.0, le=1.0, description="signed: mean confidence − mean correctness; positive = over-confident"
     )
-    remediation_technique_match: Optional[MetricCI] = Field(
-        None, description="fix aligns with the ACT canonical technique (G94/G95/F30…) — direction, a PROXY only"
+    remediation_technique_match: Optional[TechniqueMatch] = Field(
+        None,
+        description="chance-corrected fix DIRECTION vs the ACT canonical technique — a floor on 2 of 4 classes, "
+        "never proof a fix is useful; None when no classification pass was run",
     )
     abstained_n: int = Field(
         0, ge=0, description="not_applicable drafts reported as a separate cell, never folded silently into 'clean'"

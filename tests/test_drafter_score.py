@@ -13,7 +13,22 @@ from clearway.eval.drafter_score import (
     _sc_precision_counts,
     score_drafter,
 )
-from clearway.schemas.models import Conformance
+from clearway.schemas.models import Conformance, TechniqueMatch
+
+_TECHNIQUE_MATCH = TechniqueMatch(
+    kappa=0.5,
+    n=16,
+    ci_low=0.1,
+    ci_high=0.9,
+    seed=0,
+    resamples=10_000,
+    degenerate_share=0.0,
+    constant_classifier=False,
+    raw_agreement=0.75,
+    covered_classes=["document-title", "label"],
+    uncovered_classes=["empty-heading", "link-name"],
+    classifier_model="fake-classifier",
+)
 
 
 def _f(conformance: Conformance, *sc: str, confidence: float = 0.8) -> DraftedFinding:
@@ -118,8 +133,24 @@ def test_calibration_is_per_finding_and_exempt_from_ci() -> None:
     assert -1.0 <= score.overconfidence_gap <= 1.0
 
 
-def test_remediation_technique_match_not_wired() -> None:
-    assert score_drafter(_sample()).score.remediation_technique_match is None
+def test_remediation_technique_match_is_none_only_when_no_classification_pass_ran() -> None:
+    """The metric exists and the ACT technique gold is vendored; absent a classification pass there is
+    simply no number, and the notes say that rather than implying the metric is unavailable."""
+    scoring = score_drafter(_sample())
+    assert scoring.score.remediation_technique_match is None
+    assert "no technique-classification pass ran" in scoring.sensitivity_notes
+    assert "2 of 4 scored classes" in scoring.sensitivity_notes
+
+
+def test_remediation_technique_match_is_carried_through_when_supplied() -> None:
+    """The pure scorer never calls a model: the fix-direction metric is computed by the classification
+    pass and threaded onto the score untouched, with its coverage limit repeated in the notes."""
+    scoring = score_drafter(_sample(), technique_match=_TECHNIQUE_MATCH)
+    assert scoring.score.remediation_technique_match == _TECHNIQUE_MATCH
+    assert "CHANCE-CORRECTED" in scoring.sensitivity_notes
+    assert "2 of 4 scored classes (document-title, label)" in scoring.sensitivity_notes
+    assert "empty-heading, link-name carry no ACT technique requirement" in scoring.sensitivity_notes
+    assert "never" in scoring.sensitivity_notes and "USEFUL" in scoring.sensitivity_notes
 
 
 def test_sensitivity_notes_carry_the_flagged_alternatives() -> None:

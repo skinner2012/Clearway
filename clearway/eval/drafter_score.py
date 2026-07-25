@@ -25,6 +25,11 @@ one-sided ruler — a row that cites broadly wins it for free — so `sensitivit
 other side, the id-level precision, computed over the same subset. Both are strict: a real but
 not-gold citation counts as wrong, so the pair is a *direction and a floor*, never evidence that a
 citation is useful.
+
+The one number this module does not compute is `remediation_technique_match`: inferring which WCAG
+technique a drafted fix implies takes a model, and this scorer stays pure. It is computed by the
+technique-classification pass (`technique_match`) and PASSED IN, so the score carries it without this
+module ever making a call. Absent that pass it stays `None` — no pass, no number.
 """
 
 from __future__ import annotations
@@ -38,7 +43,7 @@ from clearway.eval.confidence import (
     overconfidence_gap,
 )
 from clearway.eval.stats import is_flag, metric_ci_or_empty
-from clearway.schemas.models import Conformance, DrafterScore, ExemptMetric
+from clearway.schemas.models import Conformance, DrafterScore, ExemptMetric, TechniqueMatch
 
 FAILED = "failed"  # ACT expected outcome → a true positive (a real problem the drafter must find)
 PASSED = "passed"  # ACT expected outcome → a true negative (clean content it must not flag)
@@ -186,7 +191,36 @@ def _rate(k: int, n: int) -> float:
     return k / n if n else 0.0
 
 
-def _sensitivity_notes(cases: list[DraftedCase]) -> str:
+def _technique_note(technique_match: TechniqueMatch | None) -> str:
+    """The remediation-direction sentence for the notes, in whichever of its two truthful forms applies.
+
+    With a metric it reports κ and its limits from the shape alone. Without one it says the pass did not
+    run and states the coverage limit — imported lazily from the classification module, which imports
+    this one transitively, so the coverage stays DERIVED from the gold rather than restated here."""
+    if technique_match is None:
+        from clearway.eval.technique_match import coverage_note
+
+        return (
+            "remediation_technique_match is None: no technique-classification pass ran for this score. The "
+            "ACT technique gold IS vendored (the export's wcag-technique keys), so the metric is available; "
+            f"it simply was not computed here. {coverage_note()}"
+        )
+    covered = ", ".join(technique_match.covered_classes)
+    uncovered = ", ".join(technique_match.uncovered_classes)
+    n_classes = len(technique_match.covered_classes) + len(technique_match.uncovered_classes)
+    return (
+        f"remediation_technique_match is CHANCE-CORRECTED: Cohen's κ {technique_match.kappa:+.3f} "
+        f"(n={technique_match.n}, bootstrap CI [{technique_match.ci_low:+.3f}, {technique_match.ci_high:+.3f}], "
+        f"raw agreement {technique_match.raw_agreement:.3f} — context and the constant-classifier tell, never "
+        f"the metric, because rule-level technique gold lets a constant answer score high on raw match). "
+        f"Coverage is {len(technique_match.covered_classes)} of {n_classes} scored classes ({covered}); "
+        f"{uncovered} carry no ACT technique requirement and are absent from the number, not passing it. It "
+        "scores DIRECTION — a fix pointing at the right technique — as a floor and a regression guard; whether "
+        "a fix is USEFUL still needs a human specialist and is unmeasured."
+    )
+
+
+def _sensitivity_notes(cases: list[DraftedCase], technique_match: TechniqueMatch | None) -> str:
     fp_k, _ = _fp_counts(cases)
     fp_nt_k, fp_nt_n = _fp_counts(cases, include_trivial=False)
     r2_k, r2_n = _recall_counts(cases, partial_flags=False)
@@ -207,17 +241,21 @@ def _sensitivity_notes(cases: list[DraftedCase]) -> str:
         f"set, {_rate(sp_n, sc_cases):.2f} ids cited per case. Report the pair — the headline alone rewards "
         f"citing broadly, precision alone rewards citing nothing. not_applicable drafts (n={abstained}) are "
         f"CLEAN under the primary "
-        f"collapse but reported separately as abstained_n, never folded silently. remediation_technique_"
-        f"match is not wired (ACT G/F technique metadata is not vendored) — see the not-measured list."
+        f"collapse but reported separately as abstained_n, never folded silently. "
+        f"{_technique_note(technique_match)}"
     )
 
 
-def score_drafter(cases: list[DraftedCase]) -> DrafterScoring:
+def score_drafter(cases: list[DraftedCase], *, technique_match: TechniqueMatch | None = None) -> DrafterScoring:
     """Score the drafter against ACT gold → `DrafterScore` + sensitivity notes.
 
     Per-case recall/FP/SC-match (with clustering-honest `effective_n` ≈ #rules), per-finding ECE +
     over-confidence gap, and the NA abstention count. Raises if there are no drafted findings at all
     (ECE has nothing to measure) — a benchmark that drafted nothing is an error, not a 0.0.
+
+    `technique_match` is the remediation fix-direction metric, computed by the classification pass and
+    carried through untouched — this scorer stays pure and makes no call to obtain it. Left unset it is
+    `None`, and the notes say so rather than implying the metric does not exist.
     """
     _validate(cases)
     recall_k, recall_n = _recall_counts(cases)
@@ -237,7 +275,7 @@ def score_drafter(cases: list[DraftedCase]) -> DrafterScoring:
         sc_citation_match=metric_ci_or_empty(sc_k, sc_n, effective_n=_rules([c for c in failed if _flagged(c)])),
         expected_calibration_error=ExemptMetric(value=ece, n=len(points), exempt_reason=_ECE_EXEMPT_REASON),
         overconfidence_gap=overconfidence_gap(points),
-        remediation_technique_match=None,
+        remediation_technique_match=technique_match,
         abstained_n=_abstained_n(cases),
     )
-    return DrafterScoring(score=score, sensitivity_notes=_sensitivity_notes(cases))
+    return DrafterScoring(score=score, sensitivity_notes=_sensitivity_notes(cases, technique_match))

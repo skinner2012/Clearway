@@ -1,0 +1,311 @@
+{
+  "status": "measurement",
+  "is_reported_metric": true,
+  "smoke_reason": null,
+  "metric": {
+    "kappa": 0.2763157894736842,
+    "n": 22,
+    "ci_low": 0.07228915662650603,
+    "ci_high": 0.49425287356321856,
+    "ci_method": "bootstrap-percentile",
+    "seed": 0,
+    "resamples": 10000,
+    "degenerate_share": 0.0045,
+    "constant_classifier": false,
+    "raw_agreement": 0.5454545454545454,
+    "covered_classes": [
+      "document-title",
+      "label"
+    ],
+    "uncovered_classes": [
+      "empty-heading",
+      "link-name"
+    ],
+    "classifier_model": "gpt-5.6-sol"
+  },
+  "notes": "remediation_technique_match is CHANCE-CORRECTED (Cohen's κ +0.276, n=22, bootstrap CI [+0.072, +0.494], seed=0). No raw match rate is reported as the metric: the technique gold is rule-level, so a constant classifier answering one id for everything scores high on raw match while carrying no signal — raw agreement 0.545 is context and the constant-classifier tell, never the number. Coverage is 2 of 4 scored classes: document-title (G88/H25); label (G131). empty-heading, link-name carry no technique requirement in the ACT export and are NOT scored here — absent, not passing. It scores DIRECTION — that a drafted fix points at the right technique — as a floor and a regression guard; whether a fix is USEFUL still needs a human specialist and remains unmeasured. Strict: a sensible technique ACT does not list counts as a disagreement. It measures the drafter-plus-classifier chain, not the drafter alone (classifier: gpt-5.6-sol, a different model from both the drafter and the judge; its output is checked against ACT gold, never trusted).",
+  "classifications": [
+    {
+      "act_testcase_id": "0ed8074a5bee7052a1a28f9fd718b7d35a645cfd",
+      "axe_rule": "label",
+      "remediation": "No remediation necessary as the programmatic label clearly identifies the purpose of the field.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "90d77d3e5b2fdc19bce47f9f9362283861d3903b",
+      "axe_rule": "label",
+      "remediation": "No remediation necessary as the programmatic label clearly identifies the purpose of the field.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "2a3113551e8b6285b44b1495356235222b75542f",
+      "axe_rule": "label",
+      "remediation": "No remediation is required as the label 'First name:' clearly identifies the purpose of the input field.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "88a1646138c707f4d488ac76215fde0fd398bb94",
+      "axe_rule": "label",
+      "remediation": "No remediation is required as the label 'First name:' clearly identifies the purpose of the input field.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "remediation": "Update the label text from 'Name' to 'Shipping Name' to clearly and uniquely identify the purpose of the field.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "remediation": "Update the label to 'Shipping Street Address' to clearly and uniquely identify the field's purpose.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "remediation": "Update the label from 'Name' to 'Billing Name' to clearly identify the field's specific purpose for users navigating via assistive technology.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "remediation": "Update the label to 'Billing Street Address' to ensure the field's purpose is clearly identified independently of surrounding context.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "467ca5a8f029d0f7a099ccf81b19872df5ccd117",
+      "axe_rule": "label",
+      "remediation": "N/A",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "94d3003abb03281265a5423caf07d3dc4cc2a190",
+      "axe_rule": "label",
+      "remediation": "Replace the programmatic label 'Menu' with a descriptive label that clearly identifies the field's purpose, such as 'First Name'.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "ec284879633645f114751de5cf1d14978030ab77",
+      "axe_rule": "label",
+      "remediation": "Replace the programmatic label 'Menu' with a descriptive label that clearly identifies the field's purpose, such as 'First Name'.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "80c83d04972e8a4a4127ced657b3d724435d06b0",
+      "axe_rule": "label",
+      "remediation": "Update the label text associated with the field to accurately describe its purpose, such as 'First Name' instead of 'Menu'.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "remediation": "Update the label to 'Shipping Name' to clearly distinguish the field's purpose from other potential name fields on the page.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "remediation": "No remediation is necessary as the label clearly identifies the field's purpose within the provided context.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "remediation": "Add a visible label element that clearly identifies the field as the billing name.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "remediation": "No remediation necessary.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "925f5da9291c3ff7ee2c98cf43773ff6933be5a9",
+      "axe_rule": "label",
+      "remediation": "Provide a descriptive label that identifies the purpose of the input field, such as 'Search', rather than using the submit button's text.",
+      "inferred_technique": "G131",
+      "gold_techniques": [
+        "G131"
+      ],
+      "gold_key": "G131",
+      "inferred_key": "G131",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "30012df5a74ec5df2f74d8522c451233882d5f3a",
+      "axe_rule": "document-title",
+      "remediation": "No remediation is necessary as the page title accurately describes the topic of the page.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G88",
+        "H25"
+      ],
+      "gold_key": "G88+H25",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "23ecf6c48bb8c1619c59cdbc5fe2e6def8f80d6e",
+      "axe_rule": "document-title",
+      "remediation": "No remediation is necessary as the page title accurately describes the topic of the page.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G88",
+        "H25"
+      ],
+      "gold_key": "G88+H25",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "5e5cb1efed740d903d45d885d47363a5b068274f",
+      "axe_rule": "document-title",
+      "remediation": "No remediation is necessary as the page title accurately describes the topic of the page.",
+      "inferred_technique": "none",
+      "gold_techniques": [
+        "G88",
+        "H25"
+      ],
+      "gold_key": "G88+H25",
+      "inferred_key": "none",
+      "agrees": false
+    },
+    {
+      "act_testcase_id": "64ad3868e9022dcfa3f8ba5a3ac1943fd1a9a240",
+      "axe_rule": "document-title",
+      "remediation": "Update the page title to accurately describe the content, such as changing 'Apple harvesting season' to 'Clementine harvesting season'.",
+      "inferred_technique": "G88",
+      "gold_techniques": [
+        "G88",
+        "H25"
+      ],
+      "gold_key": "G88+H25",
+      "inferred_key": "G88+H25",
+      "agrees": true
+    },
+    {
+      "act_testcase_id": "e53e988e29ce9f96fb282825cc089df9b5b65753",
+      "axe_rule": "document-title",
+      "remediation": "Update the page title to accurately describe the content, such as 'Clementine Harvest Guide'.",
+      "inferred_technique": "G88",
+      "gold_techniques": [
+        "G88",
+        "H25"
+      ],
+      "gold_key": "G88+H25",
+      "inferred_key": "G88+H25",
+      "agrees": true
+    }
+  ],
+  "source_artifact": "/Users/skinnercheng/Projects/Clearway/benchmark/runs/citation_grounding_run_1.json",
+  "source_run_ids": [
+    "citation-grounding-pass1-2026-07-25T02:41:41.406015+00:00"
+  ],
+  "drafter_model": "gemma4:31b",
+  "classifier_model": "gpt-5.6-sol",
+  "classifier_reasoning_effort": "medium",
+  "classifier_prompt_sha256": "3fe707cd8b1cdc5d7f5b951e20330084f4ef2052e87f8560231611b72fa98479",
+  "classifier_vocabulary_size": 42,
+  "classifier_calls": 22,
+  "drafter_calls": 0,
+  "provenance_note": "The remediation text was read from the input artifact, not drafted here: NO drafter call was made, so this pass adds nothing to the held-out drafter run count. The only model calls are the classifier's — one per scoreable case, at scoring time. The classifier's answer is scored against ACT gold, never trusted: it is a classification, not a judge, and it is a different model from both the drafter and the judge role, which takes no part in this number. Every classified sentence is echoed in `classifications`, so the κ recomputes from this file alone.",
+  "created_at": "2026-07-25T17:57:49.425505+00:00"
+}

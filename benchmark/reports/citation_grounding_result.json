@@ -1,0 +1,307 @@
+{
+  "pooled": {
+    "axe_rules": [
+      "label",
+      "link-name"
+    ],
+    "improved": 5,
+    "regressed": 1,
+    "p_value": 0.109375,
+    "alpha": 0.05,
+    "thesis": "directional_not_significant"
+  },
+  "classes": [
+    {
+      "axe_rule": "document-title",
+      "n_paired": 5,
+      "improved": 3,
+      "regressed": 0,
+      "improved_ids": [
+        "23ecf6c48bb8c1619c59cdbc5fe2e6def8f80d6e",
+        "30012df5a74ec5df2f74d8522c451233882d5f3a",
+        "5e5cb1efed740d903d45d885d47363a5b068274f"
+      ],
+      "regressed_ids": [],
+      "p_value": 0.125,
+      "verdict": "worked_but_uncertifiable"
+    },
+    {
+      "axe_rule": "empty-heading",
+      "n_paired": 13,
+      "improved": 0,
+      "regressed": 0,
+      "improved_ids": [],
+      "regressed_ids": [],
+      "p_value": 1.0,
+      "verdict": "failed"
+    },
+    {
+      "axe_rule": "label",
+      "n_paired": 11,
+      "improved": 4,
+      "regressed": 0,
+      "improved_ids": [
+        "0ed8074a5bee7052a1a28f9fd718b7d35a645cfd",
+        "467ca5a8f029d0f7a099ccf81b19872df5ccd117",
+        "80c83d04972e8a4a4127ced657b3d724435d06b0",
+        "90d77d3e5b2fdc19bce47f9f9362283861d3903b"
+      ],
+      "regressed_ids": [],
+      "p_value": 0.0625,
+      "verdict": "worked_but_uncertifiable"
+    },
+    {
+      "axe_rule": "link-name",
+      "n_paired": 15,
+      "improved": 1,
+      "regressed": 1,
+      "improved_ids": [
+        "1ba642803c6137b0206c7bc909f3dbb8cfb4a654"
+      ],
+      "regressed_ids": [
+        "5e67cab9c6586318a6186eeca1ac536542e5e437"
+      ],
+      "p_value": 0.75,
+      "verdict": "failed"
+    }
+  ],
+  "reachable_errors_moved": {
+    "document-title": [
+      "23ecf6c48bb8c1619c59cdbc5fe2e6def8f80d6e",
+      "30012df5a74ec5df2f74d8522c451233882d5f3a",
+      "5e5cb1efed740d903d45d885d47363a5b068274f"
+    ],
+    "empty-heading": [],
+    "label": [
+      "0ed8074a5bee7052a1a28f9fd718b7d35a645cfd",
+      "467ca5a8f029d0f7a099ccf81b19872df5ccd117",
+      "80c83d04972e8a4a4127ced657b3d724435d06b0",
+      "90d77d3e5b2fdc19bce47f9f9362283861d3903b"
+    ],
+    "link-name": [
+      "1ba642803c6137b0206c7bc909f3dbb8cfb4a654"
+    ]
+  },
+  "predictions_scored": [
+    {
+      "prediction_id": "accname-trailing-colon",
+      "act_testcase_ids": [
+        "e419548ab0986f9d71f073253193a66178191536",
+        "5d11716ba4bcb2c9804cbea517e2382b51d89217"
+      ],
+      "per_case_movement": {
+        "e419548ab0986f9d71f073253193a66178191536": "not_moved",
+        "5d11716ba4bcb2c9804cbea517e2382b51d89217": "not_moved"
+      },
+      "held_mechanically": true
+    },
+    {
+      "prediction_id": "destination-outside-dom",
+      "act_testcase_ids": [
+        "3bb1986371e1ad785428f87c89a1dd7071604ee0"
+      ],
+      "per_case_movement": {
+        "3bb1986371e1ad785428f87c89a1dd7071604ee0": "not_moved"
+      },
+      "held_mechanically": true
+    }
+  ],
+  "mechanism": [
+    {
+      "axe_rule": "document-title",
+      "kappa": 1.0,
+      "kappa_partial_false": 1.0,
+      "raw_agreement": 1.0,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "constant_classifier": false,
+      "distinct_prompts_before": 1,
+      "distinct_prompts_after": 3,
+      "errors": 0,
+      "reachable_errors_remaining": 0,
+      "baseline_reachable_error_ids": [
+        "30012df5a74ec5df2f74d8522c451233882d5f3a",
+        "23ecf6c48bb8c1619c59cdbc5fe2e6def8f80d6e",
+        "5e5cb1efed740d903d45d885d47363a5b068274f"
+      ]
+    },
+    {
+      "axe_rule": "empty-heading",
+      "kappa": 0.6749999999999999,
+      "kappa_partial_false": 0.6749999999999999,
+      "raw_agreement": 0.8461538461538461,
+      "tp": 4,
+      "fp": 1,
+      "fn": 1,
+      "tn": 7,
+      "constant_classifier": false,
+      "distinct_prompts_before": 9,
+      "distinct_prompts_after": 9,
+      "errors": 2,
+      "reachable_errors_remaining": 1,
+      "baseline_reachable_error_ids": [
+        "aee358f45b40658fcc5c42d12a6df82dbdf94e0c"
+      ]
+    },
+    {
+      "axe_rule": "label",
+      "kappa": 0.8196721311475409,
+      "kappa_partial_false": 0.6333333333333335,
+      "raw_agreement": 0.9090909090909091,
+      "tp": 5,
+      "fp": 1,
+      "fn": 0,
+      "tn": 5,
+      "constant_classifier": false,
+      "distinct_prompts_before": 6,
+      "distinct_prompts_after": 14,
+      "errors": 1,
+      "reachable_errors_remaining": 1,
+      "baseline_reachable_error_ids": [
+        "0ed8074a5bee7052a1a28f9fd718b7d35a645cfd",
+        "90d77d3e5b2fdc19bce47f9f9362283861d3903b",
+        "e419548ab0986f9d71f073253193a66178191536",
+        "467ca5a8f029d0f7a099ccf81b19872df5ccd117",
+        "80c83d04972e8a4a4127ced657b3d724435d06b0"
+      ]
+    },
+    {
+      "axe_rule": "link-name",
+      "kappa": 0.2105263157894737,
+      "kappa_partial_false": 0.1666666666666666,
+      "raw_agreement": 0.6,
+      "tp": 4,
+      "fp": 4,
+      "fn": 2,
+      "tn": 5,
+      "constant_classifier": false,
+      "distinct_prompts_before": 13,
+      "distinct_prompts_after": 19,
+      "errors": 6,
+      "reachable_errors_remaining": 5,
+      "baseline_reachable_error_ids": [
+        "6566c139dc811b5a566a8e58c85d1f7f3c550d04",
+        "970cf7f07cc3acd3d99ac57f73f5e622df0fe19b",
+        "1ba642803c6137b0206c7bc909f3dbb8cfb4a654",
+        "95f35d6374bc2e0fb1852882923fad9601ecd810",
+        "3bb1986371e1ad785428f87c89a1dd7071604ee0"
+      ]
+    }
+  ],
+  "drafter_score": {
+    "recall": {
+      "value": 0.8333333333333334,
+      "n": 18,
+      "ci_low": 0.6077796189608429,
+      "ci_high": 0.9416342319413855,
+      "effective_n": 4,
+      "ci_method": "wilson"
+    },
+    "false_positive_rate": {
+      "value": 0.23076923076923078,
+      "n": 26,
+      "ci_low": 0.11033849405783291,
+      "ci_high": 0.42051554078943687,
+      "effective_n": 4,
+      "ci_method": "wilson"
+    },
+    "sc_citation_match": {
+      "value": 0.6666666666666666,
+      "n": 15,
+      "ci_low": 0.41713547738519774,
+      "ci_high": 0.8482367556028526,
+      "effective_n": 4,
+      "ci_method": "wilson"
+    },
+    "expected_calibration_error": {
+      "value": 0.20925925925925926,
+      "n": 54,
+      "exempt_reason": "single populated confidence bin at this n — there is nothing to bin, so the raw gap is reported without a CI (the two-figure n+CI exemption)"
+    },
+    "overconfidence_gap": 0.20925925925925926,
+    "remediation_technique_match": {
+      "kappa": 0.2763157894736842,
+      "n": 22,
+      "ci_low": 0.07228915662650603,
+      "ci_high": 0.49425287356321856,
+      "ci_method": "bootstrap-percentile",
+      "seed": 0,
+      "resamples": 10000,
+      "degenerate_share": 0.0045,
+      "constant_classifier": false,
+      "raw_agreement": 0.5454545454545454,
+      "covered_classes": [
+        "document-title",
+        "label"
+      ],
+      "uncovered_classes": [
+        "empty-heading",
+        "link-name"
+      ],
+      "classifier_model": "gpt-5.6-sol"
+    },
+    "abstained_n": 0
+  },
+  "drafter_score_notes": "FP over the 24 non-trivial true negatives (dropping the passed honest-misses that mint no finding) = 6/24 = 0.250; the headline FP uses all true negatives. partially_supports scored as CLEAN instead of FLAGS → recall 13/18 = 0.722, FP 5/26 = 0.192. Construct-validity: among failed cases whose cited SC intersects the ACT SC (n=10), conformance-correct on 10 (1.000). SC-citation PRECISION over the same 15 correctly-flagged failed cases the headline sc_citation_match (10/15) is taken over, micro-averaged over ids instead of cases: 10/15 = 0.667 of the SC ids cited are in the ACT gold set, 1.00 ids cited per case. Report the pair — the headline alone rewards citing broadly, precision alone rewards citing nothing. not_applicable drafts (n=0) are CLEAN under the primary collapse but reported separately as abstained_n, never folded silently. remediation_technique_match is CHANCE-CORRECTED: Cohen's κ +0.276 (n=22, bootstrap CI [+0.072, +0.494], raw agreement 0.545 — context and the constant-classifier tell, never the metric, because rule-level technique gold lets a constant answer score high on raw match). Coverage is 2 of 4 scored classes (document-title, label); empty-heading, link-name carry no ACT technique requirement and are absent from the number, not passing it. It scores DIRECTION — a fix pointing at the right technique — as a floor and a regression guard; whether a fix is USEFUL still needs a human specialist and is unmeasured.",
+  "determinism": {
+    "passes": 3,
+    "per_class_kappa_identical": true
+  },
+  "run_ids": [
+    "citation-grounding-pass1-2026-07-25T02:41:41.406015+00:00",
+    "citation-grounding-pass2-2026-07-25T13:37:54.675092+00:00",
+    "citation-grounding-pass3-2026-07-25T17:57:40.945890+00:00"
+  ],
+  "baseline_run_ids": [
+    "acceptance-2026-07-15T01:55:47.047521+00:00"
+  ],
+  "held_out_model_run_count": 3,
+  "judge_absent": true,
+  "attribution": {
+    "classes": [
+      {
+        "axe_rule": "document-title",
+        "improved": 0,
+        "regressed": 0,
+        "improved_ids": [],
+        "regressed_ids": [],
+        "prior_gains_lost": []
+      },
+      {
+        "axe_rule": "empty-heading",
+        "improved": 0,
+        "regressed": 0,
+        "improved_ids": [],
+        "regressed_ids": [],
+        "prior_gains_lost": []
+      },
+      {
+        "axe_rule": "label",
+        "improved": 0,
+        "regressed": 0,
+        "improved_ids": [],
+        "regressed_ids": [],
+        "prior_gains_lost": []
+      },
+      {
+        "axe_rule": "link-name",
+        "improved": 1,
+        "regressed": 0,
+        "improved_ids": [
+          "0f20115dd3962dc390c9de33df2793a71ef40845"
+        ],
+        "regressed_ids": [],
+        "prior_gains_lost": []
+      }
+    ],
+    "eats_prior_run": false,
+    "prior_run_ids": [
+      "referent-injection-pass1-2026-07-24T17:22:26.050733+00:00"
+    ],
+    "run_run_ids": [
+      "citation-grounding-pass1-2026-07-25T02:41:41.406015+00:00"
+    ]
+  }
+}

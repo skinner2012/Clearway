@@ -119,21 +119,28 @@ class ClassKappa(NamedTuple):
     n: int
 
 
-# Per-class κ from the latest frozen run scored against W3C ACT expert gold —
-# `benchmark/reports/referent_injection_result.json`, `mechanism[]` (three passes, κ identical on
-# every pass). A class ABSENT from this table has never been scored against gold. The values are
-# pinned against that artifact by test, so they cannot drift from the run they quote.
+# Per-class κ from the LATEST frozen run scored against W3C ACT expert gold —
+# `benchmark/reports/citation_grounding_result.json`, `mechanism[]`. A class ABSENT from this table
+# has never been scored against gold. The values are pinned against that artifact by test, so they
+# cannot drift from the run they quote, and the artifact they point at has to be the newest scored
+# run: a tier derived from a superseded one describes a drafter that no longer ships.
 #
-# What moved since the earlier reading in `benchmark/reports/drafter_kappa_baseline.json`, once the
-# resolved referent was injected into the drafter's input: document-title 0.00 -> 1.00 (its constant
-# classifier broke); label 0.13 -> 0.82; link-name 0.21 -> 0.05 (a NET REGRESSION — its referent is
-# the link destination, which is not in the DOM the drafter sees); empty-heading unchanged at 0.675
+# What moved since the pre-injection reading in `benchmark/reports/drafter_kappa_baseline.json`, once
+# the resolved referent was injected into the drafter's input and the criterion's normative text was
+# carried to the prompt: document-title 0.00 -> 1.00 (its constant classifier broke); label
+# 0.13 -> 0.82; link-name 0.21 -> 0.21 (UNMOVED — its referent is the link destination, which is not
+# in the DOM the drafter sees, so no in-page grounding reaches it); empty-heading unchanged at 0.675
 # (the untouched control).
+#
+# link-name's reading also shows why the pinned artifact matters: under referent injection alone it
+# was 0.05, a net regression, and carrying the normative text recovered it to the pre-injection 0.21.
+# Its TIER is WEAK on both readings, so no consumer's behaviour changes — but quoting the superseded
+# number would have understated the shipped drafter by a factor of four.
 FROZEN_CLASS_KAPPA: dict[str, ClassKappa] = {
     "document-title": ClassKappa(kappa=1.0, n=5),
     "empty-heading": ClassKappa(kappa=0.675, n=13),
     "label": ClassKappa(kappa=0.8197, n=11),
-    "link-name": ClassKappa(kappa=0.0541, n=15),
+    "link-name": ClassKappa(kappa=0.2105, n=15),
 }
 
 

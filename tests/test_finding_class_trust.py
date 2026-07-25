@@ -30,7 +30,7 @@ from clearway.normalizer.quality_review import (
 
 _REPO = Path(__file__).resolve().parent.parent
 _REPORTS = _REPO / "benchmark" / "reports"
-_LATEST_RUN = _REPORTS / "referent_injection_result.json"
+_LATEST_RUN = _REPORTS / "citation_grounding_result.json"
 _EARLIER_RUN = _REPORTS / "drafter_kappa_baseline.json"
 
 _DOC = _REPO / "docs" / "finding-class-trust.md"

@@ -19,9 +19,10 @@ refreshed against a future frozen run without re-negotiating the mapping.
   `TRUST_KAPPA_THRESHOLD = 0.60` — Landis & Koch "substantial agreement", the same bar the judge's
   trust gate uses. Every class in `QUALITY_REVIEW_RULES` must carry a tier (enforced by a test), so a
   new rule cannot ship unlabelled; it starts UNMEASURED until someone scores it.
-- **The numbers:** `benchmark/reports/referent_injection_result.json` (`mechanism[]`, three passes,
+- **The numbers:** `benchmark/reports/citation_grounding_result.json` (`mechanism[]`, multiple passes,
   κ identical on each). `FROZEN_CLASS_KAPPA` is pinned against that artifact by a test, so the code
-  cannot quote a number the run does not contain.
+  cannot quote a number the run does not contain — and the artifact it points at must be the **newest
+  scored run**, because a tier derived from a superseded one describes a drafter that no longer ships.
 - **To refresh:** re-run `derive_class_trust` against the next frozen run's per-class κ.
 
 ## ⚠️ The tiers are not equally well established
@@ -41,12 +42,13 @@ adjusted case by case after the fact. **Read the n in the table, not just the ti
 | `empty-heading` | ✅ **reliable** | κ 0.68 (n=13) | recall 4/5, FP 1/8 — the drafter can judge heading descriptiveness from the DOM. The untouched control: this class was not changed and did not move. |
 | `document-title` | ✅ **reliable** | κ 1.00 (n=5) | 2 hits, 3 correct passes, no errors — but on five cases, and see the caveat above. Its former constant classifier is gone. |
 | `label` | ✅ **reliable** | κ 0.82 (n=11) | recall 5/5 with 1 false positive in 6 clean cases — it now tracks the resolved field name, not just the label mechanism. |
-| `link-name` | ⚠️ **weak** | κ 0.05 (n=15) | 4 false positives and 3 misses in 15 — barely above chance. The referent that decides link purpose is the link's **destination**, which is not in the DOM the drafter sees, so no in-page grounding fixes it. |
+| `link-name` | ⚠️ **weak** | κ 0.21 (n=15) | 4 false positives and 2 misses in 15 — well below the bar. The referent that decides link purpose is the link's **destination**, which is not in the DOM the drafter sees, so no in-page grounding fixes it. |
 | `image-alt` | ❔ **unmeasured** | never scored | structurally unvalidatable text-only — ACT filenames leak the answer; needs a multimodal drafter. |
 | `frame-title` | ❔ **unmeasured** | never scored | no external gold anywhere — trust unknown. |
 
 κ above is the headline (strict) reading. Under the alternative partial-credit reading no tier
-changes: `link-name` is 0.24, still far below the bar; the other three are unchanged.
+changes: `link-name` is 0.17 and `label` 0.63, both still on the same side of the bar as their
+headline reading; the other two are unchanged.
 
 ## Where these came from — the earlier reading
 
@@ -59,12 +61,14 @@ is what the tiers used to encode:
 | `empty-heading` | 0.68 → 0.68 | none — it was reliable then and is the control now |
 | `document-title` | 0.00 → 1.00 | a **constant classifier**: `does_not_support` on every title, 3/3 false positives on clean ones |
 | `label` | 0.13 → 0.82 | tracked the label *mechanism* (`<label>` vs `aria-labelledby`) rather than the resolved name |
-| `link-name` | 0.21 → 0.05 | mixed, with false positives on in-context link purpose — and it **net-regressed** (1 case fixed, 2 broken) |
+| `link-name` | 0.21 → 0.21 | mixed, with false positives on in-context link purpose — **unmoved**: it dipped to 0.05 under referent injection alone, and carrying the criterion's normative text recovered it to where it started |
 
 The common cause of the first three was the same: the drafter was judging a name it could not see.
 Injecting the resolved referent into its input fixed the two classes whose referent is *in* the DOM
-(the `<title>` text, the field's computed label) and made the one whose referent is *outside* it
-worse. That diagnosis is why `link-name` stays weak rather than being retried with more of the same.
+(the `<title>` text, the field's computed label) and did nothing for the one whose referent is
+*outside* it. That diagnosis is why `link-name` stays weak rather than being retried with more of the
+same: the fact that decides link purpose is the link's destination, and no amount of in-page context
+contains it.
 
 ## How to read a finding by its class
 

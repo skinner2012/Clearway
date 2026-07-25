@@ -195,7 +195,7 @@
     "passes": 3,
     "per_class_kappa_identical": true
   },
-  "referent_injection_run_ids": [
+  "run_ids": [
     "referent-injection-pass1-2026-07-24T17:22:26.050733+00:00",
     "referent-injection-pass2-2026-07-24T19:35:27.696783+00:00",
     "referent-injection-pass3-2026-07-24T21:27:49.698220+00:00"

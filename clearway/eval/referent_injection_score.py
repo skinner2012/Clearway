@@ -1,18 +1,23 @@
-"""Freeze and score Run A: determinism assertion, the paired thesis, per-class mechanism, the honest read.
+"""Freeze and score one acceptance run: determinism assertion, the paired thesis, per-class mechanism.
 
-Pure — no model, no network, no clock. It replays the frozen Run A pass artifacts
-(`referent_injection_run_1..3.json`) and the frozen baseline (`verdict_vector.json` +
-`drafter_kappa_baseline.json`) into the referent-injection result. Three things are produced:
+Pure — no model, no network, no clock. It replays one run's frozen pass artifacts and the frozen baseline
+(`verdict_vector.json` + `drafter_kappa_baseline.json`) into that run's result. Three things are produced:
 
-1. **Determinism.** Per-class κ must be identical across the three passes (`_assert_deterministic`, reused
-   from the baseline freeze). The injected prompt is longer than the one the earlier baseline verified, and
-   injection splits the previously-degenerate prompts, so this check now tests something it could not before.
-   A drift here means pass 1 is not canonical and no paired claim may be made.
-2. **The paired thesis.** Run A's per-case verdict vector set beside the baseline's, keyed by
+1. **Determinism.** Per-class κ must be identical across the run's passes (`_assert_deterministic`, reused
+   from the baseline freeze). Each prompt change lengthens the prompt the earlier baseline verified, so this
+   check keeps testing something it could not before. A drift here means pass 1 is not canonical and no
+   paired claim may be made.
+2. **The paired thesis.** The run's per-case verdict vector set beside the baseline's, keyed by
    `act_testcase_id` → the pooled primary endpoint and the per-class secondary tests (`paired.pair_verdicts`).
 3. **Per-class mechanism** (reported for every class, certified or not): distinct prompts before/after, the
    `constant_classifier` state, the 2×2, and which specific reachable errors moved — the evidence that
    survives when significance does not, and the only evidence `document-title` can offer.
+
+**Which run is scored is an explicit argument.** Passes are selected by run label rather than by globbing a
+shared prefix (`run_artifacts.frozen_pass_paths`): two runs swept into one determinism check would be
+compared against each other, and the prompt change that distinguishes them — the very thing under test —
+would surface as a determinism drift. Every artifact read and written is likewise label-scoped, so scoring
+one run cannot overwrite another's frozen record.
 
 The judge appears in no number here, exactly as the pre-registration requires. `document-title` is reported
 on mechanism only and can never read as "certified"; that invariant is asserted before the result is written.
@@ -93,23 +98,25 @@ def _score_predictions(
     return rows
 
 
-def score_run_a(
+def score_run(
     runs: list[dict[str, Any]],
     baseline_vec: VerdictVector,
     baseline_reachable: dict[str, list[str]],
     distinct_after: dict[str, int],
     predictions: list[dict[str, Any]] | None = None,
 ) -> tuple[VerdictVector, dict[str, Any]]:
-    """The three frozen Run A passes + the frozen baseline → (Run A verdict vector, the result dict).
+    """One run's frozen passes + the frozen baseline → (that run's verdict vector, the result dict).
 
-    Asserts determinism across the passes first (run_A_1 is canonical only if they agree), builds Run A's
-    verdict vector from pass 1, pairs it against the baseline, and assembles the paired thesis + per-class
-    mechanism. `document-title` reported as certified is a spec violation, asserted here before returning."""
+    All passes must belong to the SAME run: determinism is asserted across them, so passes from two runs
+    would be read as one drifting run. Asserts determinism first (pass 1 is canonical only if they agree),
+    builds the verdict vector from pass 1, pairs it against the baseline, and assembles the paired thesis +
+    per-class mechanism. `document-title` reported as certified is a spec violation, asserted before
+    returning."""
     if len(runs) < 2:
-        raise ValueError("Run A determinism needs at least two passes to compare")
+        raise ValueError("determinism needs at least two passes of the same run to compare")
     _assert_deterministic(runs)
-    run_a_vec = build_verdict_vector(runs[0])
-    paired = pair_verdicts(baseline_vec, run_a_vec)
+    run_vec = build_verdict_vector(runs[0])
+    paired = pair_verdicts(baseline_vec, run_vec)
 
     for cls in paired.classes:
         if cls.axe_rule == "document-title" and cls.verdict == "certified":
@@ -130,17 +137,17 @@ def score_run_a(
         "predictions_scored": _score_predictions(predictions or [], all_improved, all_regressed),
         "mechanism": _mechanism(runs[0], baseline_reachable, distinct_after),
         "determinism": {"passes": len(runs), "per_class_kappa_identical": True},
-        "referent_injection_run_ids": [rid for r in runs for rid in r["run_ids"]],
+        "run_ids": [rid for r in runs for rid in r["run_ids"]],
         "baseline_run_ids": list(baseline_vec.run_ids),
         "held_out_model_run_count": len(runs),
         "judge_absent": True,
     }
-    return run_a_vec, result
+    return run_vec, result
 
 
-def _print_read(result: dict[str, Any]) -> None:
+def _print_read(result: dict[str, Any], label: str) -> None:
     pooled = result["pooled"]
-    print("\n=== Run A — the referent-injection experiment ===")
+    print(f"\n=== {label} — paired against the frozen baseline ===")
     print(
         f"POOLED (primary): label+link-name  b={pooled['improved']} c={pooled['regressed']}  "
         f"p={pooled['p_value']:.4f}  → THESIS {pooled['thesis'].upper()}"
@@ -165,33 +172,53 @@ def _print_read(result: dict[str, Any]) -> None:
 
 
 def main() -> None:
-    from clearway.eval.offline_build import _REPORTS_DIR, _RUNS_DIR
+    import argparse
 
-    paths = sorted(_RUNS_DIR.glob("referent_injection_run_*.json"), key=lambda p: int(p.stem.split("_")[-1]))
+    from clearway.eval.offline_build import _REPORTS_DIR, _RUNS_DIR
+    from clearway.eval.run_artifacts import (
+        RUN_LABELS,
+        dry_gate_path,
+        frozen_pass_paths,
+        result_path,
+        verdict_vector_path,
+    )
+
+    parser = argparse.ArgumentParser(description="score one frozen acceptance run against the frozen baseline")
+    parser.add_argument(
+        "--run",
+        required=True,
+        choices=RUN_LABELS,
+        help="which run to score — required, never defaulted, because passes of different runs must "
+        "never be swept into one determinism check",
+    )
+    args = parser.parse_args()
+
+    paths = frozen_pass_paths(args.run)
     if not paths:
-        raise SystemExit(f"no Run A passes found under {_RUNS_DIR} — run referent_injection_build first")
+        raise SystemExit(
+            f"no {args.run} passes found under {_RUNS_DIR} — build them first with "
+            f"`referent_injection_build --run {args.run} <pass>`"
+        )
     runs = [json.loads(p.read_text()) for p in paths]
 
     baseline_vec = VerdictVector.model_validate_json((_REPORTS_DIR / "verdict_vector.json").read_text())
     baseline_kappa = json.loads((_REPORTS_DIR / "drafter_kappa_baseline.json").read_text())
     baseline_reachable = {c["axe_rule"]: c.get("reachable_error_ids", []) for c in baseline_kappa["classes"]}
 
-    # After-injection distinct prompts: recomputed live by the dry gate; read its last diagnostic if present,
-    # else fall back to an empty map (the counts are a diagnostic, not a gate).
+    # Distinct prompts after the change: recomputed live by this run's dry gate; read its last diagnostic if
+    # present, else fall back to an empty map (the counts are a diagnostic, not a gate).
     distinct_after: dict[str, int] = {}
-    dg = _REPORTS_DIR / "referent_injection_dry_gate.json"
+    dg = dry_gate_path(args.run)
     if dg.exists():
         distinct_after = json.loads(dg.read_text()).get("distinct_prompts_by_class", {})
 
-    run_a_vec, result = score_run_a(
+    run_vec, result = score_run(
         runs, baseline_vec, baseline_reachable, distinct_after, predictions=baseline_kappa.get("predictions", [])
     )
-    (_REPORTS_DIR / "referent_injection_verdict_vector.json").write_text(run_a_vec.model_dump_json(indent=2) + "\n")
-    (_REPORTS_DIR / "referent_injection_result.json").write_text(
-        json.dumps(result, indent=2, ensure_ascii=False) + "\n"
-    )
-    _print_read(result)
-    print(f"\nwrote {(_REPORTS_DIR / 'referent_injection_result.json').relative_to(Path.cwd())}")
+    verdict_vector_path(args.run).write_text(run_vec.model_dump_json(indent=2) + "\n")
+    result_path(args.run).write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
+    _print_read(result, args.run)
+    print(f"\nwrote {result_path(args.run).relative_to(Path.cwd())}  ({len(paths)} passes, {args.run})")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""The Run A dry gate: assert offline, before the model is called once, that the run is worth starting.
+"""The dry gate: assert offline, before the model is called once, that a run is worth starting.
 
 Four checks, each seconds of computation against a run that costs a long local sweep — a run started with
 the gate red is a wasted run:
@@ -217,11 +217,18 @@ def _assemble_records() -> tuple[list[PromptRecord], set[str]]:
     return records, scoped_ids
 
 
-def run_dry_gate() -> DryGateResult:
+def run_dry_gate(label: str) -> DryGateResult:
     """The live gate: assemble every scoped prompt (no model), read the frozen baseline, run the four
-    checks, print the verdict. Invoke: `uv run python -m clearway.eval.dry_gate`."""
+    checks, print the verdict, and freeze the diagnostic under `label`'s own name.
+
+    `label` is required because the gate's own output is a frozen record: the scorer reads its
+    `distinct_prompts_by_class` back as the run's mechanism evidence, so one run's gate writing over
+    another's would silently restate the wrong run's prompt counts.
+
+    Invoke: `uv run python -m clearway.eval.dry_gate --run <label>`."""
     from clearway.eval.act_gold import _EXPORT_SHA256
     from clearway.eval.offline_build import _CONFIG_ID, _REPORTS_DIR, _ollama_digest
+    from clearway.eval.run_artifacts import dry_gate_path
     from clearway.llm import LocalLLMClient
     from clearway.retriever import build_default_retriever
     from clearway.scanner import AXE_VERSION
@@ -260,14 +267,23 @@ def run_dry_gate() -> DryGateResult:
         for f in fails:
             print(f"        - {f}")
     print(f"  distinct prompts by class (diagnostic): {result.distinct_prompts_by_class}")
-    (_REPORTS_DIR / "referent_injection_dry_gate.json").write_text(
-        json.dumps(result.to_dict(), indent=2, ensure_ascii=False) + "\n"
-    )
+    dry_gate_path(label).write_text(json.dumps(result.to_dict(), indent=2, ensure_ascii=False) + "\n")
     return result
 
 
 def main() -> None:
-    raise SystemExit(0 if run_dry_gate().green else 1)
+    import argparse
+
+    from clearway.eval.run_artifacts import RUN_LABELS
+
+    parser = argparse.ArgumentParser(description="run the offline go/no-go gate for one acceptance run")
+    parser.add_argument(
+        "--run",
+        required=True,
+        choices=RUN_LABELS,
+        help="which run this gate is for — it names the frozen diagnostic the scorer reads back",
+    )
+    raise SystemExit(0 if run_dry_gate(parser.parse_args().run).green else 1)
 
 
 if __name__ == "__main__":

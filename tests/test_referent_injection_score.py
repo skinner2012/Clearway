@@ -1,4 +1,4 @@
-"""Run A scoring: determinism gate, paired thesis, mechanism, and the document-title certified-guard."""
+"""Run scoring: determinism gate, paired thesis, mechanism, and the document-title certified-guard."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from clearway.eval.referent_injection_score import score_run_a
+from clearway.eval.referent_injection_score import score_run
 from clearway.schemas.models import CaseVerdict, VerdictVector
 
 
@@ -56,7 +56,7 @@ def _baseline_vector(cases: list[CaseVerdict]) -> VerdictVector:
     )
 
 
-# Two label cases both gold-failed; baseline drafter was CLEAN on both (wrong), Run A flags both (right).
+# Two label cases both gold-failed; baseline drafter was CLEAN on both (wrong), the run flags both (right).
 _LABEL_CASES = [
     _case("k1", "Link in context is descriptive", "link-name", "failed", "does_not_support"),
     _case("k2", "Link in context is descriptive", "link-name", "failed", "does_not_support"),
@@ -65,7 +65,7 @@ _LABEL_CASES = [
 
 def test_determinism_needs_two_passes() -> None:
     with pytest.raises(ValueError, match="at least two passes"):
-        score_run_a([_artifact(_LABEL_CASES)], _baseline_vector([]), {}, {})
+        score_run([_artifact(_LABEL_CASES)], _baseline_vector([]), {}, {})
 
 
 def test_paired_improvement_scored() -> None:
@@ -88,7 +88,7 @@ def test_paired_improvement_scored() -> None:
             ),
         ]
     )
-    _vec, result = score_run_a([run, run, run], base_vec, {"link-name": ["k1", "k2"]}, {"link-name": 2})
+    _vec, result = score_run([run, run, run], base_vec, {"link-name": ["k1", "k2"]}, {"link-name": 2})
     kln = next(c for c in result["classes"] if c["axe_rule"] == "link-name")
     assert (kln["improved"], kln["regressed"]) == (2, 0)
     assert result["determinism"]["passes"] == 3
@@ -114,4 +114,4 @@ def test_determinism_drift_raises() -> None:
         ]
     )
     with pytest.raises(ValueError, match="drifted"):
-        score_run_a([good, drifted], _baseline_vector([]), {}, {})
+        score_run([good, drifted], _baseline_vector([]), {}, {})

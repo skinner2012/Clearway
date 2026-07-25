@@ -1,4 +1,4 @@
-"""The Run A dry-gate check functions — pure, gold-free, run before the model is ever called."""
+"""The dry-gate check functions — pure, gold-free, run before the model is ever called."""
 
 from __future__ import annotations
 

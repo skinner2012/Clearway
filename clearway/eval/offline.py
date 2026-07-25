@@ -26,6 +26,7 @@ from clearway.schemas.models import (
     NotMeasuredItem,
     OfflineEvalReport,
     OfflineEvalScorecard,
+    TechniqueMatch,
     TierBSmoke,
 )
 
@@ -144,11 +145,21 @@ def _tier_b(artifact: dict[str, Any]) -> TierBSmoke | None:
     )
 
 
-def build_scorecard(artifact: dict[str, Any], *, noise_floor: NoiseFloor | None = None) -> OfflineEvalScorecard:
+def build_scorecard(
+    artifact: dict[str, Any],
+    *,
+    noise_floor: NoiseFloor | None = None,
+    technique_match: TechniqueMatch | None = None,
+) -> OfflineEvalScorecard:
     """Score both subjects off the frozen artifact → the metrics payload. `noise_floor` is None on a
     single run (it needs the repeat runs a lone artifact does not carry) and is passed in by the freeze
-    step once the sweep exists."""
-    drafter_scoring = score_drafter(_drafted_cases(artifact))
+    step once the sweep exists; `technique_match` likewise needs its own classification pass over this
+    artifact's remediation text, so it is passed in rather than derived here.
+
+    **This is the judge-INCLUSIVE scorecard** and requires the artifact to carry judge fields. A
+    drafter-only run is scored by `score_drafter` directly (see `referent_injection_score`), not here —
+    a `.get()` default for the missing judge half would score an absent measurement as a present one."""
+    drafter_scoring = score_drafter(_drafted_cases(artifact), technique_match=technique_match)
     injected = artifact.get("injected")
     judge = score_judge(
         _judged_drafts(artifact),

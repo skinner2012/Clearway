@@ -21,6 +21,7 @@ from clearway.eval.run_artifacts import (
     require_label,
     result_path,
     run_path,
+    technique_match_path,
     verdict_vector_path,
 )
 
@@ -39,7 +40,7 @@ def test_referent_injection_label_reproduces_the_already_frozen_filenames() -> N
 def test_the_two_labels_collide_on_no_artifact_path() -> None:
     """The whole point of the label. A shared path means the second run silently overwrites the first,
     and the first is the comparison the second is measured against."""
-    for builder in (dry_gate_path, result_path, verdict_vector_path):
+    for builder in (dry_gate_path, result_path, verdict_vector_path, technique_match_path):
         assert builder(REFERENT_INJECTION) != builder(CITATION_GROUNDING)
     for pass_n in (1, 2, 3):
         assert run_path(REFERENT_INJECTION, pass_n) != run_path(CITATION_GROUNDING, pass_n)

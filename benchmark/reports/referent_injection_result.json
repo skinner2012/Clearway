@@ -191,6 +191,41 @@
       ]
     }
   ],
+  "drafter_score": {
+    "recall": {
+      "value": 0.7777777777777778,
+      "n": 18,
+      "ci_low": 0.5478541568378739,
+      "ci_high": 0.9099907189139831,
+      "effective_n": 4,
+      "ci_method": "wilson"
+    },
+    "false_positive_rate": {
+      "value": 0.23076923076923078,
+      "n": 26,
+      "ci_low": 0.11033849405783291,
+      "ci_high": 0.42051554078943687,
+      "effective_n": 4,
+      "ci_method": "wilson"
+    },
+    "sc_citation_match": {
+      "value": 1.0,
+      "n": 14,
+      "ci_low": 0.7846891972623643,
+      "ci_high": 1.0,
+      "effective_n": 4,
+      "ci_method": "wilson"
+    },
+    "expected_calibration_error": {
+      "value": 0.2314814814814815,
+      "n": 54,
+      "exempt_reason": "single populated confidence bin at this n — there is nothing to bin, so the raw gap is reported without a CI (the two-figure n+CI exemption)"
+    },
+    "overconfidence_gap": 0.2314814814814815,
+    "remediation_technique_match": null,
+    "abstained_n": 0
+  },
+  "drafter_score_notes": "FP over the 24 non-trivial true negatives (dropping the passed honest-misses that mint no finding) = 6/24 = 0.250; the headline FP uses all true negatives. partially_supports scored as CLEAN instead of FLAGS → recall 13/18 = 0.722, FP 3/26 = 0.115. Construct-validity: among failed cases whose cited SC intersects the ACT SC (n=16), conformance-correct on 14 (0.875). SC-citation PRECISION over the same 14 correctly-flagged failed cases the headline sc_citation_match (14/14) is taken over, micro-averaged over ids instead of cases: 14/22 = 0.636 of the SC ids cited are in the ACT gold set, 1.57 ids cited per case. Report the pair — the headline alone rewards citing broadly, precision alone rewards citing nothing. not_applicable drafts (n=0) are CLEAN under the primary collapse but reported separately as abstained_n, never folded silently. remediation_technique_match is None: no technique-classification pass ran for this score. The ACT technique gold IS vendored (the export's wcag-technique keys), so the metric is available; it simply was not computed here. Coverage is 2 of 4 scored classes: document-title (G88/H25); label (G131). empty-heading, link-name carry no technique requirement in the ACT export and are NOT scored here — absent, not passing.",
   "determinism": {
     "passes": 3,
     "per_class_kappa_identical": true

@@ -31,9 +31,11 @@ from typing import Any
 
 from clearway.eval.drafter_kappa import class_ceilings, class_kappa_cis, class_kappas
 from clearway.eval.drafter_kappa_baseline import _assert_deterministic
+from clearway.eval.drafter_score import score_drafter
+from clearway.eval.offline import _drafted_cases
 from clearway.eval.paired import attribute_against_prior, pair_verdicts
 from clearway.eval.verdict_vector import build_verdict_vector
-from clearway.schemas.models import VerdictVector
+from clearway.schemas.models import TechniqueMatch, VerdictVector
 
 # The distinct-prompt counts BEFORE injection, as pre-registered in the spec / frozen baseline (assembled
 # `_user_prompt` over the minting cases). Reported beside the after-injection counts as a secondary, gold-free
@@ -105,6 +107,7 @@ def score_run(
     distinct_after: dict[str, int],
     predictions: list[dict[str, Any]] | None = None,
     prior_vec: VerdictVector | None = None,
+    technique_match: TechniqueMatch | None = None,
 ) -> tuple[VerdictVector, dict[str, Any]]:
     """One run's frozen passes + the frozen baseline → (that run's verdict vector, the result dict).
 
@@ -116,7 +119,11 @@ def score_run(
 
     `prior_vec` is the preceding run's frozen vector, where one exists. It answers a question the baseline
     pairing cannot: whether this run's further prompt change gave back what the previous run bought. The
-    caller decides whether it is required — see `run_artifacts.prior_label`."""
+    caller decides whether it is required — see `run_artifacts.prior_label`.
+
+    `technique_match` is the remediation fix-direction measurement, which needs its own classification pass
+    over this run's drafted text and so is passed in rather than derived here. Absent, it stays `None` and
+    the notes say why — an unmeasured direction must never render as a zero."""
     if len(runs) < 2:
         raise ValueError("determinism needs at least two passes of the same run to compare")
     _assert_deterministic(runs)
@@ -135,12 +142,19 @@ def score_run(
     all_improved = {tid for cls in paired.classes for tid in cls.improved_ids}
     all_regressed = {tid for cls in paired.classes for tid in cls.regressed_ids}
 
+    # The drafter-side rates, off the same frozen artifact — a pure function of it, no second model pass.
+    # A drafter-only run cannot go through the judge-inclusive scorecard, and these are the numbers the
+    # written read reports beside the paired thesis, so they are scored here rather than left unreported.
+    drafter_scoring = score_drafter(_drafted_cases(runs[0]), technique_match=technique_match)
+
     result = {
         "pooled": paired.pooled.to_dict(),
         "classes": [c.to_dict() for c in paired.classes],
         "reachable_errors_moved": reachable_moved,
         "predictions_scored": _score_predictions(predictions or [], all_improved, all_regressed),
         "mechanism": _mechanism(runs[0], baseline_reachable, distinct_after),
+        "drafter_score": drafter_scoring.score.model_dump(mode="json"),
+        "drafter_score_notes": drafter_scoring.sensitivity_notes,
         "determinism": {"passes": len(runs), "per_class_kappa_identical": True},
         "run_ids": [rid for r in runs for rid in r["run_ids"]],
         "baseline_run_ids": list(baseline_vec.run_ids),
@@ -198,6 +212,7 @@ def main() -> None:
         frozen_pass_paths,
         prior_label,
         result_path,
+        technique_match_path,
         verdict_vector_path,
     )
 
@@ -245,6 +260,17 @@ def main() -> None:
             )
         prior_vec = VerdictVector.model_validate_json(prior_path.read_text())
 
+    # The fix-direction pass calls a classifier, so it is run separately and its frozen result read back
+    # here. Absent, the metric stays None and says so — never a zero standing in for an unmeasured thing.
+    technique_match: TechniqueMatch | None = None
+    tm_path = technique_match_path(args.run)
+    if tm_path.exists():
+        payload = json.loads(tm_path.read_text())
+        if payload.get("is_reported_metric"):
+            technique_match = TechniqueMatch.model_validate(payload["metric"])
+        else:
+            print(f"skipping {tm_path.name}: stamped {payload.get('status')!r}, not the reported metric")
+
     run_vec, result = score_run(
         runs,
         baseline_vec,
@@ -252,6 +278,7 @@ def main() -> None:
         distinct_after,
         predictions=baseline_kappa.get("predictions", []),
         prior_vec=prior_vec,
+        technique_match=technique_match,
     )
     verdict_vector_path(args.run).write_text(run_vec.model_dump_json(indent=2) + "\n")
     result_path(args.run).write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")

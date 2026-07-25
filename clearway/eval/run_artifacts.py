@@ -128,6 +128,13 @@ def verdict_vector_path(label: str) -> Path:
     return _reports_dir() / f"{require_label(label)}_verdict_vector.json"
 
 
+def technique_match_path(label: str) -> Path:
+    """The remediation fix-direction measurement, scoped to the run whose drafted text it scored. The
+    metric is a property of that run's remediation sentences, so an unscoped name would let one run's
+    score be read as another's."""
+    return _reports_dir() / f"{require_label(label)}_technique_match.json"
+
+
 def refuse_to_overwrite(path: Path) -> None:
     """Refuse to write over an already-frozen pass.
 

@@ -20,7 +20,7 @@ real number. Every classification is echoed into the artifact with the sentence 
 κ recomputes from the file alone.
 
 Not run by the test suite (it calls a cloud model). Invoke it explicitly:
-`uv run python -m clearway.eval.technique_match_build benchmark/runs/<run>.json`
+`uv run python -m clearway.eval.technique_match_build --run citation_grounding`
 """
 
 from __future__ import annotations
@@ -28,7 +28,6 @@ from __future__ import annotations
 import argparse
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from clearway.eval.technique_match import (
@@ -125,11 +124,17 @@ def _print_read(result: dict[str, Any]) -> None:
 
 
 def main() -> None:
-    from clearway.eval.offline_build import _REPORTS_DIR
+    from clearway.eval.run_artifacts import RUN_LABELS, run_path, technique_match_path
 
     parser = argparse.ArgumentParser(description="score drafted remediation direction against ACT technique gold")
-    parser.add_argument("run_artifact", help="frozen run artifact whose drafts carry remediation text")
-    parser.add_argument("--out", default="technique_match.json", help="artifact name under benchmark/reports/")
+    parser.add_argument(
+        "--run",
+        required=True,
+        choices=RUN_LABELS,
+        help="which run's drafted remediation to score — it names both the input artifact and the output, "
+        "so a score can never be read as another run's",
+    )
+    parser.add_argument("--pass-n", type=int, default=1, help="which determinism pass to read (default: 1, canonical)")
     parser.add_argument(
         "--smoke",
         default=None,
@@ -138,14 +143,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    source = Path(args.run_artifact)
+    source = run_path(args.run, args.pass_n)
+    if not source.exists():
+        raise SystemExit(f"no frozen pass at {source} — build it first")
     result = build_technique_match(
         json.loads(source.read_text()),
         source=str(source),
         smoke_reason=args.smoke,
         created_at=datetime.now(timezone.utc).isoformat(),
     )
-    out = _REPORTS_DIR / args.out
+    out = technique_match_path(args.run)
     out.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
     _print_read(result)
     print(f"\nwrote {out}")

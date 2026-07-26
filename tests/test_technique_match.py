@@ -31,7 +31,7 @@ from clearway.eval.technique_match import (
     technique_vocabulary,
     uncovered_classes,
 )
-from clearway.llm.client import Completion, FakeLLMClient
+from clearway.llm.client import Completion, FakeLLMClient, ImagePart
 from clearway.schemas.models import Citation, Conformance, DraftRow
 
 LABEL_GOLD = "G131"
@@ -184,9 +184,12 @@ def test_classify_sends_only_the_remediation_sentence_and_parses_the_answer() ->
     captured: dict[str, str] = {}
 
     class _Recording(FakeLLMClient):
-        def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
+        def complete_json(
+            self, system: str, user: str, schema: type[BaseModel], image: ImagePart | None = None
+        ) -> Completion:
             captured["system"], captured["user"] = system, user
-            return super().complete_json(system, user, schema)
+            assert image is None, "the classifier is a text-only role and must attach no picture"
+            return super().complete_json(system, user, schema, image)
 
     sentence = "Name what the visitor should type into this field."
     client = _Recording('{"technique":"G131"}')

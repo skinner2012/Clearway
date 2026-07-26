@@ -8,6 +8,15 @@ comes from a pinned snapshot + a fixed reasoning effort + a fixed prompt — the
 model offers (a dated snapshot is still not bit-reproducible).
 
 Satisfies the shared `LLMClient` seam, so callers depend only on that, never on the provider.
+
+**It takes the seam's `image` parameter and refuses a non-`None` one.** Signature parity is required
+— the drafter and the judge depend on one protocol — but the roles this client serves send no
+pixels: the judge grades a drafted row against a finding's text, and the technique classifier is
+handed a remediation sentence and deliberately nothing else. So the honest options were an
+unexercised Responses image part (untested code on a paid path, which a later caller would read as
+supported) or a refusal that says so. Silently dropping the picture was never one: the local client
+is the only place the image channel is measured, and a cloud call that quietly discarded a picture
+would produce a complete-looking answer to a question nobody asked.
 """
 
 from __future__ import annotations
@@ -17,7 +26,7 @@ import time
 
 from pydantic import BaseModel
 
-from clearway.llm.client import Completion, LLMUsage
+from clearway.llm.client import Completion, ImagePart, LLMUsage
 
 _DEFAULT_MODEL = "gpt-5.6-luna"
 _DEFAULT_EFFORT = "medium"
@@ -46,9 +55,18 @@ class CloudLLMClient:
     def reasoning_effort(self) -> str:
         return self._effort
 
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
+    def complete_json(
+        self, system: str, user: str, schema: type[BaseModel], image: ImagePart | None = None
+    ) -> Completion:
         import litellm
 
+        if image is not None:
+            raise NotImplementedError(
+                "this cloud client sends no images: its roles (the reference judge, the technique "
+                f"classifier) are text-only by design, and the Responses image part is unexercised. "
+                f"Refused rather than dropped — a discarded picture ({image.ref[:8]}…) would return a "
+                "complete-looking answer to a question the model was never shown."
+            )
         start = time.perf_counter()
         response = litellm.responses(
             model=f"openai/{self._model}",

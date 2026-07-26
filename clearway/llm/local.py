@@ -16,16 +16,33 @@ Three provider details this gets right that a naive `litellm.completion(...)` wo
 
 The timeout bounds *waiting*, not sampling, so it cannot change what a reachable model returns —
 at `temperature=0` a draft made with it is byte-identical to one made without.
+
+A picture, when one is attached
+------------------------------
+The user message becomes an OpenAI-shaped content-part list — the text part first, then the image as
+a `data:` URI — which LiteLLM translates for the provider. Two properties this keeps:
+
+* **No picture, no change.** With `image=None` the content is the same plain string it always was, so
+  every existing call is byte-identical on the wire to the one it made before this channel existed.
+* **The text never mentions the picture.** The image is a part beside the prompt, not a sentence
+  inside it, so two requests can differ in pixels alone — the premise the image experiment's
+  statistic is defined over, and the reason the model is never told to look.
+
+That this provider carries an image part, a `response_format` schema and the model's own thinking in
+ONE request was measured before anything was built (`benchmark/reports/multimodal_transport_probe.json`)
+— it is not assumed, because the sibling `ollama/` prefix drops structured output silently and a
+dropped image part would be invisible in exactly the same way.
 """
 
 from __future__ import annotations
 
 import os
 import time
+from typing import Any
 
 from pydantic import BaseModel
 
-from clearway.llm.client import Completion, LLMUsage
+from clearway.llm.client import Completion, ImagePart, LLMUsage
 
 _DEFAULT_MODEL = "gemma4:31b"
 _DEFAULT_BASE_URL = "http://localhost:11434"
@@ -51,14 +68,16 @@ class LocalLLMClient:
     def timeout_s(self) -> float:
         return self._timeout_s
 
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
+    def complete_json(
+        self, system: str, user: str, schema: type[BaseModel], image: ImagePart | None = None
+    ) -> Completion:
         import litellm
 
         start = time.perf_counter()
         response = litellm.completion(
             model=f"ollama_chat/{self._model}",  # ollama_chat/, NOT ollama/ — see module docstring
             api_base=self._base_url,
-            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": _user_content(user, image)}],
             response_format=schema,
             temperature=0.0,
             timeout=self._timeout_s,  # bounds waiting only — see module docstring
@@ -66,6 +85,19 @@ class LocalLLMClient:
         latency_ms = (time.perf_counter() - start) * 1000.0
         content: str = response.choices[0].message.content or ""
         return Completion(content, _usage_from(response, latency_ms))
+
+
+def _user_content(user: str, image: ImagePart | None) -> str | list[dict[str, Any]]:
+    """The user message: the plain string when nothing is attached, the two-part content list when a
+    picture is.
+
+    The string branch is not an optimisation — it is the guarantee that a call attaching no picture
+    sends exactly what it sent before this parameter existed, so no already-frozen run becomes
+    unreproducible. The text part carries the prompt unchanged; the picture is a sibling part.
+    """
+    if image is None:
+        return user
+    return [{"type": "text", "text": user}, {"type": "image_url", "image_url": {"url": image.data_url()}}]
 
 
 def _usage_from(response: object, latency_ms: float) -> LLMUsage:

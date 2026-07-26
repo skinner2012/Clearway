@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from clearway.drafter import Drafter, is_fallback_draft
 from clearway.drafter.llm import confirmed_violation_sc_ids
-from clearway.llm import Completion, LLMUsage
+from clearway.llm import Completion, ImagePart, LLMUsage
 from clearway.normalizer.quality_review import QUALITY_REVIEW_RULES
 from clearway.oracle import AxeCoreOracle
 from clearway.schemas.models import (
@@ -35,22 +35,28 @@ from clearway.validator import validate
 
 
 class _RecordingClient:
-    """An `LLMClient` that records every (system, user, schema) it is handed and replays canned
+    """An `LLMClient` that records every (system, user, schema, image) it is handed and replays canned
     responses. The byte-identity guard asserts on what the drafter *actually sent*, so a change to
-    the dispatch is caught as surely as a change to the prompt text."""
+    the dispatch is caught as surely as a change to the prompt text.
+
+    The image is recorded too, and every assertion below is on a text class, so the pins here double
+    as the cross-class half of the image channel's guard: a picture that leaked onto a text prompt
+    would show up as a fourth element that is not `None`."""
 
     def __init__(self, *responses: str, model: str = "recording-llm") -> None:
         self._responses = list(responses) or ['{"remediation":"x"}']
         self._model = model
         self._i = 0
-        self.calls: list[tuple[str, str, type[BaseModel]]] = []
+        self.calls: list[tuple[str, str, type[BaseModel], ImagePart | None]] = []
 
     @property
     def model(self) -> str:
         return self._model
 
-    def complete_json(self, system: str, user: str, schema: type[BaseModel]) -> Completion:
-        self.calls.append((system, user, schema))
+    def complete_json(
+        self, system: str, user: str, schema: type[BaseModel], image: ImagePart | None = None
+    ) -> Completion:
+        self.calls.append((system, user, schema, image))
         response = self._responses[min(self._i, len(self._responses) - 1)]
         self._i += 1
         return Completion(response, LLMUsage())
@@ -61,11 +67,16 @@ def _cite(sc_id: str, url: str) -> Citation:
 
 
 def _sent(finding: Finding, citations: list[Citation], *responses: str) -> tuple[str, str, type[BaseModel]]:
-    """Drive the real `Drafter` and return the single (system, user, schema) it sent."""
+    """Drive the real `Drafter` and return the single (system, user, schema) it sent.
+
+    It also asserts here, once for every pin below, that **no picture was attached**: every finding in
+    this file is a text class drafted with no image argument, so a fourth element that was not `None`
+    would mean the image channel had reached a class it must never touch."""
     client = _RecordingClient(*responses)
     Drafter(client).draft(finding, citations)
-    (call,) = client.calls
-    return call
+    ((system, user, schema, image),) = client.calls
+    assert image is None
+    return system, user, schema
 
 
 # --- the guard: judgment-bucket prompts are byte-identical -------------------

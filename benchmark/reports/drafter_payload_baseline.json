@@ -1,0 +1,187 @@
+{
+  "artifact": "drafter request payload hashes, no-image condition",
+  "version": 1,
+  "schema": "_LLMDraft",
+  "note": "The payload hash of every image-pool finding drafted text-only, plus one text finding of the referent-injected class as a cross-class check. Measured against the drafter as it stood BEFORE the image was wired into it (see pre_wiring), so the wiring is allowed to ship only if these hashes are unchanged after it. A payload is the ask as a value — system prompt, user prompt, response schema name and the attached picture's digest, canonically serialized — so it moves if and only if what the model is asked moves. Citations are pinned in the builder, not retrieved: the claim controlled here is about prompt assembly, and a control that needs a database running is a control nobody re-checks. Rows are keyed by (scope, act_testcase_id, target); finding_id hashes the case's file:// URL and is therefore a property of this checkout's location, while the payload hash is not, because no prompt carries the URL.",
+  "pre_wiring": {
+    "commit": "45cce1cb4e599bfce85235fdbf05d1bcb9e85594",
+    "drafter_blob_sha256": "f6c5170a06d44c2e1038f3bb8872375bc1c11da0535ac24cb290d5b8180448d7",
+    "method": "the prompt builders of `git show <commit>:clearway/drafter/llm.py`, imported as a module and hashed through the same canonical LLMRequest serialization used here"
+  },
+  "pinned_citations": {
+    "image-alt": [
+      {
+        "sc_id": "1.1.1",
+        "title": "Non-text Content",
+        "level": "A",
+        "source": "WCAG-SC",
+        "url": "https://www.w3.org/TR/WCAG22/#non-text-content",
+        "text": "All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below.",
+        "technique_id": null
+      }
+    ],
+    "label": [
+      {
+        "sc_id": "4.1.2",
+        "title": "Name, Role, Value",
+        "level": "A",
+        "source": "WCAG-SC",
+        "url": "https://www.w3.org/TR/WCAG22/#name-role-value",
+        "text": "For all user interface components, the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies.",
+        "technique_id": null
+      }
+    ]
+  },
+  "payloads": [
+    {
+      "scope": "image-leaky",
+      "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "cb0d86c54f6e561f",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "96397a9c5e1e67ce193d1f0b24010b15d7910700a12e3376d09527482aadc383"
+    },
+    {
+      "scope": "image-leaky",
+      "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "934bca3b11511ae8",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "60d0c7fe162c4baa80bde1129ee2f1c9423e14bd878d009aacae1921faaf588e"
+    },
+    {
+      "scope": "image-leaky",
+      "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "8acebb2c8adf6e7d",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "7c963723570bbd893c079341e897b600f84f0fcfc2d6ad984e29ae67fbf47bb8"
+    },
+    {
+      "scope": "image-leaky",
+      "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "93ec4c14981309d3",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "9d38d50b17a172168bd1a1f9a1fbd779f49e4ccc81a099de9e947b682e0430e0"
+    },
+    {
+      "scope": "image-leaky",
+      "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "332d749a06d92787",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "f3ff1c2c1db9bdfde9735fc12b86c98bebadd1981bc491797413df5b8d11c607"
+    },
+    {
+      "scope": "image-leaky",
+      "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "812cb194bac295a2",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "1b7ff373c49135ad40457f2d2ea548c0dee35b47163dc98233ebaad53e605d94"
+    },
+    {
+      "scope": "image-leaky",
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "7d696ac91d62a0ae",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "7d1cf01e8b0650777abcf1b115c104b70cbec66d28731c9b6f58c703bfb7248a"
+    },
+    {
+      "scope": "image-opaque",
+      "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "a054a5256af49de2",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "d45fa2f4b96e463eb12b902f69ae3f5345dd4c333fb42e92a097e5d04b8ec4c4"
+    },
+    {
+      "scope": "image-opaque",
+      "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "8f4b06fe4a222907",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "e5846c4a33853748f2b1220fa55d3ff8fffc048c5ae0f267e5baa282a5821174"
+    },
+    {
+      "scope": "image-opaque",
+      "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "bf7688e780305be4",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "c148cd451b77c4ed7e6979510288facbb97d6eeab2d083c7369bccc511ca500f"
+    },
+    {
+      "scope": "image-opaque",
+      "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "c398b407d79aca6f",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "91f59810fba554b6d377cf0996f83549313303029ea12fa2d7b78b6a2446651d"
+    },
+    {
+      "scope": "image-opaque",
+      "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "bbede717e40ab60a",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "cdc799f4de53605b6a9c836c7e27d37ff271427735f60b6b0f10ae08371f760b"
+    },
+    {
+      "scope": "image-opaque",
+      "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "10f322c79b16872a",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "e590e58055b2bca2ef687ce576eaef02ec1b62aba1449b118e9cd7745651596b"
+    },
+    {
+      "scope": "image-opaque",
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "axe_rule": "image-alt",
+      "target": "img",
+      "finding_id": "e14930e63599c863",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "6894bde492d6c133abc71f65cd7b1c740f11758a81b3ef03805a4790ab4711de"
+    },
+    {
+      "scope": "acceptance",
+      "act_testcase_id": "0ed8074a5bee7052a1a28f9fd718b7d35a645cfd",
+      "axe_rule": "label",
+      "target": "#fname",
+      "finding_id": "0ad128777582043b",
+      "condition": "no-image",
+      "image_ref": null,
+      "payload_sha256": "368c03b040883871faf006e731bea7b9ebe374314cd59de574fa485e1e7ca872"
+    }
+  ]
+}

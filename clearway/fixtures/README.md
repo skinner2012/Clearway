@@ -102,6 +102,37 @@ Two things make this set different from every other fixture here:
   the assets and asserts every image rendered, because a scan without them mints the identical finding
   over a picture that never arrived. Guarded by `tests/test_act_image_gold.py`.
 
+## `act-image-opaque` — the same seven cases with the answer taken out of the URLs
+
+A **derived** set ([`act-image-opaque/`](act-image-opaque/), provenance in its
+[NOTICE](act-image-opaque/NOTICE)), not a vendored one: the seven pool cases of `act-image/` with
+every `/test-assets/…` reference — `src`, `srcset` and directory alike — replaced by a single pinned
+scheme. Built by [`clearway/eval/image_opaque.py`](../eval/image_opaque.py), regenerable from
+`act-image/` alone, guarded by `tests/test_image_opaque.py`.
+
+It lives in its own directory precisely because `act-image/`'s promise is that ACT's bytes are
+untouched, and this set's purpose is to change them.
+
+- **A filename rewrite is not enough.** One case's `srcset` retains the literal tokens `nyhavn` and
+  `paris` — and upstream the file named `paris` *is* the Nyhavn photograph, so on that case the
+  filename agreed with the `alt` and disagreed with the pixels on a case whose gold is **failed**. The
+  directory `/test-assets/image-filename-as-accessible-name-9eb3f6/` spells out the deprecated rule's
+  own deciding criterion on five of the seven cases and partitions the pool by rule while it is there.
+- **The scheme is per asset, never per case**: `/img/a.png` the W3C logo, `/img/b.png` the Nyhavn
+  photograph, `/img/c.png` the bread — multiplicity **4 / 2 / 1**. A per-case index would manufacture a
+  distinguishing token the originals never had and would defeat the prompt-level twin rule, which is
+  re-run on the ablated set and finds nothing new. The `.png` is decorative and wrong for two of the
+  three: the name must carry no information, not even the format. **Never derive a media type from
+  these names** — the browser and the scanner both sniff the bytes.
+- **Nothing else changes**, and that is what carries the gold: the `alt` text and the rendered pixels
+  are untouched, so the WCAG 1.1.1 judgment the set scores has both sides unmoved and the labels
+  transfer. What does *not* transfer is `9eb3f6`'s own applicability — that rule is about a name that
+  *is* the filename, and after ablation no name is a filename.
+- **[`permutation.json`](act-image-opaque/permutation.json) is a pre-registration**: which *wrong*
+  image each case is shown behind a byte-identical prompt, frozen before any verdict over this set
+  existed, with the derangement asserted at build time.
+- The case-by-case written confirmation is [`docs/image-ablation-review.md`](../../docs/image-ablation-review.md).
+
 ## Changing a set
 
 Any change to a planted signal is a **version bump**: increment `version` (and `eval_set_id`) in the relevant `expected_m*.json` and here. Downstream eval runs are tagged with the set version, so a bump never silently invalidates past results.

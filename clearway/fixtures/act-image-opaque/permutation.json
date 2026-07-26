@@ -1,0 +1,95 @@
+{
+  "set_id": "act-image-opaque@1",
+  "version": 1,
+  "note": "THE PRE-REGISTRATION for the mismatched-image condition: the wrong image each pool case is shown behind a byte-identical prompt. Frozen as a mapping over ACT testcase ids before any verdict over this set exists; resolving it to bytes, and re-asserting the derangement on what was actually attached, belongs to the capture ticket. `true_image` is measured from the case's own src, `mismatched_image` is authored, and no case receives its own image. `live` describes which cells can move and is NOT a filter — the endpoint is defined over all seven cells, and the control that should not move is evidence when it does.",
+  "images": {
+    "w3c-logo": {
+      "sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "opaque_asset": "/img/a.png",
+      "cases_showing_it": 2
+    },
+    "nyhavn": {
+      "sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "opaque_asset": "/img/b.png",
+      "cases_showing_it": 4
+    },
+    "bread": {
+      "sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+      "opaque_asset": "/img/c.png",
+      "cases_showing_it": 1
+    }
+  },
+  "live_cells": 4,
+  "mapping": [
+    {
+      "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "alt": "W3C",
+      "true_image": "w3c-logo",
+      "true_image_asset": "/img/a.png",
+      "mismatched_image": "bread",
+      "mismatched_image_asset": "/img/c.png",
+      "live": true,
+      "note": "alt 'W3C' is true of the true image and false of the bread"
+    },
+    {
+      "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "alt": "ERCIM",
+      "true_image": "w3c-logo",
+      "true_image_asset": "/img/a.png",
+      "mismatched_image": "nyhavn",
+      "mismatched_image_asset": "/img/b.png",
+      "live": false,
+      "note": "dead: alt 'ERCIM' is wrong for the W3C logo and wrong for every other pool image, so the correct verdict does not move when the picture does"
+    },
+    {
+      "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "alt": "Nyhavn",
+      "true_image": "nyhavn",
+      "true_image_asset": "/img/b.png",
+      "mismatched_image": "w3c-logo",
+      "mismatched_image_asset": "/img/a.png",
+      "live": true,
+      "note": "alt 'Nyhavn' is true of the photograph and false of the logo"
+    },
+    {
+      "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "alt": "pain",
+      "true_image": "bread",
+      "true_image_asset": "/img/c.png",
+      "mismatched_image": "w3c-logo",
+      "mismatched_image_asset": "/img/a.png",
+      "live": true,
+      "note": "alt 'pain' is true of the bread and false of the logo"
+    },
+    {
+      "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "alt": "Nyhavn",
+      "true_image": "nyhavn",
+      "true_image_asset": "/img/b.png",
+      "mismatched_image": "bread",
+      "mismatched_image_asset": "/img/c.png",
+      "live": true,
+      "note": "alt 'Nyhavn' is true of the photograph and false of the bread"
+    },
+    {
+      "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+      "alt": "Paris",
+      "true_image": "nyhavn",
+      "true_image_asset": "/img/b.png",
+      "mismatched_image": "bread",
+      "mismatched_image_asset": "/img/c.png",
+      "live": false,
+      "note": "dead: alt 'Paris' is wrong under any image in this pool"
+    },
+    {
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "alt": "94251e110d24a4c2b6e6ce76e7203374",
+      "true_image": "nyhavn",
+      "true_image_asset": "/img/b.png",
+      "mismatched_image": "w3c-logo",
+      "mismatched_image_asset": "/img/a.png",
+      "live": false,
+      "note": "dead by design — the specificity control: a hex-digest name describes nothing whatever is attached, so a disagreement here means the manipulation moved something other than perception"
+    }
+  ]
+}

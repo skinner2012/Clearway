@@ -1,0 +1,175 @@
+{
+  "set_id": "act-image-opaque@1",
+  "version": 1,
+  "gold_version": "act-gold@a805d865",
+  "source": "w3c-act",
+  "labeller": "ACT Rules Community Group",
+  "export_sha256": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "axe_core_version": "4.12.1",
+  "derived_from": {
+    "set_id": "act-image-leaky@1",
+    "manifest": "expected_image.json"
+  },
+  "ablation": {
+    "removed": [
+      "src",
+      "srcset",
+      "the directory component"
+    ],
+    "scheme": "/img/<letter>.png, one letter per DISTINCT IMAGE, never per case",
+    "letters": {
+      "/img/a.png": "w3c-logo",
+      "/img/b.png": "nyhavn",
+      "/img/c.png": "bread"
+    },
+    "extension_is_decorative": "every asset is named .png and two of the three are JPEG. The uniform name is the point — it carries no information, not even the format — and it is safe only because nothing reads it: the browser sniffs the bytes and so does the scanner. NEVER derive a media type from these names; a .png label on JPEG bytes in a data: URI is a lie told to the model."
+  },
+  "note": "The image pool with every path cue ablated: src, srcset and the directory alike. A filename-only rewrite is not enough — one case's srcset retains the tokens `nyhavn` and `paris`, and the directory spells out the deprecated rule's own deciding criterion on five of the seven cases. Nothing else changes: the alt text, the descriptors, the lang and the whitespace are byte-exact, and the rendered pixels are the same bytes under a new name. The judgment scored over this set is therefore unmoved — WCAG 1.1.1, does this accessible name describe this image, with both sides of the question untouched. What does NOT survive is the deprecated rule's own applicability: 9eb3f6 is about a name that IS the filename, and after ablation no name is a filename. That is a property of the page ACT published and is not what this set scores. Scored deterministically against gold, never by the judge.",
+  "rules": {
+    "qt1vmo": {
+      "rule_name": "Image accessible name is descriptive",
+      "deprecated": false,
+      "pool_cases": 2
+    },
+    "9eb3f6": {
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "deprecated": true,
+      "pool_cases": 5,
+      "deprecation": {
+        "upstream_notice": "This rule is not maintained anymore and should not be used.",
+        "superseded_by": "qt1vmo",
+        "decided": "ACT Rules Community Group call 2021-01-14, PR #1538",
+        "expected_outcomes_disputed": false,
+        "consequence": "most of this pool rests on a rule ACT tells implementers not to use, so every report over the set states the share it carries alongside the result"
+      }
+    }
+  },
+  "cases": [
+    {
+      "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "act_rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "rule_deprecated": false,
+      "axe_rule": "image-alt",
+      "path": "html/be6b29e220d6afbd827625c602ec49027e73fdf1.html",
+      "derived_from": "act-image/html/be6b29e220d6afbd827625c602ec49027e73fdf1.html",
+      "expected": "passed",
+      "gold_conformance": "supports",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1,
+      "image": "w3c-logo",
+      "image_asset": "/img/a.png"
+    },
+    {
+      "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "act_rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "rule_deprecated": false,
+      "axe_rule": "image-alt",
+      "path": "html/530266c6116fcfad12561e9e1a407fa0a0da3435.html",
+      "derived_from": "act-image/html/530266c6116fcfad12561e9e1a407fa0a0da3435.html",
+      "expected": "failed",
+      "gold_conformance": "does_not_support",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1,
+      "image": "w3c-logo",
+      "image_asset": "/img/a.png"
+    },
+    {
+      "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e.html",
+      "derived_from": "act-image/html/cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e.html",
+      "expected": "passed",
+      "gold_conformance": "supports",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1,
+      "image": "nyhavn",
+      "image_asset": "/img/b.png"
+    },
+    {
+      "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/607ad4964aa69e78a663cf993a28cedd6a1dc39e.html",
+      "derived_from": "act-image/html/607ad4964aa69e78a663cf993a28cedd6a1dc39e.html",
+      "expected": "passed",
+      "gold_conformance": "supports",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1,
+      "image": "bread",
+      "image_asset": "/img/c.png"
+    },
+    {
+      "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/1ff696703e7e7393a5d05cdcd3229cb050594998.html",
+      "derived_from": "act-image/html/1ff696703e7e7393a5d05cdcd3229cb050594998.html",
+      "expected": "passed",
+      "gold_conformance": "supports",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1,
+      "image": "nyhavn",
+      "image_asset": "/img/b.png"
+    },
+    {
+      "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/f7406b89f8e6769c01da5c305e3e6c921fd7c1e4.html",
+      "derived_from": "act-image/html/f7406b89f8e6769c01da5c305e3e6c921fd7c1e4.html",
+      "expected": "failed",
+      "gold_conformance": "does_not_support",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1,
+      "image": "nyhavn",
+      "image_asset": "/img/b.png"
+    },
+    {
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/a2333ec76e676624212dcd616ed11ae576ab775e.html",
+      "derived_from": "act-image/html/a2333ec76e676624212dcd616ed11ae576ab775e.html",
+      "expected": "failed",
+      "gold_conformance": "does_not_support",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1,
+      "image": "nyhavn",
+      "image_asset": "/img/b.png"
+    }
+  ]
+}

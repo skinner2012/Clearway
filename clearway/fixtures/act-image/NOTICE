@@ -1,0 +1,94 @@
+Vendored W3C ACT-Rules image test cases — NOTICE and provenance
+================================================================
+
+This directory contains a frozen, redistributed copy of expert-authored
+accessibility test cases from the ACT-Rules Community Group — the cases for the
+three rules whose judgment is about an IMAGE — together with the image files
+those cases reference.
+
+It is a second vendored set beside `act-gold/`, not an extension of it: that set
+holds the five descriptiveness rules and its manifest, checksums and scope
+constants are asserted at those counts. The case METADATA is not re-fetched here;
+both sets read the same frozen `act-gold/testcases.json` export, so they carry the
+same freeze id and no second export can drift from the first.
+
+Source
+------
+  Name:      ACT-Rules Community test cases
+  Website:   https://act-rules.github.io
+  Export:    https://act-rules.github.io/testcases.json   (read from act-gold/)
+  License:   https://act-rules.github.io/pages/license/
+
+License and attribution (required)
+----------------------------------
+The ACT-Rules content is published under the **W3C Software and Document
+Notice and License** (https://www.w3.org/copyright/software-license/).
+
+This software or document includes material copied from or derived from the
+ACT-Rules Community Group test cases (https://act-rules.github.io/testcases.json).
+Copyright © 2022 W3C® (MIT, ERCIM, Keio, Beihang).
+
+The material is provided "AS IS" and the copyright holders disclaim all
+warranties and liability, as stated in the license.
+
+What was vendored
+-----------------
+ALL published examples (passed / failed / inapplicable) of all three image rules,
+so the set is the complete rule set and not a favorable subset — the same rule
+act-gold/NOTICE states. Which cases the pipeline can actually reach is then a
+MEASURED property, recorded in `image_reachability.json`, not a choice made while
+fetching:
+
+  Image accessible name is descriptive                      (ruleId qt1vmo)  16 cases
+  Image not in the accessibility tree is decorative         (ruleId e88epe)  20 cases
+  DEPRECATED — Image filename is accessible name for image  (ruleId 9eb3f6)  15 cases
+
+  html/    : the 51 referenced HTML files for the three rules above.
+  assets/  : the 10 image files those cases reference, stored at their UPSTREAM
+             path, so a render can request them exactly as ACT wrote them.
+
+One referenced asset is deliberately absent upstream
+----------------------------------------------------
+`/test-assets/does-not-exist.png` returns HTTP 404 and is referenced by two cases
+(`96471b44c9…` qt1vmo and `99e3d03366…` e88epe), both of which ACT marks
+`inapplicable`. This is not a fetch failure: "the image request did not complete"
+is a state these rules are explicitly written about, and their applicability
+excludes it. It is recorded in `assets.json` with its status and left out of
+`assets/`, so a render of those cases fails exactly as it does upstream.
+
+What actually made these cases render blank
+-------------------------------------------
+The ACT case HTML references its assets at the site-absolute path `/test-assets/…`,
+which under a `file://` render resolves to the filesystem root and loads nothing.
+The vendored bytes are NOT rewritten to fix that — the ACT markup is expert
+material and is kept byte-exact. The scanner repairs it at the request layer
+instead (`clearway/scanner/scan.py`, `_vendored_asset_route`), and every pool case
+then renders with `naturalWidth > 0`.
+
+Why the served Content-Type is recorded beside the upstream one
+---------------------------------------------------------------
+Five of these assets are extensionless and are served `application/octet-stream`
+upstream. That was expected to be a second cause of blank renders; it is NOT —
+measured against the pinned Chromium, an `<img>` decodes from its bytes under
+`application/octet-stream`, under `text/plain`, and with no Content-Type at all.
+The honest type is still recorded and served, for two reasons that are real: an
+image handed to a multimodal model travels as `data:<media-type>;base64,…` and is
+decoded by that declared type, which neither the extensionless file name nor the
+upstream header can supply; and a truthful response is what keeps this correct if
+anything ever sends `X-Content-Type-Options: nosniff`. `assets.json` records both
+types per asset.
+
+How this copy is pinned (freeze)
+--------------------------------
+By content hash, one line per file in `checksums.sha256` (verify with
+`shasum -a 256 -c checksums.sha256` from this directory).
+
+  Fetched:        2026-07-25
+  Fetched by:     scripts/vendor_act_image_cases.py
+  robots.txt:     https://act-rules.github.io/robots.txt → HTTP 404 (absent, so
+                  nothing is disallowed — checked before fetching, not assumed)
+  Rate limit:     1 request/second, explicit User-Agent (the scanner's)
+  Export freeze:  act-gold@a805d865 (act-gold/testcases.json, unchanged)
+
+The reachability artifact and the benchmark read THIS vendored copy only, never
+the live URL.

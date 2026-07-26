@@ -1,0 +1,87 @@
+[
+  {
+    "path": "/test-assets/shared/w3c-logo.png",
+    "http_status": 200,
+    "bytes": 1927,
+    "sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+    "upstream_content_type": "image/png",
+    "served_content_type": "image/png"
+  },
+  {
+    "path": "/test-assets/shared/pdf-icon.png",
+    "http_status": 200,
+    "bytes": 772,
+    "sha256": "cd15e6bc9b12869d0642d7f68dce06ef0310d65d7043df583a31f58a99fcad60",
+    "upstream_content_type": "image/png",
+    "served_content_type": "image/png"
+  },
+  {
+    "path": "/test-assets/shared/fireworks.jpg",
+    "http_status": 200,
+    "bytes": 25318,
+    "sha256": "e1835150b2ac01ed94a03b816b5635f3b179872108de38f7cdeedfe77dac060e",
+    "upstream_content_type": "image/jpeg",
+    "served_content_type": "image/jpeg"
+  },
+  {
+    "path": "/test-assets/does-not-exist.png",
+    "http_status": 404,
+    "bytes": null
+  },
+  {
+    "path": "/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn",
+    "http_status": 200,
+    "bytes": 32822,
+    "sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+    "upstream_content_type": "application/octet-stream",
+    "served_content_type": "image/jpeg"
+  },
+  {
+    "path": "/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+    "http_status": 200,
+    "bytes": 32822,
+    "sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+    "upstream_content_type": "image/jpeg",
+    "served_content_type": "image/jpeg"
+  },
+  {
+    "path": "/test-assets/image-filename-as-accessible-name-9eb3f6/login",
+    "http_status": 200,
+    "bytes": 1077,
+    "sha256": "04afc240a6e980ae48ef6e0eb0e879dd48fa02f761b1056a0bfffe9726e6ad3d",
+    "upstream_content_type": "application/octet-stream",
+    "served_content_type": "image/png"
+  },
+  {
+    "path": "/test-assets/image-filename-as-accessible-name-9eb3f6/pain",
+    "http_status": 200,
+    "bytes": 7350,
+    "sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+    "upstream_content_type": "application/octet-stream",
+    "served_content_type": "image/jpeg"
+  },
+  {
+    "path": "/test-assets/image-filename-as-accessible-name-9eb3f6/paris",
+    "http_status": 200,
+    "bytes": 32822,
+    "sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+    "upstream_content_type": "application/octet-stream",
+    "served_content_type": "image/jpeg"
+  },
+  {
+    "path": "/test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374",
+    "http_status": 200,
+    "bytes": 32822,
+    "sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+    "upstream_content_type": "application/octet-stream",
+    "served_content_type": "image/jpeg"
+  },
+  {
+    "path": "/test-assets/image-filename-as-accessible-name-9eb3f6/login.png",
+    "http_status": 200,
+    "bytes": 1077,
+    "sha256": "04afc240a6e980ae48ef6e0eb0e879dd48fa02f761b1056a0bfffe9726e6ad3d",
+    "upstream_content_type": "image/png",
+    "served_content_type": "image/png"
+  }
+]

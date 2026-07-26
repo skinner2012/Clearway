@@ -534,6 +534,13 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
 - **Acceptance 2:** the smoke test runs **through the real pipeline prompt**, not a hand-written probe.
 - **Acceptance 3:** no non-image finding carries an image; payload-hash equality holds over all 7
   image-class no-image payloads and one M7 text finding (Control 6).
+  > **⚠️ Read this acceptance by the NODE, not by the rule — measured at T4.** On a pool page the
+  > `<img>` is outside any landmark, so axe's `region` rule reports **the same node** and its finding
+  > carries the same `image_ref`. That is correct — the reference names the picture a *node*
+  > rendered — but "non-image finding" must mean *a finding whose node is not an image*, never *a
+  > finding whose rule is not `image-alt`*. Written the second way, this acceptance fails on a
+  > correct implementation. What T5 must actually assert is that `_draft_remediation` and every
+  > text-class finding send no image.
 - **Depends on:** T4
 
 ### T6 — The two text-only conditions

@@ -34,12 +34,11 @@ from pathlib import Path
 from typing import Any
 
 from clearway.drafter import Drafter
-from clearway.eval.act_gold import _ACT_GOLD, _EXPORT_SHA256, _MANIFEST, RULE_TO_AXE, _minting_findings
-from clearway.eval.offline_build import _CONFIG_ID, _EVAL_SET_ID, _RUNS_DIR, _draft_checked, _ollama_digest
+from clearway.eval.offline_build import _RUNS_DIR, _draft_checked, _ollama_digest
 from clearway.eval.run_artifacts import RUN_LABELS, partial_path, refuse_to_overwrite, run_path
+from clearway.eval.run_scope import ACCEPTANCE, RunScope, cases_for, honest_misses_for
 from clearway.llm import LocalLLMClient
 from clearway.retriever import build_default_retriever
-from clearway.scanner import AXE_VERSION
 
 
 def _read_partial(path: Path) -> dict[str, Any] | None:
@@ -71,14 +70,18 @@ def _draft_record(finding: Any, draft: Any) -> dict[str, Any]:
     }
 
 
-def run_acceptance_drafter_only(created_at: str, pass_n: int, label: str) -> dict[str, Any]:
-    """Draft every scoped ACT minting case under the current prompt, carry the honest-misses as drafts-less
-    cases, stamp the reproducibility provenance → the raw pass artifact. Drafter-only, checkpointed.
+def run_acceptance_drafter_only(scope: RunScope, created_at: str, pass_n: int, label: str) -> dict[str, Any]:
+    """Draft every case this scope covers under the current prompt, carry the honest-misses as drafts-less
+    cases, stamp the scope's reproducibility provenance → the raw pass artifact. Drafter-only, checkpointed.
+
+    `scope` is required and is the whole work list: which manifest the cases come from, which classes are
+    in it, how a case mints its findings, and which config and eval-set ids the artifact carries. It used
+    to be four module-level constants, so any reuse of this builder silently drafted the acceptance 44 and
+    stamped the acceptance identity on the result.
 
     `label` names which run this pass belongs to and namespaces its checkpoint and its run ids, so two
     runs never resume from each other's half-written state."""
-    manifest = json.loads(_MANIFEST.read_text())
-    scoped_cases = [c for c in manifest["cases"] if c["rule_name"] in RULE_TO_AXE]
+    scoped_cases = cases_for(scope)
     total = len(scoped_cases)
     checkpoint = partial_path(label, pass_n)
 
@@ -99,7 +102,7 @@ def run_acceptance_drafter_only(created_at: str, pass_n: int, label: str) -> dic
         if case["act_testcase_id"] in done:
             continue
         drafts: list[dict[str, Any]] = []
-        for finding in _minting_findings(_ACT_GOLD / case["path"], case["axe_rule"]):
+        for finding in scope.minting_findings(scope.root / case["path"], case["axe_rule"]):
             draft = _draft_checked(drafter, finding, retriever.retrieve(finding))
             drafts.append(_draft_record(finding, draft))
         cases.append(
@@ -122,21 +125,18 @@ def run_acceptance_drafter_only(created_at: str, pass_n: int, label: str) -> dic
             "expected": m["expected"],
             "gold_success_criteria": m["gold_success_criteria"],
         }
-        for m in manifest["honest_misses"]
-        if m["rule_name"] in RULE_TO_AXE
+        for m in honest_misses_for(scope)
     ]
 
     model = drafter_client.model
     artifact = {
-        "run_ids": [f"{label.replace('_', '-')}-pass{pass_n}-{created_at}"],
-        "config_id": _CONFIG_ID,
-        "eval_set_id": _EVAL_SET_ID,
-        "corpus_version": retriever.corpus_version,
-        "drafter_model": model,
-        "drafter_model_digest": _ollama_digest(model),
-        "axe_core_version": AXE_VERSION,
-        "act_export_hash": _EXPORT_SHA256,
-        "created_at": created_at,
+        **scope.provenance(
+            run_ids=[f"{label.replace('_', '-')}-pass{pass_n}-{created_at}"],
+            corpus_version=retriever.corpus_version,
+            drafter_model=model,
+            drafter_model_digest=_ollama_digest(model),
+            created_at=created_at,
+        ),
         "cases": cases,
         "honest_misses": honest_misses,
     }
@@ -163,7 +163,7 @@ def main() -> None:
 
     _RUNS_DIR.mkdir(parents=True, exist_ok=True)
     artifact = run_acceptance_drafter_only(
-        created_at=datetime.now(timezone.utc).isoformat(), pass_n=args.pass_n, label=args.run
+        ACCEPTANCE, created_at=datetime.now(timezone.utc).isoformat(), pass_n=args.pass_n, label=args.run
     )
     refuse_to_overwrite(out)
     out.write_text(json.dumps(artifact, indent=2, ensure_ascii=False) + "\n")

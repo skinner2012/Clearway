@@ -25,24 +25,18 @@ from pathlib import Path
 from typing import Any
 
 from clearway.drafter import Drafter, is_fallback_draft
-from clearway.eval.act_gold import _ACT_GOLD, _EXPORT_SHA256, _MANIFEST, _minting_findings
+from clearway.eval.act_gold import _ACT_GOLD, _MANIFEST, _minting_findings
 from clearway.eval.noisy_pages import _MANIFEST as _NOISY_MANIFEST
 from clearway.eval.noisy_pages import _NOISY, _page_findings
 from clearway.eval.offline import build_report
 from clearway.eval.offline_inject import RATIONALE_NOTE, conformance_flip, sc_swap
 from clearway.eval.offline_tier_b import NoisyFocalResult, tier_b_smoke
+from clearway.eval.run_scope import ACCEPTANCE
 from clearway.eval.stats import is_flag
 from clearway.judge import Judge
 from clearway.llm import CloudLLMClient, LocalLLMClient
 from clearway.retriever import build_default_retriever
-from clearway.scanner import AXE_VERSION
 from clearway.schemas.models import Citation, Conformance, DraftRow, Finding
-
-# The benchmark pins the SAME frozen single-model pipeline config the orchestrator runs (one model, no
-# routing); only the eval set differs — it is held out, so it gets its own id, distinct from every dev
-# fixture set. See specs: "distinct eval_set_id".
-_CONFIG_ID = "m1-single@1"
-_EVAL_SET_ID = "act-acceptance@1"
 
 # Layout: raw runs are inputs (runs/), derived reports are outputs (reports/). A single run is run_1;
 # the noise-floor sweep adds run_2… beside it. This builder owns only the raw run; the scored report
@@ -235,21 +229,19 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
         )
 
     artifact = {
-        "run_ids": [run_id],
-        "config_id": _CONFIG_ID,
-        "eval_set_id": _EVAL_SET_ID,
-        "corpus_version": retriever.corpus_version,
-        "drafter_model": drafter_client.model,
-        "drafter_model_digest": _ollama_digest(drafter_client.model),
+        **ACCEPTANCE.provenance(
+            run_ids=[run_id],
+            corpus_version=retriever.corpus_version,
+            drafter_model=drafter_client.model,
+            drafter_model_digest=_ollama_digest(drafter_client.model),
+            created_at=created_at,
+        ),
         # Cloud models carry no Ollama-style digest; the pinned snapshot id is the best freeze key, and
         # cloud is not bit-reproducible even so (a pinned snapshot + fixed effort + fixed rubric is the
         # honest best available — the judge module says the same).
         "judge_model": judge_client.model,
         "judge_model_digest": f"cloud-snapshot:{judge_client.model}",
         "judge_version": judge.judge_version,
-        "axe_core_version": AXE_VERSION,
-        "act_export_hash": _EXPORT_SHA256,
-        "created_at": created_at,
         "cases": cases,
         "honest_misses": honest_misses,
         "injected": {"conformance_flip": conf_flip, "sc_swap": sc_swaps, "rationale_note": RATIONALE_NOTE},

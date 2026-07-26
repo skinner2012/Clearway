@@ -227,8 +227,9 @@ def run_dry_gate(label: str) -> DryGateResult:
 
     Invoke: `uv run python -m clearway.eval.dry_gate --run <label>`."""
     from clearway.eval.act_gold import _EXPORT_SHA256
-    from clearway.eval.offline_build import _CONFIG_ID, _REPORTS_DIR, _ollama_digest
+    from clearway.eval.offline_build import _REPORTS_DIR, _ollama_digest
     from clearway.eval.run_artifacts import dry_gate_path
+    from clearway.eval.run_scope import ACCEPTANCE
     from clearway.llm import LocalLLMClient
     from clearway.retriever import build_default_retriever
     from clearway.scanner import AXE_VERSION
@@ -245,7 +246,7 @@ def run_dry_gate(label: str) -> DryGateResult:
         "axe_core_version": AXE_VERSION,
         "act_export_hash": _EXPORT_SHA256,
         "corpus_version": build_default_retriever().corpus_version,
-        "config_id": _CONFIG_ID,
+        "config_id": ACCEPTANCE.config_id,
     }
 
     result = evaluate(

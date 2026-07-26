@@ -19,7 +19,7 @@ import pytest
 from clearway.eval import run_scope
 from clearway.eval.act_gold import RULE_TO_AXE
 from clearway.eval.image_reachability import HTML, IMAGE_AXE_RULE
-from clearway.eval.run_scope import ACCEPTANCE, IMAGE_LEAKY, OutOfScope
+from clearway.eval.run_scope import ACCEPTANCE, IMAGE_LEAKY, IMAGE_OPAQUE, OutOfScope
 
 
 def test_the_acceptance_scope_reproduces_the_frozen_acceptance_provenance() -> None:
@@ -38,9 +38,18 @@ def test_the_image_scope_carries_its_own_provenance_never_the_acceptance_one() -
     assert (IMAGE_LEAKY.config_id, IMAGE_LEAKY.eval_set_id) != (ACCEPTANCE.config_id, ACCEPTANCE.eval_set_id)
 
 
-def test_the_derived_opaque_sets_id_is_reserved_and_distinct_from_the_vendored_one() -> None:
-    assert run_scope.OPAQUE_EVAL_SET_ID == "act-image-opaque@1"
-    assert run_scope.OPAQUE_EVAL_SET_ID != IMAGE_LEAKY.eval_set_id
+def test_the_opaque_scope_is_the_same_pool_under_a_different_id_over_different_bytes() -> None:
+    # Two conditions, not one set with a flag: the ablated pages are different bytes with different
+    # finding ids, and a run that mixed them would read as one condition while being two.
+    assert IMAGE_OPAQUE.eval_set_id == run_scope.OPAQUE_EVAL_SET_ID == "act-image-opaque@1"
+    assert IMAGE_OPAQUE.eval_set_id != IMAGE_LEAKY.eval_set_id
+    assert IMAGE_OPAQUE.config_id == IMAGE_LEAKY.config_id == "single-multimodal@1"
+    assert IMAGE_OPAQUE.axe_rules == (IMAGE_AXE_RULE,) and IMAGE_OPAQUE.carries_honest_misses is False
+    assert IMAGE_OPAQUE.root != IMAGE_LEAKY.root and IMAGE_OPAQUE.manifest != IMAGE_LEAKY.manifest
+
+    opaque, leaky = run_scope.cases_for(IMAGE_OPAQUE), run_scope.cases_for(IMAGE_LEAKY)
+    assert [c["act_testcase_id"] for c in opaque] == [c["act_testcase_id"] for c in leaky]
+    assert all((IMAGE_OPAQUE.root / case["path"]).exists() for case in opaque)
 
 
 def test_the_acceptance_scope_selects_the_forty_four_cases_the_gate_asserts() -> None:

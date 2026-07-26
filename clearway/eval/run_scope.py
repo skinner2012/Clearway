@@ -48,6 +48,9 @@ from clearway.eval.act_gold import _ACT_GOLD, _EXPORT_SHA256, _MANIFEST, RULE_TO
 from clearway.eval.act_gold import _minting_findings as _acceptance_minting_findings
 from clearway.eval.act_image_gold import MANIFEST as _IMAGE_LEAKY_MANIFEST
 from clearway.eval.act_image_gold import _minting_findings as _image_minting_findings
+from clearway.eval.image_opaque import ACT_IMAGE_OPAQUE
+from clearway.eval.image_opaque import MANIFEST as _IMAGE_OPAQUE_MANIFEST
+from clearway.eval.image_opaque import SET_ID as OPAQUE_EVAL_SET_ID
 from clearway.eval.image_reachability import ACT_IMAGE, IMAGE_AXE_RULE
 from clearway.eval.image_reachability import SET_ID as _IMAGE_LEAKY_SET_ID
 from clearway.scanner import AXE_VERSION
@@ -63,10 +66,9 @@ ACCEPTANCE_EVAL_SET_ID = "act-acceptance@1"
 # The image pipeline: the same single model at the same temperature, with the image channel wired in.
 IMAGE_CONFIG_ID = "single-multimodal@1"
 
-# The derived set built by ablating every path component out of the vendored cases' markup. Reserved
-# here, beside the vendored set's id, because the two must never collide and the ablated set's builder
-# should not be the place that first invents its name.
-OPAQUE_EVAL_SET_ID = "act-image-opaque@1"
+# The derived set's id is now the builder's own (`OPAQUE_EVAL_SET_ID`, imported above) rather than a
+# literal reserved here — the same treatment the vendored set gets. It is read, never restated: an id
+# spelled in two places can be corrected in one of them.
 
 # The classes the referent fix treats — the pool the primary endpoint runs over. `document-title` is
 # measured (secondary, on mechanism) but is not in the pool: its ceiling cannot clear alpha, so pooling
@@ -163,6 +165,20 @@ IMAGE_LEAKY = RunScope(
     axe_rules=(IMAGE_AXE_RULE,),
     config_id=IMAGE_CONFIG_ID,
     eval_set_id=_IMAGE_LEAKY_SET_ID,
+    carries_honest_misses=False,
+    minting_findings=_image_minting,
+)
+
+# The same seven cases with every path cue ablated. A separate scope rather than a flag on the one
+# above: the two sets are different bytes under different ids, and a run that mixed them would read as
+# one condition while being two.
+IMAGE_OPAQUE = RunScope(
+    scope_id="image-opaque",
+    manifest=_IMAGE_OPAQUE_MANIFEST,
+    root=ACT_IMAGE_OPAQUE,
+    axe_rules=(IMAGE_AXE_RULE,),
+    config_id=IMAGE_CONFIG_ID,
+    eval_set_id=OPAQUE_EVAL_SET_ID,
     carries_honest_misses=False,
     minting_findings=_image_minting,
 )

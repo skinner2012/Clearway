@@ -479,6 +479,15 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
   > sniffs, and `scanner.served_content_type` sniffes the bytes. **The trap to avoid: never derive the
   > media type from these names.** A `.png` label on JPEG bytes in a `data:` URI is a lie told to the
   > model, and it is the one place where this scheme could do damage (T4/T5).
+  > **⚠️ Settled in execution — what the ablated set's gold means, because the ablation moves it.**
+  > Removing the path breaks **`9eb3f6`'s own applicability**: that rule is about an accessible name
+  > that *is* the filename, and after ablation no name is a filename — on **five of the seven cases**.
+  > The labels still carry, and the reason is specific rather than convenient: the judgment this set
+  > scores is **WCAG 1.1.1** — *does this accessible name describe this image?* — and the ablation
+  > touches neither side of that question, because every `alt` is byte-identical and every rendered
+  > image is the same bytes under a new name. So **the opaque set scores 1.1.1 conformance, not the ACT
+  > rule outcome**, and no report over it may claim otherwise. Recorded on the manifest, in the set's
+  > NOTICE, and in the ablation review.
 - **Freeze the permutation as a mapping over `act_testcase_id`s** — this is the pre-registration and it
   must be fixed before any verdict exists. Bytes are resolved in T4.
 - **⚠️ Acceptance 1:** no gold-relevant token survives anywhere in the minted prompt — `src`, `srcset`,
@@ -556,7 +565,9 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
   the receipt/permutation assertion result; **three discriminations, four of seven cases one JPEG, 7 of
   27 candidate cases**; ACT's *"should not be used"* quoted verbatim; **the deprecated rule carries 5 of
   the 7 pool cases (71 %) and the live rule only 2 (29 %)** — measured, replacing an earlier
-  "`qt1vmo`-only dependency ~100 %" that matched no reading of the pool; the prompt-mention decision;
+  "`qt1vmo`-only dependency ~100 %" that matched no reading of the pool; **that the opaque set scores
+  WCAG 1.1.1 conformance and not the deprecated rule's own outcome, whose applicability the ablation
+  removes on five of the seven cases**; the prompt-mention decision;
   the help-text tension; **the `e88epe` retraction with its
   ground, its motive, and its verified precondition**; **that M8 ran without a pre-flight gate**; and
   **one sentence that D systematically under-detects attendance**, because a mismatched image may

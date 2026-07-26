@@ -740,6 +740,15 @@ in one request. The extensionless assets decode **regardless** of the served Con
 question dissolved rather than being answered — and the type matters for the model's `data:` URI
 instead. `9eb3f6`'s assets **remain served**.
 
+**⚠️ Settle before T6/T7 if either runs anywhere but this checkout.** Every artifact that maps
+`finding.id → a picture` — `capture.json` and the dry receipt — is **bound to this working copy's path**,
+because `Finding.id` hashes the case's absolute `file://` URI. Pre-existing (T4 froze ids the same way)
+and not a defect: it is the same property that rules out a local HTTP server. But a pass run from a clone
+at a different path resolves **no** reference and the channel refuses every finding — loudly, which is the
+designed behaviour, not silently. The fix is to rebuild both artifacts in the new checkout (one command
+each, and their tests re-derive them), never to relax the lookup. `drafter_payload_baseline.json` is
+unaffected: it is keyed by `(scope, act_testcase_id, target)` on purpose. Recorded in `ARCHITECTURE.md` §4.2.
+
 **Still unverified — settle before the pass that depends on it.** Whether the drafter stays stable at
 finding level with images attached *(T7 measures it; the null rate rule already anticipates it)*.
 Image-token cost and wall-clock per condition, beyond the single spike data point. Whether

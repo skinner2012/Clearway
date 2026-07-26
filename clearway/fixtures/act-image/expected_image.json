@@ -1,0 +1,137 @@
+{
+  "set_id": "act-image-leaky@1",
+  "version": 1,
+  "gold_version": "act-gold@a805d865",
+  "source": "w3c-act",
+  "labeller": "ACT Rules Community Group",
+  "export_sha256": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "axe_core_version": "4.12.1",
+  "derived_from": "image_reachability.json",
+  "note": "The ACT image pool as gold, converted from the same frozen testcases.json the acceptance gold uses (export_sha256 above). Admitted as a SEPARATE set, never through act_gold.RULE_TO_AXE: that mapping is the acceptance benchmark's global scope and its offline gate asserts exactly 44 cases, so extending it in place would go red on runs that are already frozen. The cases are the pool measured in derived_from — usable, minting a judgment finding, not one half of a prompt-level twin pair, not from a retracted rule. Every case is loaded with the vendored asset tree served and its render asserted: an image rule's gold presumes the image arrived, and a scan without the assets mints the identical finding over a blank picture. Scored deterministically against gold, never by the judge.",
+  "rules": {
+    "qt1vmo": {
+      "rule_name": "Image accessible name is descriptive",
+      "deprecated": false,
+      "pool_cases": 2
+    },
+    "9eb3f6": {
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "deprecated": true,
+      "pool_cases": 5,
+      "deprecation": {
+        "upstream_notice": "This rule is not maintained anymore and should not be used.",
+        "superseded_by": "qt1vmo",
+        "decided": "ACT Rules Community Group call 2021-01-14, PR #1538",
+        "expected_outcomes_disputed": false,
+        "consequence": "most of this pool rests on a rule ACT tells implementers not to use, so every report over the set states the share it carries alongside the result"
+      }
+    }
+  },
+  "cases": [
+    {
+      "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "act_rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "rule_deprecated": false,
+      "axe_rule": "image-alt",
+      "path": "html/be6b29e220d6afbd827625c602ec49027e73fdf1.html",
+      "expected": "passed",
+      "gold_conformance": "supports",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1
+    },
+    {
+      "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "act_rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "rule_deprecated": false,
+      "axe_rule": "image-alt",
+      "path": "html/530266c6116fcfad12561e9e1a407fa0a0da3435.html",
+      "expected": "failed",
+      "gold_conformance": "does_not_support",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1
+    },
+    {
+      "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e.html",
+      "expected": "passed",
+      "gold_conformance": "supports",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1
+    },
+    {
+      "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/607ad4964aa69e78a663cf993a28cedd6a1dc39e.html",
+      "expected": "passed",
+      "gold_conformance": "supports",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1
+    },
+    {
+      "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/1ff696703e7e7393a5d05cdcd3229cb050594998.html",
+      "expected": "passed",
+      "gold_conformance": "supports",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1
+    },
+    {
+      "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/f7406b89f8e6769c01da5c305e3e6c921fd7c1e4.html",
+      "expected": "failed",
+      "gold_conformance": "does_not_support",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1
+    },
+    {
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "act_rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "rule_deprecated": true,
+      "axe_rule": "image-alt",
+      "path": "html/a2333ec76e676624212dcd616ed11ae576ab775e.html",
+      "expected": "failed",
+      "gold_conformance": "does_not_support",
+      "gold_success_criteria": [
+        "1.1.1"
+      ],
+      "expected_finding_count": 1,
+      "expected_rendered_images": 1
+    }
+  ]
+}

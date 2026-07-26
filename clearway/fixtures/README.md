@@ -91,6 +91,16 @@ Two things make this set different from every other fixture here:
   `img` alone, are hidden from the accessibility tree, or are one half of a **prompt-level twin pair**
   (identical minted prompt, opposite ACT outcome — a pair that hashing fixture *files* cannot see).
   Guarded by `tests/test_image_reachability.py`.
+- **The pool is gold under its own manifest.** [`expected_image.json`](act-image/expected_image.json)
+  (built by [`clearway/eval/act_image_gold.py`](../eval/act_image_gold.py)) admits exactly those 7
+  measured cases, converted from the same frozen export. It is deliberately **not** routed through
+  `act_gold.RULE_TO_AXE`: that mapping is the acceptance benchmark's global scope, asserted at 44 cases
+  by the offline gate, so admitting image rules in place would take it to 60 (the two live rules) or 71
+  (all three) and turn the gate red on runs that are already frozen. **Five of the seven cases come from
+  a rule ACT deprecated** — *"This rule is not maintained anymore and should not be used"*, quoted on the
+  manifest and now named in `act_gold.EXCLUDED_RULES`, where it had been merely absent. The loader serves
+  the assets and asserts every image rendered, because a scan without them mints the identical finding
+  over a picture that never arrived. Guarded by `tests/test_act_image_gold.py`.
 
 ## Changing a set
 

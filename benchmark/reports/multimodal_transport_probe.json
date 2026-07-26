@@ -1,0 +1,32 @@
+{
+  "probe": "multimodal transport through LiteLLM to the local chat model",
+  "ran_at": "2026-07-26T02:20:01.355544+00:00",
+  "model": "gemma4:31b",
+  "model_digest": "6316f0629137",
+  "provider_prefix": "ollama_chat/",
+  "litellm_version": "1.91.0",
+  "model_calls_spent": 2,
+  "schema": "_LLMDraft",
+  "temperature": 0.0,
+  "image": {
+    "path": "clearway/fixtures/act-image/assets/test-assets/shared/w3c-logo.png",
+    "bytes": 1927,
+    "sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+    "media_type": "image/png"
+  },
+  "schema_valid_json_returned": true,
+  "validation_error": null,
+  "content": "{\"conformance\":\"does_not_support\",\"cited_sc_ids\":[\"1.1.1\"],\"remediation\":\"Add alt text that identifies the image as the W3C logo.\",\"confidence\":0.95}",
+  "parsed": {
+    "conformance": "does_not_support",
+    "cited_sc_ids": [
+      "1.1.1"
+    ],
+    "remediation": "Add alt text that identifies the image as the W3C logo.",
+    "confidence": 0.95
+  },
+  "reasoning_returned": true,
+  "latency_ms": 58393.3,
+  "tokens_in": 835,
+  "tokens_out": 48
+}

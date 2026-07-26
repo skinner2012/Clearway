@@ -43,6 +43,30 @@ block shows the model what each candidate actually requires instead of naming an
 to supply the meaning from memory. The text is bounded here rather than at retrieval — see
 `NORMATIVE_TEXT_CHARS`. A candidate with no text (an SC named but never retrieved) renders exactly
 the id/url line it always rendered, so grounding appears only where there is grounding to show.
+
+A picture, on the judgment path only
+------------------------------------
+`draft(finding, citations, image=…)` attaches one `ImagePart` to the model call. It exists because a
+whole class of questions this drafter is asked is not answerable from the DOM: axe can say an image
+*has* an accessible name, and whether that name describes the picture is a fact about pixels. The
+referent blocks above carry the text such judgments need; this carries the one piece of referent
+material that is not text.
+
+Three properties, each load-bearing rather than tidy:
+
+* **The prompt is untouched by it.** No sentence is added saying a picture is attached, so two
+  requests can differ in pixels alone — the premise the image experiment's statistic is defined over,
+  and the reason the model is never told to look. It also means the text-only classes are provably
+  unaffected: a payload hash over a no-image call is unchanged by this whole channel
+  (`eval/drafter_payload.py`).
+* **The assembled path takes no picture, and says so loudly.** A confirmed violation's verdict and
+  criteria come from axe's tags; the model writes one sentence against them. Handing that path an
+  image is refused (`ImageOnAssembledPath`) rather than dropped — a dropped picture leaves a
+  complete-looking row whose model was shown nothing, which is indistinguishable in an artifact from
+  a model that looked and was unmoved. That distinction is the entire experiment.
+* **What was sent is recorded.** `DraftResult.request` carries the request as a value — prompts,
+  schema name, and the attached picture's digest — so a receipt records the sha256 of what actually
+  went out instead of re-deriving what probably did.
 """
 
 from __future__ import annotations
@@ -51,7 +75,7 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from clearway.llm import LLMClient, LLMUsage
+from clearway.llm import ImagePart, LLMClient, LLMRequest, LLMUsage
 from clearway.oracle import tag_to_sc_ids
 from clearway.schemas.models import AxeBucket, Citation, Conformance, DraftRow, Finding
 
@@ -96,13 +120,32 @@ NORMATIVE_TEXT_CHARS = 400
 _TRUNCATION_NOTE = f" (normative text truncated at {NORMATIVE_TEXT_CHARS} characters)"
 
 
+class ImageOnAssembledPath(ValueError):
+    """A picture was supplied for a finding that drafts on the assembled path.
+
+    Refused rather than dropped. That path's verdict and criteria come from axe's own tags and the
+    model writes one sentence against them, so there is nowhere for a picture to change an answer —
+    but a silently discarded one produces a row that looks exactly like a row whose model looked at
+    the pixels and was unmoved, and telling those two apart is the whole point of sending pixels.
+    """
+
+
 class DraftResult(NamedTuple):
-    """A drafted row **plus** the usage of the LLM call that produced it. The orchestrator seam
-    (`do_draft`) returns this so `execute()` can fill the `Trace` quartet; `Drafter.draft()` stays
-    a thin `.row`-only convenience for callers that don't care about telemetry."""
+    """A drafted row **plus** the usage of the LLM call that produced it, **plus** the request that
+    was sent. The orchestrator seam (`do_draft`) returns this so `execute()` can fill the `Trace`
+    quartet; `Drafter.draft()` stays a thin `.row`-only convenience for callers that don't care
+    about telemetry.
+
+    `request` is what went to the model, as a comparable value — the two prompts, the response
+    schema's name and the attached picture's digest. It is here rather than re-derived by the caller
+    because a receipt that reconstructs the request it *thinks* was sent cannot detect the one failure
+    that matters: a picture that never left this module. `None` means no call was recorded, which only
+    a hand-built `DraftResult` (a test stub, an orchestrator fake) produces.
+    """
 
     row: DraftRow
     usage: LLMUsage
+    request: LLMRequest | None = None
 
 
 class _LLMDraft(BaseModel):
@@ -159,52 +202,78 @@ class Drafter:
         self._client = client
         self._retries = retries
 
-    def draft(self, finding: Finding, citations: list[Citation]) -> DraftRow:
+    def draft(self, finding: Finding, citations: list[Citation], image: ImagePart | None = None) -> DraftRow:
         """Convenience for callers that only want the row (offline mechanics tests, the gated
         real-model tests). The durable orchestrator uses `draft_with_usage` to also thread usage
         into the `Trace`."""
-        return self.draft_with_usage(finding, citations).row
+        return self.draft_with_usage(finding, citations, image).row
 
-    def draft_with_usage(self, finding: Finding, citations: list[Citation]) -> DraftResult:
+    def draft_with_usage(
+        self, finding: Finding, citations: list[Citation], image: ImagePart | None = None
+    ) -> DraftResult:
         """Draft the row **and** return the usage of the LLM call that produced it. Usage is the
         successful call's; a fallback (model never parsed) carries empty usage — the tokens the
         failed attempts spent are not attributed to a row we're discarding.
 
         Dispatch is on what is already known: a confirmed violation with derivable criteria drafts
         remediation only; everything else takes the unchanged judgment path.
+
+        `image` is optional and only the judgment path can carry it — see `ImageOnAssembledPath` for
+        why the other path refuses rather than ignores one.
         """
         sc_ids = confirmed_violation_sc_ids(finding)
         if sc_ids:
+            if image is not None:
+                raise ImageOnAssembledPath(
+                    f"an image ({image.ref[:8]}…) was supplied for {finding.rule_id} finding {finding.id}, "
+                    f"whose criteria are already derived from axe's tags ({', '.join(sc_ids)}) — that draft "
+                    "asks the model for a remediation sentence only, so the picture would be dropped and the "
+                    "row would be indistinguishable from one the model saw the picture for"
+                )
             return self._draft_remediation(finding, citations, sc_ids)
-        return self._draft_judgment(finding, citations)
+        return self._draft_judgment(finding, citations, image)
 
-    def _draft_judgment(self, finding: Finding, citations: list[Citation]) -> DraftResult:
-        """The full judgment draft: the model decides conformance, citations and confidence."""
+    def _draft_judgment(
+        self, finding: Finding, citations: list[Citation], image: ImagePart | None = None
+    ) -> DraftResult:
+        """The full judgment draft: the model decides conformance, citations and confidence — from the
+        prompt, and from the picture where one is attached.
+
+        The request is built once, before the retry loop, and returned on the result: every attempt
+        sends the identical ask, so what is recorded is what was sent however many attempts it took,
+        including the attempt sequence that ended in the fallback."""
         system = _system_prompt()
         user = _user_prompt(finding, citations)
+        request = LLMRequest.of(system, user, _LLMDraft, image)
         for _ in range(self._retries + 1):
-            completion = self._client.complete_json(system, user, _LLMDraft)
+            completion = self._client.complete_json(system, user, _LLMDraft, image)
             try:
                 out = _LLMDraft.model_validate_json(completion.content)
             except ValidationError:
                 continue  # model drifted off-schema; try again, then fall back
-            return DraftResult(_assemble(finding, citations, out), completion.usage)
-        return DraftResult(_fallback(finding), LLMUsage())
+            return DraftResult(_assemble(finding, citations, out), completion.usage, request)
+        return DraftResult(_fallback(finding), LLMUsage(), request)
 
     def _draft_remediation(self, finding: Finding, citations: list[Citation], sc_ids: list[str]) -> DraftResult:
         """The confirmed-violation draft: code owns the verdict and the criteria; the model writes the
         fix against them. Same validate-retry-then-degrade contract as the judgment path, so a silent
-        drafter failure stays detectable by `is_fallback_draft` on both."""
+        drafter failure stays detectable by `is_fallback_draft` on both.
+
+        It takes no `image` parameter at all, which is the strongest form of "this path sends no
+        picture": there is nothing here to forget to pass on, and the caller's mistake is caught one
+        level up, where it can be named."""
         system = _remediation_system_prompt()
         user = _remediation_user_prompt(finding, sc_ids)
+        request = LLMRequest.of(system, user, _LLMRemediation)
         for _ in range(self._retries + 1):
             completion = self._client.complete_json(system, user, _LLMRemediation)
             try:
                 out = _LLMRemediation.model_validate_json(completion.content)
             except ValidationError:
                 continue
-            return DraftResult(_assemble_confirmed_violation(finding, citations, sc_ids, out), completion.usage)
-        return DraftResult(_fallback(finding), LLMUsage())
+            row = _assemble_confirmed_violation(finding, citations, sc_ids, out)
+            return DraftResult(row, completion.usage, request)
+        return DraftResult(_fallback(finding), LLMUsage(), request)
 
 
 def _system_prompt() -> str:

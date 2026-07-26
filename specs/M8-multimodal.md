@@ -250,7 +250,9 @@ Build the image channel on the production path, and prove the model attends to t
    reproduces the 7-case pool and the 4 twin exclusions exactly.
 3. The image scope is admitted **without changing the existing 44-case scope** — the dry gate still
    passes on M7's frozen runs.
-4. Each of the seven silent-failure paths is closed or fails loudly.
+4. Each of the **eight** silent-failure paths is closed or fails loudly — the eighth (`asset_root` not
+   threaded ⇒ identical findings over unloaded images) was found at pre-flight and voids the pool's
+   validity rather than its numbers.
 5. The opaque set is frozen with checksums in the pinned scheme; **the exclusion rule is re-run on the
    ablated set** and no gold-relevant token survives.
 6. The permutation is frozen as a mapping before any verdict exists, and resolved to bytes with a
@@ -263,7 +265,7 @@ Build the image channel on the production path, and prove the model attends to t
 10. The `leaky` → `opaque` difference reported as a secondary descriptive finding.
 11. Text classes unaffected, by payload-hash equality over all 7 image-class no-image payloads.
 12. All runs frozen and reproducible, with the held-out model-run count **including the pre-spec image
-    probe**.
+    probe and the transport spike's two calls**.
 
 ---
 
@@ -311,11 +313,18 @@ improvement on the reachable half and a coin-flip on the unreachable half are in
 **A motive is declared:** the retraction removes ~36 of the milestone's model calls.
 
 **The precondition that makes the retraction a pre-registration amendment rather than a post-hoc one,
-verified rather than assumed:** `e88epe` appears in the repo only in `act_gold.EXCLUDED_RULES` and as an
-`excluded_rules` entry in `expected_act.json`. It is **not** in `RULE_TO_AXE`; M7's 44 cases never
-touched it; the pre-spec measurement ran only the scanner and normalizer over it. **No `e88epe` drafter
-output exists anywhere in this repo.** If that is ever falsified, the retraction is contaminated and the
-prediction must be scored as written.
+verified rather than assumed: no `e88epe` drafter output exists anywhere in this repo.** It is **not**
+in `RULE_TO_AXE`; M7's 44 cases never touched it; only the scanner and normalizer have ever run over
+it. If that is ever falsified, the retraction is contaminated and the prediction must be scored as
+written.
+
+> **⚠️ Restated at pre-flight, because the original wording is now false.** It read *"`e88epe` appears
+> in the repo only in `act_gold.EXCLUDED_RULES` and as an `excluded_rules` entry in
+> `expected_act.json`"*. Since T0 the rule's **case HTML is vendored** (all published cases of the
+> three image rules are, so the reachability counts are reproducible) and its cases appear in the
+> reachability artifact with their minted `finding.html`. Neither is drafter output, so the
+> precondition that matters is untouched — and it is no longer a claim: it is **enforced by a test**
+> that fails if any `e88epe` case id, or the rule id itself, ever appears under `benchmark/`.
 
 ---
 
@@ -351,6 +360,15 @@ condition is produced by one build of the drafter stack.
   descriptiveness rules; `testcases.json` carries metadata only. Fetch the 7 pool and 4 twin cases from
   `act-rules.github.io` under `CLAUDE.md`'s scraping rules — robots.txt, rate limit, explicit
   User-Agent — checksum them, and confirm the deprecated rule's assets are still served.
+  > **⚠️ Widened in execution: all 51 published cases of the three rules were vendored, not 11.**
+  > With only the 7 pool and 4 twin cases, the twin check can only re-confirm pairs already named and
+  > *"6 of 16 mint"*, *"9eb3f6 mints 9 of 11"* and *"7 of 27"* cannot be reproduced at all — the
+  > exclusions have to be **discovered by the check**, not supplied to it. Same rule `act-gold/NOTICE`
+  > already states: the complete rule set, never a favorable subset. **Measured while fetching:**
+  > robots.txt returns **HTTP 404** (absent ⇒ nothing disallowed, recorded rather than assumed); every
+  > asset of the deprecated rule is **still served**; and one referenced asset,
+  > `/test-assets/does-not-exist.png`, **404s deliberately upstream** — it belongs to two
+  > `inapplicable` cases about an image request that never completes, so it is recorded, not repaired.
 - **⚠️⚠️ Absolute asset paths do not resolve under `file://`.** ACT references `/test-assets/…`, which
   under `file://` resolves to the filesystem root. **The repo already ships three such broken renders
   and nobody noticed, because the pipeline is text-only.** **Decision, taken here and not deferred: a
@@ -358,8 +376,18 @@ condition is produced by one build of the drafter stack.
   `Content-Type`.** Rejected alternatives, with reasons: rewriting the HTML mutates ACT bytes and
   contaminates the leaky condition; a local HTTP server puts a port inside every
   `Finding.id = sha(source_url, rule_id, target)` and destroys reproducibility.
-  **Four assets are served `application/octet-stream` upstream** (`nyhavn`, `paris`, `pain`,
-  `94251e11…`); the interceptor must set a decodable type or `naturalWidth` is 0 on four of seven cases.
+  **Five assets are served `application/octet-stream` upstream** (`nyhavn`, `paris`, `pain`,
+  `94251e11…`, and `login` on a non-pool case) — four, not five, sit on pool cases.
+  > **⚠️ Corrected by measurement: the Content-Type is NOT a second cause of blank renders.** This
+  > ticket claimed the interceptor "must set a decodable type or `naturalWidth` is 0 on four of seven
+  > cases". **False.** The same bytes decode under `image/png`, under `application/octet-stream`,
+  > under `text/plain` and **with no Content-Type at all** — Chromium sniffs an `<img>` from its
+  > content. **The path is the sole cause**, and the interceptor alone fixes it: all 7 pool cases now
+  > render. The sniffed type is kept and re-justified, because it is load-bearing **elsewhere**: an
+  > image handed to a multimodal model travels as `data:<media-type>;base64,…` and is decoded by that
+  > *declared* type, which an extensionless file name and an `application/octet-stream` header both
+  > fail to supply — so **T4/T5 must take the media type from the bytes, never from the name.** The
+  > negative result is pinned by test so a browser bump that stops sniffing surfaces as a failure.
 - **⚠️ One model-call spike, before anything is built.** `clearway/llm/local.py` routes through
   `litellm.completion(model="ollama_chat/…")` with `response_format`, and its own docstring records that
   the sibling provider prefix **"silently drops structured output and returns markdown"**. Whether that
@@ -377,24 +405,50 @@ condition is produced by one build of the drafter stack.
 - **⚠️ A separate `RULE_TO_AXE`-alike is not enough.** `expected_act.json` is asserted at 40 cases + 4
   honest misses = 44, `checksums.sha256` at 68 files, and `EXPECTED_EXCLUSIONS` names both image rules.
   The image cases need **their own manifest and builder**.
-- `act_export_hash` does not change. Extending `RULE_TO_AXE` in place would take the scope to **61** and
-  fail the dry gate on M7's frozen runs.
+- `act_export_hash` does not change. Extending `RULE_TO_AXE` in place would take the scope past the
+  44 the dry gate asserts and fail it on M7's frozen runs.
+  > **⚠️ Corrected: the resulting scope is 60 or 71, never 61.** Measured against the frozen export —
+  > current scope 44 (40 cases + 4 honest misses); **+ the two live image rules = 60**; **+ all three
+  > = 71**. The mechanism is `dry_gate` gate 3, which requires the scoped case set to equal a
+  > **44-case** baseline verdict vector (`dry_gate.py:111`), and both `dry_gate` and
+  > `referent_injection_build` scope by `manifest["cases"] … if c["rule_name"] in RULE_TO_AXE`.
+- **⚠️ The deprecated rule is not currently excluded anywhere — it is merely absent.** `EXCLUDED_RULES`
+  names the two live image rules only; `9eb3f6` never appears, because it was never vendored and
+  `build_manifest` silently skips any rule outside `RULE_TO_AXE`. So this is a **new entry**, not an
+  edit — and `test_act_gold.EXPECTED_EXCLUSIONS` is an exact-set assertion that will fail until it is
+  added. Match the name verbatim, em-dash included: `"DEPRECATED — Image filename is accessible name
+  for image"`.
 - **Acceptance:** dry gate still passes on M7's frozen runs; `EXCLUDED_RULES` and its test updated;
   deprecation recorded in the manifest.
 - **Depends on:** T0
 
 ### T2 — Give the harness an explicit scope
-**Seven paths fail silently on an image run. Each must be closed or made loud:**
+**Eight paths fail silently on an image run. Each must be closed or made loud.** All eight were
+re-verified against the code at pre-flight; the file/line notes are measured, not remembered:
 1. `drafter_kappa._grouped` drops non-`RULE_TO_AXE` cases → an **empty but schema-valid** VerdictVector.
-2. `paired._POOLED_AXE_RULES = ("label", "link-name")` is a default never threaded → **b = 0, c = 0**.
-3. Attribution against a non-overlapping baseline `continue`s → prints **"prior run intact"**, a
-   **false clean**.
+   *(It already takes `scoped: bool = True` — `scoped=False` recovers the unscoped reading, so the fix
+   may be a call site rather than new code.)*
+2. `_POOLED_AXE_RULES = ("label", "link-name")` is a default never threaded → **b = 0, c = 0**.
+   **⚠️ It exists in TWO modules** — `paired.py:42` **and** `drafter_kappa_baseline.py:117`. Fixing one
+   leaves the other silently wrong.
+3. Attribution against a non-overlapping baseline `continue`s → prints **"prior run intact"**
+   (`referent_injection_score.py:191`), a **false clean**.
 4. `_DISTINCT_PROMPTS_BEFORE` / `baseline_reachable` are `.get()`-defaulted → `image-alt` renders empty.
 5. `predictions=baseline_kappa.get("predictions", [])` → **M7's predictions scored into M8's result**.
 6. `referent_injection_build` selects on `RULE_TO_AXE` + M7's manifest → would **draft M7's 44 cases**.
-7. `_CONFIG_ID` / `_EVAL_SET_ID` stamp `m1-single@1` / `act-acceptance@1` → **false provenance frozen
-   into every artifact**. **Literals, decided here: `config_id = "m8-multimodal@1"`,
-   `eval_set_id = "act-image-opaque@1"`** (and `"act-image-leaky@1"` for the unablated condition).
+7. `_CONFIG_ID` / `_EVAL_SET_ID` (`offline_build.py:44-45`) stamp `m1-single@1` / `act-acceptance@1` →
+   **false provenance frozen into every artifact**. **Literals, decided here:
+   `config_id = "m8-multimodal@1"`, `eval_set_id = "act-image-opaque@1"`** (and `"act-image-leaky@1"`
+   for the unablated condition). *(Note the tension to settle when writing it: a milestone label inside
+   a shipped artifact is what the `m1-single@1` precedent already does, and what this repo's
+   no-milestone-labels-in-artifacts rule otherwise forbids. Decide deliberately; do not drift.)*
+8. **⚠️ NEW — found at pre-flight, and it voids the pool rather than the numbers.** `asset_root` is
+   optional on `scan()`, and **a scan without it produces the IDENTICAL finding** — same `id`, same
+   `html`, same count (measured). So a builder that forgets to thread it gets a flawless-looking
+   finding set while **every image silently fails to load**, and `qt1vmo`'s applicability — which
+   presumes the image rendered — quietly lapses with no finding-level signal anywhere.
+   **`act_gold._minting_findings()` calls `scan(str(case_path))` with no asset root, so it must not be
+   reused as-is.** Render validity is visible only through `scanner.image_render_report`.
 
 - **Not the problem:** `RUN_LABELS` namespacing is sound — `passes_in` is label-prefixed,
   `refuse_to_overwrite` is path-based, single-parent `_PRIOR_RUN` expresses M8's chain.
@@ -411,6 +465,12 @@ condition is produced by one build of the drafter stack.
 - Rewrite `src`, `srcset` and the directory on all 7 pool cases to the pinned scheme (`/img/a.png`,
   `/img/b.png`, `/img/c.png`, one per distinct image). Nothing else changes. Deterministic, checksummed,
   distinct `set_id`.
+  > **⚠️ The pinned `.png` is decorative, and two of the three images are JPEG.** Measured: the W3C
+  > logo is PNG; Nyhavn and the bread are **JPEG**. The uniform extension is kept — it is the point
+  > that the name carries no information — and it is harmless because **nothing reads it**: the browser
+  > sniffs, and `scanner.served_content_type` sniffes the bytes. **The trap to avoid: never derive the
+  > media type from these names.** A `.png` label on JPEG bytes in a `data:` URI is a lie told to the
+  > model, and it is the one place where this scheme could do damage (T4/T5).
 - **Freeze the permutation as a mapping over `act_testcase_id`s** — this is the pre-registration and it
   must be fixed before any verdict exists. Bytes are resolved in T4.
 - **⚠️ Acceptance 1:** no gold-relevant token survives anywhere in the minted prompt — `src`, `srcset`,
@@ -486,8 +546,10 @@ condition is produced by one build of the drafter stack.
   used (`max` of M8's measured rate and M7's 1/54, both printed); the per-condition instability counts;
   the direction check as secondary; the `leaky` → `opaque` difference with its fixture-artifact caveat;
   the receipt/permutation assertion result; **three discriminations, four of seven cases one JPEG, 7 of
-  27 candidate cases**; ACT's *"should not be used"* quoted verbatim; the `qt1vmo`-only dependency stated
-  as **~100 %**; the prompt-mention decision; the help-text tension; **the `e88epe` retraction with its
+  27 candidate cases**; ACT's *"should not be used"* quoted verbatim; **the deprecated rule carries 5 of
+  the 7 pool cases (71 %) and the live rule only 2 (29 %)** — measured, replacing an earlier
+  "`qt1vmo`-only dependency ~100 %" that matched no reading of the pool; the prompt-mention decision;
+  the help-text tension; **the `e88epe` retraction with its
   ground, its motive, and its verified precondition**; **that M8 ran without a pre-flight gate**; and
   **one sentence that D systematically under-detects attendance**, because a mismatched image may
   produce genuine uncertainty that the stability filter codes as noise.
@@ -510,9 +572,15 @@ condition is produced by one build of the drafter stack.
 | `opaque / with-image` | 7 × 3 | one half of D |
 | `opaque / mismatched-image` | 7 × 3 | the other half of D |
 | capture spot-check (T4 A3) | 3 | separates capture failure from plumbing failure |
-| LiteLLM spike (T0) | 1 | before anything is built |
+| LiteLLM spike (T0) | ~~1~~ **2, spent** | before anything is built |
 
-**~74 model calls over 7 findings.** M7 ran 44 cases / 54 findings at 2–3.5 h per pass; at 7 findings
+> **⚠️ The spike cost two calls, not one.** The first request reached the model and returned; the
+> script then crashed while writing its receipt (it read a `litellm.__version__` that does not exist),
+> so the response was lost and the call had to be repeated. Not a transport failure — but a spend that
+> leaves no artifact is the easiest kind to drop from a run count, so it is declared in the receipt
+> (`model_calls_spent: 2`) and here.
+
+**~75 model calls over 7 findings.** M7 ran 44 cases / 54 findings at 2–3.5 h per pass; at 7 findings
 every condition is well under an hour. **No M7 case is re-run** — provided T2 closes silent-failure
 path 6, which would otherwise draft all 44.
 
@@ -531,8 +599,8 @@ three rules carry `wcag20:1.1.1` **Level A**. `9eb3f6`'s assets `nyhavn`, `paris
 `94251e11…` are **byte-identical — `sha256 c5cc0db7…`, 32 822 B, 320×213, one photograph under four
 names**; the W3C logo is 1 927 B / 72×48; `pain` is 7 350 B / 150×100. `1ff696703e`'s `srcset` offers
 only 1.5x and 2x candidates, so at Playwright's default `deviceScaleFactor = 1` the browser takes `src`
-— **three distinct captures over seven findings, multiplicity 4 / 2 / 1**. Four assets are served
-`application/octet-stream`. **Two** prompt-level twin pairs exist. `1ff696703e`'s `srcset` retains the
+— **three distinct captures over seven findings, multiplicity 4 / 2 / 1**. **Five** assets are served
+`application/octet-stream` (four of them on pool cases). **Two** prompt-level twin pairs exist. `1ff696703e`'s `srcset` retains the
 tokens `nyhavn` and `paris` under a filename-only rewrite. **66 usable cases across 20 ACT rules mint an
 `image-alt` finding**, but none besides `qt1vmo` and `9eb3f6` shares this mechanism: `23a2a8`'s 6
 minting cases are **all gold-passed** (degenerate) and `46ca7f` has
@@ -568,17 +636,34 @@ prompt and with thinking disabled, so it establishes **capability only**. **M7:*
 p = 0.109375; **1 drifting finding in 54** at finding level, diagnosed as numerical rather than sampling
 nondeterminism; case verdicts held only because flag-if-any absorbed it, which its write-up called luck.
 
+**Re-derived at pre-flight against the vendored set, and frozen as a repo artifact.** Every count above
+reproduced exactly: 51 published → **27 usable → 15 minting → pool 7 (26 %)**, the pool ids unchanged;
+**10 matcher-limited** (4 `<svg>`, 4 `<canvas>`, 2 `<input type="image">`) **+ 2 `aria-hidden`**; the
+**two** twin pairs found by the prompt-level check, whose two files are *not* byte-identical — which is
+why the file-hashing check cannot see them. **All 7 pool cases render** (`naturalWidth` 72 / 320 / 150).
+Confirmed **before** any capture exists, so T4 Acceptance 1 is now a regression check rather than a
+discovery: the pool resolves to **3 distinct images at multiplicity 4 / 2 / 1**
+(`c5cc0db7…` 32 822 B ×4 · `083d533e…` 1 927 B ×2 · `bfd6e732…` 7 350 B ×1), and `1ff696703e` takes
+`src`, not a `srcset` candidate. **LiteLLM carries an image part, a `response_format` schema and the
+model's thinking in one request** — schema-valid `_LLMDraft` returned on `gemma4:31b` digest
+`6316f0629137`, the same digest M6/M7 ran; receipt frozen. One data point on cost: a 1 927-byte PNG
+added ~835 prompt tokens and the call took ~58 s.
+
 **Inference — reasoned, not observed.** That the pool's effective independent unit count is 3, so any
 paired statistic on it is pseudo-replication. That the 6 image-deciding cases are image-deciding,
 confirmed only when T6 runs. That full-path ablation defuses the help-text conflict rather than merely
 reducing it. That a text-blind judge answers each discrimination group uniformly — **an assumption M7
 measured false on comparable input**, which is one reason no sign test is reported.
 
-**Unverified — settle in T0 or Plan.** **Whether LiteLLM's `ollama_chat` provider carries multimodal
-content parts, a `response_format` schema and the thinking budget in one request** — the one link the
-wiring assumes and the pre-spec probe bypassed; T0 spikes it. Whether the interceptor serves decodable
-Content-Types for the four extensionless assets. Whether the drafter stays stable at finding level with
-images attached. Whether `9eb3f6`'s assets remain served. Image-token cost and wall-clock per condition.
-Whether `FROZEN_CLASS_KAPPA`'s "newest scored run" provenance rule can accommodate a run containing only
-`image-alt` — a **structural** conflict, since no single artifact would carry all five classes. **M8 does
-not resolve it and must not silently pin a shipped trust tier to ablated, deprecated-gold provenance.**
+**Settled in T0 — moved out of Unverified.** LiteLLM's `ollama_chat` provider **does** carry all three
+in one request. The extensionless assets decode **regardless** of the served Content-Type, so that
+question dissolved rather than being answered — and the type matters for the model's `data:` URI
+instead. `9eb3f6`'s assets **remain served**.
+
+**Still unverified — settle before the pass that depends on it.** Whether the drafter stays stable at
+finding level with images attached *(T7 measures it; the null rate rule already anticipates it)*.
+Image-token cost and wall-clock per condition, beyond the single spike data point. Whether
+`FROZEN_CLASS_KAPPA`'s "newest scored run" provenance rule can accommodate a run containing only
+`image-alt` — a **structural** conflict, since no single artifact would carry all five classes, and
+`image-alt` is already a shipped `QUALITY_REVIEW_RULES` class sitting at `UNMEASURED`. **M8 does not
+resolve it and must not silently pin a shipped trust tier to ablated, deprecated-gold provenance.**

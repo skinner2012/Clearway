@@ -442,6 +442,14 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
    for the unablated condition). *(Note the tension to settle when writing it: a milestone label inside
    a shipped artifact is what the `m1-single@1` precedent already does, and what this repo's
    no-milestone-labels-in-artifacts rule otherwise forbids. Decide deliberately; do not drift.)*
+   > **⚠️ Settled in execution, and it moved one literal: `config_id` ships as `single-multimodal@1`,
+   > not `m8-multimodal@1`.** The tension was put to the human and decided against the precedent: a
+   > milestone label is ticket bookkeeping, `config_id` names a pipeline configuration, and
+   > `single-multimodal@1` says what it actually identifies — one model, no routing, image channel
+   > wired in. The frozen `m1-single@1` artifacts are not rewritten; the precedent simply stops here.
+   > **Both eval-set ids are unchanged** (`act-image-leaky@1` / `act-image-opaque@1`), and the leaky one
+   > is not a new literal at all — it is `image_reachability.SET_ID`, already shipped, now read rather
+   > than restated.
 8. **⚠️ NEW — found at pre-flight, and it voids the pool rather than the numbers.** `asset_root` is
    optional on `scan()`, and **a scan without it produces the IDENTICAL finding** — same `id`, same
    `html`, same count (measured). So a builder that forgets to thread it gets a flawless-looking
@@ -620,7 +628,14 @@ alternative text provides a meaningful description"*; `30562e91bf` (gold passed,
 drafted `does_not_support` reasoning *"Add a descriptive alt attribute"*.
 
 Repo: `fixtures/act-gold/html/` holds **67 files, none of them image cases**; three already-vendored
-cases reference `/test-assets/` absolutely and **already render broken**. `RULE_TO_AXE` is the global
+cases reference `/test-assets/` absolutely and **already render broken**.
+> **⚠️ Re-measured at T2: five, not three — and two of them are inside the scored 44.** All five are
+> `<img src="/test-assets/…">`; the scored pair is `49a6b0a208` (a heading) and `d876314b60` (a link).
+> **The acceptance numbers are unaffected and the gold is not invalid**: both are decided by an `alt`
+> attribute, which is in the DOM whether or not the picture loads, and `expected_act.json` regenerates
+> byte-identical. It matters as a *scope* fact — the acceptance minting deliberately serves no assets,
+> so a guard written against the markup rather than against the gold tree would have refused two real
+> gold cases. The refusal is therefore keyed to the case's tree, not to its `src` attributes. `RULE_TO_AXE` is the global
 scope for `referent_injection_build` and `dry_gate`, which asserts **exactly 44**; extending it gives
 **61**. **`LLMClient` exposes only `complete_json(system, user, schema)` — there is no `chat()`.**
 `local.py` routes via `litellm.completion(model="ollama_chat/…")` with `response_format`, and its

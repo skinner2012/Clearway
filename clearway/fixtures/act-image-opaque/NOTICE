@@ -22,6 +22,9 @@ Beihang). The material is provided "AS IS".
 **These pages are modified and must not be presented as ACT's published cases.**
 The image files under `assets/` are byte-identical copies of the ACT assets,
 renamed. The upstream copies, at their upstream paths, are in `../act-image/`.
+The files under `captured/` are the same three images again — the bytes the
+browser actually fetched while rendering these pages — stored under their own
+sha256 rather than under any name.
 
 What was changed, exactly
 -------------------------
@@ -85,6 +88,12 @@ this repo are.
 the mismatched condition, frozen before any verdict over this set existed. It is
 authored over ACT testcase ids, every case receives an image that is not its own
 (asserted at build time), and it is not to be edited after a run.
+
+`capture.json` resolves that pre-registration to bytes, and `captured/` holds
+them. Those files carry no checksum list because they need none: each is named
+by its own sha256, so the name IS the checksum and a read that no longer matches
+it is refused (`clearway/scanner/capture.py`). Regenerate both with
+`uv run python -m clearway.eval.image_capture`, which re-renders every page.
 
   Derived:     2026-07-26
   Derived by:  clearway/eval/image_opaque.py  (`uv run python -m clearway.eval.image_opaque`)

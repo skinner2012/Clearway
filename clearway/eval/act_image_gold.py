@@ -63,6 +63,7 @@ from clearway.eval.image_reachability import (
     SET_ID,
 )
 from clearway.normalizer import normalize
+from clearway.scanner.capture import ImageStore
 from clearway.scanner.scan import AXE_VERSION, RenderedImage, image_render_report, scan
 from clearway.schemas.models import Conformance, Finding, GoldLabel
 
@@ -108,12 +109,18 @@ def assets_for(case_path: Path) -> Path:
     return assets
 
 
-def _minting_findings(case_path: Path) -> list[Finding]:
+def _minting_findings(case_path: Path, image_store: ImageStore | None = None) -> list[Finding]:
     """The judgment findings the image rule mints on this case, scanned WITH its own asset tree.
 
     The asset root is not optional here and is not a parameter — see `assets_for`.
+
+    `image_store` is a parameter, and the difference from the asset root is the whole reason: a
+    forgotten asset root mints the IDENTICAL finding over a picture that never arrived, with nothing
+    anywhere to show for it, while a forgotten store leaves `image_ref` empty on every finding — an
+    absence its consumer asserts against. So capture stays opt-in (a gold load wants findings, not
+    pixels) without reopening the failure `assets_for` closed.
     """
-    findings = normalize(scan(str(case_path), assets_for(case_path)))
+    findings = normalize(scan(str(case_path), assets_for(case_path), image_store))
     return [f for f in findings if f.rule_id == IMAGE_AXE_RULE and f.source_bucket is JUDGMENT_BUCKET]
 
 

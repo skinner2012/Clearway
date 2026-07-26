@@ -131,6 +131,17 @@ untouched, and this set's purpose is to change them.
 - **[`permutation.json`](act-image-opaque/permutation.json) is a pre-registration**: which *wrong*
   image each case is shown behind a byte-identical prompt, frozen before any verdict over this set
   existed, with the derangement asserted at build time.
+- **[`capture.json`](act-image-opaque/capture.json) + [`captured/`](act-image-opaque/captured/) are
+  that pre-registration resolved to bytes.** Built by
+  [`clearway/eval/image_capture.py`](../eval/image_capture.py) through the *production* scan, so the
+  reference lands on `Finding.image_ref` rather than in an eval-only side channel. Each picture is
+  stored under its own sha256 with **no extension** — the file's name is its checksum, and a name
+  claiming a format would be the same lie the `.png` scheme exists to demonstrate. Two acceptances
+  ride on it: the seven findings resolve to **exactly 3 distinct images at 4 / 2 / 1** (one check
+  covering the asset interceptor, the renaming, and the permutation's premise), and the mapping is a
+  derangement **on bytes** — which is a different statement from a derangement on names, because four
+  of the seven cases are the same photograph. Keyed by `finding.id`, never `target`: every pool case's
+  finding sits on the selector `img`.
 - The case-by-case written confirmation is [`docs/image-ablation-review.md`](../../docs/image-ablation-review.md).
 
 ## Changing a set

@@ -1,0 +1,145 @@
+{
+  "set_id": "act-image-opaque@1",
+  "version": 1,
+  "config_id": "single-multimodal@1",
+  "axe_core_version": "4.12.1",
+  "store": "captured",
+  "derived_from": "permutation.json",
+  "note": "The picture every pool finding actually rendered, captured through the production scan and addressed by its own sha256. Keyed by finding.id, never by target: `img` matches on nearly every case page. The bytes are the asset's own — the response the browser fetched, not a canvas or screenshot re-encoding — so a capture digest is comparable with the vendored asset's digest, and the media type is sniffed from those bytes and never from the deliberately-uniform `.png` names. The store is content-addressed, so each file's name IS its checksum and a read that no longer matches is refused. `resolved_permutation` is the frozen mapping turned into bytes: `with_image_ref` is what the case rendered, `mismatched_image_ref` is what the manipulation attaches instead, and no case receives its own bytes.",
+  "distinct_images": 3,
+  "multiplicity": [
+    4,
+    2,
+    1
+  ],
+  "captures": [
+    {
+      "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "finding_id": "a054a5256af49de2",
+      "target": "img",
+      "image": "w3c-logo",
+      "image_ref": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "media_type": "image/png",
+      "bytes": 1927
+    },
+    {
+      "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "finding_id": "8f4b06fe4a222907",
+      "target": "img",
+      "image": "w3c-logo",
+      "image_ref": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "media_type": "image/png",
+      "bytes": 1927
+    },
+    {
+      "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "finding_id": "bf7688e780305be4",
+      "target": "img",
+      "image": "nyhavn",
+      "image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "media_type": "image/jpeg",
+      "bytes": 32822
+    },
+    {
+      "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "finding_id": "c398b407d79aca6f",
+      "target": "img",
+      "image": "bread",
+      "image_ref": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+      "media_type": "image/jpeg",
+      "bytes": 7350
+    },
+    {
+      "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "finding_id": "bbede717e40ab60a",
+      "target": "img",
+      "image": "nyhavn",
+      "image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "media_type": "image/jpeg",
+      "bytes": 32822
+    },
+    {
+      "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+      "finding_id": "10f322c79b16872a",
+      "target": "img",
+      "image": "nyhavn",
+      "image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "media_type": "image/jpeg",
+      "bytes": 32822
+    },
+    {
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "finding_id": "e14930e63599c863",
+      "target": "img",
+      "image": "nyhavn",
+      "image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "media_type": "image/jpeg",
+      "bytes": 32822
+    }
+  ],
+  "resolved_permutation": [
+    {
+      "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "finding_id": "a054a5256af49de2",
+      "true_image": "w3c-logo",
+      "with_image_ref": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "mismatched_image": "bread",
+      "mismatched_image_ref": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+      "live": true
+    },
+    {
+      "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "finding_id": "8f4b06fe4a222907",
+      "true_image": "w3c-logo",
+      "with_image_ref": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "mismatched_image": "nyhavn",
+      "mismatched_image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "live": false
+    },
+    {
+      "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "finding_id": "bf7688e780305be4",
+      "true_image": "nyhavn",
+      "with_image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "mismatched_image": "w3c-logo",
+      "mismatched_image_ref": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "live": true
+    },
+    {
+      "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "finding_id": "c398b407d79aca6f",
+      "true_image": "bread",
+      "with_image_ref": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+      "mismatched_image": "w3c-logo",
+      "mismatched_image_ref": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "live": true
+    },
+    {
+      "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "finding_id": "bbede717e40ab60a",
+      "true_image": "nyhavn",
+      "with_image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "mismatched_image": "bread",
+      "mismatched_image_ref": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+      "live": true
+    },
+    {
+      "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+      "finding_id": "10f322c79b16872a",
+      "true_image": "nyhavn",
+      "with_image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "mismatched_image": "bread",
+      "mismatched_image_ref": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+      "live": false
+    },
+    {
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "finding_id": "e14930e63599c863",
+      "true_image": "nyhavn",
+      "with_image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "mismatched_image": "w3c-logo",
+      "mismatched_image_ref": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "live": false
+    }
+  ]
+}

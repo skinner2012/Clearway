@@ -30,7 +30,10 @@ Why the loader threads the asset root
 A scan without the vendored asset tree mints the IDENTICAL finding — same id, same html, same count —
 over an image that never arrived, and the image rules' gold presumes the image rendered. That failure
 has no finding-level signal at all, so the loader both serves the assets and asserts the render
-(`render_failures`), and a missing picture stops the load instead of quietly invalidating it.
+(`render_failures`), and a missing picture stops the load instead of quietly invalidating it. The
+tree is *derived* from where a case lives (`assets_for`) rather than passed in, so the derived opaque
+set — a second set of exactly this shape — inherits the same guarantee without a second argument that
+could be forgotten.
 
 Regenerate the manifest with `uv run python -m clearway.eval.act_image_gold` (re-scans the pool).
 """
@@ -54,7 +57,6 @@ from clearway.eval.act_gold import (
 from clearway.eval.image_reachability import (
     ACT_IMAGE,
     ARTIFACT,
-    ASSETS,
     HTML,
     IMAGE_AXE_RULE,
     JUDGMENT_BUCKET,
@@ -82,14 +84,36 @@ DEPRECATION: dict[str, Any] = {
 }
 
 
-def _minting_findings(case_path: Path) -> list[Finding]:
-    """The judgment findings the image rule mints on this case, scanned WITH the vendored asset tree.
+def assets_for(case_path: Path) -> Path:
+    """The asset tree that belongs to this case's OWN set — derived from where the case lives, never
+    passed in.
 
-    The asset root is not optional here and is not a parameter: an image case scanned without it
-    produces exactly the same findings over exactly no pictures, which is the one failure in this set
-    that leaves no trace on a `Finding`.
+    Every image set in this repo has the same two-directory shape, `<root>/html/<case>.html` beside
+    `<root>/assets/`, so the tree a case needs is a function of the case. That is deliberate rather
+    than convenient: an asset root that can be supplied can be forgotten, and a scan that forgets it
+    mints identical findings — same ids, same html, same count — over pictures that never arrived. The
+    derived set gets the same guarantee as the vendored one for free, and pairing one set's pages with
+    another set's assets stops being expressible.
     """
-    findings = normalize(scan(str(case_path), ASSETS))
+    from clearway.eval.run_scope import OutOfScope  # the scope sits above the gold it scopes
+
+    root = case_path.resolve().parent.parent
+    assets = root / "assets"
+    if case_path.resolve().parent.name != "html" or not assets.is_dir():
+        raise OutOfScope(
+            f"{case_path} is not an image-set case: an image set is `<root>/html/<case>.html` beside "
+            "`<root>/assets/`, and the assets are what make the picture arrive. Scanning it here would "
+            "mint the identical finding over an image that never loaded, with no finding-level trace."
+        )
+    return assets
+
+
+def _minting_findings(case_path: Path) -> list[Finding]:
+    """The judgment findings the image rule mints on this case, scanned WITH its own asset tree.
+
+    The asset root is not optional here and is not a parameter — see `assets_for`.
+    """
+    findings = normalize(scan(str(case_path), assets_for(case_path)))
     return [f for f in findings if f.rule_id == IMAGE_AXE_RULE and f.source_bucket is JUDGMENT_BUCKET]
 
 
@@ -122,7 +146,7 @@ def _case_entry(testcase: dict[str, Any]) -> dict[str, Any]:
         "gold_conformance": _conformance(testcase["expected"]).value,  # type: ignore[union-attr]  # non-None: the pool is passed/failed
         "gold_success_criteria": _success_criteria(testcase["ruleAccessibilityRequirements"]),
         "expected_finding_count": len(_minting_findings(path)),
-        "expected_rendered_images": len(image_render_report(str(path), ASSETS)),
+        "expected_rendered_images": len(image_render_report(str(path), assets_for(path))),
     }
 
 
@@ -166,21 +190,26 @@ def build_manifest() -> dict[str, Any]:
     }
 
 
-def load_image_gold_pairs() -> list[tuple[Finding, GoldLabel]]:
-    """Load the image gold as `(Finding, GoldLabel)` pairs by re-scanning each pool case with its
+def load_image_gold_pairs(manifest_path: Path = MANIFEST) -> list[tuple[Finding, GoldLabel]]:
+    """Load an image gold set as `(Finding, GoldLabel)` pairs by re-scanning each pool case with its
     assets served. A finding count that drifted from the manifest, or an image that did not render,
-    is raised — the first means axe-core moved, the second means the set is invalid."""
-    manifest = json.loads(MANIFEST.read_text())
+    is raised — the first means axe-core moved, the second means the set is invalid.
+
+    Parameterised by manifest because the derived set is a second set of exactly this shape: its cases
+    resolve against the manifest's own directory, and its assets against those cases, so no call site
+    can pair one set's pages with another's gold or another's pictures."""
+    manifest = json.loads(manifest_path.read_text())
+    root = manifest_path.parent
     pairs: list[tuple[Finding, GoldLabel]] = []
     for case in manifest["cases"]:
-        path = ACT_IMAGE / case["path"]
+        path = root / case["path"]
         findings = _minting_findings(path)
         if len(findings) != case["expected_finding_count"]:
             raise RuntimeError(
                 f"ACT image gold drift: case {case['act_testcase_id']} minted {len(findings)} findings, "
                 f"manifest expects {case['expected_finding_count']} (axe-core changed?)"
             )
-        failures = render_failures(case, image_render_report(str(path), ASSETS))
+        failures = render_failures(case, image_render_report(str(path), assets_for(path)))
         if failures:
             raise RuntimeError(f"ACT image gold invalid — the gold presumes a rendered image: {'; '.join(failures)}")
         for finding in findings:

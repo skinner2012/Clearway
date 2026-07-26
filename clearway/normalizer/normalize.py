@@ -92,6 +92,7 @@ def _findings_from_rule(source_url: str, rule: AxeRuleResult, bucket: AxeBucket)
                 # Carried, not hashed: the id above is the place's identity, and the same place
                 # must keep the same id however much context the scanner captures about it.
                 referent=node.referent,
+                image_ref=node.image_ref,
             )
         )
     return findings

@@ -21,7 +21,8 @@ from typing import Any
 
 from playwright.sync_api import Route, sync_playwright
 
-from clearway.scanner.scan import _vendored_asset_route, image_render_report, served_content_type
+from clearway.scanner.capture import served_content_type
+from clearway.scanner.scan import _vendored_asset_route, image_render_report
 
 # A 1x1 PNG, and the leading bytes of a JPEG. Literal so the test states its own inputs.
 PNG = base64.b64decode(

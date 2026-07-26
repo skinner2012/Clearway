@@ -17,7 +17,6 @@ is what makes an image-bearing fixture actually *render* offline.
 
 from __future__ import annotations
 
-import mimetypes
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,6 +25,7 @@ from urllib.parse import urlparse
 
 from playwright.sync_api import Route, sync_playwright
 
+from clearway.scanner.capture import ImageStore, ResponseRecorder, capture_images, served_content_type
 from clearway.scanner.referent import extract_referents
 from clearway.schemas.models import (
     AxeIncomplete,
@@ -54,44 +54,6 @@ def _to_url(target: str) -> str:
     if urlparse(target).scheme in {"http", "https", "file"}:
         return target
     return Path(target).resolve().as_uri()
-
-
-# Enough leading bytes to identify the image formats a fixture can carry. Sniffed from CONTENT, not
-# from the file name, because the assets that need this most have no extension at all.
-_MAGIC_CONTENT_TYPES: tuple[tuple[bytes, str], ...] = (
-    (b"\x89PNG\r\n\x1a\n", "image/png"),
-    (b"\xff\xd8\xff", "image/jpeg"),
-    (b"GIF87a", "image/gif"),
-    (b"GIF89a", "image/gif"),
-)
-
-
-def served_content_type(body: bytes, path: str = "") -> str:
-    """The honest `Content-Type` for `body`, derived from its magic bytes.
-
-    **Measured, because the obvious justification for this is wrong:** Chromium renders an `<img>`
-    from its bytes whatever type it was served under — `application/octet-stream`, `text/plain` and
-    a missing header all decode identically — so this is *not* what makes a fixture render. What
-    makes it render is the request resolving at all (`_vendored_asset_route`).
-
-    It earns its place elsewhere. The type is what a consumer other than a browser has to be told:
-    an image sent to a multimodal model travels as `data:<media-type>;base64,…` and is decoded by
-    that declared type, and several of these assets are extensionless and served
-    `application/octet-stream` upstream, so neither the file name nor the upstream header can supply
-    it. Sniffing the bytes is the only source that is right for all of them. It also keeps the served
-    response truthful, which matters the moment anything sends `X-Content-Type-Options: nosniff`.
-
-    Falls back to the file name, then to a truthful `application/octet-stream`, for content whose
-    format is not recognised — never a guess dressed as a fact.
-    """
-    for magic, content_type in _MAGIC_CONTENT_TYPES:
-        if body.startswith(magic):
-            return content_type
-    if body[:4] == b"RIFF" and body[8:12] == b"WEBP":
-        return "image/webp"
-    if body.lstrip()[:5] in (b"<svg ", b"<svg>", b"<?xml"):
-        return "image/svg+xml"
-    return mimetypes.guess_type(path)[0] or "application/octet-stream"
 
 
 def _vendored_asset_route(asset_root: Path) -> Callable[[Route], None]:
@@ -164,15 +126,29 @@ def _node_target(node: dict) -> list[str]:
     return [str(t) for t in node.get("target", [])]
 
 
-def _to_rule_result(raw: dict, cls: type[_RuleResultT], referents: dict[tuple[str, ...], NodeReferent]) -> _RuleResultT:
+def _to_rule_result(
+    raw: dict,
+    cls: type[_RuleResultT],
+    referents: dict[tuple[str, ...], NodeReferent],
+    image_refs: dict[tuple[str, ...], str],
+) -> _RuleResultT:
     """Map one axe rule-result payload (from either the `violations` or `incomplete`
     bucket — they share a shape) into the given typed model, attaching the referent material
-    captured for each node (absent for a node that could not be re-resolved)."""
+    captured for each node (absent for a node that could not be re-resolved) and the reference to
+    the picture it rendered (absent for a node that is not an image, or when capture was not asked
+    for)."""
     impact = raw.get("impact")
     nodes = []
     for node in raw.get("nodes", []):
         target = _node_target(node)
-        nodes.append(AxeNode(target=target, html=node.get("html", ""), referent=referents.get(tuple(target))))
+        nodes.append(
+            AxeNode(
+                target=target,
+                html=node.get("html", ""),
+                referent=referents.get(tuple(target)),
+                image_ref=image_refs.get(tuple(target)),
+            )
+        )
     return cls(
         rule_id=raw["id"],
         tags=list(raw.get("tags", [])),
@@ -193,21 +169,30 @@ def _all_node_targets(results: dict) -> list[list[str]]:
     ]
 
 
-def scan(target: str, asset_root: Path | None = None) -> ScanResult:
+def scan(target: str, asset_root: Path | None = None, image_store: ImageStore | None = None) -> ScanResult:
     """Scan one page (URL or local path) with axe-core and return a `ScanResult`.
 
     `asset_root` is an optional vendored asset tree to serve the page's sub-resources from (see
     `_vendored_asset_route`). Default `None` leaves every request exactly as it was, so a page that
     needs no local assets scans identically with and without the argument.
+
+    `image_store` opts the scan into capturing the picture each `<img>` node rendered (`capture.py`).
+    Default `None` captures nothing at all — no response bodies buffered, no bytes written — so a
+    production scan pays nothing for pixels nothing consumes. When given, each image node's
+    `AxeNode.image_ref` carries the sha256 of its bytes and the bytes land in the store under that
+    name; an image that did not decode raises rather than attaching what the browser could not read.
     """
     url = _to_url(target)
     with sync_playwright() as p:
         browser = p.chromium.launch()
         context = browser.new_context(user_agent=_USER_AGENT)
         page = context.new_page()
+        recorder = ResponseRecorder() if image_store is not None else None
         try:
             if asset_root is not None:
                 page.route("**/*", _vendored_asset_route(asset_root))
+            if recorder is not None:
+                recorder.watch(page)  # attached before navigation: the bodies arrive during the load
             page.goto(url, wait_until="load")
             page.add_script_tag(path=str(_AXE_MIN_JS))
             engine_version = page.evaluate("() => axe.version")
@@ -223,7 +208,15 @@ def scan(target: str, asset_root: Path | None = None) -> ScanResult:
             # the DOM around the node, and this is the only moment it exists. Once the browser
             # closes it is gone, and re-fetching the page later would break the freeze every
             # downstream number is a pure function of.
-            referents = extract_referents(page, _all_node_targets(results))
+            targets = _all_node_targets(results)
+            referents = extract_referents(page, targets)
+            # Same window, same reason: the picture a node rendered is reachable only while the page
+            # is open, and the bytes are the responses this very load fetched.
+            image_refs = (
+                {key: image_store.put(image) for key, image in capture_images(page, targets, recorder).items()}
+                if image_store is not None and recorder is not None
+                else {}
+            )
         finally:
             browser.close()
 
@@ -232,10 +225,10 @@ def scan(target: str, asset_root: Path | None = None) -> ScanResult:
         scanned_at=datetime.now(timezone.utc),
         tool="axe-core",
         tool_version=AXE_VERSION,
-        violations=[_to_rule_result(v, AxeViolation, referents) for v in results.get("violations", [])],
-        incomplete=[_to_rule_result(i, AxeIncomplete, referents) for i in results.get("incomplete", [])],
+        violations=[_to_rule_result(v, AxeViolation, referents, image_refs) for v in results.get("violations", [])],
+        incomplete=[_to_rule_result(i, AxeIncomplete, referents, image_refs) for i in results.get("incomplete", [])],
         # Faithful mirror of axe's passes[]; the normalizer surfaces the existence-only subset named
         # by QUALITY_REVIEW_RULES (clearway/normalizer/quality_review.py) as quality-review findings.
-        passes=[_to_rule_result(p, AxePass, referents) for p in results.get("passes", [])],
+        passes=[_to_rule_result(p, AxePass, referents, image_refs) for p in results.get("passes", [])],
         raw=results,
     )

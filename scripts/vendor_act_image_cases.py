@@ -52,7 +52,8 @@ from urllib.robotparser import RobotFileParser
 
 from clearway.eval.act_gold import _EXPORT  # the frozen export both vendored sets read
 from clearway.eval.image_reachability import ACT_IMAGE, ARTIFACT, ASSETS, HTML, IMAGE_RULE_IDS
-from clearway.scanner.scan import _USER_AGENT, served_content_type
+from clearway.scanner.capture import served_content_type
+from clearway.scanner.scan import _USER_AGENT
 
 _SITE = "https://act-rules.github.io"
 # One request per this many seconds. The whole set is ~60 small static files on GitHub Pages; the

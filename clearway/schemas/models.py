@@ -189,6 +189,15 @@ class AxeNode(BaseModel):
         "the node could not be re-resolved (a frame/shadow path, or an element axe reported that "
         "no longer matches its selector)",
     )
+    image_ref: Optional[str] = Field(
+        None,
+        description="content-addressed reference to the picture this node actually rendered: the "
+        "sha256 of the bytes the browser decoded. The BYTES are not here — they live in an "
+        "`ImageStore` beside the run (`scanner/capture.py`), because a base64 payload on this shape "
+        "would be serialized into every frozen artifact that ever carries a node. None means no "
+        "picture was captured for this node — it is not an image, or capture was not asked for; "
+        "capture is opt-in, so a scan that needs no pixels pays nothing for them.",
+    )
 
 
 class AxeRuleResult(BaseModel):
@@ -280,6 +289,15 @@ class Finding(BaseModel):
         description="referent material carried from the scan (AxeNode.referent). Deliberately NOT "
         "part of the id — the id is the place, and a place must hash the same however much context "
         "the scanner learns to capture about it.",
+    )
+    image_ref: Optional[str] = Field(
+        None,
+        description="content-addressed reference to the picture this finding's node rendered, "
+        "carried from the scan (AxeNode.image_ref): the sha256 of the decoded bytes, which live in "
+        "an `ImageStore` beside the run and never in this payload. Keyed to the finding by `id` and "
+        "never by `target` — `img` matches on nearly every page, so a target alone is not unique. "
+        "Deliberately NOT part of the id, for the same reason `referent` is not: the id is the "
+        "place, and a place must hash the same however much the scanner learns to capture about it.",
     )
 
 

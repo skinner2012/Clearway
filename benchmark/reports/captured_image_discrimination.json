@@ -1,0 +1,90 @@
+{
+  "probe": "the three pool discriminations, asked of the CAPTURED bytes",
+  "ran_at": "2026-07-26T21:33:03.932551+00:00",
+  "model": "gemma4:31b",
+  "model_digest": "6316f0629137",
+  "provider_prefix": "ollama_chat/",
+  "model_calls_spent": 3,
+  "schema": "_ImageDescription",
+  "temperature": 0.0,
+  "source": {
+    "artifact": "clearway/fixtures/act-image-opaque/capture.json",
+    "store": "captured"
+  },
+  "question": "Name what this image actually shows. Be specific: if it is a place, name the place.",
+  "system_prompt": "You describe images accurately. Answer only about the image you are shown.",
+  "note": "Bare: one image, one open question, no page and no pipeline prompt. The reads were pre-registered before the run (must_contain / must_not_contain, carried on each row) so the answers could not be scored after the fact. The media type on every data: URI was sniffed from the bytes, never from the deliberately-uniform `.png` file names — two of these three pictures are JPEG. This separates 'the capture destroyed it' from 'the plumbing delivered nothing' for every later condition.",
+  "all_resolved": true,
+  "results": [
+    {
+      "image": "w3c-logo",
+      "image_ref": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+      "media_type": "image/png",
+      "bytes": 1927,
+      "discrimination": "the picture is the W3C logo",
+      "must_contain": [
+        "w3c",
+        "world wide web consortium"
+      ],
+      "must_not_contain": [],
+      "resolved": true,
+      "content": "{\n  \"description\": \"The image shows the logo for the World Wide Web Consortium (W3C), featuring a blue 'W' and '3' followed by a black 'C', with a registered trademark symbol in the upper right corner.\"\n}",
+      "description": "The image shows the logo for the World Wide Web Consortium (W3C), featuring a blue 'W' and '3' followed by a black 'C', with a registered trademark symbol in the upper right corner.",
+      "validation_error": null,
+      "latency_ms": 45059.5,
+      "tokens_in": 416,
+      "tokens_out": 54
+    },
+    {
+      "image": "nyhavn",
+      "image_ref": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+      "media_type": "image/jpeg",
+      "bytes": 32822,
+      "discrimination": "the picture is a Copenhagen waterfront, and is not Paris",
+      "must_contain": [
+        "nyhavn",
+        "copenhagen",
+        "denmark",
+        "danish",
+        "canal",
+        "harbour",
+        "harbor",
+        "waterfront"
+      ],
+      "must_not_contain": [
+        "paris"
+      ],
+      "resolved": true,
+      "content": "{\"description\": \"This image shows Nyhavn, a famous 17th-century waterfront and canal district in Copenhagen, Denmark.\"}",
+      "description": "This image shows Nyhavn, a famous 17th-century waterfront and canal district in Copenhagen, Denmark.",
+      "validation_error": null,
+      "latency_ms": 19323.1,
+      "tokens_in": 243,
+      "tokens_out": 30
+    },
+    {
+      "image": "bread",
+      "image_ref": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+      "media_type": "image/jpeg",
+      "bytes": 7350,
+      "discrimination": "the picture is bread",
+      "must_contain": [
+        "bread",
+        "loaf",
+        "loaves",
+        "baguette",
+        "boule",
+        "bakery",
+        "sourdough"
+      ],
+      "must_not_contain": [],
+      "resolved": true,
+      "content": "{\n  \"description\": \"The image shows several golden-brown, crusty loaves of bread.\"\n}",
+      "description": "The image shows several golden-brown, crusty loaves of bread.",
+      "validation_error": null,
+      "latency_ms": 29675.5,
+      "tokens_in": 353,
+      "tokens_out": 24
+    }
+  ]
+}

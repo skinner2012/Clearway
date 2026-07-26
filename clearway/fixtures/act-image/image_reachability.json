@@ -1,0 +1,2487 @@
+{
+  "set_id": "act-image-leaky@1",
+  "version": 1,
+  "gold_version": "act-gold@a805d865",
+  "source": "w3c-act",
+  "axe_core_version": "4.12.1",
+  "note": "Reachability of the ACT image rules, measured with the real scanner and normalizer over every published case of the three rules — no model runs. `pool` is what survives: usable, minting a judgment finding, not one half of a prompt-level twin pair, and not a member of a retracted rule. Unreachable cases are kept with their reason so the pool can be read as a share of the candidates rather than taken on trust.",
+  "rules": {
+    "qt1vmo": {
+      "rule_name": "Image accessible name is descriptive",
+      "published": 16,
+      "usable": 6,
+      "minting": 2,
+      "in_pool": 2
+    },
+    "e88epe": {
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "published": 20,
+      "usable": 10,
+      "minting": 4,
+      "in_pool": 0
+    },
+    "9eb3f6": {
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "published": 15,
+      "usable": 11,
+      "minting": 9,
+      "in_pool": 5
+    }
+  },
+  "totals": {
+    "published": 51,
+    "usable": 27,
+    "minting": 15,
+    "twin_excluded": 4,
+    "retracted_excluded": 4,
+    "pool": 7
+  },
+  "pool": [
+    "be6b29e220d6afbd827625c602ec49027e73fdf1",
+    "530266c6116fcfad12561e9e1a407fa0a0da3435",
+    "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+    "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+    "1ff696703e7e7393a5d05cdcd3229cb050594998",
+    "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+    "a2333ec76e676624212dcd616ed11ae576ab775e"
+  ],
+  "twin_exclusions": {
+    "499be2117059dba5f38526df06b711d0125eccd7": [
+      "556be1533c3f4388dc6c8dd1c8bce9c0e9c4f06c"
+    ],
+    "556be1533c3f4388dc6c8dd1c8bce9c0e9c4f06c": [
+      "499be2117059dba5f38526df06b711d0125eccd7"
+    ],
+    "28d908a951edb6fe7768d69b10460c7cfff251b1": [
+      "f636f815cba63087a142086b3b9791fe464300cc"
+    ],
+    "f636f815cba63087a142086b3b9791fe464300cc": [
+      "28d908a951edb6fe7768d69b10460c7cfff251b1"
+    ]
+  },
+  "retracted_rules": {
+    "e88epe": "reachability is perfectly correlated with gold in this rule's minting set: both passed cases are decided by an adjacent paragraph that finding.html does not carry, and both failed cases are decided by the image. Any aggregate movement is therefore uninterpretable — an improvement on the reachable half and a coin flip on the unreachable half are indistinguishable"
+  },
+  "cases": [
+    {
+      "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/be6b29e220d6afbd827625c602ec49027e73fdf1.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/be6b29e220d6afbd827625c602ec49027e73fdf1.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "W3C",
+          "src": "/test-assets/shared/w3c-logo.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/w3c-logo.png\" alt=\"W3C\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "eeed2d0a7eb1f2a9ca85203b45e0bc7ff3a374217f5b0a9791c8d5b4528cdf2b"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/w3c-logo.png",
+          "natural_width": 72,
+          "natural_height": 48
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "dd2f262645db0f473e294a02dff5576c6ccfe133",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/dd2f262645db0f473e294a02dff5576c6ccfe133.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/dd2f262645db0f473e294a02dff5576c6ccfe133.html",
+      "image_elements": [
+        {
+          "tag": "svg",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-conditional-attr",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "html-has-lang",
+          "html-lang-valid",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is svg",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "766587b669e2928e8c5f21e3b1cd97e5b3e27a07",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/766587b669e2928e8c5f21e3b1cd97e5b3e27a07.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/766587b669e2928e8c5f21e3b1cd97e5b3e27a07.html",
+      "image_elements": [
+        {
+          "tag": "canvas",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-conditional-attr",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "html-has-lang",
+          "html-lang-valid"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is canvas",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/530266c6116fcfad12561e9e1a407fa0a0da3435.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/530266c6116fcfad12561e9e1a407fa0a0da3435.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "ERCIM",
+          "src": "/test-assets/shared/w3c-logo.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/w3c-logo.png\" alt=\"ERCIM\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "1b94bbaade63fc57ded08c486e3dd78aeebdd13d9631a600745449f20c7b1700"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/w3c-logo.png",
+          "natural_width": 72,
+          "natural_height": 48
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "a4b5c0fab27d0ca16b93e8c374c96ad13172e94e",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/a4b5c0fab27d0ca16b93e8c374c96ad13172e94e.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/a4b5c0fab27d0ca16b93e8c374c96ad13172e94e.html",
+      "image_elements": [
+        {
+          "tag": "svg",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-conditional-attr",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "html-has-lang",
+          "html-lang-valid",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is svg",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "0ef4f516db9ed70cb25f39c99637272808b8e60f",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/0ef4f516db9ed70cb25f39c99637272808b8e60f.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/0ef4f516db9ed70cb25f39c99637272808b8e60f.html",
+      "image_elements": [
+        {
+          "tag": "canvas",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-conditional-attr",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "html-has-lang",
+          "html-lang-valid"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is canvas",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "c1f626c67e8260ee8772b66ef5f9e20708719547",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/c1f626c67e8260ee8772b66ef5f9e20708719547.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/c1f626c67e8260ee8772b66ef5f9e20708719547.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "",
+          "src": "/test-assets/shared/pdf-icon.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/pdf-icon.png\" alt=\"\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "empty",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "an empty name claims the image is decorative, which the snippet cannot confirm",
+          "prompt_key": "cf9000ce55682eb29d1552f972d857603b04a60f907bc0dc4cb651fc5c269675"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/pdf-icon.png",
+          "natural_width": 32,
+          "natural_height": 32
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "736732db66e5b294bc82833892dec24ab5993f2a",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/736732db66e5b294bc82833892dec24ab5993f2a.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/736732db66e5b294bc82833892dec24ab5993f2a.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": "presentation",
+          "alt": null,
+          "src": "/test-assets/shared/fireworks.jpg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-role",
+          "aria-deprecated-role",
+          "aria-hidden-body",
+          "aria-required-attr",
+          "aria-roles",
+          "color-contrast",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/fireworks.jpg\" role=\"presentation\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "absent",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "the snippet carries no alt attribute at all, so the element is named — or excluded — by something else such as role=presentation, which the snippet alone does not settle either",
+          "prompt_key": "55588803ee5cfc6a59ab5ea930d0750b869937d482d868185564481536f05d7e"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/fireworks.jpg",
+          "natural_width": 260,
+          "natural_height": 260
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "a72201fd013b7bce9c81bf71dcaa0ff5da05f53b",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/a72201fd013b7bce9c81bf71dcaa0ff5da05f53b.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/a72201fd013b7bce9c81bf71dcaa0ff5da05f53b.html",
+      "image_elements": [
+        {
+          "tag": "svg",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast",
+          "html-has-lang",
+          "html-lang-valid",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "91f76cb178ce3ed9df8257b4717d0e5f44b4b647",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/91f76cb178ce3ed9df8257b4717d0e5f44b4b647.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/91f76cb178ce3ed9df8257b4717d0e5f44b4b647.html",
+      "image_elements": [
+        {
+          "tag": "canvas",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast",
+          "html-has-lang",
+          "html-lang-valid"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "c23abbdcfd6eac72d1e0cd81d8e7861f186de84c",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/c23abbdcfd6eac72d1e0cd81d8e7861f186de84c.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/c23abbdcfd6eac72d1e0cd81d8e7861f186de84c.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "W3C",
+          "src": "/test-assets/shared/w3c-logo.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/w3c-logo.png",
+          "natural_width": 72,
+          "natural_height": 48
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "001254f2e5a4f661d6abd4534a921c200b19f5e4",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/001254f2e5a4f661d6abd4534a921c200b19f5e4.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/001254f2e5a4f661d6abd4534a921c200b19f5e4.html",
+      "image_elements": [
+        {
+          "tag": "canvas",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "176b55978e41a84e0fb2f09605f84cdbc6004950",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/176b55978e41a84e0fb2f09605f84cdbc6004950.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/176b55978e41a84e0fb2f09605f84cdbc6004950.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "fireworks",
+          "src": "/test-assets/shared/fireworks.jpg",
+          "aria_hidden": true
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "aria-hidden-focus",
+          "html-has-lang",
+          "html-lang-valid"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/fireworks.jpg",
+          "natural_width": 260,
+          "natural_height": 260
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "7a17a37233303419f232230ee2bece7502ed8f96",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/7a17a37233303419f232230ee2bece7502ed8f96.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/7a17a37233303419f232230ee2bece7502ed8f96.html",
+      "image_elements": [
+        {
+          "tag": "svg",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [
+          "bypass"
+        ],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-conditional-attr",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "link-name",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "96471b44c91fe8200f159d0890889e2e10cc7d44",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/96471b44c91fe8200f159d0890889e2e10cc7d44.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/96471b44c91fe8200f159d0890889e2e10cc7d44.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "",
+          "src": "/test-assets/does-not-exist.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/does-not-exist.png\" alt=\"\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "empty",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "an empty name claims the image is decorative, which the snippet cannot confirm",
+          "prompt_key": "65318993ef5104e6c9be63ebb4378317283cee900978e8eb43254ea745008fe9"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/does-not-exist.png",
+          "natural_width": 0,
+          "natural_height": 0
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "2ff8f65284c144bb9aaca30e88f32154e4a6a4d8",
+      "rule_id": "qt1vmo",
+      "rule_name": "Image accessible name is descriptive",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/2ff8f65284c144bb9aaca30e88f32154e4a6a4d8.html",
+      "url": "https://act-rules.github.io/testcases/qt1vmo/2ff8f65284c144bb9aaca30e88f32154e4a6a4d8.html",
+      "image_elements": [],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "avoid-inline-spacing",
+          "color-contrast",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "Nyhavn",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn\" alt=\"Nyhavn\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "52300e07b79d17519670f4ff715951ce55e3d0c33caa80d9cfe80189383fdabd"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "499be2117059dba5f38526df06b711d0125eccd7",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/499be2117059dba5f38526df06b711d0125eccd7.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/499be2117059dba5f38526df06b711d0125eccd7.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "nyhavn.jpeg",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [
+          "bypass"
+        ],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "link-name",
+          "nested-interactive",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg\" alt=\"nyhavn.jpeg\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "filename",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "a filename-shaped name is only wrong if it names the file that actually renders, and which file renders is fixed outside the <img> snippet — a <picture>/<source> can change it",
+          "prompt_key": "d10119491949d9ae3486ee33b00a197bd6c5a993dc2aeb9a79c942c2e829f716"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "39d3fd00e8e9060969e064eaf1c8fe52aac7c326",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/39d3fd00e8e9060969e064eaf1c8fe52aac7c326.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/39d3fd00e8e9060969e064eaf1c8fe52aac7c326.html",
+      "image_elements": [
+        {
+          "tag": "input[type=image]",
+          "role": null,
+          "alt": "login",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/login",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "input-image-alt",
+          "nested-interactive",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is input[type=image]",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/607ad4964aa69e78a663cf993a28cedd6a1dc39e.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/607ad4964aa69e78a663cf993a28cedd6a1dc39e.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "pain",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/pain",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/pain\" alt=\"pain\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "0673ff7084acac568a470c8ddea401615ae43ee26887dd82f59b79e13aa78a20"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/pain",
+          "natural_width": 150,
+          "natural_height": 100
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/1ff696703e7e7393a5d05cdcd3229cb050594998.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/1ff696703e7e7393a5d05cdcd3229cb050594998.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "Nyhavn",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg\" srcset=\"\n\t\t\t/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn 1.5x,\n\t\t\t/test-assets/image-filename-as-accessible-name-9eb3f6/paris  2x\n\t\t\" alt=\"Nyhavn\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "890666666d4531e2c8d5bf0e3a79d08d15bb9910e1455f0ea88c7b9d9ce5eb53"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "28d908a951edb6fe7768d69b10460c7cfff251b1",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/28d908a951edb6fe7768d69b10460c7cfff251b1.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/28d908a951edb6fe7768d69b10460c7cfff251b1.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "Nyhavn",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg\" alt=\"Nyhavn\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "9a2d40d4483c9a034acefbea384b588b9d50801bce22466a6fd8ed6860fc1507"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/f7406b89f8e6769c01da5c305e3e6c921fd7c1e4.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/f7406b89f8e6769c01da5c305e3e6c921fd7c1e4.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "Paris",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/paris",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/paris\" alt=\"Paris\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "bf23ec990053787af7e59e52cf28d1fd89c5d79c5f6e69449095ad007a6a3615"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/paris",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/a2333ec76e676624212dcd616ed11ae576ab775e.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/a2333ec76e676624212dcd616ed11ae576ab775e.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "94251e110d24a4c2b6e6ce76e7203374",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374\" alt=\"94251e110d24a4c2b6e6ce76e7203374\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "hex-digest",
+          "deciding_fact_in_snippet": true,
+          "deciding_fact_note": "a hex digest describes nothing whatever the image shows, so the snippet alone settles it",
+          "prompt_key": "93c2d6bddbd67e7924643f93fe5e01550f91497c33e3187516a8a84ea0e74b0c"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "556be1533c3f4388dc6c8dd1c8bce9c0e9c4f06c",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/556be1533c3f4388dc6c8dd1c8bce9c0e9c4f06c.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/556be1533c3f4388dc6c8dd1c8bce9c0e9c4f06c.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "nyhavn.jpeg",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg\" alt=\"nyhavn.jpeg\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "filename",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "a filename-shaped name is only wrong if it names the file that actually renders, and which file renders is fixed outside the <img> snippet — a <picture>/<source> can change it",
+          "prompt_key": "d10119491949d9ae3486ee33b00a197bd6c5a993dc2aeb9a79c942c2e829f716"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "9ffb088dc361047bc8b7998e41fec07665ce596e",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/9ffb088dc361047bc8b7998e41fec07665ce596e.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/9ffb088dc361047bc8b7998e41fec07665ce596e.html",
+      "image_elements": [
+        {
+          "tag": "input[type=image]",
+          "role": null,
+          "alt": "login.png",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/login.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "input-image-alt",
+          "nested-interactive",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is input[type=image]",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "f636f815cba63087a142086b3b9791fe464300cc",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/f636f815cba63087a142086b3b9791fe464300cc.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/f636f815cba63087a142086b3b9791fe464300cc.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "Nyhavn",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn.jpeg\" alt=\"Nyhavn\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "9a2d40d4483c9a034acefbea384b588b9d50801bce22466a6fd8ed6860fc1507"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/nyhavn",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "3e3d7cf41d149cde4d9ef0e1962aecdae662abfc",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/3e3d7cf41d149cde4d9ef0e1962aecdae662abfc.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/3e3d7cf41d149cde4d9ef0e1962aecdae662abfc.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": "presentation",
+          "alt": "",
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-role",
+          "aria-deprecated-role",
+          "aria-hidden-body",
+          "aria-required-attr",
+          "aria-roles",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img role=\"presentation\" alt=\"\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "empty",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "an empty name claims the image is decorative, which the snippet cannot confirm",
+          "prompt_key": "d9591c6c36876e7698d80656f1c027a70e3fab23a1ef233fc3494182387eac87"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "",
+          "natural_width": 0,
+          "natural_height": 0
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "0ebe39fb92e5ed6bd21e5aa79610169033afdaa9",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/0ebe39fb92e5ed6bd21e5aa79610169033afdaa9.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/0ebe39fb92e5ed6bd21e5aa79610169033afdaa9.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "",
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "",
+          "natural_width": 0,
+          "natural_height": 0
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "57d68f3bdb9e16e08d8059a3e57c6f5adb52bce8",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/57d68f3bdb9e16e08d8059a3e57c6f5adb52bce8.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/57d68f3bdb9e16e08d8059a3e57c6f5adb52bce8.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "Nyhavn",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374\" alt=\"Nyhavn\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "2ec8d8c304c127b6cb23c502ac42a3868c934c7bc1d5329b61f8c9be6b5bc120"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "c9d1b69ad4f38c469516c19842b478fc16bc3d12",
+      "rule_id": "9eb3f6",
+      "rule_name": "DEPRECATED — Image filename is accessible name for image",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/c9d1b69ad4f38c469516c19842b478fc16bc3d12.html",
+      "url": "https://act-rules.github.io/testcases/9eb3f6/c9d1b69ad4f38c469516c19842b478fc16bc3d12.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "94251e110d24a4c2b6e6ce76e7203374",
+          "src": "/test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-conditional-attr",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "html-has-lang",
+          "html-lang-valid",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374\" alt=\"94251e110d24a4c2b6e6ce76e7203374\" aria-label=\"Nyhavn\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "hex-digest",
+          "deciding_fact_in_snippet": true,
+          "deciding_fact_note": "a hex digest describes nothing whatever the image shows, so the snippet alone settles it",
+          "prompt_key": "b695b25aad4d9db6e2882dc64dd7dc0f4e5b2a825ad295b16b12a4bc9888b3c0"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/image-filename-as-accessible-name-9eb3f6/94251e110d24a4c2b6e6ce76e7203374",
+          "natural_width": 320,
+          "natural_height": 213
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "fdc91cd65be10f2ff361158ce5f2312c7be38f21",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/fdc91cd65be10f2ff361158ce5f2312c7be38f21.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/fdc91cd65be10f2ff361158ce5f2312c7be38f21.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "",
+          "src": "/test-assets/shared/fireworks.jpg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/fireworks.jpg\" alt=\"\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "empty",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "an empty name claims the image is decorative, which the snippet cannot confirm",
+          "prompt_key": "8eaf34d4867a04e65bdb02cd9009705f42bd53b25c2f954c11c0473fe7ef3dee"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/fireworks.jpg",
+          "natural_width": 260,
+          "natural_height": 260
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "90f579fe2b01db999b270d6dfe818cce8c715b65",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/90f579fe2b01db999b270d6dfe818cce8c715b65.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/90f579fe2b01db999b270d6dfe818cce8c715b65.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": "img",
+          "alt": "",
+          "src": "/test-assets/shared/fireworks.jpg",
+          "aria_hidden": true
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-role",
+          "aria-hidden-body",
+          "aria-hidden-focus",
+          "color-contrast"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "hidden from the accessibility tree by aria-hidden, so axe reports no result for it",
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/fireworks.jpg",
+          "natural_width": 260,
+          "natural_height": 260
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "c97ef443ad5d5423ba20802a88bdc8003670727d",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/c97ef443ad5d5423ba20802a88bdc8003670727d.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/c97ef443ad5d5423ba20802a88bdc8003670727d.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": "none",
+          "alt": "ignore me",
+          "src": "/test-assets/shared/fireworks.jpg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "aria-allowed-role",
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-deprecated-role",
+          "aria-hidden-body",
+          "aria-required-attr",
+          "aria-roles",
+          "color-contrast",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/fireworks.jpg\" role=\"none\" alt=\"ignore me\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "11beab0c511b8beed3102fc3535fb4e2dec3233232a95715c7325a10f74a8322"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/fireworks.jpg",
+          "natural_width": 260,
+          "natural_height": 260
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "e147f8068869c19af0f53ec109711d587ab3e1f0",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/e147f8068869c19af0f53ec109711d587ab3e1f0.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/e147f8068869c19af0f53ec109711d587ab3e1f0.html",
+      "image_elements": [
+        {
+          "tag": "svg",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is svg",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "fbe64b24bd2d6abbc60ca11c10d72e06202a2f19",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "passed",
+      "usable": true,
+      "path": "html/fbe64b24bd2d6abbc60ca11c10d72e06202a2f19.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/fbe64b24bd2d6abbc60ca11c10d72e06202a2f19.html",
+      "image_elements": [
+        {
+          "tag": "canvas",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is canvas",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "6c3ff41e67b0f85a4e52e5bba278e4e279bea034",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/6c3ff41e67b0f85a4e52e5bba278e4e279bea034.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/6c3ff41e67b0f85a4e52e5bba278e4e279bea034.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "",
+          "src": "/test-assets/shared/w3c-logo.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/w3c-logo.png\" alt=\"\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "empty",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "an empty name claims the image is decorative, which the snippet cannot confirm",
+          "prompt_key": "27b282d59450d7bd12944fdae7eec42e2680d431b7b8e38d827a4fa5804841f0"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/w3c-logo.png",
+          "natural_width": 72,
+          "natural_height": 48
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "50aec1c628901752fcfbf956ff8c69b07d07ec7b",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/50aec1c628901752fcfbf956ff8c69b07d07ec7b.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/50aec1c628901752fcfbf956ff8c69b07d07ec7b.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "W3C logo",
+          "src": "/test-assets/shared/w3c-logo.png",
+          "aria_hidden": true
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "aria-hidden-focus"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "hidden from the accessibility tree by aria-hidden, so axe reports no result for it",
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/w3c-logo.png",
+          "natural_width": 72,
+          "natural_height": 48
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "8910ef2a7c2d5c9ad2280350dceb439f7e3849cf",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/8910ef2a7c2d5c9ad2280350dceb439f7e3849cf.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/8910ef2a7c2d5c9ad2280350dceb439f7e3849cf.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": "none",
+          "alt": "W3C logo",
+          "src": "/test-assets/shared/w3c-logo.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "aria-allowed-role",
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-deprecated-role",
+          "aria-hidden-body",
+          "aria-required-attr",
+          "aria-roles",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/w3c-logo.png\" role=\"none\" alt=\"W3C logo\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "8d2bebd62537d58f87870040e46f339f011eeebe65d08a5fdbccdc9c2b4ceae1"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/w3c-logo.png",
+          "natural_width": 72,
+          "natural_height": 48
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "b3d0cb478e276209c5cf3492b3b7d43d016edec4",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/b3d0cb478e276209c5cf3492b3b7d43d016edec4.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/b3d0cb478e276209c5cf3492b3b7d43d016edec4.html",
+      "image_elements": [
+        {
+          "tag": "svg",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is svg",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "6d71ae8ab8aecc7a08faacde77de09b4bd8dd131",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "failed",
+      "usable": true,
+      "path": "html/6d71ae8ab8aecc7a08faacde77de09b4bd8dd131.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/6d71ae8ab8aecc7a08faacde77de09b4bd8dd131.html",
+      "image_elements": [
+        {
+          "tag": "canvas",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": "matcher-limited: axe's image-alt selector is `img`, and this case's image is canvas",
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "700fb4c77a30aa7b74e2cf1345db10d7016bf056",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/700fb4c77a30aa7b74e2cf1345db10d7016bf056.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/700fb4c77a30aa7b74e2cf1345db10d7016bf056.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "W3C",
+          "src": "/test-assets/shared/w3c-logo.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/w3c-logo.png\" alt=\"W3C\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "eeed2d0a7eb1f2a9ca85203b45e0bc7ff3a374217f5b0a9791c8d5b4528cdf2b"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/w3c-logo.png",
+          "natural_width": 72,
+          "natural_height": 48
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "676e3afca2d1f65d7f364a8b3631bdbc2492dbc2",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/676e3afca2d1f65d7f364a8b3631bdbc2492dbc2.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/676e3afca2d1f65d7f364a8b3631bdbc2492dbc2.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "",
+          "src": "/test-assets/shared/w3c-logo.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/w3c-logo.png",
+          "natural_width": 72,
+          "natural_height": 48
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "3cb6585fa0024becb2c0738f723073a1283ddd88",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/3cb6585fa0024becb2c0738f723073a1283ddd88.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/3cb6585fa0024becb2c0738f723073a1283ddd88.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "",
+          "src": "/test-assets/shared/fireworks.jpg",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/fireworks.jpg\" alt=\"\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "empty",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "an empty name claims the image is decorative, which the snippet cannot confirm",
+          "prompt_key": "8eaf34d4867a04e65bdb02cd9009705f42bd53b25c2f954c11c0473fe7ef3dee"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/fireworks.jpg",
+          "natural_width": 260,
+          "natural_height": 260
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "005d1156a023d5a7de84322508e186b11eb0d2bd",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/005d1156a023d5a7de84322508e186b11eb0d2bd.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/005d1156a023d5a7de84322508e186b11eb0d2bd.html",
+      "image_elements": [
+        {
+          "tag": "svg",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [
+          "bypass"
+        ],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-conditional-attr",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "link-name",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "262a7b5bab0fcb38fe86ec20206b2b16256b365e",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/262a7b5bab0fcb38fe86ec20206b2b16256b365e.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/262a7b5bab0fcb38fe86ec20206b2b16256b365e.html",
+      "image_elements": [
+        {
+          "tag": "svg",
+          "role": "img",
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-allowed-role",
+          "aria-conditional-attr",
+          "aria-deprecated-role",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-required-attr",
+          "aria-roles",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "nested-interactive",
+          "region",
+          "svg-img-alt"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "357d6afecdc6360f342bd3307e4ee71bb9d03397",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/357d6afecdc6360f342bd3307e4ee71bb9d03397.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/357d6afecdc6360f342bd3307e4ee71bb9d03397.html",
+      "image_elements": [
+        {
+          "tag": "canvas",
+          "role": null,
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "a4090eb483a51ef90dc9ae9f9bdf05f068e5690a",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/a4090eb483a51ef90dc9ae9f9bdf05f068e5690a.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/a4090eb483a51ef90dc9ae9f9bdf05f068e5690a.html",
+      "image_elements": [
+        {
+          "tag": "canvas",
+          "role": "img",
+          "alt": null,
+          "src": null,
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-allowed-attr",
+          "aria-allowed-role",
+          "aria-conditional-attr",
+          "aria-deprecated-role",
+          "aria-hidden-body",
+          "aria-prohibited-attr",
+          "aria-required-attr",
+          "aria-roles",
+          "aria-valid-attr-value",
+          "aria-valid-attr",
+          "nested-interactive",
+          "role-img-alt"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "d484d9cb905b9ad2e73b69f687af28eadc52e340",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/d484d9cb905b9ad2e73b69f687af28eadc52e340.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/d484d9cb905b9ad2e73b69f687af28eadc52e340.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "PDF",
+          "src": "/test-assets/shared/pdf-icon.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "color-contrast",
+          "image-alt",
+          "image-redundant-alt",
+          "nested-interactive"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/shared/pdf-icon.png\" alt=\"PDF\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "phrase",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "whether the phrase describes the image requires seeing the image",
+          "prompt_key": "b0d7c32e87c0bbf26e70207a2f722bfa8f62a81f91b4453f27ba3ea1a261dbe8"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/shared/pdf-icon.png",
+          "natural_width": 32,
+          "natural_height": 32
+        }
+      ]
+    },
+    {
+      "act_testcase_id": "c934e3dcba80f4e29531bab6621e29cb8a774573",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/c934e3dcba80f4e29531bab6621e29cb8a774573.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/c934e3dcba80f4e29531bab6621e29cb8a774573.html",
+      "image_elements": [],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one",
+          "region"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "avoid-inline-spacing",
+          "color-contrast",
+          "region"
+        ]
+      },
+      "minted": [],
+      "unreachable_reason": null,
+      "rendered_images": []
+    },
+    {
+      "act_testcase_id": "99e3d033665b0a89ed706113576df48b41f0ac5a",
+      "rule_id": "e88epe",
+      "rule_name": "Image not in the accessibility tree is decorative",
+      "expected": "inapplicable",
+      "usable": false,
+      "path": "html/99e3d033665b0a89ed706113576df48b41f0ac5a.html",
+      "url": "https://act-rules.github.io/testcases/e88epe/99e3d033665b0a89ed706113576df48b41f0ac5a.html",
+      "image_elements": [
+        {
+          "tag": "img",
+          "role": null,
+          "alt": "",
+          "src": "/test-assets/does-not-exist.png",
+          "aria_hidden": false
+        }
+      ],
+      "axe_rules_by_bucket": {
+        "violations": [
+          "document-title",
+          "html-has-lang",
+          "landmark-one-main",
+          "page-has-heading-one"
+        ],
+        "incomplete": [],
+        "passes": [
+          "aria-hidden-body",
+          "image-alt",
+          "image-redundant-alt",
+          "presentation-role-conflict",
+          "region"
+        ]
+      },
+      "minted": [
+        {
+          "axe_rule": "image-alt",
+          "bucket": "passes",
+          "target": "img",
+          "html": "<img src=\"/test-assets/does-not-exist.png\" alt=\"\">",
+          "help": "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.",
+          "accessible_name_form": "empty",
+          "deciding_fact_in_snippet": false,
+          "deciding_fact_note": "an empty name claims the image is decorative, which the snippet cannot confirm",
+          "prompt_key": "65318993ef5104e6c9be63ebb4378317283cee900978e8eb43254ea745008fe9"
+        }
+      ],
+      "unreachable_reason": null,
+      "rendered_images": [
+        {
+          "src": "file:///test-assets/does-not-exist.png",
+          "natural_width": 0,
+          "natural_height": 0
+        }
+      ]
+    }
+  ]
+}

@@ -67,6 +67,31 @@ Every noise element is clean by construction, so a finding raised on any of them
 
 **Methodology is preliminary** (see the M5 spec, realistic-pages tier): the noise-construction method and its limits will be iterated and re-stated in the report.
 
+## `act-image` — the ACT image rules, with the images
+
+A second vendored ACT set ([`act-image/`](act-image/), provenance in its [NOTICE](act-image/NOTICE)):
+**all 51 published cases of the three rules whose judgment is about an image**, plus the 10 image
+files those cases reference, stored at their upstream path. It is separate from `act-gold/` because
+that set's manifest, checksums and scope constants are asserted at the five *descriptiveness* rules'
+counts; the case metadata is not re-fetched, so both sets share one freeze id.
+
+Two things make this set different from every other fixture here:
+
+- **The pages only render with help.** ACT references its assets site-absolutely (`/test-assets/…`),
+  which under `file://` resolves to the filesystem root, so the images load as nothing. The scanner
+  serves the vendored bytes through a `page.route()` interceptor (`scan(target, asset_root)`). It
+  sniffs the `Content-Type` from the bytes because five of these assets are extensionless — though
+  *measured*, that is not what makes them render (Chromium decodes an `<img>` under any served type);
+  it is what lets the same bytes be declared correctly to a multimodal model.
+- **Reachability is measured, not declared.** [`image_reachability.json`](act-image/image_reachability.json)
+  (built by [`clearway/eval/image_reachability.py`](../eval/image_reachability.py)) records, per case,
+  the minting rule and bucket, the exact `finding.html` the drafter would be shown, whether the
+  deciding fact is in that snippet, and every `<img>`'s rendered size. Of 27 usable cases, **15 mint a
+  judgment finding and 7 survive** — the rest are unreachable because axe's `image-alt` selector is
+  `img` alone, are hidden from the accessibility tree, or are one half of a **prompt-level twin pair**
+  (identical minted prompt, opposite ACT outcome — a pair that hashing fixture *files* cannot see).
+  Guarded by `tests/test_image_reachability.py`.
+
 ## Changing a set
 
 Any change to a planted signal is a **version bump**: increment `version` (and `eval_set_id`) in the relevant `expected_m*.json` and here. Downstream eval runs are tagged with the set version, so a bump never silently invalidates past results.

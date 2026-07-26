@@ -34,6 +34,11 @@ all** stayed unreachable.
 The image classes are that third case made reachable by a different channel — the fact is in the page,
 as pixels, and no text extraction can carry it. `clearway/llm/` has **no image path at all**.
 
+> *Stated in the present tense when this was written, and **T5 is what made it false**: the gateway seam
+> now takes an optional `ImagePart`. Kept verbatim rather than rewritten — it is the statement of the gap
+> this milestone exists to close, and a spec that quietly re-describes its own starting point loses the
+> ability to say what changed.*
+
 **M8 builds that path and proves the model uses it.** Two outcomes, and only two:
 
 1. **A product capability**, carried on the production path (`scanner → normalizer → drafter`), not an
@@ -232,11 +237,30 @@ so "retained" is not "drift-free", which is precisely why the null is estimated 
    condition, before and after the wiring ticket**, keeping one M7 text-finding hash as a cross-class
    check. This replaces re-running conditions post-wiring: byte-identical requests at `temperature = 0`
    leave only stack nondeterminism, which is already measured.
+   > **⚠️ Corrected at T5 — one hash cannot carry both this control and Control 7.** A serialized
+   > request that includes the attached picture's digest *must* differ between conditions, so a single
+   > "payload hash" makes this control and the byte-identical-prompt premise contradict each other.
+   > Two hashes are recorded, and each is the falsifier of a different claim: `prompt_sha256` (system +
+   > user + schema, picture excluded) must be **identical** across conditions that differ only in
+   > pixels, and `payload_sha256` (the whole ask) must **differ** between them. With only the second, a
+   > moved prompt and a changed picture are the same observation. Measured before/after comparison uses
+   > the full payload hash under `image: null`, whose shape is fixed from the start so the two sides are
+   > comparable at all. Frozen at `benchmark/reports/drafter_payload_baseline.json`, and covering the
+   > leaky set's 7 as well as the opaque set's, since `leaky / no-image` is also drafted text-only.
 7. **⚠️ The receipt logs the image `sha256`, not a byte count.** A byte count cannot verify the
    permutation: the four Nyhavn cells share identical bytes, so a count check passes whether or not the
    mapping was honoured. The receipt records `sha256` per `finding.id` per condition, and T8 asserts the
    with-image and mismatched receipts differ **exactly where the frozen mapping says they should**.
    Without this, D has no proof it was ever actually run mismatched.
+   > **The recording mechanism is T5's and is proven model-free; the live assertion is T7's.** The
+   > digest recorded is the one the drafter reports having sent (`DraftResult.request`), never the one a
+   > caller believes it passed — a receipt that reconstructs the request it *thinks* was made cannot
+   > detect a picture that never left the drafter. T5 freezes a rehearsal of all four conditions driven
+   > through the real drafter with a canned client
+   > (`benchmark/reports/image_condition_dry_receipt.json`): its `image_sha256` column is the
+   > expectation a live pass must reproduce, finding by finding. Its **payload** hashes are computed
+   > with pinned citations, so a live pass — which retrieves its own — checks prompt byte-identity
+   > *across its own conditions* rather than against that file.
 
 ---
 
@@ -531,7 +555,18 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
   `draft_with_usage` / `_draft_judgment`. `_draft_remediation` must **not** receive an image.
 - **⚠️ This spans `llm/` and `drafter/`** — split the branch accordingly.
 - **Acceptance 1:** the receipt records `sha256` per `finding.id` per condition (Control 7).
+  > **Discharged model-free.** The four conditions are values (case set + picture rule + pre-registered
+  > sample count), and the receipt emitter is exercised over all four by driving the **real** drafter
+  > with a canned client — 28 rows, no model call. The frozen rehearsal is checked against a *hand*
+  > transcription of the permutation table, read back as image names, so the receipt, the permutation
+  > artifact and the spec must all three agree.
 - **Acceptance 2:** the smoke test runs **through the real pipeline prompt**, not a hand-written probe.
+  > **⚠️ It spends one real call, and deliberately not on a pool case.** The case is `499be21170` — one
+  > half of a prompt-level twin pair, excluded from the gold pool by the exclusion rule, so no held-out
+  > cell is touched and the endpoint's seven cases stay unspent. It is gated on Ollama being up, like
+  > every other real-model test here. **Ran green:** a real scan captured the picture, the real
+  > per-finding prompt was built with its candidate criteria, and the response parsed as a non-fallback
+  > `DraftRow` (~49 s), with the request's recorded digest equal to the captured one.
 - **Acceptance 3:** no non-image finding carries an image; payload-hash equality holds over all 7
   image-class no-image payloads and one M7 text finding (Control 6).
   > **⚠️ Read this acceptance by the NODE, not by the rule — measured at T4.** On a pool page the
@@ -598,6 +633,7 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
 | `opaque / with-image` | 7 × 3 | one half of D |
 | `opaque / mismatched-image` | 7 × 3 | the other half of D |
 | capture spot-check (T4 A3) | 3 | separates capture failure from plumbing failure |
+| wiring smoke test (T5 A2) | **1, spent** | the real pipeline prompt end to end — **on a twin-excluded case, so nothing held out is spent** |
 | LiteLLM spike (T0) | ~~1~~ **2, spent** | before anything is built |
 
 > **⚠️ The spike cost two calls, not one.** The first request reached the model and returned; the
@@ -606,9 +642,15 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
 > leaves no artifact is the easiest kind to drop from a run count, so it is declared in the receipt
 > (`model_calls_spent: 2`) and here.
 
-**~75 model calls over 7 findings.** M7 ran 44 cases / 54 findings at 2–3.5 h per pass; at 7 findings
+**~76 model calls over 7 findings** (~~75~~ — the smoke test's declared call is inside the total, not
+beside it). M7 ran 44 cases / 54 findings at 2–3.5 h per pass; at 7 findings
 every condition is well under an hour. **No M7 case is re-run** — provided T2 closes silent-failure
 path 6, which would otherwise draft all 44.
+
+> **The smoke-test call is declared but is not held-out spend**, and the distinction is the one that
+> matters for T8's count: it drafts a case the exclusion rule removed from the pool, so no cell of the
+> endpoint, and no case any measurement reads, was drafted before its condition ran. The gate means it
+> repeats on any machine with Ollama up — one call per invocation, on the same excluded case.
 
 ---
 
@@ -657,7 +699,12 @@ cases reference `/test-assets/` absolutely and **already render broken**.
 scope for `referent_injection_build` and `dry_gate`, which asserts **exactly 44**; extending it gives
 **61**. **`LLMClient` exposes only `complete_json(system, user, schema)` — there is no `chat()`.**
 `local.py` routes via `litellm.completion(model="ollama_chat/…")` with `response_format`, and its
-docstring records that a sibling provider prefix silently drops structured output. The repo contains
+docstring records that a sibling provider prefix silently drops structured output.
+> **⚠️ Superseded by T5, which is the ticket that changed it.** The seam is now
+> `complete_json(system, user, schema, image: ImagePart | None = None)`. There is still no `chat()`, and
+> `local.py` still routes through the same provider prefix with the same `response_format` — what
+> changed is that the user message becomes a content-part list **only when a picture is attached**, so
+> every no-image call is byte-identical on the wire to the one this ledger entry describes. The repo contains
 **no screenshot code**. `offline_tier_b.py` is **not** a derived-set builder. `Finding.referent` is the
 precedent for a nullable, outside-the-id-hash scan field. `Finding.id` is
 `sha(source_url, rule_id, target)`. The drafter is pinned to `gemma4:31b` at `temperature = 0`, digest

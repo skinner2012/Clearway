@@ -60,6 +60,13 @@ EXCLUDED_RULES: dict[str, str] = {
     "Image not in the accessibility tree is decorative": (
         "same — the pipeline cannot see the image; needs a multimodal drafter (a future iteration)"
     ),
+    "DEPRECATED — Image filename is accessible name for image": (
+        "same reason as the two image rules above, plus its own: ACT deprecated it as superseded and "
+        "says 'This rule is not maintained anymore and should not be used'. Unlike them it is excluded "
+        "rather than merely absent, because its cases ARE vendored — they are admitted under their own "
+        "image gold manifest (act_image_gold), deliberately outside this set so the acceptance scope "
+        "stays the 44 cases the frozen baseline was built over"
+    ),
     "Links with identical accessible names have equivalent purpose": (
         "the ACT outcome is defined over a SET of links; Clearway mints one independent per-element "
         "Finding and judges each link in isolation, so it structurally cannot represent the judgment"

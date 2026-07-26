@@ -25,6 +25,9 @@ MANIFEST = json.loads((ACT_GOLD / "expected_act.json").read_text())
 EXPECTED_EXCLUSIONS = {
     "Image accessible name is descriptive",
     "Image not in the accessibility tree is decorative",
+    # deprecated upstream, and the only image rule whose cases are vendored — so it is excluded here
+    # rather than merely absent, and admitted under its own manifest (`tests/test_act_image_gold.py`)
+    "DEPRECATED — Image filename is accessible name for image",
     "Links with identical accessible names have equivalent purpose",
     "Links with identical accessible names and same context serve equivalent purpose",
     "Error message describes invalid form field value",

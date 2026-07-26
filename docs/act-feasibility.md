@@ -60,20 +60,27 @@ structural and legitimately outside axe's reach:
 These are listed in the manifest's `honest_misses` (each with `expected_finding_count: 0`). A failed
 case that mints nothing is counted an honest miss, never silently excluded.
 
-## Dropped by analysis — six rules
+## Dropped by analysis — seven rules
 
 | Dropped ACT rule(s) | Why it is not scored here |
 |---|---|
 | Image accessible name is descriptive; Image not in the accessibility tree is decorative | Ground truth is the **content of the image**, which a DOM-only pipeline cannot see. The ACT filename leaks the answer, so we would measure filename-matching, not image-text judgment — it does not transfer to real pages. Needs a multimodal drafter (a future iteration). |
+| DEPRECATED — Image filename is accessible name for image | Same as the row above, and **deprecated upstream** as superseded: ACT's notice reads *"This rule is not maintained anymore and should not be used."* It appears here only since its cases were vendored — a rule with no cases in the repo is merely *absent*, not excluded — and those cases are admitted under their own gold manifest (`clearway/eval/act_image_gold.py`), deliberately outside this set. |
 | Links with identical accessible names have equivalent purpose; …and same context… | The ACT outcome is defined over a **set** of links. Clearway mints one independent per-element `Finding` and judges each in isolation, so it structurally cannot represent the cross-element judgment; every failed case would score a systematic miss. |
 | Error message describes invalid form field value | **No axe rule** confirms the error message EXISTS, so it never mints a `Finding` — a systematic miss. |
 | Link is descriptive | **Conformance level.** It maps to SC 2.4.9 only — **Level AAA** — and every conformance row Clearway drafts is scored against a **Level A/AA** target. Its sibling *Link in context is descriptive* carries the Level A criterion 2.4.4 and stays scored, so the link judgment is narrowed, not dropped. Unlike the rows above this rule *does* reach the pipeline: its 9 cases are vendored and mint normally, and it is excluded by scope rather than by feasibility. |
 
-The first five drops are confirmed by analysis (those rules' HTML is deliberately **not** vendored); the
-exclusions and their reasons live in `clearway/eval/act_gold.py` (`EXCLUDED_RULES`) and are guarded by
-`tests/test_act_gold.py`. The consequences of the last one — including one error it converts to winnable
-and one regression it stops scoring — are recorded in `docs/drafter-kappa-baseline.md` and on the frozen
-baseline artifact.
+The first six drops are confirmed by analysis rather than by scoping; the exclusions and their reasons
+live in `clearway/eval/act_gold.py` (`EXCLUDED_RULES`) and are guarded by `tests/test_act_gold.py`. Three
+of those six have no HTML vendored here at all. The three **image** rules are the exception and the
+reason the count moved: every published case of all three is now vendored under
+`clearway/fixtures/act-image/` for the image-reachability measurement, so for them "not scored here"
+stopped meaning "not in the repo" — which is exactly why the deprecated one had to be named in
+`EXCLUDED_RULES` instead of being left absent from it. None of them enters **this** set: the acceptance
+scope is the 44 cases the frozen baseline was built over, and it is unchanged.
+
+The consequences of the scoping drop — including one error it converts to winnable and one regression it
+stops scoring — are recorded in `docs/drafter-kappa-baseline.md` and on the frozen baseline artifact.
 
 ## Cost of growing the rule set
 

@@ -103,7 +103,26 @@ def _success_criteria(requirements: dict[str, Any]) -> list[str]:
 
 def _minting_findings(case_path: Path, axe_rule: str) -> list[Finding]:
     """The PASSES-bucket findings the tested rule mints on this case (re-scanned, so `finding_id` is
-    derived from the live `file://` URL)."""
+    derived from the live `file://` URL).
+
+    It scans with **no asset root**, and that is a property of this gold set rather than an oversight:
+    its four classes are decided by text in the DOM, so a subresource that never loads changes no finding
+    here. Two of the 44 scored cases reference an absolute `/test-assets/` image today and do render it
+    broken; their accessible names come from `alt` attributes, which are present either way.
+
+    That is exactly what makes this the wrong function to reuse on a set whose gold presumes the picture
+    ARRIVED. Such a scan mints the identical findings — same ids, same html, same count — over an image
+    that never loaded, and no field on a `Finding` records the difference. So a case from outside this
+    gold's own tree is refused here rather than measured over a blank page."""
+    from clearway.eval.run_scope import OutOfScope  # the scope sits above the gold it scopes
+
+    if _ACT_GOLD not in case_path.resolve().parents:
+        raise OutOfScope(
+            f"{case_path.name} lies outside {_ACT_GOLD.name}, and this minting serves no assets — on a "
+            "set whose gold presumes a rendered image it would mint identical findings over a picture "
+            "that never arrived, with no finding-level trace of it. Use the scope whose minting threads "
+            "the vendored asset tree."
+        )
     findings = normalize(scan(str(case_path)))
     return [f for f in findings if f.rule_id == axe_rule and f.source_bucket is AxeBucket.PASSES]
 

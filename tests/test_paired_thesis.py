@@ -99,8 +99,11 @@ def test_mismatched_case_sets_raise() -> None:
 
 def test_document_title_ceiling_never_certifies() -> None:
     # 3 errors all fixed, zero regressions → best possible p = 0.125 > 0.05: uncertifiable by construction.
-    base = _vector([_case(f"t{i}", "document-title", drafter_flag=True, gold_flag=False) for i in range(3)])
-    run = _vector([_case(f"t{i}", "document-title", drafter_flag=False, gold_flag=False) for i in range(3)])
+    # One in-pool case rides along in both vectors, because a pairing carrying no pooled class at all is
+    # refused rather than pooled to b = 0 / c = 0; it moves nothing and leaves document-title untouched.
+    anchor = [_case("pool", "label", drafter_flag=True, gold_flag=True)]
+    base = _vector([_case(f"t{i}", "document-title", drafter_flag=True, gold_flag=False) for i in range(3)] + anchor)
+    run = _vector([_case(f"t{i}", "document-title", drafter_flag=False, gold_flag=False) for i in range(3)] + anchor)
     dt = next(c for c in pair_verdicts(base, run).classes if c.axe_rule == "document-title")
     assert (dt.improved, dt.regressed) == (3, 0)
     assert dt.p_value == pytest.approx(0.125)

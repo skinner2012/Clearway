@@ -34,12 +34,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from clearway.eval.drafter_kappa import _ALPHA, sign_test_p
+from clearway.eval.run_scope import POOLED_AXE_RULES, OutOfScope, assert_pooled_classes_present
 from clearway.schemas.models import VerdictVector
-
-# The classes the referent fix treats — the pool the primary endpoint runs over. `document-title` is
-# measured (secondary, on mechanism) but is not in the pool: its ceiling cannot clear α, so pooling it in
-# would only drag the primary endpoint it can never help.
-_POOLED_AXE_RULES = ("label", "link-name")
 
 
 @dataclass(frozen=True)
@@ -238,9 +234,22 @@ def attribute_against_prior(baseline: VerdictVector, prior: VerdictVector, run: 
     baseline is needed here and a straight prior-vs-run pairing is not enough. A case this run breaks that
     the prior run never fixed is a regression but not a lost gain, and the two are never collapsed.
 
+    A baseline that does not cover a paired case is refused rather than skipped. Skipping was silent and
+    its failure mode was total: against a baseline sharing NO case, every case falls through, no lost gain
+    can be recorded, and the report prints the prior run intact — the exact string a genuinely clean run
+    prints. A missing attribution and a clean one must never render the same.
+
     Pure and deterministic. ACT gold is the oracle throughout; no judge field is read."""
     by_class = _by_class(prior, run, earlier="prior run", later="run")
     baseline_by_id = {c.act_testcase_id: c for c in baseline.cases}
+
+    uncovered = sorted({c.act_testcase_id for c in prior.cases} - set(baseline_by_id))
+    if uncovered:
+        raise OutOfScope(
+            f"the baseline does not cover {len(uncovered)} of the paired cases ({uncovered}) — a case "
+            "absent from the baseline can never be counted as a lost gain, so an uncovered pairing "
+            "reports the prior run intact for the same reason a clean one does."
+        )
 
     classes: list[ClassAttribution] = []
     for axe_rule in sorted(by_class):
@@ -248,9 +257,7 @@ def attribute_against_prior(baseline: VerdictVector, prior: VerdictVector, run: 
         improved_ids, regressed_ids = _discordant(pairs)
         lost: list[str] = []
         for pc, rc in pairs:
-            bc = baseline_by_id.get(pc.act_testcase_id)
-            if bc is None:
-                continue
+            bc = baseline_by_id[pc.act_testcase_id]
             baseline_right = bc.drafter_flag == bc.gold_flag
             prior_right = pc.drafter_flag == pc.gold_flag
             run_right = rc.drafter_flag == rc.gold_flag
@@ -287,7 +294,7 @@ def pair_verdicts(
     baseline: VerdictVector,
     run: VerdictVector,
     *,
-    pooled_axe_rules: tuple[str, ...] = _POOLED_AXE_RULES,
+    pooled_axe_rules: tuple[str, ...] = POOLED_AXE_RULES,
     alpha: float = _ALPHA,
 ) -> PairedThesis:
     """Frozen baseline + a run's `VerdictVector` → the per-class and pooled discordant sign tests.
@@ -318,6 +325,7 @@ def pair_verdicts(
             )
         )
 
+    assert_pooled_classes_present({c.axe_rule for c in classes}, pooled_axe_rules)
     pooled_b = sum(c.improved for c in classes if c.axe_rule in pooled_axe_rules)
     pooled_c = sum(c.regressed for c in classes if c.axe_rule in pooled_axe_rules)
     pooled_p = sign_test_p(pooled_b, pooled_c)

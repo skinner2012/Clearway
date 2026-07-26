@@ -85,7 +85,9 @@ def _vector() -> VerdictVector:
 
 def _score(technique_match: TechniqueMatch | None = None) -> dict:
     run = _artifact(_CASES)
-    _vec, result = score_run([run, run], _vector(), {}, {}, technique_match=technique_match)
+    # The reachable-error map must name every class the run carries: an absent class is refused, so that
+    # a class the baseline never scored can never render as a class with nothing left to fix.
+    _vec, result = score_run([run, run], _vector(), {"link-name": []}, {}, technique_match=technique_match)
     return result
 
 

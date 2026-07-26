@@ -34,6 +34,7 @@ from clearway.eval.drafter_kappa_baseline import _assert_deterministic
 from clearway.eval.drafter_score import score_drafter
 from clearway.eval.offline import _drafted_cases
 from clearway.eval.paired import attribute_against_prior, pair_verdicts
+from clearway.eval.run_scope import OutOfScope
 from clearway.eval.verdict_vector import build_verdict_vector
 from clearway.schemas.models import TechniqueMatch, VerdictVector
 
@@ -41,6 +42,35 @@ from clearway.schemas.models import TechniqueMatch, VerdictVector
 # `_user_prompt` over the minting cases). Reported beside the after-injection counts as a secondary, gold-free
 # mechanism diagnostic — never an acceptance criterion.
 _DISTINCT_PROMPTS_BEFORE = {"label": 6, "document-title": 1, "link-name": 13, "empty-heading": 9}
+
+
+def _distinct_prompts_before(axe_rule: str) -> int:
+    """This class's pre-change distinct-prompt count, or a refusal.
+
+    The counts were measured over one case set. A class outside it has no pre-change count at all, and a
+    `.get()` rendered that as a blank cell beside a real after-count — a mechanism row that reads as
+    measured-and-empty rather than as belonging to a different set."""
+    if axe_rule not in _DISTINCT_PROMPTS_BEFORE:
+        raise OutOfScope(
+            f"no pre-change distinct-prompt count for {axe_rule!r} — the counts cover "
+            f"{sorted(_DISTINCT_PROMPTS_BEFORE)}. Reporting the row without it renders a class that was "
+            "never measured as one that was, and came out empty."
+        )
+    return _DISTINCT_PROMPTS_BEFORE[axe_rule]
+
+
+def _baseline_reachable_for(baseline_reachable: dict[str, list[str]], axe_rule: str) -> list[str]:
+    """This class's pre-registered reachable errors from the frozen baseline, or a refusal.
+
+    An empty list is a real state — a class with nothing left to fix — and a `.get(..., [])` made it
+    indistinguishable from a class the baseline never scored."""
+    if axe_rule not in baseline_reachable:
+        raise OutOfScope(
+            f"{axe_rule!r} has no reachable-error list in the frozen baseline, which covers "
+            f"{sorted(baseline_reachable)}. An absent class and a class with nothing left to fix both "
+            "render as an empty list, and only one of them is a measurement."
+        )
+    return baseline_reachable[axe_rule]
 
 
 def _mechanism(
@@ -66,26 +96,38 @@ def _mechanism(
                 "fn": k.fn,
                 "tn": k.tn,
                 "constant_classifier": ci.constant_classifier,
-                "distinct_prompts_before": _DISTINCT_PROMPTS_BEFORE.get(axe_rule),
+                "distinct_prompts_before": _distinct_prompts_before(axe_rule),
                 "distinct_prompts_after": distinct_after.get(axe_rule),
                 "errors": ceil.errors,
                 "reachable_errors_remaining": ceil.reachable_errors,
-                "baseline_reachable_error_ids": baseline_reachable.get(axe_rule, []),
+                "baseline_reachable_error_ids": _baseline_reachable_for(baseline_reachable, axe_rule),
             }
         )
     return rows
 
 
 def _score_predictions(
-    predictions: list[dict[str, Any]], improved: set[str], regressed: set[str]
+    predictions: list[dict[str, Any]], improved: set[str], regressed: set[str], scored_ids: set[str]
 ) -> list[dict[str, Any]]:
     """The objective movement of each pre-registered prediction's named cases — fixed / regressed / not
     moved — recorded so the two predictions are scored from the data, not narrated. Both referent-injection
     predictions are failure predictions (the case will NOT be fixed), so `held_mechanically` = none fixed.
-    The interpretation is left to a reviewer other than the ticket author (exit criterion 8)."""
+    The interpretation is left to a reviewer other than the ticket author.
+
+    A prediction naming a case this run does not contain is refused. Predictions are read off the frozen
+    baseline, so a run over a different case set inherits them, and every one of their cases scores
+    `not_moved` — which for a failure prediction reads as HELD. A prediction cannot be allowed to confirm
+    itself by being scored against a run it was never written for."""
     rows: list[dict[str, Any]] = []
     for p in predictions:
         ids = p["act_testcase_ids"]
+        foreign = sorted(set(ids) - scored_ids)
+        if foreign:
+            raise OutOfScope(
+                f"prediction {p['prediction_id']!r} names {foreign}, which this run does not contain — "
+                "it was pre-registered against a different case set. Scored here, its cases would all "
+                "read 'not_moved', and a failure prediction scored that way reports itself as held."
+            )
         per_id = {
             tid: ("fixed" if tid in improved else "regressed" if tid in regressed else "not_moved") for tid in ids
         }
@@ -151,7 +193,9 @@ def score_run(
         "pooled": paired.pooled.to_dict(),
         "classes": [c.to_dict() for c in paired.classes],
         "reachable_errors_moved": reachable_moved,
-        "predictions_scored": _score_predictions(predictions or [], all_improved, all_regressed),
+        "predictions_scored": _score_predictions(
+            predictions or [], all_improved, all_regressed, {c.act_testcase_id for c in run_vec.cases}
+        ),
         "mechanism": _mechanism(runs[0], baseline_reachable, distinct_after),
         "drafter_score": drafter_scoring.score.model_dump(mode="json"),
         "drafter_score_notes": drafter_scoring.sensitivity_notes,
@@ -276,7 +320,9 @@ def main() -> None:
         baseline_vec,
         baseline_reachable,
         distinct_after,
-        predictions=baseline_kappa.get("predictions", []),
+        # Indexed, not `.get`-defaulted: a baseline missing its predictions would score none of them and
+        # print an empty prediction block, which reads exactly like a run that had none to score.
+        predictions=baseline_kappa["predictions"],
         prior_vec=prior_vec,
         technique_match=technique_match,
     )

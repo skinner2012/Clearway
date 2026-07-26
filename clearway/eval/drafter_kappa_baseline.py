@@ -56,6 +56,7 @@ from clearway.eval.drafter_kappa import (
     tolerated_regressions,
 )
 from clearway.eval.drafter_score import DraftedCase
+from clearway.eval.run_scope import POOLED_AXE_RULES, assert_pooled_classes_present
 from clearway.schemas.models import (
     ConformanceLevel,
     DrafterKappaBaseline,
@@ -114,7 +115,6 @@ _UNSCORED_REGRESSION_EFFECT = (
     "improvement the class reports."
 )
 
-_POOLED_AXE_RULES = ("label", "link-name")
 _POOLED_HYPOTHESIS = (
     "Accuracy on the classes whose deciding fact is absent from the drafter's input is governed by whether "
     "that fact is PRESENT, not by model strength — same model, same weights, same temperature. The claim is "
@@ -191,11 +191,13 @@ def _shared_fixture_digest(*act_testcase_ids: str) -> str:
 
 def _pooled_endpoint(classes: list[DrafterKappaClass], *, alpha: float) -> PooledEndpoint:
     """The primary endpoint: one hypothesis, tested once, over the pooled reachable errors of the classes a
-    fix treats. Pure arithmetic over the rows already computed."""
-    reachable = sum(c.reachable_errors for c in classes if c.axe_rule in _POOLED_AXE_RULES)
+    fix treats. Pure arithmetic over the rows already computed — over the ONE pool definition both this
+    module and the pairing import, so the two can never disagree about what is being pooled."""
+    assert_pooled_classes_present({c.axe_rule for c in classes})
+    reachable = sum(c.reachable_errors for c in classes if c.axe_rule in POOLED_AXE_RULES)
     p_value = sign_test_p(reachable, 0)
     return PooledEndpoint(
-        axe_rules=list(_POOLED_AXE_RULES),
+        axe_rules=list(POOLED_AXE_RULES),
         hypothesis=_POOLED_HYPOTHESIS,
         reachable_errors=reachable,
         p_value=p_value,

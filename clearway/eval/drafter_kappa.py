@@ -55,6 +55,7 @@ from clearway.eval.act_gold import RULE_TO_AXE, contradictory_gold_twins
 from clearway.eval.drafter_score import FAILED, DraftedCase, _flagged
 from clearway.eval.kappa import cohen_kappa, raw_agreement
 from clearway.eval.offline import _drafted_cases
+from clearway.eval.run_scope import OutOfScope
 
 # Seeded and recorded on every interval so the percentile bounds are bit-reproducible — a CI you
 # cannot reproduce is not a measurement. Case-level, 10k resamples.
@@ -222,15 +223,30 @@ def _grouped(artifact: dict[str, Any], *, scoped: bool = True) -> dict[str, list
     artifact predating a scope correction still holds the dropped rule's cases, and scoring them would
     measure something the gold no longer claims. `scoped=False` recovers the unscoped reading, which is
     what the superseded row on the baseline is built from. Raises on a case whose rule has no axe_rule
-    rather than dropping it."""
+    rather than dropping it.
+
+    An artifact that has cases and loses **all** of them to the scoping is refused. Partial dropping is
+    the correction working as intended; total dropping means the artifact belongs to a different gold set
+    entirely, and every consumer downstream — κ, the intervals, the ceilings, the verdict vector —
+    would return a schema-valid answer over zero cases rather than say so."""
     rule_to_axe = _rule_to_axe(artifact)
+    cases = _drafted_cases(artifact)
     by_class: dict[str, list[DraftedCase]] = {}
-    for case in _drafted_cases(artifact):
+    for case in cases:
         if scoped and case.rule_name not in RULE_TO_AXE:
             continue
         if case.rule_name not in rule_to_axe:
             raise KeyError(f"case rule {case.rule_name!r} has no axe_rule in the artifact — cannot classify it")
         by_class.setdefault(rule_to_axe[case.rule_name], []).append(case)
+    if cases and not by_class:
+        dropped = sorted({case.rule_name for case in cases})
+        classes = sorted({rule_to_axe[r] for r in dropped if r in rule_to_axe})
+        raise OutOfScope(
+            f"every one of this artifact's {len(cases)} cases is outside the acceptance gold's scope — "
+            f"its rules are {dropped} ({classes}), and the scored rules are {sorted(RULE_TO_AXE)}. "
+            "Scoring it would produce a well-formed result over zero cases. Pass scoped=False for the "
+            "unscoped reading, or score it under the scope that covers it."
+        )
     return by_class
 
 

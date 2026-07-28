@@ -5,7 +5,8 @@
 > set can support one**. The mechanism question moves to M9, which builds real-page image gold.
 >
 > The primary endpoint is a **manipulation check whose oracle the experimenter constructs**, so it is
-> free of the ACT gold's power ceiling entirely.
+> free of the ACT gold's power ceiling entirely. A second, smaller question sits beside it: **what the
+> drafter does when the channel is empty** — whether it knows, and says, that it is judging blind.
 
 ## Table of Contents
 
@@ -39,12 +40,14 @@ as pixels, and no text extraction can carry it. `clearway/llm/` has **no image p
 > this milestone exists to close, and a spec that quietly re-describes its own starting point loses the
 > ability to say what changed.*
 
-**M8 builds that path and proves the model uses it.** Two outcomes, and only two:
+**M8 builds that path and proves the model uses it.** Three outcomes, and only three:
 
 1. **A product capability**, carried on the production path (`scanner → normalizer → drafter`), not an
    eval-only side channel. It is M9's prerequisite.
 2. **A manipulation check** that is scored by code rather than by reading prose: attach the *wrong*
    image behind a byte-identical prompt and require the verdict to move.
+3. **An honesty guarantee on the empty channel**: a pixel-decided finding judged without the pixels
+   must be known to the pipeline and marked, not answered confidently as if it had been seen.
 
 ---
 
@@ -199,7 +202,7 @@ conditional denominator.
 
 **⚠️ Instability may itself be the effect.** A mismatched image may make the model genuinely uncertain
 rather than cleanly flip it; excluding that cell codes attendance as noise. This is conservative, so it
-cannot inflate D — but **D systematically under-detects attendance, and T8 must say so in one
+cannot inflate D — but **D systematically under-detects attendance, and T10 must say so in one
 sentence.** Free secondary observation: **per-condition instability counts are recorded**, because
 instability concentrated in the mismatched condition relative to with-image is itself weak evidence the
 pixels are doing something. Recorded, not gated on.
@@ -214,8 +217,9 @@ so "retained" is not "drift-free", which is precisely why the null is estimated 
 
 ## Controls
 
-1. **One model throughout** — `gemma4:31b`, `temperature = 0`, all four conditions. Digest
-   `6316f0629137` with `vision` capability: **the same tag and digest M6/M7 ran.** No model change.
+1. **One model throughout** — `gemma4:31b`, `temperature = 0`, **all six conditions** (D's four, plus
+   T9's two). Digest `6316f0629137` with `vision` capability: **the same tag and digest M6/M7 ran.**
+   No model change.
 2. **⚠️ Ablation removes the whole path, not just the filename.** The `src` **and** `srcset` **and** the
    directory component are replaced. Two cues survive a filename-only rewrite and both are
    gold-relevant: `1ff696703e`'s `srcset` retains the literal tokens `nyhavn` and `paris`, and the
@@ -232,6 +236,10 @@ so "retained" is not "drift-free", which is precisely why the null is estimated 
 5. **⚠️ Record whether the prompt says an image is attached.** Keeping the text identical across
    conditions is required for D — the whole statistic rests on byte-identical prompts — **and it
    guarantees the model is never told to look.** Pre-register the choice; report it as a limitation.
+   **This holds for D's four conditions only.** T9 asks what the drafter does when it *is* told, so its
+   prompt differs by construction and its `prompt_sha256` will not match theirs. Hence: **T9's
+   conditions never enter D, D is not recomputed, and D's four passes are never re-run or
+   overwritten** — they record calls that cannot be recovered.
 6. **Text classes isolated by payload hash, across the class that carries the risk.** Assert
    byte-identity of the serialized request for **all 7 image-class findings under the no-image
    condition, before and after the wiring ticket**, keeping one M7 text-finding hash as a cross-class
@@ -255,7 +263,7 @@ so "retained" is not "drift-free", which is precisely why the null is estimated 
    > re-checked by a builder re-running its own code.
 7. **⚠️ The receipt logs the image `sha256`, not a byte count.** A byte count cannot verify the
    permutation: the four Nyhavn cells share identical bytes, so a count check passes whether or not the
-   mapping was honoured. The receipt records `sha256` per `finding.id` per condition, and T8 asserts the
+   mapping was honoured. The receipt records `sha256` per `finding.id` per condition, and T10 asserts the
    with-image and mismatched receipts differ **exactly where the frozen mapping says they should**.
    Without this, D has no proof it was ever actually run mismatched.
    > **The recording mechanism is T5's and is proven model-free; the live assertion is T7's.** The
@@ -296,6 +304,11 @@ Build the image channel on the production path, and prove the model attends to t
 11. Text classes unaffected, by payload-hash equality over all 7 image-class no-image payloads.
 12. All runs frozen and reproducible, with the held-out model-run count **including the pre-spec image
     probe and the transport spike's two calls**.
+13. **A reported with both its controls' outcomes**, against the model-free 0-of-28 blind-row baseline,
+    under one of T9's four pre-committed verdicts — with D's four conditions byte-identical on disk
+    afterwards.
+14. **A pixel-decided finding judged without pixels is marked as such on the production path**, from a
+    fact the system holds rather than from anything the model says.
 
 ---
 
@@ -492,7 +505,7 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
   `refuse_to_overwrite` is path-based, single-parent `_PRIOR_RUN` expresses M8's chain.
 - **Decided here, not deferred:** `score_run` raises below two passes (`referent_injection_score.py:128`)
   — **M8 scores outside it**, with its own scorer, because M8's endpoint is D and not a paired κ.
-  **`dry_gate` is not generalised: M8 runs without a pre-flight gate**, and T8 must state that plainly
+  **`dry_gate` is not generalised: M8 runs without a pre-flight gate**, and T10 must state that plainly
   rather than implying one existed.
 - **Depends on:** T1
 
@@ -624,7 +637,257 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
   pre-committed verdicts is stated.
 - **Depends on:** T6
 
-### T8 — Freeze and write the honest read
+### T8 — The pipeline knows when it judged blind *(no model calls)*
+
+> **Goal.** A pixel-decided finding drafted without pixels is **marked as such from a fact the system
+> holds**, and the drafter is given a place to say so. Deterministic end to end: **zero model calls, no
+> frozen artifact moved, the existing suite green unchanged.** Whether the drafter *uses* that place is
+> T9's question and does not gate anything here.
+
+**The defect, measured over the frozen text-only passes with zero model calls: the drafter judges a
+pixel-decided finding blind, confidently, and never says so.** **0 of 28 blind rows** signal that the
+picture was unavailable (7 leaky + 21 opaque), confidence sits at **0.90–0.95**, and every remediation
+speaks of *"the image"* in the abstract (*"conveys the image's actual meaning"*) while never describing
+one. The same drafter, given the pixels, describes them in 5 of 7 rows. The absence is not reported —
+it is papered over. This is a product defect, not an eval artifact: outcome #1 is a capability on the
+production path, and one that answers a visual question confidently without the visual is the same
+family of failure as M4's over-confidence (ECE 0.392) and M5's cry-wolf rate.
+
+**⚠️ What is missing is the pixels, not the element.** `<img src="/img/a.png" alt="W3C">` sits in the
+minted prompt, so *"there is no image"* would be a false statement for the drafter to make. Whether it
+received the **pixels** is a fact the system already holds (`image_ref is None` at the seam) and never
+tells it. Every decision below follows from that one asymmetry.
+
+**Scope — one concern.** Whether the pipeline knows, records and marks that a judgment was made without
+the pixels it needed. **Not** in scope: whether the picture received **matches** the page — the wrong
+image drew zero objections in 21 rows, and that is a separate ticket.
+
+**1. The baseline, model-free.** A code-scored detector over the **four already-frozen conditions** (70
+rows, of which 28 are blind): does a drafted row express that the visual evidence was unavailable? A
+prose reading is not a measurement, and a rule invented after seeing which rows it catches is not one
+either — so the rule is pinned before the rows are read through it.
+
+It has one field to read: `image_pass._draft_row` records `conformance`, `cited_sc_ids`, `confidence`
+and `remediation`, and `DraftRow` carries no rationale. **The rule: a row signals unavailability iff its
+`remediation`, case-folded, contains any of** `cannot see`, `can't see`, `unable to see`,
+`not able to see`, `cannot view`, `unable to view`, `without seeing`, `not shown the image`,
+`no image was provided`, `image is not provided`, `image not provided`, `no visual`,
+`cannot verify the image`. Deliberately high-recall and hand-checked: the expected answer is zero, so
+the failure that would matter is a rule too narrow to catch a signal that was there, and a false
+positive costs one row read by eye and named. It is frozen here so T9 can run the identical rule over
+its own rows and have the before and the after be one measurement. Expected: **0 of 28**, reproduced
+rather than assumed.
+
+**2. The contract change, decided here before any call anywhere is spent.** Give the drafter a place to
+report what it could see — **`visual_evidence: seen | absent | not_needed`** on `DraftRow` — and tell it
+in the prompt whether a picture is attached. Rejected alternatives, with reasons: reusing
+`not_applicable` collapses *"the rule does not apply"* into *"I could not see it"* and would move every
+acceptance number through `stats.CLEAN`; a confidence floor rests everything on a field M4 measured
+decorative and over-confident (ECE 0.392).
+
+- **⚠️ The field asks whether the evidence *this judgment needed* was available — never whether a
+  picture was attached.** The second is a fact the system already holds, so a model told there is no
+  picture answers it correctly by repeating the sentence it was handed. **`not_needed` is what
+  separates obedience from reasoning**, and a two-value field would be actively wrong: the pool's
+  `a2333ec76e` received no picture and needs none — its hex-digest `alt` fails 1.1.1 whatever the
+  pixels hold — so `seen | absent` alone forces a false answer on the one case that discriminates.
+  Not a reuse of `not_applicable`: that value lives on `Conformance` and speaks about the rule, this
+  one speaks about the evidence.
+
+- **⚠️ The model's claim and the system's fact are two fields, because they have two sources.**
+  `visual_evidence: Literal["seen", "absent", "not_needed"] | None = None` is **written by the model**;
+  `visually_verified: bool | None = None` is **the system's**, tri-state on purpose — `None` = the
+  question does not arise (not a pixel-decided finding), `True` = pixel-decided and the pixels were
+  sent, `False` = pixel-decided and they were not. One field for both would let the deterministic value
+  stand in for the model's answer, and any later measurement over it would be measuring the pipeline
+  rather than the drafter; a two-valued system field would have to spell *"does not arise"* as `False`
+  and would mark every text finding in the product visually unverified. Keeping them apart buys a third
+  check free: **a row claiming `seen` while the system sent nothing is a hallucination catchable with no
+  model and no judge.** Both additive with defaults, so every persisted row still validates under
+  `extra="forbid"`; the assembled path and the fallback carry `visual_evidence=None`, because a field
+  written by the model is empty where no model wrote it.
+
+- **⚠️ The announcement is a parameter defaulted OFF, because *"no sentence says a picture is
+  attached"* is a control, not a habit.** It is asserted by `test_the_prompt_never_says_a_picture_is_attached`,
+  `test_attaching_a_picture_changes_no_byte_of_either_prompt`, Control 6's live rebuild
+  (`test_the_frozen_control_reproduces_through_the_current_prompt_builders`) and
+  `test_the_frozen_receipt_rebuilds_byte_identically`. Shipped unconditionally the sentence moves all
+  15 payload hashes in `drafter_payload_baseline.json` and every hash in
+  `image_condition_dry_receipt.json`, retiring the pre-wiring comparison Control 6 exists for. So
+  `announce_image: bool = False`, **and** the announcement renders through a block returning `''` for
+  any finding outside the pixel-decided classes — the disjoint-by-class idiom the three referent blocks
+  already use. Two gates, each covering a hole the other leaves: the parameter keeps every existing
+  caller byte-identical, the class gate keeps Control 6's text cross-check row byte-identical even
+  after the parameter flips. With the default off, **nothing is re-frozen and nothing is re-run.**
+  **The default is not flipped by this ticket and not by T9 either** — T9 produces the number that
+  decides it, and flipping it is a declared prompt change shipped the way `Citation.text` (v0.26)
+  shipped its two: baseline re-frozen, amendment in `CONTRACTS.md` §6.
+
+- **⚠️ The announced call asks under its own schema class, because neither hash can see a field added
+  to `_LLMDraft`.** `LLMRequest.of` records `schema.__name__` — the class name, not its shape — so
+  widening `_LLMDraft` in place would change what the model is asked to produce while moving **neither**
+  `prompt_sha256` nor `payload_sha256`: the control built to catch a moved ask, blind to a moved answer,
+  inside the ticket that closes exactly that family of failure. So the announced path asks under
+  **`_LLMDraftVisualEvidence`** (`_LLMDraft` plus the one field), selected by the same parameter. The
+  class name then differs, so the hash moves exactly when the ask moves with no change to `LLMRequest`;
+  the unannounced path stays `_LLMDraft`, so existing hashes are not merely equal but produced by
+  identical code; and a field the model was never asked for cannot be filled by accident, being absent
+  from the shape. **Residual gap, recorded not closed: a future field added to `_LLMDraft` in place is
+  still invisible to both hashes.** Naming it is this ticket's obligation; fixing it is a control ticket.
+
+**3. The marking, and it needs no model at all.** A pixel-decided finding drafted while
+`image_ref is None` carries `visually_verified is False` on the production path, from the system's own
+fact. **This is the half that closes the defect** — it ships on its own evidence and waits on no
+measurement.
+
+- **⚠️ Pixel-decided is keyed by the RULE here, where T5's Acceptance 3 keyed by the NODE — both are
+  right, and the difference is the point.** *"Did this node render a picture"* is a property of the
+  node, which is why an `image_ref` rides one; *"does this class's judgment need pixels"* is a property
+  of the question, and `region` firing on the same node asks a question no picture answers. A pinned
+  `PIXEL_DECIDED_RULES = {"image-alt"}` beside the drafter — never inferred from `image_ref`, which is
+  `None` in exactly the case the marking exists for.
+- **⚠️ A row claiming `seen` against `visually_verified is False` fails validation** — retry once, then
+  degrade to the visible `_fallback` row, reusing the drafter's existing validate-retry-then-degrade
+  contract rather than inventing a second failure mode.
+- **⚠️ Count the blast radius of both over the WHOLE scoped corpus**, not over the seven image cases,
+  and record the counts. A guard measured only where it was designed to fire is not measured.
+
+**Sites.** `CONTRACTS.md` §3 + §5 + §6 in one change (`DraftRow`); `drafter/llm.py`
+(`_LLMDraftVisualEvidence`, the announcement block, `PIXEL_DECIDED_RULES`, the contradiction check,
+`_assemble`, and the `draft` / `draft_with_usage` / `_draft_judgment` signatures); a model-free detector
+in `eval/` reading the four frozen conditions. `_draft_remediation` is untouched — the assembled path
+takes no picture and answers no visual question.
+
+**Acceptance.**
+1. The baseline is frozen and reproduces **0 of 28** under the pinned detector rule, which is in code
+   before it is run.
+2. `CONTRACTS.md` §3 + §5 + §6 carry `visual_evidence` and `visually_verified` in one change; every
+   persisted row written before it still validates under `extra="forbid"`.
+3. **The marking ships and is tested**: a pixel-decided finding drafted with `image_ref is None` carries
+   `visually_verified is False`, and a row claiming `visual_evidence: "seen"` against it degrades to the
+   visible fallback rather than shipping. Both counted over the whole scoped corpus, counts recorded.
+4. `announce_image` defaults off and `_LLMDraft` is unwidened, so **no frozen artifact in this milestone
+   moves** — D's four conditions, `drafter_payload_baseline.json` and `image_condition_dry_receipt.json`
+   all byte-identical on disk — and **the existing suite passes unchanged rather than being updated to
+   match.** A diff over those artifacts is a test, not a habit.
+5. **Zero model calls are spent.** The held-out run count is unchanged by this ticket.
+
+- **Depends on:** T7
+
+### T9 — Does the drafter report the absence? *(42 calls)*
+
+> **Goal.** One number, **A**, read against two controls under four verdicts fixed before any of its
+> calls are spent — does the drafter, given a place to say it cannot see the picture and told whether
+> one is attached, use it? **D is not recomputed, not re-run, and not touched.**
+
+**What T8 shipped, since this ticket is read on its own.** `DraftRow.visual_evidence` —
+`seen | absent | not_needed`, written by the model, answering *"was the evidence this judgment needed
+available"* and not *"was a picture attached"*. `DraftRow.visually_verified` — the system's own
+tri-state fact. `Drafter.draft*(…, announce_image: bool = False)`, which when true adds a sentence
+saying whether a picture is attached and asks under `_LLMDraftVisualEvidence`. Every blind row this
+project has frozen — 28 of them — reports the absence in **0** cases; that is the baseline A moves from.
+
+**The endpoint, pre-registered by this spec before any of its calls are spent.**
+
+> **A = the number of the 6 image-decided pool cases whose blind verdict withholds a conformance
+> judgment** — reports the visual evidence its judgment needed as **`absent`** — **out of 6.**
+
+**The six are the pool minus `a2333ec76e`**, the one case the pool table records as decided by text
+alone and which serves as Control 1. Named by id in code, not filtered by a predicate: the pool is seven
+rows in a frozen artifact, and a predicate recomputing *"image-decided"* would be a second definition of
+a set the spec has already fixed.
+
+**⚠️ Withholding is reported on the new field, because `Conformance` has nowhere to put it.** Its four
+values are `supports`, `partially_supports`, `does_not_support`, `not_applicable`, and T8 rejects the
+fourth as the channel — so the conformance field still carries a verdict on every withheld row. That is
+a property of the instrument, not a hedge, and the report prints the conformance value beside each
+withheld row so a reader sees what the model answered while saying it could not see. Adding an
+abstention value to `Conformance` moves `stats.FLAGS` / `CLEAN` and every acceptance number in the
+repo — **out of scope, named so it is not re-derived as a good idea mid-ticket.**
+
+**⚠️ A is read from pass 1 over all six, and unstable cases are named rather than dropped.** D excludes
+a cell whose three samples disagree; A must not. D is a count read against a null rate, where losing a
+cell costs power and cannot inflate the result — A is an absolute count out of a fixed six, where
+dropping a case shrinks the denominator and makes a partial result look closer to closed. Per-case
+agreement across the three samples is reported beside A.
+
+**The two conditions, and why both are needed.** `opaque / told-no-image` and `opaque / told-with-image`,
+3 samples each, **42 calls**. The second is not decoration: without it, a drafter that abstains on
+*everything* the moment the new field exists is indistinguishable from one that abstains **because** it
+lacks the picture. They do **not** enter D — see the ⚠️ under Control 5.
+
+- **⚠️ They get their own registry rather than two more entries in `CONDITIONS`.** That tuple is not a
+  list of runs; it is the definition D's evidence is checked against — `receipt_failures` iterates it
+  and demands a full set of rows for every member, and `test_the_frozen_receipt_rebuilds_byte_identically`
+  asserts the rebuild equals the frozen 28-row file. Appending two members makes it 42 and re-freezes an
+  artifact whose whole purpose is to have been frozen before the endpoint was read. So an
+  **`ANNOUNCED_CONDITIONS`** tuple beside `CONDITIONS`, `condition_by_id` resolving over both so a CLI
+  still cannot invent a name, and `receipt_failures` taking the tuple it checks as an argument instead
+  of reaching for the module global. **`Condition` gains `announces: bool`** — a fourth thing a pass
+  cannot infer, for the reason its docstring already gives.
+- **The literals, so they are not drifted into:** `condition_id` `"opaque/told-no-image"` and
+  `"opaque/told-with-image"`; `eval_set_id` unchanged at `act-image-opaque@1`, since the case set is
+  byte-identical and a moved id would claim otherwise; **`config_id` `single-multimodal-announced@1`**,
+  because a prompt announcing the channel is a different pipeline configuration — the reasoning that
+  settled `single-multimodal@1` at T2.
+- **⚠️ A contradicted row is recorded, not aborted on.** `image_pass._draft_row` aborts the whole
+  condition on any fallback, and T8's contradiction guard degrades to exactly that fallback — but here
+  the contradiction *is* the measurement, so these two conditions record it with the model's claim
+  preserved and continue, while an unparseable-output fallback still aborts as today. The two are
+  distinguishable and must not be collapsed. A contradicted row is not withholding: out of A's
+  numerator, still in its denominator, counted and named.
+- **⚠️ Their instability does not feed D's null rate.** `null_rate` takes the artifacts it is given, and
+  six conditions instead of four would move a number the endpoint was already read against. D is not
+  recomputed — Control 5 — and that includes its denominator. This ticket's within-condition agreement
+  is its own figure, reported beside A.
+
+**Two controls, and neither needs a new fixture.** They fail in opposite directions, which is why one of
+them is not enough:
+
+| control | what must happen | reading if it does not |
+|---|---|---|
+| **`a2333ec76e`, blind** — the one case decided by **text alone**, its `alt` a hex digest that describes nothing whatever the pixels hold | reports **`not_needed`** | the drafter is obeying *"no image"* as a blanket instruction rather than reasoning about what the question needs |
+| **`told-with-image`, all 7** — the picture is there and it is told so | **no row reports `absent`** | the new mechanism suppresses judgment by its mere existence, and A measures the field, not the reasoning |
+
+Both are predicates on pass 1 and neither reads `confidence` — reported for both, gated on for neither.
+Control 1 fails equally on `seen`, which is a contradiction against `visually_verified is False`. Control
+2 is stated as the absence of withholding rather than as `seen` on all seven, because `not_needed`
+remains legitimate for `a2333ec76e` even with its picture attached, and a predicate forbidding it would
+fail a correct implementation — the failure mode T5's Acceptance 3 was corrected for.
+
+**Pre-committed verdicts**, covering every value of A so none is chosen after the fact:
+
+| outcome | verdict |
+|---|---|
+| either control fails | **uninterpretable** — checked first, because blanket obedience and reasoning are then indistinguishable |
+| **A = 6**, both controls hold | **closed** |
+| **3 ≤ A ≤ 5** | **partial** — reported with the cases that leaked, named |
+| **A ≤ 2** | **not used** — an explicit statement of absence does not change what the drafter does |
+
+**⚠️ What A does not decide is whether T8's marking ships** — that shipped on its own evidence. What it
+decides is whether `announce_image` becomes production's default, and that flip is a separate declared
+prompt change, not part of this ticket's acceptance.
+
+**Sites.** `eval/image_conditions.py` (`Condition.announces`, `ANNOUNCED_CONDITIONS`, `condition_by_id`,
+`receipt_failures` signature); `eval/image_pass.py` (`_draft_row` records both new fields and
+distinguishes a contradiction from an unparseable fallback); `eval/image_score.py` (A, its two controls,
+the verdict).
+
+**Acceptance.**
+1. Both conditions are frozen with receipts, each covering all 7 findings at its pre-registered sample
+   count, and their prompts differ from D's by construction — `prompt_sha256` is expected **not** to
+   match, which is why they never enter D.
+2. **A is reported with both controls' outcomes** under one of the four verdicts above, with per-case
+   sample agreement beside it, and with the 0-of-28 baseline it moved from re-run under T8's identical
+   detector rule.
+3. **D's four conditions are byte-identical on disk afterwards**, D is not recomputed, and its null rate
+   is unchanged.
+4. `CONDITIONS` still names D's four, and
+   `test_the_four_conditions_and_their_sample_counts_are_the_pre_registered_ones` is untouched.
+
+- **Depends on:** T8
+
+### T10 — Freeze and write the honest read
 - **Mandatory report contents**, fixed now: D with its **retained-cell count** and the null rate actually
   used (`max` of M8's measured rate and M7's 1/54, both printed); the per-condition instability counts;
   the direction check as secondary; the `leaky` → `opaque` difference with its fixture-artifact caveat;
@@ -653,9 +916,28 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
   drafter directly and the model resolved all three. That is a model run on held-out data that
   **resolved the milestone's largest uncertainty before pre-registration**. M7 declared its analogous
   spend; M8 does too, in the held-out run count.
+- **A with both its controls' outcomes**, the 0-of-28 baseline it moved from, and the production
+  marking's test result — **with the marking's and the contradiction guard's blast radius over the
+  whole scoped corpus, not over the seven pool cases.** Two more, which a reader would otherwise have
+  to infer: **that `announce_image` ships defaulted off and A is what decides whether it flips**, so
+  the milestone delivers the number and not the change of default; and **that a field added to
+  `_LLMDraft` in place would move neither `prompt_sha256` nor `payload_sha256`** — a live gap in
+  Control 6, routed around with a second schema class rather than closed.
+  **The blind-judgment question was raised after D's conditions were frozen and read** — its
+  endpoint A was pre-registered before T9 spent a call, and D was neither recomputed nor re-run, but
+  the report states the ordering rather than leaving a reader to infer it.
+- **Two numbers a mechanical reading of D would bury**, both required: that `opaque / with-image`
+  already flagged **6 of 7** cells, so **only one cell was free to move in the pre-registered
+  direction** and the "4 live cells" power description overstates what was available; and that under
+  the raw four-value conformance **3 cells moved** where the binary collapse counts **1**. Report both
+  beside D. Neither re-defines the endpoint — D stays on the axis it was registered on.
+- **That the drafter never objected to the wrong picture.** Across 21 mismatched rows it raised
+  **zero** objections — it took the pixels as the page's own and rewrote the remediation around them.
+  The manipulation working is what D measures; that nothing in the pipeline notices the contradiction
+  is a separate property of the product, and the report states it rather than leaving it implied.
 - **Rule: report ugly numbers as they are.** The unacceptable failure is not a low score but an
   untrustworthy one.
-- **Depends on:** T7
+- **Depends on:** T9
 
 ---
 
@@ -668,6 +950,8 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
 | `opaque / with-image` | 7 × 3 | one half of D |
 | `opaque / mismatched-image` | 7 × 3 | the other half of D |
 | `opaque / no-image`, **discarded attempt** | **6, spent** | see the concurrency note below |
+| `opaque / told-no-image` *(T9)* | 7 × 3 | one half of A |
+| `opaque / told-with-image` *(T9)* | 7 × 3 | the other half — the control that A is read against |
 | capture spot-check (T4 A3) | 3 | separates capture failure from plumbing failure |
 | wiring smoke test (T5 A2) | **1, spent** | the real pipeline prompt end to end — **on a twin-excluded case, so nothing held out is spent** |
 | LiteLLM spike (T0) | ~~1~~ **2, spent** | before anything is built |
@@ -693,13 +977,14 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
 > is in flight.**
 
 **~82 model calls over 7 findings** (~~75~~ → ~~76~~: the smoke test's declared call is inside the
-total, not beside it, and the discarded `opaque / no-image` attempt adds six). M7 ran 44 cases / 54
+total, not beside it, and the discarded `opaque / no-image` attempt adds six), **and ~124 with T9's two
+conditions.** M7 ran 44 cases / 54
 findings at 2–3.5 h per pass; at 7 findings
 every condition is well under an hour. **No M7 case is re-run** — provided T2 closes silent-failure
 path 6, which would otherwise draft all 44.
 
 > **The smoke-test call is declared but is not held-out spend**, and the distinction is the one that
-> matters for T8's count: it drafts a case the exclusion rule removed from the pool, so no cell of the
+> matters for T10's count: it drafts a case the exclusion rule removed from the pool, so no cell of the
 > endpoint, and no case any measurement reads, was drafted before its condition ran. The gate means it
 > repeats on any machine with Ollama up — one call per invocation, on the same excluded case.
 
@@ -761,7 +1046,7 @@ precedent for a nullable, outside-the-id-hash scan field. `Finding.id` is
 `sha(source_url, rule_id, target)`. The drafter is pinned to `gemma4:31b` at `temperature = 0`, digest
 `6316f0629137`, `capabilities: ['completion', 'vision', 'tools', 'thinking']` — **the same tag and digest
 M6/M7 ran**. **A direct `/api/chat` probe with each pool image attached — spent held-out data, declared
-in T8 —** showed the model answers *"NO — this is Copenhagen, not Paris"*, *"YES — 'pain' is the French
+in T10 —** showed the model answers *"NO — this is Copenhagen, not Paris"*, *"YES — 'pain' is the French
 word for bread"*, and names the W3C logo; it **bypassed LiteLLM**, ran without the pipeline's system
 prompt and with thinking disabled, so it establishes **capability only**. **M7:** b = 5, c = 1,
 p = 0.109375; **1 drifting finding in 54** at finding level, diagnosed as numerical rather than sampling
@@ -802,6 +1087,9 @@ unaffected: it is keyed by `(scope, act_testcase_id, target)` on purpose. Record
 
 **Still unverified — settle before the pass that depends on it.** Whether the drafter stays stable at
 finding level with images attached *(T7 measures it; the null rate rule already anticipates it)*.
+Whether the drafter uses an explicit statement that no picture is attached, or ignores it — nothing in
+this repo has ever told it, and the measured starting point is that it never volunteers the absence
+(0 of 28 blind rows, at 0.90–0.95 confidence).
 Image-token cost and wall-clock per condition, beyond the single spike data point. Whether
 `FROZEN_CLASS_KAPPA`'s "newest scored run" provenance rule can accommodate a run containing only
 `image-alt` — a **structural** conflict, since no single artifact would carry all five classes, and

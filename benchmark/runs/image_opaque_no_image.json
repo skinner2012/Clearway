@@ -1,0 +1,630 @@
+{
+  "artifact": "one image condition drafted against the real model, all its samples",
+  "version": 1,
+  "condition": {
+    "condition": "opaque/no-image",
+    "scope": "image-opaque",
+    "attaches": "none",
+    "samples": 3
+  },
+  "canonical_sample": 1,
+  "citations": {
+    "source": "pinned",
+    "sc_ids": [
+      "1.1.1"
+    ],
+    "note": "The candidate criteria were PINNED (eval/drafter_payload.PINNED_CITATIONS), not retrieved. The endpoint is defined over prompts that are byte-identical across conditions differing only in pixels, and a live retriever is a service whose ordering is one more thing that could move between two calls run hours apart. The cost is real and is not hidden: the block holds the one criterion this class is about, where production retrieval surfaces several candidates including distractors, so these conditions are drafted against an easier candidate set than a live scan would produce. It is the same set for all four conditions, so it cannot move a difference between them."
+  },
+  "run_ids": [
+    "image-opaque_no_image-sample1-2026-07-28T14:41:47.983243+00:00",
+    "image-opaque_no_image-sample2-2026-07-28T14:41:47.983243+00:00",
+    "image-opaque_no_image-sample3-2026-07-28T14:41:47.983243+00:00"
+  ],
+  "config_id": "single-multimodal@1",
+  "eval_set_id": "act-image-opaque@1",
+  "corpus_version": "pinned:image-alt@fdbe6e83a265",
+  "drafter_model": "gemma4:31b",
+  "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+  "axe_core_version": "4.12.1",
+  "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "created_at": "2026-07-28T14:41:47.983243+00:00",
+  "samples": [
+    {
+      "sample": 1,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "d45fa2f4b96e463eb12b902f69ae3f5345dd4c333fb42e92a097e5d04b8ec4c4"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "None required."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "e5846c4a33853748f2b1220fa55d3ff8fffc048c5ae0f267e5baa282a5821174"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text provides a meaningful identification of the organization."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "c148cd451b77c4ed7e6979510288facbb97d6eeab2d083c7369bccc511ca500f"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary as the alt text provides a meaningful identification of the image content."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "91f59810fba554b6d377cf0996f83549313303029ea12fa2d7b78b6a2446651d"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the vague alt text 'pain' with a descriptive alternative that conveys the image's actual meaning or purpose."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "cdc799f4de53605b6a9c836c7e27d37ff271427735f60b6b0f10ae08371f760b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "None required."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "e590e58055b2bca2ef687ce576eaef02ec1b62aba1449b118e9cd7745651596b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "N/A"
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "6894bde492d6c133abc71f65cd7b1c740f11758a81b3ef03805a4790ab4711de"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alphanumeric hash in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    },
+    {
+      "sample": 2,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "d45fa2f4b96e463eb12b902f69ae3f5345dd4c333fb42e92a097e5d04b8ec4c4"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "None required."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "e5846c4a33853748f2b1220fa55d3ff8fffc048c5ae0f267e5baa282a5821174"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text provides a meaningful identification of the organization."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "c148cd451b77c4ed7e6979510288facbb97d6eeab2d083c7369bccc511ca500f"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary as the alt text provides a meaningful identification of the image content."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "91f59810fba554b6d377cf0996f83549313303029ea12fa2d7b78b6a2446651d"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the vague alt text 'pain' with a descriptive alternative that conveys the image's actual meaning or purpose."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "cdc799f4de53605b6a9c836c7e27d37ff271427735f60b6b0f10ae08371f760b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "None required."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "e590e58055b2bca2ef687ce576eaef02ec1b62aba1449b118e9cd7745651596b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "N/A"
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "6894bde492d6c133abc71f65cd7b1c740f11758a81b3ef03805a4790ab4711de"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alphanumeric hash in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    },
+    {
+      "sample": 3,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "d45fa2f4b96e463eb12b902f69ae3f5345dd4c333fb42e92a097e5d04b8ec4c4"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "None required."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "e5846c4a33853748f2b1220fa55d3ff8fffc048c5ae0f267e5baa282a5821174"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text provides a meaningful identification of the organization."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "c148cd451b77c4ed7e6979510288facbb97d6eeab2d083c7369bccc511ca500f"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary as the alt text provides a meaningful identification of the image content."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "91f59810fba554b6d377cf0996f83549313303029ea12fa2d7b78b6a2446651d"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the vague alt text 'pain' with a descriptive alternative that conveys the image's actual meaning or purpose."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "cdc799f4de53605b6a9c836c7e27d37ff271427735f60b6b0f10ae08371f760b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "None required."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "e590e58055b2bca2ef687ce576eaef02ec1b62aba1449b118e9cd7745651596b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "N/A"
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/no-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "6894bde492d6c133abc71f65cd7b1c740f11758a81b3ef03805a4790ab4711de"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alphanumeric hash in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,232 @@
+{
+  "artifact": "one image condition drafted against the real model, all its samples",
+  "version": 1,
+  "condition": {
+    "condition": "leaky/no-image",
+    "scope": "image-leaky",
+    "attaches": "none",
+    "samples": 1
+  },
+  "canonical_sample": 1,
+  "citations": {
+    "source": "pinned",
+    "sc_ids": [
+      "1.1.1"
+    ],
+    "note": "The candidate criteria were PINNED (eval/drafter_payload.PINNED_CITATIONS), not retrieved. The endpoint is defined over prompts that are byte-identical across conditions differing only in pixels, and a live retriever is a service whose ordering is one more thing that could move between two calls run hours apart. The cost is real and is not hidden: the block holds the one criterion this class is about, where production retrieval surfaces several candidates including distractors, so these conditions are drafted against an easier candidate set than a live scan would produce. It is the same set for all four conditions, so it cannot move a difference between them."
+  },
+  "run_ids": [
+    "image-leaky_no_image-sample1-2026-07-28T14:18:23.167206+00:00"
+  ],
+  "config_id": "single-multimodal@1",
+  "eval_set_id": "act-image-leaky@1",
+  "corpus_version": "pinned:image-alt@fdbe6e83a265",
+  "drafter_model": "gemma4:31b",
+  "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+  "axe_core_version": "4.12.1",
+  "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "created_at": "2026-07-28T14:18:23.167206+00:00",
+  "samples": [
+    {
+      "sample": 1,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "leaky/no-image",
+            "scope": "image-leaky",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "cb0d86c54f6e561f",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "c1bc3c28ce012c0bb1482fc5cb31c90ae02732809688ebc5d60717a879be9bd2",
+            "payload_sha256": "96397a9c5e1e67ce193d1f0b24010b15d7910700a12e3376d09527482aadc383"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary as the alt text accurately identifies the organization represented by the logo."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "leaky/no-image",
+            "scope": "image-leaky",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "934bca3b11511ae8",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "bd1ea863b61fca06769c7549a00b157925607423958fefcfb80b31bad1ddfb87",
+            "payload_sha256": "60d0c7fe162c4baa80bde1129ee2f1c9423e14bd878d009aacae1921faaf588e"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to accurately reflect the content of the image, such as 'W3C logo'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "leaky/no-image",
+            "scope": "image-leaky",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "8acebb2c8adf6e7d",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "ad5aaf13c1f115c3ebf7d0382520bac6f4ec3206f85bb7750ca095a4f044668d",
+            "payload_sha256": "7c963723570bbd893c079341e897b600f84f0fcfc2d6ad984e29ae67fbf47bb8"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the alt text, which currently mirrors the filename, with a descriptive alternative that conveys the actual content or purpose of the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "leaky/no-image",
+            "scope": "image-leaky",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "93ec4c14981309d3",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "01ffc2df50a92f207c575b8c4172cf5bb473c0cc578c79a62ce6ea61d351c3ef",
+            "payload_sha256": "9d38d50b17a172168bd1a1f9a1fbd779f49e4ccc81a099de9e947b682e0430e0"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the generic alt text with a descriptive alternative that conveys the actual meaning or purpose of the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "leaky/no-image",
+            "scope": "image-leaky",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "332d749a06d92787",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "9f76a34d18dce2779f837dc447476c83997bc156d92021f3cbbe8427cd06d0cd",
+            "payload_sha256": "f3ff1c2c1db9bdfde9735fc12b86c98bebadd1981bc491797413df5b8d11c607"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the filename-based alt text with a descriptive alternative that conveys the meaning and purpose of the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "leaky/no-image",
+            "scope": "image-leaky",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "812cb194bac295a2",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "ed2b7e9fbac3088199b27ad4d05e00ca478abc23360b818b0ced630cf93fd923",
+            "payload_sha256": "1b7ff373c49135ad40457f2d2ea548c0dee35b47163dc98233ebaad53e605d94"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the generic city name with a descriptive text alternative that conveys the actual content and purpose of the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "leaky/no-image",
+            "scope": "image-leaky",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "7d696ac91d62a0ae",
+            "target": "img",
+            "image_sha256": null,
+            "media_type": null,
+            "prompt_sha256": "9807e8488d39dbd707599cdeffc897d76dc220ab9c7d5d1c07202621bc758c03",
+            "payload_sha256": "7d1cf01e8b0650777abcf1b115c104b70cbec66d28731c9b6f58c703bfb7248a"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the filename in the alt attribute with a descriptive text alternative that conveys the meaning and purpose of the image."
+          }
+        }
+      ]
+    }
+  ]
+}

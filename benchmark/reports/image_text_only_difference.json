@@ -1,0 +1,244 @@
+{
+  "artifact": "the leaky → opaque text-only difference, a secondary descriptive finding",
+  "version": 1,
+  "note": "The two text-only conditions of the image experiment, compared. Scored deterministically against ACT gold, never by the judge. Descriptive: it is not an endpoint and it is NOT the ablation gate — that gate is the offline token check the opaque set was derived under. Both conditions were drafted against PINNED candidate criteria, so neither reflects what a live retriever would surface; the pinning is identical across them and cannot move the difference. The opaque condition's three samples share a byte-identical ask, so their disagreements are the stack and are recorded as the null replicates.",
+  "passes": {
+    "leaky/no-image": {
+      "path": "image_leaky_no_image.json",
+      "created_at": "2026-07-28T14:18:23.167206+00:00",
+      "drafter_model": "gemma4:31b",
+      "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+      "corpus_version": "pinned:image-alt@fdbe6e83a265",
+      "samples": 1
+    },
+    "opaque/no-image": {
+      "path": "image_opaque_no_image.json",
+      "created_at": "2026-07-28T14:41:47.983243+00:00",
+      "drafter_model": "gemma4:31b",
+      "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+      "corpus_version": "pinned:image-alt@fdbe6e83a265",
+      "samples": 3
+    }
+  },
+  "conditions": {
+    "leaky/no-image": {
+      "condition": "leaky/no-image",
+      "eval_set_id": "act-image-leaky@1",
+      "canonical_sample": 1,
+      "cases": 7,
+      "flagged": 6,
+      "correct": 4,
+      "false_positives": 3,
+      "false_negatives": 0,
+      "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+      "verdicts": {
+        "be6b29e220d6afbd827625c602ec49027e73fdf1": false,
+        "530266c6116fcfad12561e9e1a407fa0a0da3435": true,
+        "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e": true,
+        "607ad4964aa69e78a663cf993a28cedd6a1dc39e": true,
+        "1ff696703e7e7393a5d05cdcd3229cb050594998": true,
+        "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4": true,
+        "a2333ec76e676624212dcd616ed11ae576ab775e": true
+      }
+    },
+    "opaque/no-image": {
+      "condition": "opaque/no-image",
+      "eval_set_id": "act-image-opaque@1",
+      "canonical_sample": 1,
+      "cases": 7,
+      "flagged": 2,
+      "correct": 4,
+      "false_positives": 1,
+      "false_negatives": 2,
+      "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+      "verdicts": {
+        "be6b29e220d6afbd827625c602ec49027e73fdf1": false,
+        "530266c6116fcfad12561e9e1a407fa0a0da3435": false,
+        "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e": false,
+        "607ad4964aa69e78a663cf993a28cedd6a1dc39e": true,
+        "1ff696703e7e7393a5d05cdcd3229cb050594998": false,
+        "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4": false,
+        "a2333ec76e676624212dcd616ed11ae576ab775e": true
+      }
+    }
+  },
+  "instability": {
+    "leaky/no-image": {
+      "condition": "leaky/no-image",
+      "measurable": false,
+      "samples": 1,
+      "findings": 7,
+      "pairs": 0,
+      "note": "one sample — within-condition stability is NOT measured here, which is not the same as measured and found perfect. This condition was pre-registered as descriptive."
+    },
+    "opaque/no-image": {
+      "condition": "opaque/no-image",
+      "measurable": true,
+      "samples": 3,
+      "findings": 7,
+      "pairs": 21,
+      "disagreeing_pairs": 0,
+      "rate": 0.0,
+      "unstable_findings": [],
+      "unstable_cases": []
+    }
+  },
+  "filename_cue": {
+    "rule": "the last path segment of `src`, compared case-insensitively to `alt` verbatim; the reported variant strips one trailing extension from that segment first",
+    "cases": [
+      {
+        "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+        "expected": "passed",
+        "alt": "W3C",
+        "src_last_segment": "w3c-logo.png",
+        "alt_equals_filename": false,
+        "alt_equals_filename_stem": false
+      },
+      {
+        "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+        "expected": "failed",
+        "alt": "ERCIM",
+        "src_last_segment": "w3c-logo.png",
+        "alt_equals_filename": false,
+        "alt_equals_filename_stem": false
+      },
+      {
+        "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+        "expected": "passed",
+        "alt": "Nyhavn",
+        "src_last_segment": "nyhavn",
+        "alt_equals_filename": true,
+        "alt_equals_filename_stem": true
+      },
+      {
+        "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+        "expected": "passed",
+        "alt": "pain",
+        "src_last_segment": "pain",
+        "alt_equals_filename": true,
+        "alt_equals_filename_stem": true
+      },
+      {
+        "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+        "expected": "passed",
+        "alt": "Nyhavn",
+        "src_last_segment": "nyhavn.jpeg",
+        "alt_equals_filename": false,
+        "alt_equals_filename_stem": true
+      },
+      {
+        "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+        "expected": "failed",
+        "alt": "Paris",
+        "src_last_segment": "paris",
+        "alt_equals_filename": true,
+        "alt_equals_filename_stem": true
+      },
+      {
+        "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+        "expected": "failed",
+        "alt": "94251e110d24a4c2b6e6ce76e7203374",
+        "src_last_segment": "94251e110d24a4c2b6e6ce76e7203374",
+        "alt_equals_filename": true,
+        "alt_equals_filename_stem": true
+      }
+    ],
+    "alt_equals_filename": 4,
+    "alt_equals_filename_stem": 5,
+    "help_text": [
+      "An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT."
+    ],
+    "note": "In the vendored condition the drafter's help text says a filename does not describe an image, and these cases hand it an alt that is (or nearly is) the filename. So part of any leaky→opaque movement is a property of how a DEPRECATED rule's fixtures were authored, not of pages anyone ships. Reported beside the difference, never subtracted from it."
+  },
+  "ablation_gate": {
+    "gate": "clearway.eval.image_opaque.ablation_failures, over the minted `finding.html`",
+    "asserted_by": "tests/test_image_opaque.py::test_the_ablation_gate_passes_on_every_minted_prompt",
+    "note": "THE ablation gate is that offline, model-free check — not the difference measured here. This report neither runs it nor stands in for it; it records which bytes the conditions were drafted over so a set that moved after the gate ran cannot pass unnoticed.",
+    "opaque_set_checksums_sha256": "acaddcee768e01a9f67a62bb7ac6d227ac3e279239cd91d9113b95eb78cc223d"
+  },
+  "difference": {
+    "cases": 7,
+    "moved": 4,
+    "differs": true,
+    "toward_flag": 0,
+    "toward_clean": 4,
+    "moved_on_cue_cases": 2,
+    "moved_off_cue_cases": 2,
+    "moved_on_cue_cases_stem": 3,
+    "moved_off_cue_cases_stem": 1,
+    "reading": "The two text-only conditions differ. This is descriptive and is NOT the ablation gate: the gate is the offline, model-free token check run when the opaque set was derived. A difference here is consistent with the path cues having carried information, and is also consistent with one case moving for an unrelated reason — see the per-case split and the filename-cue measurement before reading it as the first.",
+    "caveat": "This difference partly measures a fixture artifact. In the leaky condition 4 of 7 cases have an alt equal to their own filename (5 of 7 once one extension is stripped; the rule is the last path segment of `src`, compared case-insensitively to `alt` verbatim; the reported variant strips one trailing extension from that segment first), and the drafter's help text says \"An alt attribute is PRESENT — judge whether it MEANINGFULLY describes the image for WCAG 1.1.1; a filename or generic word ('image', 'photo', 'logo') does NOT.\". So on those cases the leaky cue is close to a string-equality trigger — a property of how a DEPRECATED rule's fixtures were authored, not of real pages.",
+    "by_case": [
+      {
+        "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+        "expected": "passed",
+        "leaky_flagged": false,
+        "opaque_flagged": false,
+        "moved": false,
+        "direction": null,
+        "carries_filename_cue": false,
+        "carries_filename_cue_stem": false
+      },
+      {
+        "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+        "expected": "failed",
+        "leaky_flagged": true,
+        "opaque_flagged": false,
+        "moved": true,
+        "direction": "toward_clean",
+        "carries_filename_cue": false,
+        "carries_filename_cue_stem": false
+      },
+      {
+        "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+        "expected": "passed",
+        "leaky_flagged": true,
+        "opaque_flagged": false,
+        "moved": true,
+        "direction": "toward_clean",
+        "carries_filename_cue": true,
+        "carries_filename_cue_stem": true
+      },
+      {
+        "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+        "expected": "passed",
+        "leaky_flagged": true,
+        "opaque_flagged": true,
+        "moved": false,
+        "direction": null,
+        "carries_filename_cue": true,
+        "carries_filename_cue_stem": true
+      },
+      {
+        "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+        "expected": "passed",
+        "leaky_flagged": true,
+        "opaque_flagged": false,
+        "moved": true,
+        "direction": "toward_clean",
+        "carries_filename_cue": false,
+        "carries_filename_cue_stem": true
+      },
+      {
+        "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+        "expected": "failed",
+        "leaky_flagged": true,
+        "opaque_flagged": false,
+        "moved": true,
+        "direction": "toward_clean",
+        "carries_filename_cue": true,
+        "carries_filename_cue_stem": true
+      },
+      {
+        "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+        "expected": "failed",
+        "leaky_flagged": true,
+        "opaque_flagged": true,
+        "moved": false,
+        "direction": null,
+        "carries_filename_cue": true,
+        "carries_filename_cue_stem": true
+      }
+    ]
+  }
+}

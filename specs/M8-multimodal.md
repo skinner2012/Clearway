@@ -247,6 +247,12 @@ so "retained" is not "drift-free", which is precisely why the null is estimated 
    > the full payload hash under `image: null`, whose shape is fixed from the start so the two sides are
    > comparable at all. Frozen at `benchmark/reports/drafter_payload_baseline.json`, and covering the
    > leaky set's 7 as well as the opaque set's, since `leaky / no-image` is also drafted text-only.
+   > **⚠️ Discharged again at T6, this time on a LIVE pass.** Both text-only conditions were run
+   > against the real model and every one of their **28 recorded payload hashes equals the
+   > pre-wiring control** — 7 leaky + 21 opaque, checked from the frozen artifacts. That this is even
+   > checkable is a consequence of T6's pinned-citation decision: a retrieved candidate block would
+   > make every live hash unique to its own retrieval, and the control could then only ever be
+   > re-checked by a builder re-running its own code.
 7. **⚠️ The receipt logs the image `sha256`, not a byte count.** A byte count cannot verify the
    permutation: the four Nyhavn cells share identical bytes, so a count check passes whether or not the
    mapping was honoured. The receipt records `sha256` per `finding.id` per condition, and T8 asserts the
@@ -585,6 +591,24 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
   case-insensitively, so against a help text saying *"a filename … does NOT describe"* the leaky cue is
   close to a string-equality trigger — a property of how a **deprecated** rule's fixtures were authored,
   not of real pages.
+  > **⚠️ Measured in execution: "4 of 7" is true only under a stated reading of "≈", and the reading
+  > moves the number.** Comparing `alt` to the **last path segment of `src`** verbatim gives **4**;
+  > stripping one extension from that segment first gives **5**, because `1ff696703e` carries
+  > `src=".../nyhavn.jpeg"` against `alt="Nyhavn"`. Neither is the right one, so the rule is pinned in
+  > code and **both counts are reported** — a number nobody can reproduce is worth less than two
+  > numbers plus the rule that separates them. The caveat sentence is generated from the measured
+  > counts and quotes the help text **read from the frozen reachability artifact**, not transcribed.
+- **⚠️ Settled in execution: the conditions are drafted against PINNED candidate criteria, not live
+  retrieval** (`drafter_payload.PINNED_CITATIONS`, the same input T5's smoke test and the dry receipt
+  already used). The endpoint is defined over prompts that are byte-identical across conditions
+  differing only in pixels, and a live retriever is a service whose ordering is one more thing that
+  could move between two calls run hours apart; pinning takes it out of the premise and makes every
+  condition reproducible with no database running. **The cost is declared, not hidden:** the block
+  holds the one criterion this class is about, where production retrieval surfaces several candidates
+  including distractors — so these conditions are drafted against an easier candidate set than a live
+  scan would produce, and no report over them may describe the candidate block as production's. It is
+  the same set for all four conditions, so it cannot move a difference *between* them. `corpus_version`
+  is derived from the pinned list rather than from a corpus, so changing a pinned citation moves it.
 - **⚠️ This is not the ablation gate** — T3 Acceptance 1 is, because it is offline and model-free. A
   model-based gate fails in both directions: it passes when one case differs for an irrelevant reason
   while real cues survive, and it fires when a perfect ablation meets a drafter that simply ignores
@@ -614,6 +638,17 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
   ground, its motive, and its verified precondition**; **that M8 ran without a pre-flight gate**; and
   **one sentence that D systematically under-detects attendance**, because a mismatched image may
   produce genuine uncertainty that the stability filter codes as noise.
+- **⚠️ Added at T6, because it qualifies every number in the milestone: all four conditions are
+  drafted against PINNED candidate criteria, not live retrieval.** The report must say so, and must
+  not describe the candidate block as the one production retrieval would surface — it holds the single
+  criterion the class is about, where a live retriever returns several candidates including
+  distractors. The reason is that the endpoint's premise is byte-identical prompts and a live service
+  is one more thing that can move between two calls; the price is that these are not production's
+  candidates. It is identical across all four conditions, so it cannot move D or the leaky→opaque
+  difference.
+- **⚠️ Also declare the discarded `opaque / no-image` attempt** — six calls spent under accidental
+  model contention and thrown away, with the reason, and the fact that `leaky / no-image` was audited
+  in the same inference-server log and **not** re-run.
 - **⚠️ Declare the pre-spec probe.** Before this spec was written, each pool image was sent to the
   drafter directly and the model resolved all three. That is a model run on held-out data that
   **resolved the milestone's largest uncertainty before pre-registration**. M7 declared its analogous
@@ -632,6 +667,7 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
 | `opaque / no-image` | 7 × 3 | the text-only floor; supplies null replicates |
 | `opaque / with-image` | 7 × 3 | one half of D |
 | `opaque / mismatched-image` | 7 × 3 | the other half of D |
+| `opaque / no-image`, **discarded attempt** | **6, spent** | see the concurrency note below |
 | capture spot-check (T4 A3) | 3 | separates capture failure from plumbing failure |
 | wiring smoke test (T5 A2) | **1, spent** | the real pipeline prompt end to end — **on a twin-excluded case, so nothing held out is spent** |
 | LiteLLM spike (T0) | ~~1~~ **2, spent** | before anything is built |
@@ -641,9 +677,24 @@ re-verified against the code at pre-flight; the file/line notes are measured, no
 > so the response was lost and the call had to be repeated. Not a transport failure — but a spend that
 > leaves no artifact is the easiest kind to drop from a run count, so it is declared in the receipt
 > (`model_calls_spent: 2`) and here.
+>
+> **⚠️ A first attempt at `opaque / no-image` was discarded and re-run, for a procedural reason
+> independent of any verdict.** The test suite was started while the condition was drafting, and it
+> contains gated real-model tests, so two `/api/chat` requests to the same model overlapped — read off
+> the inference server's own log, where one measurement call took **3m33s against a clean-run mean of
+> ~73s**. Concurrent requests share KV-cache slots, which is the exact mechanism M7 diagnosed as this
+> stack's source of nondeterminism, so the contaminated sample would have been indistinguishable from
+> drift in the very replicates the null rate is estimated from — and it was **sample 1, the canonical
+> one**. Five findings had been drafted and a sixth was in flight; nothing was written to disk, and the
+> condition was re-run with nothing else touching the model. The discard is declared rather than
+> quietly repeated: **six calls, spent and thrown away.** The `leaky / no-image` pass is unaffected and
+> was **not** re-run — its seven calls are strictly sequential in the same log, ending at 07:26:51,
+> before the suite started at 07:28:46. **Standing consequence: no test suite runs while a condition
+> is in flight.**
 
-**~76 model calls over 7 findings** (~~75~~ — the smoke test's declared call is inside the total, not
-beside it). M7 ran 44 cases / 54 findings at 2–3.5 h per pass; at 7 findings
+**~82 model calls over 7 findings** (~~75~~ → ~~76~~: the smoke test's declared call is inside the
+total, not beside it, and the discarded `opaque / no-image` attempt adds six). M7 ran 44 cases / 54
+findings at 2–3.5 h per pass; at 7 findings
 every condition is well under an hour. **No M7 case is re-run** — provided T2 closes silent-failure
 path 6, which would otherwise draft all 44.
 

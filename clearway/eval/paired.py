@@ -4,7 +4,9 @@ The per-class κ scalar cannot be paired; the frozen `VerdictVector` can. This m
 FLAG/CLEAN vector beside another's, keyed by `act_testcase_id`, and reads off the discordant pairs: `b` = a
 case the earlier vector got wrong and the later got right (an improvement), `c` = the reverse (a regression).
 
-**Two different questions are asked of those pairs, and they are kept apart.**
+**Two different questions are asked of those pairs, and they are kept apart.** ("Endpoint" below is
+the trial-design sense — a pre-registered outcome measure, never an HTTP route; see the package
+docstring.)
 
 1. **`pair_verdicts` — the pre-registered hypothesis test**, against the frozen pre-change baseline. The
    one-sided exact sign test on `(b, c)` is the same `sign_test_p` the ceiling pre-registration uses —

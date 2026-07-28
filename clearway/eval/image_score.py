@@ -1,6 +1,7 @@
 """What the frozen image conditions say — scored deterministically against ACT gold, never by a judge.
 
-Two measurements live here, and they are not of the same rank.
+Two measurements live here, and they are not of the same rank. **"Endpoint" is the trial-design sense
+throughout — a pre-registered outcome measure, never an HTTP route; see the package docstring.**
 
 **The primary endpoint is D**: the number of pool cases whose verdict moves when the *wrong* picture
 is attached behind a byte-identical prompt. It is the milestone's whole question — does the drafter

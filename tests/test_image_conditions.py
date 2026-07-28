@@ -17,6 +17,7 @@ from typing import Any
 
 import pytest
 
+from clearway.drafter import Drafter
 from clearway.eval.drafter_payload import load_baseline
 from clearway.eval.image_capture import ARTIFACT as CAPTURE_ARTIFACT
 from clearway.eval.image_conditions import (
@@ -30,12 +31,18 @@ from clearway.eval.image_conditions import (
     Condition,
     ImageChannel,
     condition_by_id,
+    drafted_findings,
     dry_receipt,
     receipt_failures,
     refs_for,
 )
 from clearway.eval.image_opaque import PERMUTATION
 from clearway.eval.run_scope import IMAGE_OPAQUE, OutOfScope
+from clearway.llm import FakeLLMClient
+
+# A canned answer, so the assembly path runs with no model. Its content is irrelevant here: these
+# tests are about the request, never about the response.
+_CANNED = '{"conformance":"supports","cited_sc_ids":["1.1.1"],"remediation":"x","confidence":0.5}'
 
 # The spec's permutation table, transcribed independently of the builder: case → (true, attached).
 # Hand-written on purpose — a table derived from the artifact under test would agree with it however
@@ -75,6 +82,36 @@ def _case_ids() -> set[str]:
 
 def _prefixes(case_ids: set[str]) -> set[str]:
     return {case_id[:10] for case_id in case_ids}
+
+
+# --- one definition of a sample, shared by the rehearsal and a live pass -----
+
+
+def test_one_sample_is_every_pool_finding_drafted_once_with_its_condition_s_picture() -> None:
+    """The rehearsal and a live pass must draft the *same* work list under the *same* attachment rule.
+
+    Two copies of this loop would be two definitions of what a sample is, and they would diverge in
+    the direction that costs most: a live pass that drafts six findings, or one that quietly sends no
+    picture, produces an artifact that reads as a completed condition either way.
+    """
+    drafter = Drafter(FakeLLMClient(_CANNED))
+    drafted = list(drafted_findings(OPAQUE_WITH_IMAGE, drafter))
+
+    assert len(drafted) == 7
+    assert {case["act_testcase_id"][:10] for case, _, _ in drafted} == set(_TABLE)
+    labels = _labels()
+    for case, finding, result in drafted:
+        assert result.request is not None
+        assert result.request.image_ref == refs_for(OPAQUE_WITH_IMAGE)[finding.id]
+        assert labels[str(result.request.image_ref)] == _TABLE[case["act_testcase_id"][:10]][0]
+
+
+def test_a_text_only_condition_drafts_the_same_findings_and_sends_no_picture() -> None:
+    drafter = Drafter(FakeLLMClient(_CANNED))
+    drafted = list(drafted_findings(OPAQUE_NO_IMAGE, drafter))
+
+    assert len(drafted) == 7
+    assert all(result.request is not None and result.request.image_ref is None for _, _, result in drafted)
 
 
 # --- the receipt is what the frozen mapping says ----------------------------

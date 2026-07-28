@@ -41,11 +41,12 @@ Regenerate with `uv run python -m clearway.eval.image_conditions` (re-scans the 
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from clearway.drafter import Drafter
+from clearway.drafter import Drafter, DraftResult
 from clearway.eval.drafter_payload import citations_for
 from clearway.eval.image_capture import ARTIFACT as CAPTURE_ARTIFACT
 from clearway.eval.image_capture import load_capture
@@ -172,27 +173,54 @@ def receipt_row(condition: Condition, act_testcase_id: str, finding: Finding, re
     }
 
 
-def draft_condition(condition: Condition, drafter: Drafter, artifact: Path = CAPTURE_ARTIFACT) -> list[dict[str, Any]]:
-    """Draft every finding this condition covers, once, and return the receipt rows.
+def drafted_findings(
+    condition: Condition, drafter: Drafter, artifact: Path = CAPTURE_ARTIFACT
+) -> Iterator[tuple[dict[str, Any], Finding, DraftResult]]:
+    """One sample: every finding this condition covers, drafted once, with the picture it attaches.
 
-    One sample per finding — a pass that takes `condition.samples` of them calls this that many times,
-    so what a sample *is* stays defined in one place. Citations are the pinned ones: a receipt is about
-    which picture went out, and pinning the text keeps that answer independent of a live retriever.
+    **This is the only definition of what a sample is**, and both the model-free rehearsal and a live
+    pass consume it. Two copies of this loop would be two definitions, and they would come apart in
+    the direction that costs most — a pass that drafts six of the seven findings, or one that quietly
+    sends no picture, freezes an artifact that reads as a completed condition either way.
+
+    Citations are the pinned ones (`drafter_payload.citations_for`), never retrieved. The premise the
+    endpoint is defined over is that the three opaque conditions send byte-identical prompts, and a
+    live retriever is a service whose ordering is one more thing that could move between two calls
+    hours apart. Pinning takes it out of the premise: the candidate block is fixed, named and offline,
+    so the only thing that differs between those conditions is the pixels. What it costs is stated
+    rather than hidden — the block holds the one criterion this class is about, where production
+    retrieval would surface several candidates including distractors, so these conditions are drafted
+    against an easier candidate set than a live scan would produce. That is a property of all four
+    conditions equally, so it cannot move a difference *between* them.
     """
     channel = ImageChannel(condition, artifact)
-    rows: list[dict[str, Any]] = []
     for case in cases_for(condition.scope):
         path = condition.scope.root / case["path"]
         for finding in condition.scope.minting_findings(path, case["axe_rule"]):
             image = channel.for_finding(finding.id)
-            result = drafter.draft_with_usage(finding, citations_for(case["axe_rule"]), image)
-            if result.request is None:
-                raise RuntimeError(
-                    f"the drafter reported no request for finding {finding.id} under "
-                    f"{condition.condition_id!r} — a receipt cannot record what was sent"
-                )
-            rows.append(receipt_row(condition, case["act_testcase_id"], finding, result.request))
-    return rows
+            yield case, finding, drafter.draft_with_usage(finding, citations_for(case["axe_rule"]), image)
+
+
+def sent_request(condition: Condition, finding: Finding, result: DraftResult) -> LLMRequest:
+    """The request the drafter reports having sent, or a refusal.
+
+    A `DraftResult` may carry none — only a hand-built one does — and a receipt row built over that
+    absence would have to invent the digest it is supposed to be evidence of.
+    """
+    if result.request is None:
+        raise RuntimeError(
+            f"the drafter reported no request for finding {finding.id} under "
+            f"{condition.condition_id!r} — a receipt cannot record what was sent"
+        )
+    return result.request
+
+
+def draft_condition(condition: Condition, drafter: Drafter, artifact: Path = CAPTURE_ARTIFACT) -> list[dict[str, Any]]:
+    """Draft every finding this condition covers, once, and return the receipt rows."""
+    return [
+        receipt_row(condition, case["act_testcase_id"], finding, sent_request(condition, finding, result))
+        for case, finding, result in drafted_findings(condition, drafter, artifact)
+    ]
 
 
 def receipt_failures(rows: list[dict[str, Any]], artifact: Path = CAPTURE_ARTIFACT) -> list[str]:

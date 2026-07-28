@@ -36,6 +36,11 @@ _ALLOWED_READS: dict[str, str] = {
     "eval/calibration_build.py": "freezes the judge-scored half of the receipt's curve",
     "eval/offline_build.py": "freezes drafts into the offline artifact, receipt included",
     "eval/referent_injection_build.py": "freezes drafts into the run artifact, receipt included",
+    "eval/image_pass.py": (
+        "freezes drafts into an image condition's pass artifact, receipt included — recorded beside "
+        "the verdict and never read back: the difference and the endpoint are scored on the "
+        "conformance collapse against gold, and nothing there weights or thresholds by confidence"
+    ),
     "eval/offline.py": "reads the frozen artifact back",
     "eval/kappa.py": "replays frozen drafts into receipt points",
     "eval/drafter_score.py": "the benchmark's receipt — ECE and over-confidence gap per run",

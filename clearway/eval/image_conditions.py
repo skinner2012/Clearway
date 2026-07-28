@@ -1,12 +1,21 @@
-"""The four conditions the image pool is drafted under, and the receipt of what each one sent.
+"""The conditions the image pool is drafted under, and the receipt of what each one sent.
 
 A condition is a value, not a flag
 ----------------------------------
-Each condition names three things a pass cannot infer: **which case set** it drafts (the vendored
+Each condition names four things a pass cannot infer: **which case set** it drafts (the vendored
 pages or the ablated ones), **which picture** it attaches to each finding (none, the case's own, or
-the wrong one), and **how many samples** it takes. Those were the three things most likely to be
-supplied by a default argument and then reported as something else — the same failure `run_scope`
-exists to stop one level up, at the case set.
+the wrong one), **how many samples** it takes, and **whether it announces the picture** — telling the
+model whether one is attached and asking it to report what its judgment could see. Those were the
+things most likely to be supplied by a default argument and then reported as something else — the
+same failure `run_scope` exists to stop one level up, at the case set.
+
+Two registries, because they are two experiments
+------------------------------------------------
+`CONDITIONS` is the primary endpoint's four, and it is not a list of runs: the frozen dry receipt is
+asserted to rebuild from it and every receipt check demands a full set of rows for each of its
+members, so it is the *definition* that endpoint's evidence is checked against. `ANNOUNCED_CONDITIONS`
+is the pair that tells the drafter what it is looking at. They never pool — their prompts differ by
+construction, which is exactly why the announced pair cannot enter the primary endpoint.
 
 Why a receipt, and why it records a digest
 ------------------------------------------
@@ -50,7 +59,14 @@ from clearway.drafter import Drafter, DraftResult
 from clearway.eval.drafter_payload import citations_for
 from clearway.eval.image_capture import ARTIFACT as CAPTURE_ARTIFACT
 from clearway.eval.image_capture import load_capture
-from clearway.eval.run_scope import IMAGE_LEAKY, IMAGE_OPAQUE, OutOfScope, RunScope, cases_for
+from clearway.eval.run_scope import (
+    ANNOUNCED_IMAGE_CONFIG_ID,
+    IMAGE_LEAKY,
+    IMAGE_OPAQUE,
+    OutOfScope,
+    RunScope,
+    cases_for,
+)
 from clearway.llm import FakeLLMClient, ImagePart, LLMRequest
 from clearway.scanner.capture import ImageStore
 from clearway.schemas.models import Finding
@@ -70,38 +86,77 @@ _CANNED_JUDGMENT = '{"conformance":"does_not_support","cited_sc_ids":["1.1.1"],"
 
 @dataclass(frozen=True)
 class Condition:
-    """One condition: a case set, a picture rule, and a pre-registered sample count.
+    """One condition: a case set, a picture rule, a pre-registered sample count, and an announcement.
 
     `samples` is here because it is part of what the condition *is*, and because it was pre-registered
     before any of this ran: one descriptive pass over the vendored set, three over each ablated one.
     A pass that took a different number would be answering a different question about stability, and
     the number a report prints must be the number a run was defined by.
+
+    `announces` is the fourth on the same grounds. Whether the prompt says a picture is attached, and
+    whether the model is asked to report what its judgment could see, is not something a pass can infer
+    from the pictures it sends — a blind condition that announces and one that does not are the same
+    seven findings with no picture, and they are two different experiments.
     """
 
     condition_id: str
     scope: RunScope
     attaches: str
     samples: int
+    announces: bool
 
     @property
     def carries_image(self) -> bool:
         return self.attaches != ATTACHES_NOTHING
 
+    @property
+    def config_id(self) -> str:
+        """The pipeline configuration this condition drafts under.
 
-LEAKY_NO_IMAGE = Condition("leaky/no-image", IMAGE_LEAKY, ATTACHES_NOTHING, samples=1)
-OPAQUE_NO_IMAGE = Condition("opaque/no-image", IMAGE_OPAQUE, ATTACHES_NOTHING, samples=3)
-OPAQUE_WITH_IMAGE = Condition("opaque/with-image", IMAGE_OPAQUE, ATTACHES_TRUE_IMAGE, samples=3)
-OPAQUE_MISMATCHED_IMAGE = Condition("opaque/mismatched-image", IMAGE_OPAQUE, ATTACHES_MISMATCHED_IMAGE, samples=3)
+        It is the condition's rather than the scope's because the announcement changes the pipeline
+        and not the case set: the announced conditions run the byte-identical opaque pages, so their
+        `eval_set_id` is the scope's and unmoved, while their prompt and their response schema are
+        both different — which is exactly what a config id names.
+        """
+        return ANNOUNCED_IMAGE_CONFIG_ID if self.announces else self.scope.config_id
+
+
+LEAKY_NO_IMAGE = Condition("leaky/no-image", IMAGE_LEAKY, ATTACHES_NOTHING, samples=1, announces=False)
+OPAQUE_NO_IMAGE = Condition("opaque/no-image", IMAGE_OPAQUE, ATTACHES_NOTHING, samples=3, announces=False)
+OPAQUE_WITH_IMAGE = Condition("opaque/with-image", IMAGE_OPAQUE, ATTACHES_TRUE_IMAGE, samples=3, announces=False)
+OPAQUE_MISMATCHED_IMAGE = Condition(
+    "opaque/mismatched-image", IMAGE_OPAQUE, ATTACHES_MISMATCHED_IMAGE, samples=3, announces=False
+)
 
 CONDITIONS = (LEAKY_NO_IMAGE, OPAQUE_NO_IMAGE, OPAQUE_WITH_IMAGE, OPAQUE_MISMATCHED_IMAGE)
+
+# The two conditions that TELL the drafter whether a picture is attached, and give it a field to
+# answer in. They are a separate tuple rather than two more members of `CONDITIONS`, and the reason is
+# that `CONDITIONS` is not a list of runs — it is the definition the primary endpoint's evidence is
+# checked against. `receipt_failures` demands a full set of rows for every member and the frozen dry
+# receipt is asserted to rebuild from it, so appending here would re-freeze an artifact whose whole
+# purpose is to have been frozen before that endpoint was read.
+OPAQUE_TOLD_NO_IMAGE = Condition("opaque/told-no-image", IMAGE_OPAQUE, ATTACHES_NOTHING, samples=3, announces=True)
+OPAQUE_TOLD_WITH_IMAGE = Condition(
+    "opaque/told-with-image", IMAGE_OPAQUE, ATTACHES_TRUE_IMAGE, samples=3, announces=True
+)
+
+ANNOUNCED_CONDITIONS = (OPAQUE_TOLD_NO_IMAGE, OPAQUE_TOLD_WITH_IMAGE)
+
+# Every condition this experiment defines — the namespace a condition id resolves in, and nothing
+# more. No measurement is defined over this tuple: the two registries answer different questions and
+# a reader that pooled them would be reading one endpoint's evidence into the other's.
+ALL_CONDITIONS = CONDITIONS + ANNOUNCED_CONDITIONS
 
 
 def condition_by_id(condition_id: str) -> Condition:
     """A condition named by its id — so a CLI or a report cannot invent one."""
-    for condition in CONDITIONS:
+    for condition in ALL_CONDITIONS:
         if condition.condition_id == condition_id:
             return condition
-    raise OutOfScope(f"{condition_id!r} is not one of the four conditions {[c.condition_id for c in CONDITIONS]}")
+    raise OutOfScope(
+        f"{condition_id!r} is not one of the registered conditions {[c.condition_id for c in ALL_CONDITIONS]}"
+    )
 
 
 def refs_for(condition: Condition, artifact: Path = CAPTURE_ARTIFACT) -> dict[str, str]:
@@ -192,13 +247,22 @@ def drafted_findings(
     retrieval would surface several candidates including distractors, so these conditions are drafted
     against an easier candidate set than a live scan would produce. That is a property of all four
     conditions equally, so it cannot move a difference *between* them.
+
+    The announcement is passed from the condition for the same reason the picture is: it is part of
+    what the condition sends, so a pass cannot take a default and freeze the result under a name that
+    says otherwise. It is `False` for all four of the primary endpoint's conditions, which is what
+    keeps their asks byte-identical to the ones already frozen.
     """
     channel = ImageChannel(condition, artifact)
     for case in cases_for(condition.scope):
         path = condition.scope.root / case["path"]
         for finding in condition.scope.minting_findings(path, case["axe_rule"]):
             image = channel.for_finding(finding.id)
-            yield case, finding, drafter.draft_with_usage(finding, citations_for(case["axe_rule"]), image)
+            yield (
+                case,
+                finding,
+                drafter.draft_with_usage(finding, citations_for(case["axe_rule"]), image, condition.announces),
+            )
 
 
 def sent_request(condition: Condition, finding: Finding, result: DraftResult) -> LLMRequest:
@@ -223,8 +287,29 @@ def draft_condition(condition: Condition, drafter: Drafter, artifact: Path = CAP
     ]
 
 
-def receipt_failures(rows: list[dict[str, Any]], artifact: Path = CAPTURE_ARTIFACT) -> list[str]:
+def announcement_state(condition: Condition) -> tuple[bool, bool]:
+    """What a condition's prompt says about pictures — the thing its prompt hash is a function of.
+
+    Two conditions in the same state must ask byte-identical prompts; two in different states must
+    not. A silent condition is in one state whatever it attaches, which is the endpoint's premise: the
+    prompt never mentions the picture, so only the pixels move. An announced one is in a state per
+    attachment, because the sentence it renders states which — and two announced conditions asking the
+    identical prompt would mean the drafter was told the same thing about two different messages.
+    """
+    return (condition.announces, condition.announces and condition.carries_image)
+
+
+def receipt_failures(
+    rows: list[dict[str, Any]],
+    conditions: tuple[Condition, ...] = CONDITIONS,
+    artifact: Path = CAPTURE_ARTIFACT,
+) -> list[str]:
     """Every way a receipt can fail to be the run the frozen mapping describes.
+
+    `conditions` is the set being checked, taken as an argument rather than read off the module: two
+    registries are defined here and each is the complete expectation for its own run. Checking one
+    group's rows against the other's membership would demand rows nothing drafted and report a
+    complete run as a short one.
 
     Pure over `rows`, so it reads the same over a dry rehearsal and over a live pass:
 
@@ -233,24 +318,28 @@ def receipt_failures(rows: list[dict[str, Any]], artifact: Path = CAPTURE_ARTIFA
     3. with-image attached each finding's **own** captured bytes;
     4. mismatched attached exactly the picture the frozen permutation names, and never the case's own —
        this is the assertion that the manipulation was actually run mismatched;
-    5. the three opaque conditions share one **prompt** hash per finding — the byte-identical-prompt
-       premise the endpoint is defined over, checked rather than assumed;
-    6. and their **payload** hashes differ, because a picture that changed must change the ask. The
+    5. the opaque conditions ask one **prompt** hash per finding per announcement state — the
+       byte-identical-prompt premise the endpoint is defined over, checked rather than assumed, and its
+       counterpart for the announced pair, whose prompts must differ because they say opposite things;
+    6. and their **payload** hashes all differ, because a picture that changed must change the ask. The
        two together are what "only the pixels change" means; either alone is satisfiable by a bug.
     """
     frozen = json.loads(artifact.read_text())
     captured = {c["finding_id"]: c["image_ref"] for c in frozen["captures"]}
     mismatched = {r["finding_id"]: r["mismatched_image_ref"] for r in frozen["resolved_permutation"]}
-    by_condition: dict[str, list[dict[str, Any]]] = {c.condition_id: [] for c in CONDITIONS}
+    by_condition: dict[str, list[dict[str, Any]]] = {c.condition_id: [] for c in conditions}
     failures: list[str] = []
 
     for row in rows:
         if row["condition"] not in by_condition:
-            failures.append(f"{row['condition']!r} is not one of the four conditions")
+            failures.append(
+                f"{row['condition']!r} is not one of the conditions this receipt is checked against "
+                f"{[c.condition_id for c in conditions]}"
+            )
             continue
         by_condition[row["condition"]].append(row)
 
-    for condition in CONDITIONS:
+    for condition in conditions:
         present = by_condition[condition.condition_id]
         expected = sum(case["expected_finding_count"] for case in cases_for(condition.scope))
         if len(present) != expected:
@@ -281,33 +370,42 @@ def receipt_failures(rows: list[dict[str, Any]], artifact: Path = CAPTURE_ARTIFA
                     "manipulation did not run mismatched"
                 )
 
-    opaque = [c.condition_id for c in CONDITIONS if c.scope is IMAGE_OPAQUE]
+    opaque = [c for c in conditions if c.scope is IMAGE_OPAQUE]
+    opaque_ids = {c.condition_id for c in opaque}
+    asks = len({announcement_state(c) for c in opaque})
     prompts: dict[str, set[str]] = {}
     payloads: dict[str, set[str]] = {}
     for row in rows:
-        if row["condition"] in opaque:
+        if row["condition"] in opaque_ids:
             prompts.setdefault(row["finding_id"], set()).add(row["prompt_sha256"])
             payloads.setdefault(row["finding_id"], set()).add(row["payload_sha256"])
     failures += [
-        f"{finding_id} was drafted under {len(hashes)} different prompts across the opaque conditions — "
-        "the endpoint is defined over byte-identical prompts differing only in pixels"
+        f"{finding_id} was drafted under {len(hashes)} different prompts across the opaque conditions, "
+        f"which cover {asks} announcement state(s) and so admit exactly {asks} — the endpoint is "
+        "defined over byte-identical prompts differing only in pixels, and an announced condition's "
+        "prompt differs from a silent one's, and from its own twin's, by construction"
         for finding_id, hashes in prompts.items()
-        if len(hashes) != 1
+        if len(hashes) != asks
     ]
     failures += [
-        f"{finding_id} sent the same payload under {len(opaque)} conditions that attach different "
-        "pictures — the prompts are identical by design, so an identical payload means no picture moved"
+        f"{finding_id} sent the same payload under {len(opaque)} conditions that differ in the picture "
+        "they attach, in what they announce, or in both — an identical payload means neither moved"
         for finding_id, hashes in payloads.items()
         if len(hashes) != len(opaque)
     ]
     return failures
 
 
-def dry_receipt(artifact: Path = CAPTURE_ARTIFACT) -> dict[str, Any]:
-    """Rehearse all four conditions through the real drafter with a canned client — no model calls."""
+def dry_receipt(artifact: Path = CAPTURE_ARTIFACT, conditions: tuple[Condition, ...] = CONDITIONS) -> dict[str, Any]:
+    """Rehearse a set of conditions through the real drafter with a canned client — no model calls.
+
+    Defaulted to the primary endpoint's four, because the artifact this function freezes is theirs.
+    The announced pair rehearses through the same code and is checked the same way, but is not frozen
+    beside them: the frozen receipt's value is that it predates the endpoint it is evidence for.
+    """
     drafter = Drafter(FakeLLMClient(_CANNED_JUDGMENT))
-    rows = [row for condition in CONDITIONS for row in draft_condition(condition, drafter, artifact)]
-    failures = receipt_failures(rows, artifact)
+    rows = [row for condition in conditions for row in draft_condition(condition, drafter, artifact)]
+    failures = receipt_failures(rows, conditions, artifact)
     if failures:
         raise RuntimeError(f"the conditions do not send what the frozen mapping says: {'; '.join(failures)}")
     return {
@@ -331,11 +429,11 @@ def dry_receipt(artifact: Path = CAPTURE_ARTIFACT) -> dict[str, Any]:
                 "condition": c.condition_id,
                 "scope": c.scope.scope_id,
                 "eval_set_id": c.scope.eval_set_id,
-                "config_id": c.scope.config_id,
+                "config_id": c.config_id,
                 "attaches": c.attaches,
                 "samples": c.samples,
             }
-            for c in CONDITIONS
+            for c in conditions
         ],
         "rows": rows,
     }

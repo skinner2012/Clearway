@@ -45,7 +45,7 @@ from clearway.drafter import Drafter, DraftResult, is_fallback_draft
 from clearway.eval.drafter_payload import citations_for
 from clearway.eval.image_capture import ARTIFACT as CAPTURE_ARTIFACT
 from clearway.eval.image_conditions import (
-    CONDITIONS,
+    ALL_CONDITIONS,
     Condition,
     condition_by_id,
     drafted_findings,
@@ -99,8 +99,17 @@ def _draft_row(condition: Condition, case: dict[str, Any], finding: Finding, res
     The three are separated rather than flattened because they have three different owners and three
     different lifetimes — the receipt is evidence about the request, the gold is ACT's label, and the
     draft is the model's answer. A flat row invites a reader to compare a field against itself.
+
+    **A contradicted row is recorded; an unparseable one still aborts.** Both degrade to the identical
+    fallback, so the two are told apart by the claim the drafter carries out of the guard. An
+    unparseable draft is a broken measurement — it would freeze `does_not_support`@0.0 as a verdict no
+    model gave. A contradicted one is a *result*: the model claimed to have seen a picture nothing
+    sent, which is one of the answers this ticket exists to count, and aborting on it would abort on
+    the measurement. It is recorded with the claim preserved, so a scorer can put it where it belongs
+    — out of the numerator of "reported the absence", still in its denominator.
     """
-    if is_fallback_draft(result.row):
+    contradicted = result.contradicted_claim
+    if is_fallback_draft(result.row) and contradicted is None:
         raise RuntimeError(
             f"drafter fell back on finding {finding.id!r} under {condition.condition_id!r} (no parseable "
             "model output) — aborting the condition. A fallback ships as does_not_support@0.0 and would "
@@ -118,6 +127,12 @@ def _draft_row(condition: Condition, case: dict[str, Any], finding: Finding, res
             "cited_sc_ids": [c.sc_id for c in result.row.citations],
             "confidence": result.row.confidence,
             "remediation": result.row.remediation,
+            # The model's claim and the system's fact, kept apart on the row exactly as they are kept
+            # apart on `DraftRow` — and a third column for the claim that was refused, which is on
+            # neither, because the row carrying it was thrown away.
+            "visual_evidence": result.row.visual_evidence.value if result.row.visual_evidence else None,
+            "visually_verified": result.row.visually_verified,
+            "contradicted_claim": contradicted.value if contradicted else None,
         },
     }
 
@@ -171,6 +186,7 @@ def build_pass(
             "scope": condition.scope.scope_id,
             "attaches": condition.attaches,
             "samples": condition.samples,
+            "announces": condition.announces,
         },
         "canonical_sample": CANONICAL_SAMPLE,
         "citations": {
@@ -195,6 +211,10 @@ def build_pass(
             drafter_model=drafter_model,
             drafter_model_digest=drafter_model_digest,
             created_at=created_at,
+            # The condition's, not the scope's: the announced pair drafts the byte-identical opaque
+            # pages under a prompt and a response schema that are both different, which is a moved
+            # pipeline configuration and an unmoved case set.
+            config_id=condition.config_id,
         ),
         "samples": samples,
     }
@@ -225,6 +245,17 @@ def load_pass(condition: Condition) -> dict[str, Any]:
     return dict(json.loads(path.read_text()))
 
 
+def _answered_the_evidence_question(draft: dict[str, Any]) -> bool:
+    """Did this row come back from a model that was asked what its judgment could see?
+
+    Either answer counts: a claim the row carries, or a claim the guard refused and the drafter handed
+    out. Read with `.get`, and that is deliberate rather than lax — the keys are absent on every row
+    frozen before the field existed, and this predicate is only ever applied to announced conditions,
+    which cannot be among them.
+    """
+    return draft.get("visual_evidence") is not None or draft.get("contradicted_claim") is not None
+
+
 def pass_failures(artifact: dict[str, Any]) -> list[str]:
     """Every way one condition's pass can fail to be the run it says it is. Pure over the artifact.
 
@@ -240,7 +271,13 @@ def pass_failures(artifact: dict[str, Any]) -> list[str]:
     4. a text-only condition attached nothing on every row;
     5. the samples are repeats of the **identical ask** — same prompt hash and same payload hash per
        finding. This is what makes them null replicates: if the ask moved between samples, a
-       disagreement between them measures the prompt rather than the stack.
+       disagreement between them measures the prompt rather than the stack;
+    6. an **announced** condition actually asked: every row carries either the model's claim or the
+       claim the guard refused. A condition that ran with the announcement silently off would be seven
+       complete-looking findings whose every answer to "could you see it" is empty — which reads in a
+       report as a drafter that declined to say, and is instead a drafter that was never asked. The
+       check is applied to announced conditions only, so the conditions frozen before the field existed
+       are read by a rule that does not look for it.
     """
     condition = condition_by_id(artifact["condition"]["condition"])
     expected_rows = sum(case["expected_finding_count"] for case in cases_for(condition.scope))
@@ -281,6 +318,12 @@ def pass_failures(artifact: dict[str, Any]) -> list[str]:
                 )
             if not condition.carries_image and receipt["image_sha256"] is not None:
                 failures.append(f"{condition.condition_id} {receipt['finding_id']} attached a picture and must not")
+            if condition.announces and not _answered_the_evidence_question(row["draft"]):
+                failures.append(
+                    f"{condition.condition_id} {receipt['finding_id']} carries no visual-evidence "
+                    "answer and no refused claim — an announced condition whose announcement never "
+                    "reached the model, which reads as a drafter that declined to say"
+                )
             asks.setdefault(receipt["finding_id"], set()).add((receipt["prompt_sha256"], receipt["payload_sha256"]))
 
     failures += [
@@ -297,9 +340,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="run one image condition against the real model and freeze it")
     parser.add_argument(
         "condition",
-        choices=[c.condition_id for c in CONDITIONS],
-        help="which condition to run — required, never defaulted: the condition decides both the case "
-        "set and the picture attached to every finding",
+        choices=[c.condition_id for c in ALL_CONDITIONS],
+        help="which condition to run — required, never defaulted: the condition decides the case set, "
+        "the picture attached to every finding, and whether the drafter is told about it",
     )
     args = parser.parse_args()
     condition = condition_by_id(args.condition)

@@ -66,6 +66,14 @@ ACCEPTANCE_EVAL_SET_ID = "act-acceptance@1"
 # The image pipeline: the same single model at the same temperature, with the image channel wired in.
 IMAGE_CONFIG_ID = "single-multimodal@1"
 
+# The same pipeline with the announcement on: the prompt says whether a picture is attached and the
+# model answers under a schema that carries `visual_evidence`. A separate id rather than the same one,
+# for the reason `IMAGE_CONFIG_ID` was separated from the acceptance run's: a prompt that announces the
+# channel is a different pipeline configuration, and two runs sharing a config id claim they are not.
+# The eval-set id is NOT moved with it — the case set is byte-identical, and a moved id would say
+# otherwise.
+ANNOUNCED_IMAGE_CONFIG_ID = "single-multimodal-announced@1"
+
 # The derived set's id is now the builder's own (`OPAQUE_EVAL_SET_ID`, imported above) rather than a
 # literal reserved here — the same treatment the vendored set gets. It is read, never restated: an id
 # spelled in two places can be corrected in one of them.
@@ -128,15 +136,20 @@ class RunScope:
         drafter_model: str,
         drafter_model_digest: str,
         created_at: str,
+        config_id: str | None = None,
     ) -> dict[str, Any]:
         """The reproducibility header a pass artifact carries, with this scope's identity on it.
 
         The config and eval-set ids come from the scope rather than from the builder's module, which is
         what let an image pass stamp the acceptance run's identity into its own artifact. The axe-core
-        version and the ACT export hash are global to the vendored gold and are read from it."""
+        version and the ACT export hash are global to the vendored gold and are read from it.
+
+        `config_id` overrides the scope's, and only that one: a run may drive the SAME cases through a
+        differently-configured pipeline, and the config id is the field that says so. The eval-set id
+        is deliberately not overridable — that one names the cases, which is what a scope is."""
         return {
             "run_ids": list(run_ids),
-            "config_id": self.config_id,
+            "config_id": config_id or self.config_id,
             "eval_set_id": self.eval_set_id,
             "corpus_version": corpus_version,
             "drafter_model": drafter_model,

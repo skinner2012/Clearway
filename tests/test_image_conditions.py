@@ -21,11 +21,14 @@ from clearway.drafter import Drafter
 from clearway.eval.drafter_payload import load_baseline
 from clearway.eval.image_capture import ARTIFACT as CAPTURE_ARTIFACT
 from clearway.eval.image_conditions import (
+    ANNOUNCED_CONDITIONS,
     ATTACHES_MISMATCHED_IMAGE,
     CONDITIONS,
     LEAKY_NO_IMAGE,
     OPAQUE_MISMATCHED_IMAGE,
     OPAQUE_NO_IMAGE,
+    OPAQUE_TOLD_NO_IMAGE,
+    OPAQUE_TOLD_WITH_IMAGE,
     OPAQUE_WITH_IMAGE,
     RECEIPT,
     Condition,
@@ -279,11 +282,23 @@ def test_two_conditions_sending_the_identical_payload_fails(frozen: dict[str, An
 
 
 def test_an_unknown_condition_id_is_refused(frozen: dict[str, Any]) -> None:
-    with pytest.raises(OutOfScope, match="not one of the four conditions"):
+    with pytest.raises(OutOfScope, match="not one of the registered conditions"):
         condition_by_id("opaque/with-the-right-image")
     rows = _rows(frozen)
     rows[0]["condition"] = "invented"
-    assert any("not one of the four conditions" in f for f in receipt_failures(rows))
+    assert any("is not one of the conditions this receipt is checked against" in f for f in receipt_failures(rows))
+
+
+def test_a_receipt_is_checked_against_the_registry_it_was_given(frozen: dict[str, Any]) -> None:
+    """The two registries are two complete expectations, and neither is the other's.
+
+    Checked against the announced pair, the four conditions' own rows are all unknown *and* every
+    announced condition is missing all seven of its findings — which is the failure that would
+    otherwise pass silently in the other direction, reading a complete run as a short one.
+    """
+    failures = receipt_failures(_rows(frozen), ANNOUNCED_CONDITIONS)
+    assert all("is not one of the conditions this receipt is checked against" in f for f in failures[:28])
+    assert any("0 rows for 7 findings" in f for f in failures)
 
 
 # --- the channel refuses rather than drafting a picture-less image condition -
@@ -341,3 +356,97 @@ def test_the_receipt_records_the_scope_identity_of_every_condition(frozen: dict[
     assert {row["config_id"] for row in frozen["conditions"]} == {"single-multimodal@1"}
     assert Path(RECEIPT).name == "image_condition_dry_receipt.json"
     assert _prefixes(_case_ids()) == set(_TABLE)
+
+
+# --- the announced pair: a second registry, and it is not this one ----------
+
+
+@pytest.fixture(scope="module")
+def announced() -> dict[str, Any]:
+    """One model-free rehearsal of the announced pair (14 drafts through the real Drafter).
+
+    Not frozen beside the other receipt, and that is the point of the other receipt: its value is
+    that it predates the endpoint it is evidence for, so a second pair of conditions cannot be
+    appended to it after the fact.
+    """
+    return dry_receipt(conditions=ANNOUNCED_CONDITIONS)
+
+
+def test_the_announced_pair_is_the_one_the_spec_pre_registered() -> None:
+    assert [c.condition_id for c in ANNOUNCED_CONDITIONS] == ["opaque/told-no-image", "opaque/told-with-image"]
+    assert [c.samples for c in ANNOUNCED_CONDITIONS] == [3, 3]
+    assert [c.carries_image for c in ANNOUNCED_CONDITIONS] == [False, True]
+    assert all(c.announces for c in ANNOUNCED_CONDITIONS)
+    assert not any(c.announces for c in CONDITIONS)
+
+
+def test_the_announced_pair_drafts_the_same_cases_under_a_different_configuration() -> None:
+    """The case set is byte-identical, so the eval-set id must not move; the prompt and the response
+    schema are both different, which is exactly what a config id names."""
+    for condition in ANNOUNCED_CONDITIONS:
+        assert condition.scope is OPAQUE_NO_IMAGE.scope
+        assert condition.scope.eval_set_id == OPAQUE_NO_IMAGE.scope.eval_set_id
+        assert condition.config_id == "single-multimodal-announced@1"
+    assert OPAQUE_NO_IMAGE.config_id == "single-multimodal@1"
+
+
+def test_the_announced_pair_rehearses_clean_against_the_frozen_mapping(announced: dict[str, Any]) -> None:
+    """`dry_receipt` raises on any failure, so reaching here is the assertion — plus the shape: both
+    conditions covering all seven findings, and the with-image half sending each case's own bytes."""
+    counts: dict[str, int] = {}
+    for row in announced["rows"]:
+        counts[row["condition"]] = counts.get(row["condition"], 0) + 1
+    assert counts == {c.condition_id: 7 for c in ANNOUNCED_CONDITIONS}
+    assert receipt_failures(announced["rows"], ANNOUNCED_CONDITIONS) == []
+
+
+def test_the_announcement_lands_in_the_prompt_and_says_opposite_things(announced: dict[str, Any]) -> None:
+    """The manipulation A rests on: one condition is told a picture is attached and the other that
+    none is. If their prompts matched, the drafter was told the same thing about two different
+    messages and A would be a measurement of nothing.
+    """
+    told_no, told_with = {}, {}
+    for row in announced["rows"]:
+        target = told_no if row["condition"] == OPAQUE_TOLD_NO_IMAGE.condition_id else told_with
+        target[row["finding_id"]] = row["prompt_sha256"]
+    assert set(told_no) == set(told_with)
+    assert all(told_no[fid] != told_with[fid] for fid in told_no)
+
+
+def test_an_announced_prompt_is_not_a_prompt_any_condition_of_the_endpoint_asked(
+    announced: dict[str, Any], frozen: dict[str, Any]
+) -> None:
+    """Why the two registries never pool: the announced conditions cannot enter an endpoint defined
+    over byte-identical prompts, because theirs differ from all four by construction."""
+    endpoint_prompts = {row["prompt_sha256"] for row in frozen["rows"]}
+    assert not {row["prompt_sha256"] for row in announced["rows"]} & endpoint_prompts
+
+
+def test_two_announced_conditions_asking_the_identical_prompt_fails(announced: dict[str, Any]) -> None:
+    """The check that the announcement actually varied, proven to fire — the analogue, for this pair,
+    of the moved-prompt check the endpoint's four are held to."""
+    rows = [dict(row) for row in announced["rows"]]
+    told_with = next(row for row in rows if row["condition"] == OPAQUE_TOLD_WITH_IMAGE.condition_id)
+    told_no = next(
+        row
+        for row in rows
+        if row["condition"] == OPAQUE_TOLD_NO_IMAGE.condition_id and row["finding_id"] == told_with["finding_id"]
+    )
+    told_with["prompt_sha256"] = told_no["prompt_sha256"]
+    failures = receipt_failures(rows, ANNOUNCED_CONDITIONS)
+    assert any("different prompts across the opaque conditions" in f for f in failures)
+
+
+def test_the_announced_pair_still_sends_the_pictures_the_frozen_mapping_names(announced: dict[str, Any]) -> None:
+    labels = _labels()
+    for row in announced["rows"]:
+        if row["condition"] == OPAQUE_TOLD_WITH_IMAGE.condition_id:
+            assert row["image_sha256"] is not None
+        else:
+            assert row["image_sha256"] is None
+    shown = {
+        labels[row["image_sha256"]]
+        for row in announced["rows"]
+        if row["condition"] == OPAQUE_TOLD_WITH_IMAGE.condition_id
+    }
+    assert shown == {true for true, _ in _TABLE.values()}

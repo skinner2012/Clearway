@@ -19,10 +19,12 @@ from typing import Any
 import pytest
 
 from clearway.drafter import Drafter
+from clearway.drafter.llm import FALLBACK_REMEDIATION
 from clearway.eval.image_conditions import (
     CONDITIONS,
     LEAKY_NO_IMAGE,
     OPAQUE_NO_IMAGE,
+    OPAQUE_TOLD_NO_IMAGE,
     OPAQUE_WITH_IMAGE,
     Condition,
 )
@@ -40,10 +42,18 @@ from clearway.llm import FakeLLMClient
 _CANNED = '{"conformance":"supports","cited_sc_ids":["1.1.1"],"remediation":"add a description","confidence":0.7}'
 
 
-def _build(condition: Condition, tmp_path: Path) -> dict[str, Any]:
+def _announced_claim(claim: str) -> str:
+    """The same canned answer under the shape an announced condition asks for."""
+    return _CANNED[:-1] + f',"visual_evidence":"{claim}"}}'
+
+
+_ANNOUNCED = _announced_claim("absent")
+
+
+def _build(condition: Condition, tmp_path: Path, canned: str = _CANNED) -> dict[str, Any]:
     return build_pass(
         condition,
-        Drafter(FakeLLMClient(_CANNED)),
+        Drafter(FakeLLMClient(canned)),
         created_at="2026-07-28T00:00:00+00:00",
         drafter_model="gemma4:31b",
         drafter_model_digest="deadbeef",
@@ -201,6 +211,83 @@ def test_a_fallback_draft_is_never_frozen(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match="fell back"):
         build_pass(
             LEAKY_NO_IMAGE,
+            Drafter(FakeLLMClient("not json at all"), retries=0),
+            created_at="2026-07-28T00:00:00+00:00",
+            drafter_model="gemma4:31b",
+            drafter_model_digest="deadbeef",
+            checkpoint=tmp_path / "partial.json",
+        )
+
+
+# --- an announced pass: what the model was asked, and what it claimed --------
+
+
+@pytest.fixture(scope="module")
+def announced_pass(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
+    return _build(OPAQUE_TOLD_NO_IMAGE, tmp_path_factory.mktemp("announced"), _ANNOUNCED)
+
+
+def test_an_announced_pass_records_the_model_s_claim_beside_the_system_s_fact(
+    announced_pass: dict[str, Any],
+) -> None:
+    """Two fields with two owners, kept apart on the row exactly as they are on `DraftRow`: one field
+    would let the deterministic value stand in for the model's answer."""
+    for row in canonical_rows(announced_pass):
+        assert row["draft"]["visual_evidence"] == "absent"
+        assert row["draft"]["visually_verified"] is False
+        assert row["draft"]["contradicted_claim"] is None
+    assert pass_failures(announced_pass) == []
+
+
+def test_an_unannounced_pass_carries_no_claim_because_no_model_was_asked_for_one(
+    opaque_pass: dict[str, Any],
+) -> None:
+    for row in canonical_rows(opaque_pass):
+        assert row["draft"]["visual_evidence"] is None
+        assert row["draft"]["visually_verified"] is False  # pixel-decided, and no pixels were sent
+
+
+def test_an_announced_pass_stamps_the_announced_configuration_over_an_unmoved_case_set(
+    announced_pass: dict[str, Any], opaque_pass: dict[str, Any]
+) -> None:
+    assert announced_pass["config_id"] == "single-multimodal-announced@1"
+    assert announced_pass["eval_set_id"] == opaque_pass["eval_set_id"]
+    assert announced_pass["condition"]["announces"] is True
+    assert opaque_pass["condition"]["announces"] is False
+
+
+def test_an_announced_condition_that_never_actually_asked_fails(announced_pass: dict[str, Any]) -> None:
+    """Seven complete-looking findings whose every answer to "could you see it" is empty reads in a
+    report as a drafter that declined to say, and is a drafter that was never asked."""
+    artifact = _mutated(announced_pass)
+    artifact["samples"][0]["rows"][0]["draft"]["visual_evidence"] = None
+    assert any("carries no visual-evidence answer" in f for f in pass_failures(artifact))
+
+
+def test_a_contradicted_row_is_recorded_with_its_claim_rather_than_aborted_on(tmp_path: Path) -> None:
+    """Here the contradiction *is* the measurement: a model claiming to have seen a picture nothing
+    sent is one of the answers this endpoint counts, and aborting would abort on the result."""
+    artifact = build_pass(
+        OPAQUE_TOLD_NO_IMAGE,
+        Drafter(FakeLLMClient(_announced_claim("seen"))),
+        created_at="2026-07-28T00:00:00+00:00",
+        drafter_model="gemma4:31b",
+        drafter_model_digest="deadbeef",
+        checkpoint=tmp_path / "partial.json",
+    )
+    for row in canonical_rows(artifact):
+        assert row["draft"]["contradicted_claim"] == "seen"
+        assert row["draft"]["visual_evidence"] is None  # the degraded row makes no claim of its own
+        assert row["draft"]["remediation"] == FALLBACK_REMEDIATION
+    assert pass_failures(artifact) == []
+
+
+def test_an_unparseable_draft_still_aborts_an_announced_condition(tmp_path: Path) -> None:
+    """The two degrade to the byte-identical fallback and must not be collapsed: one is a result, the
+    other is a broken measurement that would freeze a verdict no model gave."""
+    with pytest.raises(RuntimeError, match="fell back"):
+        build_pass(
+            OPAQUE_TOLD_NO_IMAGE,
             Drafter(FakeLLMClient("not json at all"), retries=0),
             created_at="2026-07-28T00:00:00+00:00",
             drafter_model="gemma4:31b",

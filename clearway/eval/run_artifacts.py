@@ -116,6 +116,22 @@ def frozen_pass_paths(label: str) -> list[Path]:
     return passes_in(_runs_dir(), label)
 
 
+def case_shaped_passes() -> list[Path]:
+    """Every frozen pass in `runs/` whose artifact is the `{cases: [{drafts: […]}]}` shape.
+
+    **The runs directory holds more than one shape now**, and that is the reason this exists rather
+    than a `glob("*.json")`. The acceptance sweep and every labelled run are cases-of-drafts; the image
+    conditions (`image_<condition>.json`, `eval/image_pass.py`) are samples-of-rows, because a
+    condition repeats one work list rather than walking a case set once. A reader that globs the
+    directory and indexes `["cases"]` meets the second shape as a `KeyError` — loud, but recurring, and
+    every production reader already scopes itself by name (`run_*.json`, `{label}_run_*.json`).
+
+    So the selection is by the naming scheme this module owns, and it is here rather than at a call
+    site because the directory now has two conventions and only one place should know that.
+    """
+    return sorted(_runs_dir().glob("run_*.json")) + [p for label in RUN_LABELS for p in frozen_pass_paths(label)]
+
+
 def dry_gate_path(label: str) -> Path:
     return _reports_dir() / f"{require_label(label)}_dry_gate.json"
 

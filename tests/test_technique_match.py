@@ -290,10 +290,10 @@ def test_the_pre_fix_frozen_runs_stay_unscoreable_rather_than_being_rewritten() 
     Which artifacts those are is decided by reading them, not by a hard-coded list: a run is pre-fix iff
     no draft in it carries `remediation`. That keeps this test honest as new runs are frozen, while still
     failing if anyone back-fills a sentence into an old artifact."""
-    from clearway.eval.offline_build import _RUNS_DIR
+    from clearway.eval.run_artifacts import case_shaped_passes
     from clearway.eval.technique_match_build import remediation_drafts
 
-    runs = sorted(_RUNS_DIR.glob("*.json"))
+    runs = case_shaped_passes()
     assert runs, "no frozen run artifacts to check"
     pre_fix = [
         p
@@ -310,11 +310,11 @@ def test_a_run_frozen_after_the_fix_is_scoreable_from_its_own_file() -> None:
     """The consequence of the fix, asserted on the real artifacts rather than a fixture: at least one
     frozen run now carries drafted remediation, so the fix-direction metric is computable from a
     checked-in file with no re-drafting. Before this, the metric was structurally unmeasurable."""
-    from clearway.eval.offline_build import _RUNS_DIR
+    from clearway.eval.run_artifacts import case_shaped_passes
     from clearway.eval.technique_match_build import remediation_drafts
 
     scoreable = []
-    for path in sorted(_RUNS_DIR.glob("*.json")):
+    for path in case_shaped_passes():
         artifact = json.loads(path.read_text())
         if any(d.get("remediation") for c in artifact["cases"] for d in c["drafts"]):
             scoreable.append((path, remediation_drafts(artifact)))

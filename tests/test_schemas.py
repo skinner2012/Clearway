@@ -52,6 +52,7 @@ from clearway.schemas.models import (
     StepState,
     StepStatus,
     TierBSmoke,
+    VisualEvidence,
 )
 
 # Every concrete BaseModel defined in the contract (Oracle is a Protocol, excluded).
@@ -249,6 +250,28 @@ def test_eval_metrics_expert_edit_distance_defaults_to_zero() -> None:
         citations_verifiable_total=5,
     )
     assert m1_style.expert_edit_distance == 0.0
+
+
+def test_the_two_visual_evidence_fields_are_additive_and_mean_different_things() -> None:
+    """A row persisted before either field existed still validates under `extra="forbid"`, and both
+    default to `None` — which on the model's field means *no model wrote one* and on the system's
+    means *the question does not arise*. They are separate fields because they have separate owners:
+    a claim of `seen` beside a system fact of `False` is the contradiction the drafter refuses, and
+    one merged field could not express it."""
+    persisted = '{"finding_id":"f1","conformance":"does_not_support","confidence":0.5}'
+    before = DraftRow.model_validate_json(persisted)
+    assert before.visual_evidence is None and before.visually_verified is None
+
+    row = DraftRow(
+        finding_id="f1",
+        conformance=Conformance.DOES_NOT_SUPPORT,
+        confidence=0.5,
+        visual_evidence=VisualEvidence.ABSENT,
+        visually_verified=False,
+    )
+    restored = DraftRow.model_validate_json(row.model_dump_json())
+    assert restored == row
+    assert json.loads(row.model_dump_json())["visual_evidence"] == "absent"  # the enum's wire value
 
 
 _AT = datetime(2026, 7, 9, 12, 0, 0)

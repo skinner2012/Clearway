@@ -117,6 +117,25 @@ class ReferentSource(str, Enum):
     ANCESTOR_TEXT = "ancestor_text"  # bounded rendered text of a nearby ancestor
 
 
+class VisualEvidence(str, Enum):
+    """What a drafting model reports about the visual evidence ITS OWN judgment needed.
+
+    The question is *"was the evidence this judgment needed available"* and never *"was a picture
+    attached"* — the second is a fact the system already holds, so a model told there is no picture
+    answers it correctly by repeating the sentence it was handed. `NOT_NEEDED` is what separates
+    obedience from reasoning: an `alt` that is a hex digest describes nothing whatever the pixels
+    hold, so its finding is decidable from the text alone and a two-valued field would force a false
+    answer on exactly the case that discriminates.
+
+    Not a reuse of `Conformance.NOT_APPLICABLE`: that value speaks about the RULE ("the criterion
+    does not apply"), this one speaks about the EVIDENCE, and collapsing them would move every
+    conformance number in the repo."""
+
+    SEEN = "seen"  # the evidence was available and was used
+    ABSENT = "absent"  # deciding this needed evidence that was not supplied
+    NOT_NEEDED = "not_needed"  # decidable without it
+
+
 # ============================================================
 # Scanner output  (scanner/ -> normalizer/)
 # ============================================================
@@ -400,6 +419,24 @@ class DraftRow(BaseModel):
         "measured to carry no usable signal (held-out over-confidence gap +0.329; values pinned ~0.85-1.0 "
         "regardless of correctness), and the assembled half is calibrated by construction, so neither "
         "discriminates. Derive a real trust signal elsewhere — see docs/acceptance-analysis.md.",
+    )
+    visual_evidence: Optional[VisualEvidence] = Field(
+        None,
+        description="THE MODEL'S CLAIM about the evidence its own judgment needed. None means no model "
+        "wrote one — it was not asked (the default), or no model produced the row at all (an assembled "
+        "verdict, the degradation fallback). Never inferred from the system's fact beside it: a value "
+        "derived by code would make any measurement over this field a measurement of the pipeline "
+        "rather than of the drafter.",
+    )
+    visually_verified: Optional[bool] = Field(
+        None,
+        description="THE SYSTEM'S FACT about the same judgment, and deliberately tri-state. None = the "
+        "question does not arise (a class no picture decides, or a verdict assembled from axe's tags "
+        "rather than judged); True = the judgment turned on pixels and the pixels were sent; False = it "
+        "turned on pixels and they were not. Two-valued, 'does not arise' would have to be spelled "
+        "False and every text finding in the product would read as visually unverified. Kept apart from "
+        "`visual_evidence` because they have two sources — which buys one check for free: a row "
+        "claiming `seen` against False is a hallucination catchable with no model and no judge.",
     )
 
 

@@ -50,6 +50,7 @@ from clearway.schemas.models import (
     StepStatus,
     TierBSmoke,
     Trace,
+    VisualEvidence,
 )
 
 __all__ = [
@@ -102,4 +103,5 @@ __all__ = [
     "StepStatus",
     "TierBSmoke",
     "Trace",
+    "VisualEvidence",
 ]

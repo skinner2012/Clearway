@@ -1,6 +1,6 @@
 """The deterministic scoring primitives every acceptance number rests on — no LLM, no network.
 
-Two things live here, kept together because the whole benchmark is built from them:
+Three things live here, kept together because the whole benchmark is built from them:
 
 - **The Wilson score interval.** Every headline rate ships as `(value, n, CI)`. The interval is the
   *asymmetric* Wilson score interval, never a symmetric `p ± z·se`: near 0 or 1 the normal
@@ -17,13 +17,17 @@ Two things live here, kept together because the whole benchmark is built from th
   `partially_supports` the other way — the collapse is a judgement call, so its cost is measured,
   not hidden.
 
+- **The exact binomial upper tail.** What turns a pre-registered threshold into a number. Exact and
+  hand-rolled for the same reasons as Wilson: the counts are single-digit and the rates tiny, which
+  is where a normal approximation is worst, and a closed form pins no dependency.
+
 Kept pure so the scorecard replays from a frozen artifact, never re-derived by a non-deterministic
 model — the same discipline the κ replay follows.
 """
 
 from __future__ import annotations
 
-from math import sqrt
+from math import comb, sqrt
 
 from clearway.schemas.models import Conformance, MetricCI
 
@@ -83,6 +87,29 @@ def wilson_interval(k: int, n: int, *, z: float = Z_95) -> tuple[float, float]:
     # floating-point rounding at the k=0 / k=n boundaries can't leave it a hair outside (which would
     # otherwise report ci_high=0.9999… on a 100%-clean stratum instead of a clean 1.0).
     return (min(low, p), max(high, p))
+
+
+def binomial_tail_ge(k: int, n: int, p: float) -> float:
+    """`P(X ≥ k)` for `X ~ Binomial(n, p)` — exact, summed term by term.
+
+    The one place a pre-registered threshold turns into a number. Exact rather than normal-approximated
+    because every use here sits in the far tail at a tiny `p` and a single-digit `n`, where the normal
+    approximation is worthless — and hand-rolled for the same reason `wilson_interval` is: a closed
+    form over `math.comb` needs no dependency pinned for reproducibility.
+
+    `k <= 0` is the whole distribution (1.0) and `k > n` is impossible (0.0). Neither is an error: both
+    are what a shrinking denominator does to a count-based endpoint, and raising would make a report
+    crash exactly when its power collapsed.
+    """
+    if n < 0:
+        raise ValueError(f"a binomial tail needs a non-negative trial count, got n={n}")
+    if not 0.0 <= p <= 1.0:
+        raise ValueError(f"a binomial rate must lie in [0, 1], got p={p}")
+    if k <= 0:
+        return 1.0
+    if k > n:
+        return 0.0
+    return sum(comb(n, i) * p**i * (1 - p) ** (n - i) for i in range(k, n + 1))
 
 
 def metric_ci(k: int, n: int, *, effective_n: int | None = None, z: float = Z_95) -> MetricCI:

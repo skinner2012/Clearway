@@ -12,6 +12,7 @@ from clearway.eval.stats import (
     COLLAPSE_RULE,
     FLAGS,
     Z_95,
+    binomial_tail_ge,
     is_flag,
     metric_ci,
     wilson_interval,
@@ -92,6 +93,48 @@ def test_metric_ci_effective_n_defaults_none() -> None:
 def test_metric_ci_propagates_empty_stratum_error() -> None:
     with pytest.raises(ValueError):
         metric_ci(0, 0)
+
+
+# ---- exact binomial upper tail ---------------------------------------------
+
+
+def test_the_pre_registered_thresholds_are_reproduced_from_the_null_rate() -> None:
+    """The image endpoint's thresholds were pre-registered as P(≥ D) over 7 cells at a null rate of
+    1 in 54, and written into the spec as 0.007 and 0.12. They are re-derived here rather than
+    transcribed: a threshold nobody can reproduce is a number, not a pre-registration."""
+    assert binomial_tail_ge(2, 7, 1 / 54) == pytest.approx(0.007, abs=5e-4)
+    assert binomial_tail_ge(1, 7, 1 / 54) == pytest.approx(0.12, abs=5e-3)
+
+
+def test_zero_or_fewer_successes_is_the_whole_distribution() -> None:
+    """P(X ≥ 0) = 1 exactly — the tail that asks nothing, and the one an off-by-one would break."""
+    assert binomial_tail_ge(0, 7, 1 / 54) == 1.0
+    assert binomial_tail_ge(0, 0, 0.5) == 1.0
+
+
+def test_the_full_tail_is_the_probability_of_every_trial_succeeding() -> None:
+    assert binomial_tail_ge(3, 3, 0.5) == pytest.approx(0.125)
+
+
+def test_a_tail_beyond_the_trials_is_impossible_rather_than_an_error() -> None:
+    """Asking for more disagreements than there are retained cells is a real question with the
+    answer 0 — it is what a shrunken denominator does to the endpoint's power."""
+    assert binomial_tail_ge(4, 3, 0.5) == 0.0
+
+
+def test_the_certain_and_impossible_null_rates_are_exact() -> None:
+    assert binomial_tail_ge(1, 5, 0.0) == 0.0
+    assert binomial_tail_ge(5, 5, 1.0) == 1.0
+
+
+def test_a_rate_outside_zero_to_one_is_refused() -> None:
+    with pytest.raises(ValueError):
+        binomial_tail_ge(1, 5, 1.5)
+
+
+def test_a_negative_trial_count_is_refused() -> None:
+    with pytest.raises(ValueError):
+        binomial_tail_ge(1, -1, 0.5)
 
 
 # ---- conformance collapse --------------------------------------------------

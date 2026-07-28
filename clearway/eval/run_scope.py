@@ -184,6 +184,14 @@ IMAGE_OPAQUE = RunScope(
 )
 
 
+# Every scope this repo defines — the corpus a new guard's blast radius is measured over.
+#
+# It exists so "the whole scoped corpus" is a named value rather than a list re-derived by each
+# measurement, and so a scope added later joins the count by being declared here rather than by being
+# remembered. A guard counted only over the cases it was designed to fire on is not measured.
+ALL_SCOPES: tuple[RunScope, ...] = (ACCEPTANCE, IMAGE_LEAKY, IMAGE_OPAQUE)
+
+
 def _manifest_of(scope: RunScope) -> dict[str, Any]:
     return dict(json.loads(scope.manifest.read_text()))
 

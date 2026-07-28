@@ -1,0 +1,636 @@
+{
+  "artifact": "one image condition drafted against the real model, all its samples",
+  "version": 1,
+  "condition": {
+    "condition": "opaque/mismatched-image",
+    "scope": "image-opaque",
+    "attaches": "mismatched",
+    "samples": 3
+  },
+  "canonical_sample": 1,
+  "citations": {
+    "source": "pinned",
+    "sc_ids": [
+      "1.1.1"
+    ],
+    "note": "The candidate criteria were PINNED (eval/drafter_payload.PINNED_CITATIONS), not retrieved. The endpoint is defined over prompts that are byte-identical across conditions differing only in pixels, and a live retriever is a service whose ordering is one more thing that could move between two calls run hours apart. The cost is real and is not hidden: the block holds the one criterion this class is about, where production retrieval surfaces several candidates including distractors, so these conditions are drafted against an easier candidate set than a live scan would produce. It is the same set for all four conditions, so it cannot move a difference between them."
+  },
+  "run_ids": [
+    "image-opaque_mismatched_image-sample1-2026-07-28T17:40:30.608204+00:00",
+    "image-opaque_mismatched_image-sample2-2026-07-28T17:40:30.608204+00:00",
+    "image-opaque_mismatched_image-sample3-2026-07-28T17:40:30.608204+00:00"
+  ],
+  "config_id": "single-multimodal@1",
+  "eval_set_id": "act-image-opaque@1",
+  "corpus_version": "pinned:image-alt@fdbe6e83a265",
+  "drafter_model": "gemma4:31b",
+  "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+  "axe_core_version": "4.12.1",
+  "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "created_at": "2026-07-28T17:40:30.608204+00:00",
+  "samples": [
+    {
+      "sample": 1,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "d5e761560e66c2593e6532bbbef8e139494fcb65d85e4bef6c2cd4fe5dadf771"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alt text 'W3C' with a descriptive alternative that accurately describes the image of bread."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "c8bffb67ea6685845e4a20463c65d9d1967c7b3ca2f77d42caacd621ab1925e5"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alt text 'ERCIM' with a descriptive phrase that accurately describes the colorful buildings and waterfront scene shown in the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "8854361a06ebd411e64e9b8753dd0cf3eb5ddcb32152a1615a29091d046f0705"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as the W3C logo instead of 'Nyhavn'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "09a858b35c3526fda6bb79b94d14273ec26db0f1c83fbc05401060bd23e5a5a0"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to a meaningful description of the logo, such as 'W3C'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "87ef1efe10bd271331e128e931258f5431469e78094e88d606273ff6ff6ec5ba"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image of bread instead of using 'Nyhavn'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "da9ea14db5e13f1f0f4d8dd0620f0ad4a9592873b9d9c73249a0218d73d424c1"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image content, such as 'Freshly baked loaves of bread'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "2106d3d10e5ef83ea992784b7eb8906b2273900be4a542e4172da6c25ab87870"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Replace the alphanumeric string in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    },
+    {
+      "sample": 2,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "d5e761560e66c2593e6532bbbef8e139494fcb65d85e4bef6c2cd4fe5dadf771"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alt text 'W3C' with a descriptive alternative that accurately describes the image of bread."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "c8bffb67ea6685845e4a20463c65d9d1967c7b3ca2f77d42caacd621ab1925e5"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alt text 'ERCIM' with a descriptive phrase that accurately describes the colorful buildings and waterfront scene shown in the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "8854361a06ebd411e64e9b8753dd0cf3eb5ddcb32152a1615a29091d046f0705"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as the W3C logo instead of 'Nyhavn'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "09a858b35c3526fda6bb79b94d14273ec26db0f1c83fbc05401060bd23e5a5a0"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to a meaningful description of the logo, such as 'W3C'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "87ef1efe10bd271331e128e931258f5431469e78094e88d606273ff6ff6ec5ba"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image of bread instead of using 'Nyhavn'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "da9ea14db5e13f1f0f4d8dd0620f0ad4a9592873b9d9c73249a0218d73d424c1"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image content, such as 'Freshly baked loaves of bread'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "2106d3d10e5ef83ea992784b7eb8906b2273900be4a542e4172da6c25ab87870"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Replace the alphanumeric string in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    },
+    {
+      "sample": 3,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "d5e761560e66c2593e6532bbbef8e139494fcb65d85e4bef6c2cd4fe5dadf771"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alt text 'W3C' with a descriptive alternative that accurately describes the image of bread."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "c8bffb67ea6685845e4a20463c65d9d1967c7b3ca2f77d42caacd621ab1925e5"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alt text 'ERCIM' with a descriptive phrase that accurately describes the colorful buildings and waterfront scene shown in the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "8854361a06ebd411e64e9b8753dd0cf3eb5ddcb32152a1615a29091d046f0705"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as the W3C logo instead of 'Nyhavn'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "09a858b35c3526fda6bb79b94d14273ec26db0f1c83fbc05401060bd23e5a5a0"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to a meaningful description of the logo, such as 'W3C'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "87ef1efe10bd271331e128e931258f5431469e78094e88d606273ff6ff6ec5ba"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image of bread instead of using 'Nyhavn'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "da9ea14db5e13f1f0f4d8dd0620f0ad4a9592873b9d9c73249a0218d73d424c1"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image content, such as 'Freshly baked loaves of bread'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/mismatched-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "2106d3d10e5ef83ea992784b7eb8906b2273900be4a542e4172da6c25ab87870"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Replace the alphanumeric string in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    }
+  ]
+}

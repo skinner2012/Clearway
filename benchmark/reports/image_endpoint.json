@@ -1,0 +1,491 @@
+{
+  "artifact": "the primary endpoint: does the drafter attend to the pixels?",
+  "version": 1,
+  "note": "D counts the pool cases whose verdict moved when the WRONG picture was attached behind a byte-identical prompt. Scored deterministically against the drafted verdicts, never by the judge. All four conditions were drafted against PINNED candidate criteria, not live retrieval, so none of them reflects what a live retriever would surface; the pinning is identical across them and cannot move D. The prompts never say a picture is attached — keeping the text identical is what the endpoint rests on, and it also means the model was never told to look.",
+  "passes": {
+    "leaky/no-image": {
+      "path": "image_leaky_no_image.json",
+      "created_at": "2026-07-28T14:18:23.167206+00:00",
+      "drafter_model": "gemma4:31b",
+      "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+      "corpus_version": "pinned:image-alt@fdbe6e83a265",
+      "attaches": "none",
+      "samples": 1
+    },
+    "opaque/no-image": {
+      "path": "image_opaque_no_image.json",
+      "created_at": "2026-07-28T14:41:47.983243+00:00",
+      "drafter_model": "gemma4:31b",
+      "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+      "corpus_version": "pinned:image-alt@fdbe6e83a265",
+      "attaches": "none",
+      "samples": 3
+    },
+    "opaque/with-image": {
+      "path": "image_opaque_with_image.json",
+      "created_at": "2026-07-28T17:04:04.504169+00:00",
+      "drafter_model": "gemma4:31b",
+      "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+      "corpus_version": "pinned:image-alt@fdbe6e83a265",
+      "attaches": "true",
+      "samples": 3
+    },
+    "opaque/mismatched-image": {
+      "path": "image_opaque_mismatched_image.json",
+      "created_at": "2026-07-28T17:40:30.608204+00:00",
+      "drafter_model": "gemma4:31b",
+      "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+      "corpus_version": "pinned:image-alt@fdbe6e83a265",
+      "attaches": "mismatched",
+      "samples": 3
+    }
+  },
+  "conditions": {
+    "opaque/with-image": {
+      "condition": "opaque/with-image",
+      "eval_set_id": "act-image-opaque@1",
+      "canonical_sample": 1,
+      "cases": 7,
+      "flagged": 6,
+      "correct": 4,
+      "false_positives": 3,
+      "false_negatives": 0,
+      "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+      "verdicts": {
+        "be6b29e220d6afbd827625c602ec49027e73fdf1": false,
+        "530266c6116fcfad12561e9e1a407fa0a0da3435": true,
+        "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e": true,
+        "607ad4964aa69e78a663cf993a28cedd6a1dc39e": true,
+        "1ff696703e7e7393a5d05cdcd3229cb050594998": true,
+        "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4": true,
+        "a2333ec76e676624212dcd616ed11ae576ab775e": true
+      }
+    },
+    "opaque/mismatched-image": {
+      "condition": "opaque/mismatched-image",
+      "eval_set_id": "act-image-opaque@1",
+      "canonical_sample": 1,
+      "cases": 7,
+      "flagged": 7,
+      "correct": 3,
+      "false_positives": 4,
+      "false_negatives": 0,
+      "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+      "verdicts": {
+        "be6b29e220d6afbd827625c602ec49027e73fdf1": true,
+        "530266c6116fcfad12561e9e1a407fa0a0da3435": true,
+        "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e": true,
+        "607ad4964aa69e78a663cf993a28cedd6a1dc39e": true,
+        "1ff696703e7e7393a5d05cdcd3229cb050594998": true,
+        "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4": true,
+        "a2333ec76e676624212dcd616ed11ae576ab775e": true
+      }
+    }
+  },
+  "instability": {
+    "leaky/no-image": {
+      "condition": "leaky/no-image",
+      "measurable": false,
+      "samples": 1,
+      "findings": 7,
+      "pairs": 0,
+      "note": "one sample — within-condition stability is NOT measured here, which is not the same as measured and found perfect. This condition was pre-registered as descriptive."
+    },
+    "opaque/no-image": {
+      "condition": "opaque/no-image",
+      "measurable": true,
+      "samples": 3,
+      "findings": 7,
+      "pairs": 21,
+      "disagreeing_pairs": 0,
+      "rate": 0.0,
+      "unstable_findings": [],
+      "unstable_cases": []
+    },
+    "opaque/with-image": {
+      "condition": "opaque/with-image",
+      "measurable": true,
+      "samples": 3,
+      "findings": 7,
+      "pairs": 21,
+      "disagreeing_pairs": 2,
+      "rate": 0.09523809523809523,
+      "unstable_findings": [
+        "bbede717e40ab60a"
+      ],
+      "unstable_cases": [
+        "1ff696703e7e7393a5d05cdcd3229cb050594998"
+      ]
+    },
+    "opaque/mismatched-image": {
+      "condition": "opaque/mismatched-image",
+      "measurable": true,
+      "samples": 3,
+      "findings": 7,
+      "pairs": 21,
+      "disagreeing_pairs": 0,
+      "rate": 0.0,
+      "unstable_findings": [],
+      "unstable_cases": []
+    }
+  },
+  "null_rate": {
+    "pairs": 63,
+    "disagreeing_pairs": 2,
+    "measured_rate": 0.031746031746031744,
+    "m7_rate": 0.018518518518518517,
+    "rate": 0.031746031746031744,
+    "source": "M8",
+    "conditions": [
+      {
+        "condition": "leaky/no-image",
+        "measurable": false,
+        "samples": 1,
+        "findings": 7,
+        "pairs": 0,
+        "note": "one sample — within-condition stability is NOT measured here, which is not the same as measured and found perfect. This condition was pre-registered as descriptive."
+      },
+      {
+        "condition": "opaque/no-image",
+        "measurable": true,
+        "samples": 3,
+        "findings": 7,
+        "pairs": 21,
+        "disagreeing_pairs": 0,
+        "rate": 0.0,
+        "unstable_findings": [],
+        "unstable_cases": []
+      },
+      {
+        "condition": "opaque/with-image",
+        "measurable": true,
+        "samples": 3,
+        "findings": 7,
+        "pairs": 21,
+        "disagreeing_pairs": 2,
+        "rate": 0.09523809523809523,
+        "unstable_findings": [
+          "bbede717e40ab60a"
+        ],
+        "unstable_cases": [
+          "1ff696703e7e7393a5d05cdcd3229cb050594998"
+        ]
+      },
+      {
+        "condition": "opaque/mismatched-image",
+        "measurable": true,
+        "samples": 3,
+        "findings": 7,
+        "pairs": 21,
+        "disagreeing_pairs": 0,
+        "rate": 0.0,
+        "unstable_findings": [],
+        "unstable_cases": []
+      }
+    ],
+    "not_measurable": [
+      "leaky/no-image"
+    ],
+    "note": "Pooled over every condition that took repeats, including the cells D excludes — a rate estimated from the retained cells alone would be conditioned on the very stability the endpoint acts on. The rate used is the max of this and M7's 1 finding in 54, because 63 pairs cannot certify a clean stack and a null rate of zero would make one disagreement look decisive."
+  },
+  "receipts": {
+    "failures": [],
+    "dry_receipt_failures": [],
+    "matches_dry_receipt": true,
+    "samples_checked": 3,
+    "rows_checked": 84,
+    "digests_differ": 7,
+    "findings": 7,
+    "note": "A digest per finding per condition, and not a byte count: four of the seven findings render the same photograph, so a count check would pass whether or not the frozen permutation was honoured. The digests are the ones the drafter reported having sent."
+  },
+  "endpoint": {
+    "statistic": "D = the number of pool cases whose opaque/with-image verdict differs from its opaque/mismatched-image verdict, over cells fixed in advance",
+    "collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+    "cells": 7,
+    "live_cells": 4,
+    "retained": 6,
+    "live_cells_retained": 3,
+    "excluded": [
+      "1ff696703e7e7393a5d05cdcd3229cb050594998"
+    ],
+    "d": 1,
+    "differing_cells_including_excluded": 1,
+    "direction": {
+      "predicted": "toward_flag",
+      "toward_flag": 1,
+      "toward_clean": 0,
+      "note": "A pre-registered SECONDARY strengthening: if the pixels are being read, the wrong picture should push the drafter toward does_not_support. Reported, never gated on — gating on direction would re-import a denominator conditioned on the result."
+    },
+    "specificity_control": {
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "alt": "94251e110d24a4c2b6e6ce76e7203374",
+      "live": false,
+      "frozen_note": "dead by design — the specificity control: a hex-digest name describes nothing whatever is attached, so a disagreement here means the manipulation moved something other than perception",
+      "reading": "This cell is dead by design: its alt is a hex digest, which describes no picture, so the correct verdict is the same whatever is attached. It stays inside D as a within-experiment control — a disagreement here is evidence the manipulation moved something other than perception, so it is reported, never dropped.",
+      "differs": false,
+      "retained": true
+    },
+    "by_case": [
+      {
+        "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+        "live": true,
+        "true_image": "w3c-logo",
+        "mismatched_image": "bread",
+        "with_image": {
+          "conformance": "supports",
+          "flagged": false,
+          "samples": [
+            "supports",
+            "supports",
+            "supports"
+          ],
+          "stable": true
+        },
+        "mismatched": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "retained": true,
+        "differs": true,
+        "counted_in_d": true,
+        "conformance_differs": true,
+        "direction": "toward_flag"
+      },
+      {
+        "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+        "live": false,
+        "true_image": "w3c-logo",
+        "mismatched_image": "nyhavn",
+        "with_image": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "mismatched": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "retained": true,
+        "differs": false,
+        "counted_in_d": false,
+        "conformance_differs": false,
+        "direction": null
+      },
+      {
+        "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+        "live": true,
+        "true_image": "nyhavn",
+        "mismatched_image": "w3c-logo",
+        "with_image": {
+          "conformance": "partially_supports",
+          "flagged": true,
+          "samples": [
+            "partially_supports",
+            "partially_supports",
+            "partially_supports"
+          ],
+          "stable": true
+        },
+        "mismatched": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "retained": true,
+        "differs": false,
+        "counted_in_d": false,
+        "conformance_differs": true,
+        "direction": null
+      },
+      {
+        "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+        "live": true,
+        "true_image": "bread",
+        "mismatched_image": "w3c-logo",
+        "with_image": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "mismatched": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "retained": true,
+        "differs": false,
+        "counted_in_d": false,
+        "conformance_differs": false,
+        "direction": null
+      },
+      {
+        "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+        "live": true,
+        "true_image": "nyhavn",
+        "mismatched_image": "bread",
+        "with_image": {
+          "conformance": "partially_supports",
+          "flagged": true,
+          "samples": [
+            "partially_supports",
+            "supports",
+            "supports"
+          ],
+          "stable": false
+        },
+        "mismatched": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "retained": false,
+        "differs": false,
+        "counted_in_d": false,
+        "conformance_differs": true,
+        "direction": null
+      },
+      {
+        "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+        "live": false,
+        "true_image": "nyhavn",
+        "mismatched_image": "bread",
+        "with_image": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "mismatched": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "retained": true,
+        "differs": false,
+        "counted_in_d": false,
+        "conformance_differs": false,
+        "direction": null
+      },
+      {
+        "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+        "live": false,
+        "true_image": "nyhavn",
+        "mismatched_image": "w3c-logo",
+        "with_image": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "mismatched": {
+          "conformance": "does_not_support",
+          "flagged": true,
+          "samples": [
+            "does_not_support",
+            "does_not_support",
+            "does_not_support"
+          ],
+          "stable": true
+        },
+        "retained": true,
+        "differs": false,
+        "counted_in_d": false,
+        "conformance_differs": false,
+        "direction": null
+      }
+    ]
+  },
+  "reading": {
+    "d": 1,
+    "cells": 7,
+    "retained": 6,
+    "excluded": [
+      "1ff696703e7e7393a5d05cdcd3229cb050594998"
+    ],
+    "null_rate": 0.031746031746031744,
+    "null_rate_source": "M8",
+    "measured_null_rate": 0.031746031746031744,
+    "p_value": 0.17598386941312677,
+    "p_value_note": "P(D ≥ 1) over the 6 retained cells at a null rate of 0.03175. The pre-registered thresholds are counts, so this is reported beside the verdict and never in place of it; it says what the retained cells were worth, which a seven-cell tail would overstate.",
+    "pre_registered_thresholds": [
+      {
+        "d": "≥ 2",
+        "p_at_7_cells": 0.0067692670034260605,
+        "verdict": "delivery confirmed"
+      },
+      {
+        "d": "1",
+        "p_at_7_cells": 0.12264618585302636,
+        "verdict": "inconclusive — indistinguishable from drift"
+      },
+      {
+        "d": "0",
+        "p_at_7_cells": null,
+        "verdict": "delivery refuted"
+      },
+      {
+        "d": "any, with fewer than 2 retained cells",
+        "p_at_7_cells": null,
+        "verdict": "uninterpretable — fewer than two retained cells"
+      }
+    ],
+    "verdict": "inconclusive — indistinguishable from drift",
+    "direction": {
+      "predicted": "toward_flag",
+      "toward_flag": 1,
+      "toward_clean": 0,
+      "note": "A pre-registered SECONDARY strengthening: if the pixels are being read, the wrong picture should push the drafter toward does_not_support. Reported, never gated on — gating on direction would re-import a denominator conditioned on the result."
+    },
+    "note": "D systematically under-detects attendance. A mismatched picture may make the drafter genuinely uncertain rather than cleanly flip it, and the stability filter codes that uncertainty as noise and excludes the cell. The bias is conservative — it can only cost D, never inflate it."
+  }
+}

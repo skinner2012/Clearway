@@ -1,0 +1,630 @@
+{
+  "artifact": "one image condition drafted against the real model, all its samples",
+  "version": 1,
+  "condition": {
+    "condition": "opaque/with-image",
+    "scope": "image-opaque",
+    "attaches": "true",
+    "samples": 3
+  },
+  "canonical_sample": 1,
+  "citations": {
+    "source": "pinned",
+    "sc_ids": [
+      "1.1.1"
+    ],
+    "note": "The candidate criteria were PINNED (eval/drafter_payload.PINNED_CITATIONS), not retrieved. The endpoint is defined over prompts that are byte-identical across conditions differing only in pixels, and a live retriever is a service whose ordering is one more thing that could move between two calls run hours apart. The cost is real and is not hidden: the block holds the one criterion this class is about, where production retrieval surfaces several candidates including distractors, so these conditions are drafted against an easier candidate set than a live scan would produce. It is the same set for all four conditions, so it cannot move a difference between them."
+  },
+  "run_ids": [
+    "image-opaque_with_image-sample1-2026-07-28T17:04:04.504169+00:00",
+    "image-opaque_with_image-sample2-2026-07-28T17:04:04.504169+00:00",
+    "image-opaque_with_image-sample3-2026-07-28T17:04:04.504169+00:00"
+  ],
+  "config_id": "single-multimodal@1",
+  "eval_set_id": "act-image-opaque@1",
+  "corpus_version": "pinned:image-alt@fdbe6e83a265",
+  "drafter_model": "gemma4:31b",
+  "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+  "axe_core_version": "4.12.1",
+  "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "created_at": "2026-07-28T17:04:04.504169+00:00",
+  "samples": [
+    {
+      "sample": 1,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "2e8ddb348f91647ab0d8b0dac80d7456ff70b96e1d3dd6915eaba215aa17e3a6"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "434c0e85fea791d8d3c7fa13506e0908e45cfbfe34555b110731b8446e188146"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to accurately describe the image as 'W3C' or 'World Wide Web Consortium'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "c55f52730ea106e089d9bbe5e494d09d698ddbb3d6dac8f5329c57634e225d18"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "partially_supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.85,
+            "remediation": "Expand the alt text to more descriptively convey the visual content of the image, such as mentioning the colorful houses and boats along the canal."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "ba1a1f81188b695afaedb41a27da774703eed7cd166da598ec1dbe9b6bdb00b0"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the generic or potentially misleading alt text 'pain' with a descriptive alternative that accurately describes the image content, such as 'Freshly baked rustic bread loaves'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "543676238a30f8cc43ea0f1ff37d6cbb4ee1d673b27fb329f1990def057db0ac"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "partially_supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Expand the alt text to describe the visual elements of the scene, such as the colorful buildings and boats along the canal."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "c125c857a1942904db72ae5c494ab3e7c6e06c1620e546aac11634a2ea2f0764"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to accurately describe the image as depicting Nyhavn in Copenhagen rather than Paris."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "2c75de8dbedeef4ce7b685280f676b1d55a9011436d77bbe006b095e482bf67b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alphanumeric hash in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    },
+    {
+      "sample": 2,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "2e8ddb348f91647ab0d8b0dac80d7456ff70b96e1d3dd6915eaba215aa17e3a6"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "434c0e85fea791d8d3c7fa13506e0908e45cfbfe34555b110731b8446e188146"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to accurately describe the image as 'W3C' or 'World Wide Web Consortium'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "c55f52730ea106e089d9bbe5e494d09d698ddbb3d6dac8f5329c57634e225d18"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "partially_supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.85,
+            "remediation": "Expand the alt text to describe the visual characteristics of the scene, such as the colorful houses and boats along the canal."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "ba1a1f81188b695afaedb41a27da774703eed7cd166da598ec1dbe9b6bdb00b0"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the generic alt text 'pain' with a more descriptive alternative, such as 'Freshly baked loaves of bread'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "543676238a30f8cc43ea0f1ff37d6cbb4ee1d673b27fb329f1990def057db0ac"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary as the alt text accurately identifies the subject of the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "c125c857a1942904db72ae5c494ab3e7c6e06c1620e546aac11634a2ea2f0764"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to accurately describe the image as depicting Nyhavn in Copenhagen rather than Paris."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "2c75de8dbedeef4ce7b685280f676b1d55a9011436d77bbe006b095e482bf67b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alphanumeric hash in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    },
+    {
+      "sample": 3,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "fbc5077a8bbbde2a5b4cec128b3f0414be03c66db56ac48d860c177a55702e70",
+            "payload_sha256": "2e8ddb348f91647ab0d8b0dac80d7456ff70b96e1d3dd6915eaba215aa17e3a6"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "a562c711a97f8eb0473babab4a1c63fcd27ef2a72ad619880730f02e028f12fb",
+            "payload_sha256": "434c0e85fea791d8d3c7fa13506e0908e45cfbfe34555b110731b8446e188146"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to accurately describe the image as 'W3C' or 'World Wide Web Consortium'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "939e8c81a57650f833337069ea0ec4329b2d7932aac1fa764dd5486640be9df5",
+            "payload_sha256": "c55f52730ea106e089d9bbe5e494d09d698ddbb3d6dac8f5329c57634e225d18"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "partially_supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.85,
+            "remediation": "Expand the alt text to describe the visual characteristics of the scene, such as the colorful houses and boats along the canal."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "03852907a18b8e17ebd62430fd6b33725df5d023cf3725d562b447824389404f",
+            "payload_sha256": "ba1a1f81188b695afaedb41a27da774703eed7cd166da598ec1dbe9b6bdb00b0"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the generic alt text 'pain' with a more descriptive alternative, such as 'Freshly baked loaves of bread'."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "5dabe02c3c1b99eeea1ac28956d23207cf007847542d4807ca940ff77550ebd6",
+            "payload_sha256": "543676238a30f8cc43ea0f1ff37d6cbb4ee1d673b27fb329f1990def057db0ac"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation necessary as the alt text accurately identifies the subject of the image."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "0d8bab71535ea4c767320cd2b342b25b19c1ee5bfaf1995f99a24a9e3b2e972f",
+            "payload_sha256": "c125c857a1942904db72ae5c494ab3e7c6e06c1620e546aac11634a2ea2f0764"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Update the alt attribute to accurately describe the image as depicting Nyhavn in Copenhagen rather than Paris."
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "f41ea30999b2d546dab84b9b2df8c257f9ee6a9e1146f857f8e6ed0565ba1168",
+            "payload_sha256": "2c75de8dbedeef4ce7b685280f676b1d55a9011436d77bbe006b095e482bf67b"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "Replace the alphanumeric hash in the alt attribute with a descriptive text alternative that conveys the meaning of the image."
+          }
+        }
+      ]
+    }
+  ]
+}

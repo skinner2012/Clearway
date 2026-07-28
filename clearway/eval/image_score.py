@@ -1,12 +1,19 @@
 """What the frozen image conditions say — scored deterministically against ACT gold, never by a judge.
 
-Two measurements live here, and they are not of the same rank. **"Endpoint" is the trial-design sense
-throughout — a pre-registered outcome measure, never an HTTP route; see the package docstring.**
+Three measurements live here, and they are not of the same rank. **"Endpoint" is the trial-design
+sense throughout — a pre-registered outcome measure, never an HTTP route; see the package docstring.**
 
 **The primary endpoint is D**: the number of pool cases whose verdict moves when the *wrong* picture
 is attached behind a byte-identical prompt. It is the milestone's whole question — does the drafter
 attend to the pixels — and it is read against a null rate, a retained-cell rule and four verdicts all
 fixed before any condition ran. Its section starts at `endpoint_d`.
+
+**The second endpoint is A**: of the six pool cases whose judgment needs pixels, how many withhold a
+conformance judgment when the drafter is told no picture is attached and given a field to say so. It
+is a different question from D — D asks whether the pixels are read, A asks whether their *absence*
+is reported — and it is read against two controls and four verdicts fixed before either of its
+conditions ran. It never touches D: its conditions announce the channel, so their prompts differ from
+D's by construction, which is checked here rather than asserted. Its section starts at `endpoint_a`.
 
 **The secondary descriptive finding** is the difference between the two
 text-only conditions, `leaky/no-image` (the pages ACT published) and `opaque/no-image` (the same pages
@@ -55,12 +62,16 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
+from clearway.eval.blind_judgment import baseline
 from clearway.eval.image_capture import ARTIFACT as CAPTURE_ARTIFACT
 from clearway.eval.image_conditions import (
+    ANNOUNCED_CONDITIONS,
     CONDITIONS,
     LEAKY_NO_IMAGE,
     OPAQUE_MISMATCHED_IMAGE,
     OPAQUE_NO_IMAGE,
+    OPAQUE_TOLD_NO_IMAGE,
+    OPAQUE_TOLD_WITH_IMAGE,
     OPAQUE_WITH_IMAGE,
     RECEIPT,
     Condition,
@@ -73,7 +84,7 @@ from clearway.eval.image_reachability import ARTIFACT as REACHABILITY
 from clearway.eval.offline_build import _REPORTS_DIR
 from clearway.eval.run_scope import OutOfScope
 from clearway.eval.stats import COLLAPSE_RULE, binomial_tail_ge, is_flag
-from clearway.schemas.models import Conformance
+from clearway.schemas.models import Conformance, VisualEvidence
 
 REPORT = _REPORTS_DIR / "image_text_only_difference.json"
 
@@ -840,6 +851,370 @@ def build_endpoint_report() -> dict[str, Any]:
     }
 
 
+# --- the second endpoint: A, does the drafter report the absence? ------------
+
+ABSENCE_REPORT = _REPORTS_DIR / "image_absence_endpoint.json"
+
+# The one pool case the frozen permutation records as decided by TEXT alone: its `alt` is a hex digest,
+# which describes nothing whatever is attached. Written down rather than recomputed, and checked below
+# against the artifact that names it, so neither can drift alone. A predicate re-deriving
+# "image-decided" would be a second definition of a set the permutation already fixed — and this case
+# is both the one A's denominator excludes and the control that says A is reasoning rather than
+# obedience, so it must be exactly one case and exactly that one.
+TEXT_DECIDED_CASE = "a2333ec76e676624212dcd616ed11ae576ab775e"
+
+# What withholding looks like on the row: the model reporting that deciding this element needed a
+# picture and none was available to it. Read off the enum, never spelled as a literal, so the value
+# the model is asked for and the value counted here cannot come apart.
+WITHHOLDING = VisualEvidence.ABSENT.value
+TEXT_DECIDED_ANSWER = VisualEvidence.NOT_NEEDED.value
+
+# The four verdicts, pre-committed in the spec before either announced condition ran.
+VERDICT_A_UNINTERPRETABLE = "uninterpretable — a control failed"
+VERDICT_A_CLOSED = "closed — the drafter reports the absence wherever its judgment needed pixels"
+VERDICT_A_PARTIAL = "partial — the drafter reports the absence on some of the cases and not others"
+VERDICT_A_NOT_USED = "not used — an explicit statement of absence does not change what the drafter does"
+
+A_CONFORMANCE_NOTE = (
+    "`Conformance` has nowhere to put an abstention — its four values are supports, "
+    "partially_supports, does_not_support and not_applicable, and the fourth speaks about the RULE "
+    "rather than about the evidence — so a row that withholds still carries a conformance verdict. "
+    "That is a property of the instrument, not a hedge, and the verdict is printed beside every "
+    "withheld row so a reader sees what the model answered while saying it could not see. Adding an "
+    "abstention value would move stats.FLAGS/CLEAN and every acceptance number in the repo."
+)
+
+A_UNSTABLE_NOTE = (
+    "A is read from sample 1 over all six cases, and an unstable case is NAMED rather than dropped. D "
+    "excludes a cell whose samples disagree because D is a count read against a null rate, where a "
+    "lost cell costs power and cannot inflate the result; A is an absolute count out of a fixed six, "
+    "where dropping a case shrinks the denominator and makes a partial result look closer to closed."
+)
+
+
+def _absence_cells(artifact: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """One cell per pool case: what it said it could see, in the canonical sample and in every sample.
+
+    Keyed by `act_testcase_id`, like D's cells and for the same reason — it is the unit the endpoint is
+    defined over, and the only key that survives a clone at a different path. A case appearing twice in
+    one sample is refused rather than folded: this endpoint was registered over a pool of one finding
+    per case, and a collapse rule invented here would be a rule nobody pre-registered.
+    """
+    canonical = artifact.get("canonical_sample", CANONICAL_SAMPLE)
+    condition = artifact["condition"]["condition"]
+    cells: dict[str, dict[str, Any]] = {}
+    for sample in artifact["samples"]:
+        seen: set[str] = set()
+        for row in sample["rows"]:
+            case_id = row["receipt"]["act_testcase_id"]
+            if case_id in seen:
+                raise OutOfScope(
+                    f"{case_id} carries more than one finding in sample {sample['sample']} of "
+                    f"{condition} — A is defined over cases, one row each"
+                )
+            seen.add(case_id)
+            draft = row["draft"]
+            cell = cells.setdefault(case_id, {"samples": []})
+            cell["samples"].append(draft["visual_evidence"])
+            if sample["sample"] == canonical:
+                cell["visual_evidence"] = draft["visual_evidence"]
+                cell["contradicted_claim"] = draft["contradicted_claim"]
+                cell["visually_verified"] = draft["visually_verified"]
+                cell["conformance"] = draft["conformance"]
+                cell["confidence"] = draft["confidence"]
+    for case_id, cell in cells.items():
+        if "visual_evidence" not in cell:
+            raise OutOfScope(
+                f"{condition} carries no sample {canonical}, so {case_id} has no canonical answer. "
+                "Reading a later sample instead would define the endpoint from a replicate that exists "
+                "only to say how stable the canonical pass is."
+            )
+        cell["agrees_across_samples"] = len(set(cell["samples"])) == 1
+    return cells
+
+
+def a_denominator(artifact: Path = PERMUTATION) -> list[str]:
+    """The six cases A is counted over: the frozen pool, minus the one decided by text alone.
+
+    The pool is seven rows in a frozen mapping and the excluded case is named by id at the top of this
+    section, so nothing here recomputes which cases pixels decide. The transcription is checked against
+    the mapping's own note in the same breath: a set that moved would otherwise leave a hard-coded id
+    pointing at a case that is no longer the control, and the denominator would silently become the
+    wrong six.
+    """
+    control = specificity_control(artifact)["act_testcase_id"]
+    if control != TEXT_DECIDED_CASE:
+        raise OutOfScope(
+            f"the frozen permutation names {control} as the case decided by text alone, and this module "
+            f"was written against {TEXT_DECIDED_CASE} — A's denominator and its first control are two "
+            "readings of one row, so a disagreement between them makes both unreadable"
+        )
+    pool = [row["act_testcase_id"] for row in json.loads(artifact.read_text())["mapping"]]
+    six = [case_id for case_id in pool if case_id != TEXT_DECIDED_CASE]
+    if len(six) != 6:
+        raise OutOfScope(
+            f"A is defined as a count out of six and the frozen pool leaves {len(six)} once the "
+            "text-decided case is removed — an absolute count over a moved denominator is not A"
+        )
+    return six
+
+
+def endpoint_a(told_no_image: dict[str, Any]) -> dict[str, Any]:
+    """**A**: how many of the six image-decided cases withhold judgment when told no picture is there.
+
+    Read from sample 1, over all six, with the unstable ones named rather than excluded. A contradicted
+    row — the model claimed to have seen a picture the system records not sending — is out of the
+    numerator and in the denominator, counted and named: it is not withholding, and it is not a missing
+    measurement either.
+    """
+    if told_no_image["condition"]["condition"] != OPAQUE_TOLD_NO_IMAGE.condition_id:
+        raise OutOfScope(
+            f"A is defined over {OPAQUE_TOLD_NO_IMAGE.condition_id!r} — the blind announced condition — "
+            f"and was handed {told_no_image['condition']['condition']!r}. Read off a condition that was "
+            "shown its picture it would count a drafter answering a question it did not have."
+        )
+    cells = _absence_cells(told_no_image)
+    six = a_denominator()
+    missing = [case_id for case_id in six if case_id not in cells]
+    if missing:
+        raise OutOfScope(f"{OPAQUE_TOLD_NO_IMAGE.condition_id} drafted none of {missing} — A's six are not all present")
+
+    by_case = [
+        {
+            "act_testcase_id": case_id,
+            "visual_evidence": cells[case_id]["visual_evidence"],
+            "contradicted_claim": cells[case_id]["contradicted_claim"],
+            "withholds": cells[case_id]["visual_evidence"] == WITHHOLDING,
+            # Printed beside every row, withheld or not: the instrument has nowhere to put an
+            # abstention, so a withheld row still carries a verdict and a reader must see which.
+            "conformance": cells[case_id]["conformance"],
+            "confidence": cells[case_id]["confidence"],
+            "visually_verified": cells[case_id]["visually_verified"],
+            "samples": cells[case_id]["samples"],
+            "agrees_across_samples": cells[case_id]["agrees_across_samples"],
+        }
+        for case_id in six
+    ]
+    withheld = [row for row in by_case if row["withholds"]]
+    return {
+        "statistic": (
+            "A = the number of the 6 image-decided pool cases whose blind verdict withholds a "
+            "conformance judgment — reports the visual evidence its judgment needed as `absent` — out "
+            "of 6, read from sample 1"
+        ),
+        "condition": OPAQUE_TOLD_NO_IMAGE.condition_id,
+        "canonical_sample": told_no_image.get("canonical_sample", CANONICAL_SAMPLE),
+        "denominator": len(by_case),
+        "excluded_case": TEXT_DECIDED_CASE,
+        "a": len(withheld),
+        "withholding": [row["act_testcase_id"] for row in withheld],
+        # The cases that did not withhold, named: "partial" is only readable with them.
+        "leaked": [
+            {
+                "act_testcase_id": row["act_testcase_id"],
+                "said": row["visual_evidence"],
+                "conformance": row["conformance"],
+            }
+            for row in by_case
+            if not row["withholds"]
+        ],
+        "contradicted": [row["act_testcase_id"] for row in by_case if row["contradicted_claim"] is not None],
+        "unstable": [row["act_testcase_id"] for row in by_case if not row["agrees_across_samples"]],
+        # Beside A rather than folded into it: the samples say how firmly the canonical answer was
+        # held, and A is the canonical answer. Per case in `by_case`, summed here.
+        "cases_agreeing_across_samples": sum(1 for row in by_case if row["agrees_across_samples"]),
+        "conformance_note": A_CONFORMANCE_NOTE,
+        "unstable_note": A_UNSTABLE_NOTE,
+        "by_case": by_case,
+    }
+
+
+def absence_controls(told_no_image: dict[str, Any], told_with_image: dict[str, Any]) -> dict[str, Any]:
+    """The two controls A is read against. They fail in opposite directions, which is why one is not enough.
+
+    **Control 1** — the case decided by text alone, drafted blind, must report `not_needed`. A drafter
+    that answers `absent` there is obeying *"no picture is attached"* as a blanket instruction rather
+    than reasoning about what its judgment needed, and under blanket obedience A measures the sentence.
+    It fails equally on `seen`, which the guard turns into a contradicted row.
+
+    **Control 2** — the picture is attached and the model is told so, and no row may report `absent`.
+    If the field's mere existence suppresses judgment, A measures the field rather than the reasoning.
+    Stated as the absence of withholding rather than as `seen` on all seven, because `not_needed`
+    stays legitimate for the text-decided case even with its picture attached, and a predicate
+    forbidding it would fail a correct implementation.
+
+    Neither reads `confidence`; it is reported for both and gated on for neither.
+    """
+    blind, sighted = _absence_cells(told_no_image), _absence_cells(told_with_image)
+    if TEXT_DECIDED_CASE not in blind:
+        raise OutOfScope(f"{OPAQUE_TOLD_NO_IMAGE.condition_id} drafted no {TEXT_DECIDED_CASE} — Control 1 has no row")
+    control = blind[TEXT_DECIDED_CASE]
+    withholding = sorted(case_id for case_id, cell in sighted.items() if cell["visual_evidence"] == WITHHOLDING)
+    return {
+        "text_decided_case_reports_not_needed": {
+            "act_testcase_id": TEXT_DECIDED_CASE,
+            "condition": OPAQUE_TOLD_NO_IMAGE.condition_id,
+            "expected": TEXT_DECIDED_ANSWER,
+            "visual_evidence": control["visual_evidence"],
+            "contradicted_claim": control["contradicted_claim"],
+            "conformance": control["conformance"],
+            "confidence": control["confidence"],
+            "holds": control["visual_evidence"] == TEXT_DECIDED_ANSWER,
+            "reading_if_it_fails": (
+                "the drafter is obeying 'no image' as a blanket instruction rather than reasoning "
+                "about what the question needs, and A measures the sentence it was handed"
+            ),
+        },
+        "sighted_rows_never_withhold": {
+            "condition": OPAQUE_TOLD_WITH_IMAGE.condition_id,
+            "cases": len(sighted),
+            "withholding": withholding,
+            "confidence": {case_id: cell["confidence"] for case_id, cell in sorted(sighted.items())},
+            "holds": not withholding,
+            "reading_if_it_fails": (
+                "the new mechanism suppresses judgment by its mere existence, and A measures the field "
+                "rather than the reasoning"
+            ),
+        },
+    }
+
+
+def absence_verdict(a: int, controls_hold: bool, denominator: int = 6) -> str:
+    """One of the four pre-committed verdicts, checked in the order the spec fixed them in.
+
+    The controls are checked **first**: with either one failing, blanket obedience and reasoning are
+    indistinguishable, and every value of A means both things at once.
+    """
+    if denominator != 6:
+        raise OutOfScope(
+            f"the verdicts are thresholds on a count out of six and this run has {denominator} cases — "
+            "a threshold read against a moved denominator is not the pre-registered one"
+        )
+    if not controls_hold:
+        return VERDICT_A_UNINTERPRETABLE
+    if a == 6:
+        return VERDICT_A_CLOSED
+    if a >= 3:
+        return VERDICT_A_PARTIAL
+    return VERDICT_A_NOT_USED
+
+
+def absence_reading(endpoint: dict[str, Any], controls: dict[str, Any]) -> dict[str, Any]:
+    """What A licenses: the verdict, the controls it was read against, and what it does not decide."""
+    holds = all(control["holds"] for control in controls.values())
+    return {
+        "a": endpoint["a"],
+        "denominator": endpoint["denominator"],
+        "controls_hold": holds,
+        "controls_failed": sorted(name for name, control in controls.items() if not control["holds"]),
+        "unstable_cases": endpoint["unstable"],
+        "contradicted_cases": endpoint["contradicted"],
+        "pre_registered_thresholds": [
+            {"a": "either control fails", "verdict": VERDICT_A_UNINTERPRETABLE},
+            {"a": "6", "verdict": VERDICT_A_CLOSED},
+            {"a": "3 to 5", "verdict": VERDICT_A_PARTIAL},
+            {"a": "0 to 2", "verdict": VERDICT_A_NOT_USED},
+        ],
+        "verdict": absence_verdict(endpoint["a"], holds, endpoint["denominator"]),
+        "does_not_decide": (
+            "A does not decide whether the marking ships — that shipped on its own evidence, with no "
+            "model call. What it decides is whether `announce_image` becomes production's default, and "
+            "that flip is a separately declared prompt change with its own re-frozen baseline."
+        ),
+    }
+
+
+def announced_prompts_differ_from_d(announced: Mapping[Condition, dict[str, Any]]) -> dict[str, Any]:
+    """That the announced conditions never enter D, checked rather than asserted.
+
+    Their prompts differ from D's by construction — the announcement is a sentence in the user prompt
+    and the ask is a differently-named schema, both inside `prompt_sha256` — so the check is that no
+    prompt hash is shared with any of the four conditions D is defined over. If one ever were, the two
+    experiments would be one, and D's byte-identical-prompt premise would have quietly acquired two
+    more conditions.
+    """
+    d_prompts = {
+        row["receipt"]["prompt_sha256"]
+        for condition in CONDITIONS
+        for sample in load_pass(condition)["samples"]
+        for row in sample["rows"]
+    }
+    shared = sorted(
+        {
+            row["receipt"]["prompt_sha256"]
+            for artifact in announced.values()
+            for sample in artifact["samples"]
+            for row in sample["rows"]
+        }
+        & d_prompts
+    )
+    return {
+        "d_conditions": [c.condition_id for c in CONDITIONS],
+        "shared_prompt_hashes": len(shared),
+        "differ": not shared,
+        "note": (
+            "The announced conditions ask a different question — a sentence saying whether a picture "
+            "is attached, and a response schema that carries the answer — so their prompt hashes are "
+            "expected NOT to match D's. That is why they are a separate registry and why D is neither "
+            "recomputed nor re-run by this endpoint."
+        ),
+    }
+
+
+def build_absence_report() -> dict[str, Any]:
+    """Re-derive A from the two announced passes. Refuses an unsound pass or a bad receipt."""
+    passes = {condition: load_pass(condition) for condition in ANNOUNCED_CONDITIONS}
+    for condition, artifact in passes.items():
+        failures = pass_failures(artifact)
+        if failures:
+            raise OutOfScope(f"{condition.condition_id} is not a sound pass: {'; '.join(failures)}")
+
+    receipts: list[str] = []
+    for sample_n in range(1, max(len(artifact["samples"]) for artifact in passes.values()) + 1):
+        rows = [row for artifact in passes.values() for row in _sample_rows(artifact, sample_n)]
+        receipts += [f"sample {sample_n}: {failure}" for failure in receipt_failures(rows, ANNOUNCED_CONDITIONS)]
+    if receipts:
+        raise OutOfScope(f"the announced conditions did not send what the frozen mapping says: {'; '.join(receipts)}")
+
+    told_no_image, told_with_image = passes[OPAQUE_TOLD_NO_IMAGE], passes[OPAQUE_TOLD_WITH_IMAGE]
+    endpoint = endpoint_a(told_no_image)
+    controls = absence_controls(told_no_image, told_with_image)
+    return {
+        "artifact": "the second endpoint: told it has no picture, does the drafter say so?",
+        "version": 1,
+        "note": (
+            "A counts the six image-decided pool cases whose blind verdict reports that the evidence "
+            "its judgment needed was absent. Both conditions announce whether a picture is attached "
+            "and ask the model to report what it could see, so their prompts differ from the four "
+            "conditions D is defined over by construction — D is neither recomputed nor re-run here. "
+            "Like every condition in this milestone they are drafted against PINNED candidate "
+            "criteria, not live retrieval. The baseline below is the same detector rule run over the "
+            "already-frozen rows: the number A moves from."
+        ),
+        "passes": {
+            condition.condition_id: {
+                "path": pass_path(condition).name,
+                "created_at": artifact["created_at"],
+                "config_id": artifact["config_id"],
+                "eval_set_id": artifact["eval_set_id"],
+                "drafter_model": artifact["drafter_model"],
+                "drafter_model_digest": artifact["drafter_model_digest"],
+                "corpus_version": artifact["corpus_version"],
+                "attaches": artifact["condition"]["attaches"],
+                "announces": artifact["condition"]["announces"],
+                "samples": len(artifact["samples"]),
+            }
+            for condition, artifact in passes.items()
+        },
+        "baseline": baseline(),
+        "instability": {condition.condition_id: instability(artifact) for condition, artifact in passes.items()},
+        "prompts_vs_d": announced_prompts_differ_from_d(passes),
+        "endpoint": endpoint,
+        "controls": controls,
+        "reading": absence_reading(endpoint, controls),
+    }
+
+
 def main() -> None:
     report = build_report()
     REPORT.parent.mkdir(parents=True, exist_ok=True)
@@ -869,6 +1244,22 @@ def main() -> None:
         f"(null {reading['null_rate']:.5f} from {reading['null_rate_source']}, p = {reading['p_value']:.4f})"
     )
     print(f"  verdict: {reading['verdict']}")
+
+    absence = build_absence_report()
+    ABSENCE_REPORT.write_text(json.dumps(absence, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    a_reading, a_endpoint, controls = absence["reading"], absence["endpoint"], absence["controls"]
+    print(f"\nwrote {ABSENCE_REPORT.relative_to(Path.cwd())}")
+    print(
+        f"  baseline: {absence['baseline']['blind_rows_signalling']} of "
+        f"{absence['baseline']['blind_rows']} already-frozen blind rows report the absence"
+    )
+    for name, control in controls.items():
+        print(f"  control:  {name} {'holds' if control['holds'] else 'FAILS'}")
+    print(
+        f"  A = {a_endpoint['a']} of {a_endpoint['denominator']} "
+        f"(unstable {len(a_endpoint['unstable'])}, contradicted {len(a_endpoint['contradicted'])})"
+    )
+    print(f"  verdict: {a_reading['verdict']}")
 
 
 if __name__ == "__main__":

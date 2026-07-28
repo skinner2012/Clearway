@@ -41,6 +41,12 @@ _ALLOWED_READS: dict[str, str] = {
         "the verdict and never read back: the difference and the endpoint are scored on the "
         "conformance collapse against gold, and nothing there weights or thresholds by confidence"
     ),
+    "eval/image_score.py": (
+        "prints it beside each row of the absence endpoint's two controls — reported for both and "
+        "gated on by neither, which is how the controls were pre-registered. It appears in the "
+        "artifact and in no predicate: A counts `visual_evidence` values, and both controls are "
+        "equalities on that field"
+    ),
     "eval/offline.py": "reads the frozen artifact back",
     "eval/kappa.py": "replays frozen drafts into receipt points",
     "eval/drafter_score.py": "the benchmark's receipt — ECE and over-confidence gap per run",

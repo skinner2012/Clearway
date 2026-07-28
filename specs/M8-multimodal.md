@@ -836,6 +836,14 @@ lacks the picture. They do **not** enter D — see the ⚠️ under Control 5.
   preserved and continue, while an unparseable-output fallback still aborts as today. The two are
   distinguishable and must not be collapsed. A contradicted row is not withholding: out of A's
   numerator, still in its denominator, counted and named.
+  - **⚠️ Written back after T8 shipped: at that seam they are not yet distinguishable, and the claim
+    is already gone.** Both failures produce the byte-identical `_fallback` row and a `DraftResult`
+    that records only the request, so `_draft_row` alone can neither tell them apart nor preserve what
+    the model claimed — it would have to abort on the measurement. **The channel is T9's to build**
+    (the natural shape: the guard sets the contradicted claim on `DraftResult`, which already carries
+    an optional field for something a hand-built result does not have), and `drafter/llm.py` joins
+    T9's Sites for it. T8 was right not to add it: a field nothing yet reads is a channel measured by
+    nobody.
 - **⚠️ Their instability does not feed D's null rate.** `null_rate` takes the artifacts it is given, and
   six conditions instead of four would move a number the endpoint was already read against. D is not
   recomputed — Control 5 — and that includes its denominator. This ticket's within-condition agreement
@@ -870,7 +878,8 @@ prompt change, not part of this ticket's acceptance.
 
 **Sites.** `eval/image_conditions.py` (`Condition.announces`, `ANNOUNCED_CONDITIONS`, `condition_by_id`,
 `receipt_failures` signature); `eval/image_pass.py` (`_draft_row` records both new fields and
-distinguishes a contradiction from an unparseable fallback); `eval/image_score.py` (A, its two controls,
+distinguishes a contradiction from an unparseable fallback); `drafter/llm.py` (the channel that carries
+the contradicted claim out of the guard — see the ⚠️ above); `eval/image_score.py` (A, its two controls,
 the verdict).
 
 **Acceptance.**

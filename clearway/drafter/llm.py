@@ -67,6 +67,34 @@ Three properties, each load-bearing rather than tidy:
 * **What was sent is recorded.** `DraftResult.request` carries the request as a value — prompts,
   schema name, and the attached picture's digest — so a receipt records the sha256 of what actually
   went out instead of re-deriving what probably did.
+
+Judging blind, and knowing it
+-----------------------------
+A whole class of question here is decided by pixels, and this drafter is routinely asked one of them
+with no pixels attached. That is legitimate — production scans do not always capture — but answering
+it *confidently and silently* is not, and it is the same family of failure as a confidence number
+that does not move with correctness. Three pieces, each doing one job:
+
+* **`visually_verified` is the system's own fact**, written by `_visually_verified` from what this
+  module knows at the seam: a pixel-decided finding drafted with no picture carries `False`. It needs
+  no model, it costs nothing, and it is what a row is marked with.
+* **`visual_evidence` is the model's claim** about the evidence its judgment needed, and it is
+  written only where the model was actually asked for it (`announce_image=True`). Two fields rather
+  than one, because a single field would let the deterministic value stand in for the model's answer
+  and any later measurement over it would be measuring this module rather than the drafter.
+* **A row claiming `seen` against `visually_verified is False` fails**, and degrades through the
+  existing validate-retry-then-fallback contract rather than through a second failure mode.
+
+`announce_image` defaults **off**, and that is a control rather than caution: shipped on
+unconditionally the announcement sentence moves every payload hash in
+`benchmark/reports/drafter_payload_baseline.json` — the pre-wiring comparison those hashes exist for.
+Two gates keep it still: the parameter (no existing caller changes at all) and the class gate (a
+finding outside `PIXEL_DECIDED_RULES` is byte-identical even after the parameter flips). The
+announced call also asks under its **own schema class**, because `LLMRequest` records
+`schema.__name__` and not the schema's shape: widening `_LLMDraft` in place would change what the
+model is asked to produce while moving neither `prompt_sha256` nor `payload_sha256`. That residual
+gap — a field added in place is invisible to both hashes — is routed around here, not closed, and is
+recorded in `CONTRACTS.md` §5.
 """
 
 from __future__ import annotations
@@ -77,7 +105,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from clearway.llm import ImagePart, LLMClient, LLMRequest, LLMUsage
 from clearway.oracle import tag_to_sc_ids
-from clearway.schemas.models import AxeBucket, Citation, Conformance, DraftRow, Finding
+from clearway.schemas.models import AxeBucket, Citation, Conformance, DraftRow, Finding, VisualEvidence
 
 _FALLBACK_CONFIDENCE = 0.0  # a draft we could not parse is worth nothing — say so, don't crash
 FALLBACK_REMEDIATION = "(draft unavailable — the model did not return a usable response)"
@@ -118,6 +146,15 @@ _ORACLE_GROUNDED_CONFIDENCE = 1.0
 # prompt, with the budget named, so a bounded excerpt is never read as the whole criterion.
 NORMATIVE_TEXT_CHARS = 400
 _TRUNCATION_NOTE = f" (normative text truncated at {NORMATIVE_TEXT_CHARS} characters)"
+
+# The classes whose judgment is decided by PIXELS — pinned here, beside the drafter that acts on it.
+#
+# Keyed by the RULE, where the scanner's `image_ref` is keyed by the NODE, and both are right. *"Did
+# this node render a picture"* is a property of the node, which is why a reference rides on one; *"does
+# this class's judgment need pixels"* is a property of the QUESTION, and a rule firing on the same node
+# can ask a question no picture answers. It is never inferred from `image_ref`, which is `None` in
+# exactly the case the marking exists for.
+PIXEL_DECIDED_RULES = frozenset({"image-alt"})
 
 
 class ImageOnAssembledPath(ValueError):
@@ -161,6 +198,27 @@ class _LLMDraft(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
 
 
+class _LLMDraftVisualEvidence(_LLMDraft):
+    """`_LLMDraft` plus the one field the **announced** ask adds: what the model could see.
+
+    A subclass rather than a widening of `_LLMDraft`, and the reason is a hash. `LLMRequest.of`
+    records `schema.__name__` — the class name, not its shape — so adding this field to `_LLMDraft` in
+    place would change what the model is asked to produce while moving neither `prompt_sha256` nor
+    `payload_sha256`: the control built to catch a moved ask, blind to a moved answer. A distinct name
+    moves the hash exactly when the ask moves, with no change to `LLMRequest`; the unannounced path
+    keeps asking under `_LLMDraft`, so its existing hashes are not merely equal but produced by
+    identical code; and a field the model was never asked for cannot be filled by accident, being
+    absent from the shape it answers under.
+
+    Required rather than defaulted: this class exists only where the prompt explains the field, so a
+    response omitting it is off-schema and takes the same retry-then-degrade path as any other
+    malformed draft. `None` on a persisted row therefore means *the model was not asked*, never *the
+    model declined to answer*.
+    """
+
+    visual_evidence: VisualEvidence
+
+
 class _LLMRemediation(BaseModel):
     """The single field the LLM still writes for a CONFIRMED violation: how to fix it.
 
@@ -202,14 +260,24 @@ class Drafter:
         self._client = client
         self._retries = retries
 
-    def draft(self, finding: Finding, citations: list[Citation], image: ImagePart | None = None) -> DraftRow:
+    def draft(
+        self,
+        finding: Finding,
+        citations: list[Citation],
+        image: ImagePart | None = None,
+        announce_image: bool = False,
+    ) -> DraftRow:
         """Convenience for callers that only want the row (offline mechanics tests, the gated
         real-model tests). The durable orchestrator uses `draft_with_usage` to also thread usage
         into the `Trace`."""
-        return self.draft_with_usage(finding, citations, image).row
+        return self.draft_with_usage(finding, citations, image, announce_image).row
 
     def draft_with_usage(
-        self, finding: Finding, citations: list[Citation], image: ImagePart | None = None
+        self,
+        finding: Finding,
+        citations: list[Citation],
+        image: ImagePart | None = None,
+        announce_image: bool = False,
     ) -> DraftResult:
         """Draft the row **and** return the usage of the LLM call that produced it. Usage is the
         successful call's; a fallback (model never parsed) carries empty usage — the tokens the
@@ -220,6 +288,13 @@ class Drafter:
 
         `image` is optional and only the judgment path can carry it — see `ImageOnAssembledPath` for
         why the other path refuses rather than ignores one.
+
+        `announce_image` tells the model whether a picture is attached and asks it to report what its
+        judgment could see. **Default off** — see the module docstring for the two hashes that keeps
+        still. It reaches the judgment path only: the assembled path takes no picture, re-judges
+        nothing, and is left byte-identical rather than given a sentence about evidence it does not
+        use. That is why the flag is not refused there — nothing is dropped by ignoring it, and the
+        row says so, since `visual_evidence` stays `None` wherever no model wrote one.
         """
         sc_ids = confirmed_violation_sc_ids(finding)
         if sc_ids:
@@ -231,27 +306,41 @@ class Drafter:
                     "row would be indistinguishable from one the model saw the picture for"
                 )
             return self._draft_remediation(finding, citations, sc_ids)
-        return self._draft_judgment(finding, citations, image)
+        return self._draft_judgment(finding, citations, image, announce_image)
 
     def _draft_judgment(
-        self, finding: Finding, citations: list[Citation], image: ImagePart | None = None
+        self,
+        finding: Finding,
+        citations: list[Citation],
+        image: ImagePart | None = None,
+        announce_image: bool = False,
     ) -> DraftResult:
         """The full judgment draft: the model decides conformance, citations and confidence — from the
         prompt, and from the picture where one is attached.
 
         The request is built once, before the retry loop, and returned on the result: every attempt
         sends the identical ask, so what is recorded is what was sent however many attempts it took,
-        including the attempt sequence that ended in the fallback."""
-        system = _system_prompt()
-        user = _user_prompt(finding, citations)
-        request = LLMRequest.of(system, user, _LLMDraft, image)
+        including the attempt sequence that ended in the fallback.
+
+        A row that claims it saw a picture this module never sent is refused exactly like an
+        off-schema one: retry, then degrade to the visible fallback. One failure mode, not two — a
+        second one would need its own detector everywhere `is_fallback_draft` is already read.
+        """
+        announces = _announces_image(finding, announce_image)
+        schema = _LLMDraftVisualEvidence if announces else _LLMDraft
+        verified = _visually_verified(finding, image)
+        system = _system_prompt(announce_image=announces)
+        user = _user_prompt(finding, citations, announce_image=announce_image, image_attached=image is not None)
+        request = LLMRequest.of(system, user, schema, image)
         for _ in range(self._retries + 1):
-            completion = self._client.complete_json(system, user, _LLMDraft, image)
+            completion = self._client.complete_json(system, user, schema, image)
             try:
-                out = _LLMDraft.model_validate_json(completion.content)
+                out = schema.model_validate_json(completion.content)
             except ValidationError:
                 continue  # model drifted off-schema; try again, then fall back
-            return DraftResult(_assemble(finding, citations, out), completion.usage, request)
+            if _claims_evidence_it_was_never_sent(out, verified):
+                continue  # a row claiming `seen` against the system's own record — same path
+            return DraftResult(_assemble(finding, citations, out, verified), completion.usage, request)
         return DraftResult(_fallback(finding), LLMUsage(), request)
 
     def _draft_remediation(self, finding: Finding, citations: list[Citation], sc_ids: list[str]) -> DraftResult:
@@ -276,7 +365,47 @@ class Drafter:
         return DraftResult(_fallback(finding), LLMUsage(), request)
 
 
-def _system_prompt() -> str:
+def _announces_image(finding: Finding, announce_image: bool) -> bool:
+    """Both gates on the announcement, in one place so no site can apply only one of them.
+
+    The **parameter** keeps every existing caller byte-identical; the **class gate** keeps a finding
+    outside the pixel-decided classes byte-identical even after the parameter is flipped on. Each
+    covers a hole the other leaves, and the answer decides all three halves of the ask at once — the
+    system prompt, the user prompt's block, and the response schema — because `prompt_sha256` covers
+    the schema's name as well as the two prompts.
+    """
+    return announce_image and finding.rule_id in PIXEL_DECIDED_RULES
+
+
+def _visually_verified(finding: Finding, image: ImagePart | None) -> bool | None:
+    """The system's own fact about one judgment, from what this module holds at the seam.
+
+    Tri-state, and the `None` is the load-bearing value: a class no picture decides is not
+    *unverified*, it is a class where the question does not arise, and spelling that `False` would
+    mark every text finding in the product visually unverified. No model, no cost, no way for it to
+    be wrong about the one thing it reports.
+    """
+    if finding.rule_id not in PIXEL_DECIDED_RULES:
+        return None
+    return image is not None
+
+
+def _claims_evidence_it_was_never_sent(out: _LLMDraft, visually_verified: bool | None) -> bool:
+    """A row claiming it saw a picture the system records not having sent — a hallucination catchable
+    with no model and no judge, which is the whole reason the claim and the fact are two fields.
+
+    Only `seen` contradicts: `absent` and `not_needed` are both answers a blind draft may correctly
+    give, and `seen` against `None` is not a contradiction either — that judgment was never one
+    pixels decide, so the model is reporting on evidence this module does not track.
+    """
+    return (
+        isinstance(out, _LLMDraftVisualEvidence)
+        and out.visual_evidence is VisualEvidence.SEEN
+        and visually_verified is False
+    )
+
+
+def _system_prompt(announce_image: bool = False) -> str:
     """The judgment system prompt.
 
     The `cited_sc_ids` rule carries a **citation budget**: cite the single most applicable criterion.
@@ -285,7 +414,25 @@ def _system_prompt() -> str:
     it scores as one hit however loosely each id fits. The budget is stated with an explicit escape in
     both directions (a second id where the finding independently fails it; none where none applies),
     so it narrows the citation set without forcing a citation the model does not believe.
+
+    `announce_image` adds the `visual_evidence` rule, and the default keeps this function returning
+    the exact string it returned before the field existed. The rule states the question as *what this
+    judgment needed*, never *what was attached*: the second is a fact the caller already holds, and a
+    model told there is no picture would answer it correctly by repeating the sentence it was handed.
+
+    **The example's value is `seen`, chosen against the measurement rather than for it.** Whether the
+    drafter reports an absence is counted in `absent` rows, so an example showing `absent` would
+    manufacture the very result; showing `seen` can only make that count harder to reach.
     """
+    visual_evidence_rule = (
+        "- visual_evidence: EXACTLY one of seen | absent | not_needed — about the evidence THIS "
+        "judgment needed, not about what was attached: seen if you examined the picture and used it, "
+        "absent if deciding this element required seeing the picture and none was available to you, "
+        "not_needed if the element can be judged from the text alone\n"
+        if announce_image
+        else ""
+    )
+    visual_evidence_example = ',"visual_evidence":"seen"' if announce_image else ""
     return (
         "You are an accessibility specialist drafting ONE conformance row for a VPAT/ACR. "
         "Output ONLY a single JSON object matching the schema — no prose, no markdown, no code fences.\n"
@@ -296,8 +443,9 @@ def _system_prompt() -> str:
         "finding independently fails that one too; cite none if none of the candidates applies\n"
         "- confidence: a DECIMAL number between 0 and 1 (e.g. 0.85), never a word\n"
         "- remediation: one concrete sentence on how to fix it\n"
+        f"{visual_evidence_rule}"
         'Example: {"conformance":"does_not_support","cited_sc_ids":["1.1.1"],'
-        '"remediation":"Add a descriptive alt attribute.","confidence":0.9}'
+        f'"remediation":"Add a descriptive alt attribute.","confidence":0.9{visual_evidence_example}}}'
     )
 
 
@@ -430,6 +578,25 @@ def _link_name_referent_block(finding: Finding) -> str:
     return "\n" + "\n".join(lines)
 
 
+def _image_announcement_block(finding: Finding, announce_image: bool, image_attached: bool) -> str:
+    """The one sentence that says whether a picture rode with this prompt — or `''`.
+
+    Disjoint by class exactly like the three referent blocks above, and gated on the caller's request
+    as well (`_announces_image` holds both gates). It states a fact and asks for nothing: the field's
+    rules live in the system prompt, and an instruction to *look* here would make an announced call
+    differ from an unannounced one in more than what it announces.
+
+    It is rendered in **both** directions, because "no picture is attached" is the half that matters:
+    the defect this closes is a model answering a question about pixels with no pixels and no sign
+    that anything was missing. Saying so is what gives it somewhere to go.
+    """
+    if not _announces_image(finding, announce_image):
+        return ""
+    if image_attached:
+        return "\nVisual evidence: a picture of this element, as the page rendered it, IS attached to this message."
+    return "\nVisual evidence: NO picture of this element is attached to this message."
+
+
 def _candidate_lines(citations: list[Citation]) -> str:
     """The candidate-criteria block: the id/url line each citation has always rendered, plus — where
     the corpus supplied one — the criterion's bounded normative text on an indented line beneath it.
@@ -448,7 +615,12 @@ def _candidate_lines(citations: list[Citation]) -> str:
     return "\n".join(lines) or "- (none retrieved)"
 
 
-def _user_prompt(finding: Finding, citations: list[Citation]) -> str:
+def _user_prompt(
+    finding: Finding,
+    citations: list[Citation],
+    announce_image: bool = False,
+    image_attached: bool = False,
+) -> str:
     # Three-way framing by provenance. PASSES is the subtle one: axe *passed* the mechanical
     # check (a name/attribute/title EXISTS) but never judged its quality — so without this branch
     # the model reads "has alt text" as conformant and drafts `supports`, defeating the whole
@@ -477,12 +649,15 @@ def _user_prompt(finding: Finding, citations: list[Citation]) -> str:
     # Per-class referent injection: each block is disjoint by class and returns "" for every other
     # class (and for a finding that carries no referent), so `base` stays byte-identical wherever the
     # block does not apply — the property the control's byte-identity guard rests on. The appends
-    # compose in class order and the run keeps clean per-class attribution.
+    # compose in class order and the run keeps clean per-class attribution. The image announcement is
+    # the same idiom on the same terms, and is last because it is about the message rather than the
+    # element: default off, disjoint by class, `''` everywhere it does not apply.
     return (
         base
         + _label_referent_block(finding)
         + _document_title_referent_block(finding)
         + _link_name_referent_block(finding)
+        + _image_announcement_block(finding, announce_image, image_attached)
     )
 
 
@@ -504,9 +679,15 @@ def _resolve_citations(citations: list[Citation], sc_ids: list[str]) -> list[Cit
     return [(by_id.get(sc_id) or Citation(sc_id=sc_id)).model_copy(update={"text": ""}) for sc_id in sc_ids]
 
 
-def _assemble(finding: Finding, citations: list[Citation], out: _LLMDraft) -> DraftRow:
+def _assemble(finding: Finding, citations: list[Citation], out: _LLMDraft, visually_verified: bool | None) -> DraftRow:
     """Build the full `DraftRow` for a judgment draft: identity + severity from code, the semantic
-    verdict from the model, citations resolved from the retrieved set."""
+    verdict from the model, citations resolved from the retrieved set.
+
+    The two evidence fields keep their two owners here. `visual_evidence` is copied off the response
+    and is `None` wherever the model answered under the shape that does not carry it — no model wrote
+    one, so the row holds none. `visually_verified` is passed in, because it is the caller's record of
+    what was sent and not something re-derivable from an answer.
+    """
     return DraftRow(
         finding_id=finding.id,
         conformance=out.conformance,
@@ -514,6 +695,8 @@ def _assemble(finding: Finding, citations: list[Citation], out: _LLMDraft) -> Dr
         remediation=out.remediation,
         severity=finding.impact,
         confidence=out.confidence,
+        visual_evidence=out.visual_evidence if isinstance(out, _LLMDraftVisualEvidence) else None,
+        visually_verified=visually_verified,
     )
 
 
@@ -540,6 +723,11 @@ def _fallback(finding: Finding) -> DraftRow:
     knows. A fallback is the statement "no usable row was produced", and `is_fallback_draft` reads it
     off exactly this signature; dressing it with the assembled citations would give a remediation-less
     row a confident-looking citation set and blunt the one signal that says do not trust it.
+
+    Both evidence fields stay empty for the same reason: nothing was judged here, so there is no
+    judgment for either the model's claim or the system's fact to be about. It is also what keeps this
+    row's signature fixed — one shape for every way a draft can fail, including a claim the system
+    contradicted.
     """
     return DraftRow(
         finding_id=finding.id,

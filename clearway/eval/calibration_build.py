@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Any
 
 from clearway.drafter import Drafter
-from clearway.drafter.llm import _assemble, _LLMDraft, _system_prompt
+from clearway.drafter.llm import _assemble, _LLMDraft, _system_prompt, _visually_verified
 from clearway.eval.kappa import KAPPA_THRESHOLD, analyze, human_verdict
 from clearway.judge import Judge
 from clearway.llm import CloudLLMClient, LLMClient, LocalLLMClient
@@ -198,7 +198,11 @@ def _elicit(client: LLMClient, finding: Finding, citations: list[Citation], user
             out = _LLMDraft.model_validate_json(completion.content)
         except ValueError:
             continue
-        return _assemble(finding, citations, out)
+        # The same system fact a natural draft of this finding would carry: nothing is attached here,
+        # so a pixel-decided class is marked unverified exactly as the production path marks it. This
+        # elicitation exists to produce rows identical in shape to natural ones, and the marking is
+        # part of that shape.
+        return _assemble(finding, citations, out, _visually_verified(finding, None))
     raise RuntimeError(f"elicitation produced no parseable draft for finding {finding.id!r}")
 
 

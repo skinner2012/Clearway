@@ -7,6 +7,7 @@ the shared gateway (`clearway.llm`). The canned drafter was retired to a test do
 
 from clearway.drafter.llm import (
     FALLBACK_REMEDIATION,
+    PIXEL_DECIDED_RULES,
     Drafter,
     DraftResult,
     ImageOnAssembledPath,
@@ -15,6 +16,7 @@ from clearway.drafter.llm import (
 
 __all__ = [
     "FALLBACK_REMEDIATION",
+    "PIXEL_DECIDED_RULES",
     "DraftResult",
     "Drafter",
     "ImageOnAssembledPath",

@@ -1,6 +1,13 @@
 """What the frozen image conditions say — scored deterministically against ACT gold, never by a judge.
 
-The first thing this scores is the **secondary descriptive finding**: the difference between the two
+Two measurements live here, and they are not of the same rank.
+
+**The primary endpoint is D**: the number of pool cases whose verdict moves when the *wrong* picture
+is attached behind a byte-identical prompt. It is the milestone's whole question — does the drafter
+attend to the pixels — and it is read against a null rate, a retained-cell rule and four verdicts all
+fixed before any condition ran. Its section starts at `endpoint_d`.
+
+**The secondary descriptive finding** is the difference between the two
 text-only conditions, `leaky/no-image` (the pages ACT published) and `opaque/no-image` (the same pages
 with every path cue ablated). It is descriptive rather than an endpoint, and it is deliberately *not*
 the ablation gate — that gate is offline and model-free, and it already ran when the set was derived.
@@ -28,11 +35,13 @@ This report survives a clone at a different path, and the other image artifacts 
 ------------------------------------------------------------------------------------
 `capture.json` and the dry receipt map `finding.id → a picture`, and a finding id hashes the case's
 absolute `file://` URI, so both are bound to the working copy that built them. Nothing here recomputes
-a finding id: the pairing is on `act_testcase_id`, and the ids that do appear are read back out of the
-frozen passes rather than derived. So `build_report()` reproduces byte-identically wherever the repo
-sits, and the byte-identity test is a determinism check rather than a check on this directory.
+a finding id: the pairing is on `act_testcase_id`, and every id that appears is read back out of a
+frozen artifact. The endpoint's receipt check does compare two of those path-bound artifacts against
+each other — but both are frozen, so the comparison is between two recordings and not against this
+directory. Both reports therefore reproduce byte-identically wherever the repo sits, and their
+byte-identity tests are determinism checks rather than checks on a path.
 
-Regenerate with `uv run python -m clearway.eval.image_score` once both text-only conditions are
+Regenerate both with `uv run python -m clearway.eval.image_score`, once all four conditions are
 frozen. Pure: no model, no network.
 """
 
@@ -40,17 +49,29 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping, Sequence
 from itertools import combinations
 from pathlib import Path
 from typing import Any
 
-from clearway.eval.image_conditions import LEAKY_NO_IMAGE, OPAQUE_NO_IMAGE, Condition, condition_by_id
-from clearway.eval.image_opaque import ACT_IMAGE_OPAQUE
+from clearway.eval.image_capture import ARTIFACT as CAPTURE_ARTIFACT
+from clearway.eval.image_conditions import (
+    CONDITIONS,
+    LEAKY_NO_IMAGE,
+    OPAQUE_MISMATCHED_IMAGE,
+    OPAQUE_NO_IMAGE,
+    OPAQUE_WITH_IMAGE,
+    RECEIPT,
+    Condition,
+    condition_by_id,
+    receipt_failures,
+)
+from clearway.eval.image_opaque import ACT_IMAGE_OPAQUE, PERMUTATION
 from clearway.eval.image_pass import CANONICAL_SAMPLE, canonical_rows, load_pass, pass_failures, pass_path
 from clearway.eval.image_reachability import ARTIFACT as REACHABILITY
 from clearway.eval.offline_build import _REPORTS_DIR
 from clearway.eval.run_scope import OutOfScope
-from clearway.eval.stats import COLLAPSE_RULE, is_flag
+from clearway.eval.stats import COLLAPSE_RULE, binomial_tail_ge, is_flag
 from clearway.schemas.models import Conformance
 
 REPORT = _REPORTS_DIR / "image_text_only_difference.json"
@@ -382,6 +403,442 @@ def build_report() -> dict[str, Any]:
     }
 
 
+# --- the primary endpoint: D -------------------------------------------------
+
+# The null rate M7 measured on this stack: 1 drifting finding in 54, across three passes of one
+# condition at temperature 0 — numerical nondeterminism from KV-cache reuse, not sampling. It is the
+# FLOOR under M8's own estimate, never a replacement for it: 63 pairs here expect ~1.2 disagreements,
+# which is too coarse to certify a clean run as a clean stack. Recorded in docs/referent-injection-result.md.
+M7_DRIFT_RATE = 1 / 54
+
+# The four verdicts, pre-committed in the spec before any condition ran. Strings rather than an enum
+# because they are quoted verbatim into the milestone's report and must not be paraphrased there.
+VERDICT_CONFIRMED = "delivery confirmed"
+VERDICT_INCONCLUSIVE = "inconclusive — indistinguishable from drift"
+VERDICT_REFUTED = "delivery refuted"
+VERDICT_UNINTERPRETABLE = "uninterpretable — fewer than two retained cells"
+
+# What every disagreement was pre-registered to look like if the pixels are being read: the wrong
+# picture should push the drafter toward does_not_support. Secondary, and never gated on — gating on
+# direction would condition the denominator on the result.
+PREDICTED_DIRECTION = "toward_flag"
+
+SPECIFICITY_CONTROL_READING = (
+    "This cell is dead by design: its alt is a hex digest, which describes no picture, so the correct "
+    "verdict is the same whatever is attached. It stays inside D as a within-experiment control — a "
+    "disagreement here is evidence the manipulation moved something other than perception, so it is "
+    "reported, never dropped."
+)
+
+UNDER_DETECTION_NOTE = (
+    "D systematically under-detects attendance. A mismatched picture may make the drafter genuinely "
+    "uncertain rather than cleanly flip it, and the stability filter codes that uncertainty as noise "
+    "and excludes the cell. The bias is conservative — it can only cost D, never inflate it."
+)
+
+ENDPOINT_REPORT = _REPORTS_DIR / "image_endpoint.json"
+
+
+def _cells(artifact: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """One cell per pool case: its canonical verdict, every sample's verdict, and whether it held.
+
+    Keyed by `act_testcase_id`, because that is the unit D is defined over and the only key that
+    survives a clone at a different path. A case that minted more than one finding is **refused**:
+    collapsing several findings into one cell needs a rule (flag-if-any, in M7's case), and this
+    endpoint was pre-registered over a pool of one finding per case.
+    """
+    canonical = artifact.get("canonical_sample", CANONICAL_SAMPLE)
+    condition = artifact["condition"]["condition"]
+    cells: dict[str, dict[str, Any]] = {}
+    for sample in artifact["samples"]:
+        seen: set[str] = set()
+        for row in sample["rows"]:
+            case_id = row["receipt"]["act_testcase_id"]
+            if case_id in seen:
+                raise OutOfScope(
+                    f"{case_id} carries more than one finding in sample {sample['sample']} of "
+                    f"{condition} — D is defined over cases, and folding several findings into one "
+                    "cell needs a collapse rule this endpoint was never registered under"
+                )
+            seen.add(case_id)
+            cell = cells.setdefault(case_id, {"flags": [], "conformance": []})
+            cell["flags"].append(flagged(row))
+            cell["conformance"].append(row["draft"]["conformance"])
+            if sample["sample"] == canonical:
+                cell["canonical_flag"] = flagged(row)
+                cell["canonical_conformance"] = row["draft"]["conformance"]
+    for case_id, cell in cells.items():
+        if "canonical_flag" not in cell:
+            raise OutOfScope(
+                f"{condition} carries no sample {canonical}, so {case_id} has no canonical verdict. "
+                "Reading a later sample instead would define the endpoint from a replicate that "
+                "exists only to say how stable the canonical pass is."
+            )
+        cell["stable"] = len(set(cell["flags"])) == 1
+    return cells
+
+
+def specificity_control(artifact: Path = PERMUTATION) -> dict[str, Any]:
+    """The cell that should not move, read out of the frozen permutation rather than transcribed.
+
+    Its `alt` is a hex digest: it describes neither the picture the case shows nor the one the
+    manipulation attaches, so its correct verdict is invariant under the swap. Derived from the frozen
+    mapping's own note, so a set that moved cannot leave a hard-coded id pointing at a case that is no
+    longer the control.
+    """
+    frozen = json.loads(artifact.read_text())
+    named = [row for row in frozen["mapping"] if "specificity control" in row["note"]]
+    if len(named) != 1:
+        raise OutOfScope(
+            f"the frozen permutation names {len(named)} specificity controls — the endpoint reports "
+            "exactly one cell that should not move, and neither zero nor two of them can play that part"
+        )
+    row = named[0]
+    return {
+        "act_testcase_id": row["act_testcase_id"],
+        "alt": row["alt"],
+        "live": row["live"],
+        "frozen_note": row["note"],
+        "reading": SPECIFICITY_CONTROL_READING,
+    }
+
+
+def _endpoint_pair(with_image: dict[str, Any], mismatched: dict[str, Any]) -> None:
+    """Refuse anything but the endpoint's two conditions, in that order.
+
+    Order matters and is not a style point: the direction check reads the mismatched condition against
+    the with-image one, so a swapped pair would report every movement backwards.
+    """
+    got = (with_image["condition"]["condition"], mismatched["condition"]["condition"])
+    expected = (OPAQUE_WITH_IMAGE.condition_id, OPAQUE_MISMATCHED_IMAGE.condition_id)
+    if got != expected:
+        raise OutOfScope(
+            f"D is defined between {expected[0]!r} (with-image) and {expected[1]!r}, in that order — "
+            f"got {list(got)}. The direction check reads one against the other, so a swapped pair "
+            "would report every movement backwards."
+        )
+
+
+def endpoint_d(with_image: dict[str, Any], mismatched: dict[str, Any]) -> dict[str, Any]:
+    """**D**: the pool cases whose verdict moved when the picture did, behind an identical prompt.
+
+    Defined over cells fixed in advance, never over verdicts. All seven are in — the four *live* cells
+    describe the power, and a dead cell that moves is evidence the manipulation touched something
+    other than perception, which is exactly why it is not filtered out.
+
+    A cell whose three samples disagree in **either** condition is excluded and named: under an
+    identical ask it moved on its own, so it cannot tell a picture from drift. Since D's threshold is
+    an absolute count, excluding a cell costs power and cannot bias toward confirmation.
+    """
+    _endpoint_pair(with_image, mismatched)
+    left, right = _cells(with_image), _cells(mismatched)
+    if set(left) != set(right):
+        raise OutOfScope(
+            "the two conditions do not cover the same cases — D over the intersection would count "
+            f"whichever cells happened to overlap ({len(set(left) & set(right))} of {len(set(left) | set(right))})"
+        )
+
+    frozen = json.loads(CAPTURE_ARTIFACT.read_text())["resolved_permutation"]
+    if {row["act_testcase_id"] for row in frozen} != set(left):
+        raise OutOfScope(
+            "the conditions cover cases the frozen permutation does not name (or miss ones it does) — "
+            "every cell of D has to be one the mapping was frozen over before any verdict existed"
+        )
+
+    control_id = specificity_control()["act_testcase_id"]
+    by_case = []
+    for row in frozen:
+        case_id = row["act_testcase_id"]
+        this, other = left[case_id], right[case_id]
+        retained = bool(this["stable"] and other["stable"])
+        differs = this["canonical_flag"] != other["canonical_flag"]
+        by_case.append(
+            {
+                "act_testcase_id": case_id,
+                "live": row["live"],
+                "true_image": row["true_image"],
+                "mismatched_image": row["mismatched_image"],
+                "with_image": {
+                    "conformance": this["canonical_conformance"],
+                    "flagged": this["canonical_flag"],
+                    "samples": this["conformance"],
+                    "stable": this["stable"],
+                },
+                "mismatched": {
+                    "conformance": other["canonical_conformance"],
+                    "flagged": other["canonical_flag"],
+                    "samples": other["conformance"],
+                    "stable": other["stable"],
+                },
+                "retained": retained,
+                "differs": differs,
+                "counted_in_d": retained and differs,
+                # The finer movement, recorded beside the collapsed one it cannot replace: D is defined
+                # on the binary collapse, the same axis the null replicates are counted on.
+                "conformance_differs": this["canonical_conformance"] != other["canonical_conformance"],
+                "direction": (
+                    None if not differs else (PREDICTED_DIRECTION if other["canonical_flag"] else "toward_clean")
+                ),
+            }
+        )
+
+    counted = [row for row in by_case if row["counted_in_d"]]
+    control = next(row for row in by_case if row["act_testcase_id"] == control_id)
+    return {
+        "statistic": (
+            "D = the number of pool cases whose opaque/with-image verdict differs from its "
+            "opaque/mismatched-image verdict, over cells fixed in advance"
+        ),
+        "collapse_rule": COLLAPSE_RULE,
+        "cells": len(by_case),
+        "live_cells": sum(1 for row in by_case if row["live"]),
+        "retained": sum(1 for row in by_case if row["retained"]),
+        "live_cells_retained": sum(1 for row in by_case if row["live"] and row["retained"]),
+        "excluded": [row["act_testcase_id"] for row in by_case if not row["retained"]],
+        "d": len(counted),
+        # Reported so an excluded cell that moved is visible rather than absorbed: it is not evidence,
+        # but a reader must be able to see that D and the raw movement are not the same number.
+        "differing_cells_including_excluded": sum(1 for row in by_case if row["differs"]),
+        "direction": {
+            "predicted": PREDICTED_DIRECTION,
+            "toward_flag": sum(1 for row in counted if row["direction"] == "toward_flag"),
+            "toward_clean": sum(1 for row in counted if row["direction"] == "toward_clean"),
+            "note": (
+                "A pre-registered SECONDARY strengthening: if the pixels are being read, the wrong "
+                "picture should push the drafter toward does_not_support. Reported, never gated on — "
+                "gating on direction would re-import a denominator conditioned on the result."
+            ),
+        },
+        "specificity_control": {**specificity_control(), **{k: control[k] for k in ("differs", "retained")}},
+        "by_case": by_case,
+    }
+
+
+def null_rate(artifacts: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """The rate at which this stack answers an identical ask differently — the endpoint's null.
+
+    Pooled over **every** condition that took repeats, **including the cells D excludes**. Estimating
+    it from the retained cells only would be circular: those cells are retained *because* they held,
+    and the excluded ones are the evidence that drift exists, so dropping them from the denominator
+    while acting on them in the numerator biases toward confirmation.
+
+    The rate used is `max(measured here, M7's 1/54)`. M8's own estimate is low-resolution — 63 pairs,
+    expecting about 1.2 disagreements — so it corroborates M7's figure rather than replacing it, and a
+    lucky clean run cannot buy a null rate of zero, under which any single disagreement would look
+    decisive.
+    """
+    per_condition = [instability(artifact) for artifact in artifacts]
+    measurable = [measured for measured in per_condition if measured["measurable"]]
+    if not measurable:
+        raise OutOfScope(
+            "no replicates: every condition given took a single sample, so this stack's disagreement "
+            "rate is not measured here. An unmeasured rate is not a rate of zero."
+        )
+
+    pairs = sum(measured["pairs"] for measured in measurable)
+    disagreeing = sum(measured["disagreeing_pairs"] for measured in measurable)
+    measured_rate = disagreeing / pairs
+    return {
+        "pairs": pairs,
+        "disagreeing_pairs": disagreeing,
+        "measured_rate": measured_rate,
+        "m7_rate": M7_DRIFT_RATE,
+        "rate": max(measured_rate, M7_DRIFT_RATE),
+        "source": "M8" if measured_rate > M7_DRIFT_RATE else "M7",
+        "conditions": per_condition,
+        "not_measurable": [measured["condition"] for measured in per_condition if not measured["measurable"]],
+        "note": (
+            "Pooled over every condition that took repeats, including the cells D excludes — a rate "
+            "estimated from the retained cells alone would be conditioned on the very stability the "
+            "endpoint acts on. The rate used is the max of this and M7's 1 finding in 54, because 63 "
+            "pairs cannot certify a clean stack and a null rate of zero would make one disagreement "
+            "look decisive."
+        ),
+    }
+
+
+def endpoint_verdict(d: int, retained: int) -> str:
+    """One of the four pre-committed verdicts, from D and the retained-cell count alone.
+
+    The uninterpretable branch is checked **first**: below two retained cells, D ≥ 2 is unreachable by
+    construction, so reading D = 0 as *refuted* would publish a false negative as the headline of a
+    measurement that never had the power to say anything.
+    """
+    if retained < 2:
+        return VERDICT_UNINTERPRETABLE
+    if d >= 2:
+        return VERDICT_CONFIRMED
+    if d == 1:
+        return VERDICT_INCONCLUSIVE
+    return VERDICT_REFUTED
+
+
+def endpoint_reading(endpoint: dict[str, Any], null: dict[str, Any]) -> dict[str, Any]:
+    """What D licenses: the verdict, the null rate it was read against, and the tail it implies.
+
+    The tail is computed over the **retained** cells rather than over all seven, so a run that lost
+    cells to drift quotes the power it actually had. The verdict is a function of D and the retained
+    count only — the p-value is reported beside it, never substituted for it, because the thresholds
+    were pre-registered as counts.
+    """
+    d, retained, rate = endpoint["d"], endpoint["retained"], null["rate"]
+    return {
+        "d": d,
+        "cells": endpoint["cells"],
+        "retained": retained,
+        "excluded": endpoint["excluded"],
+        "null_rate": rate,
+        "null_rate_source": null["source"],
+        "measured_null_rate": null["measured_rate"],
+        "p_value": binomial_tail_ge(d, retained, rate),
+        "p_value_note": (
+            f"P(D ≥ {d}) over the {retained} retained cells at a null rate of {rate:.5f}. The "
+            "pre-registered thresholds are counts, so this is reported beside the verdict and never "
+            "in place of it; it says what the retained cells were worth, which a seven-cell tail "
+            "would overstate."
+        ),
+        "pre_registered_thresholds": [
+            {"d": "≥ 2", "p_at_7_cells": binomial_tail_ge(2, 7, M7_DRIFT_RATE), "verdict": VERDICT_CONFIRMED},
+            {"d": "1", "p_at_7_cells": binomial_tail_ge(1, 7, M7_DRIFT_RATE), "verdict": VERDICT_INCONCLUSIVE},
+            {"d": "0", "p_at_7_cells": None, "verdict": VERDICT_REFUTED},
+            {"d": "any, with fewer than 2 retained cells", "p_at_7_cells": None, "verdict": VERDICT_UNINTERPRETABLE},
+        ],
+        "verdict": endpoint_verdict(d, retained),
+        "direction": endpoint["direction"],
+        "note": UNDER_DETECTION_NOTE,
+    }
+
+
+def _sample_rows(artifact: dict[str, Any], sample_n: int) -> list[dict[str, Any]]:
+    """This condition's receipt rows for sample `n`, falling back to its canonical sample.
+
+    The fallback is for the one-sample descriptive condition: it has no second or third pass, and its
+    rows are in every check because the receipt check requires all four conditions to be complete.
+    """
+    for sample in artifact["samples"]:
+        if sample["sample"] == sample_n:
+            return [row["receipt"] for row in sample["rows"]]
+    return [row["receipt"] for row in canonical_rows(artifact)]
+
+
+def receipt_assertion(passes: Mapping[Condition, dict[str, Any]]) -> dict[str, Any]:
+    """The live proof that the manipulation was actually run mismatched — every sample, not just one.
+
+    Two independent claims, kept apart because they falsify different things:
+
+    1. `failures` — the frozen permutation was honoured and the prompts were byte-identical across the
+       opaque conditions, checked by `image_conditions.receipt_failures` over one sample of each of the
+       four conditions at a time. Run per sample rather than on the canonical one alone: a condition
+       whose later samples sent the case's own bytes would still be three samples of *something*, and
+       the endpoint would read them as stability.
+    2. `dry_receipt_failures` — the digests actually sent are the ones the model-free rehearsal froze
+       before a single call was spent. A live pass that attached something else is a different
+       experiment wearing this one's name.
+    """
+    if set(passes) != set(CONDITIONS):
+        raise OutOfScope(
+            "the receipt assertion needs all four conditions — the permutation check is defined "
+            f"across them, and a missing one silently drops its rows from every claim (got "
+            f"{sorted(c.condition_id for c in passes)})"
+        )
+
+    failures: list[str] = []
+    rows_checked = 0
+    samples = max(len(artifact["samples"]) for artifact in passes.values())
+    for sample_n in range(1, samples + 1):
+        rows = [row for artifact in passes.values() for row in _sample_rows(artifact, sample_n)]
+        rows_checked += len(rows)
+        failures += [f"sample {sample_n}: {failure}" for failure in receipt_failures(rows)]
+
+    frozen = {
+        (row["condition"], row["finding_id"]): row["image_sha256"] for row in json.loads(RECEIPT.read_text())["rows"]
+    }
+    dry_failures = []
+    for artifact in passes.values():
+        for sample in artifact["samples"]:
+            for row in sample["rows"]:
+                receipt = row["receipt"]
+                key = (receipt["condition"], receipt["finding_id"])
+                if key not in frozen:
+                    dry_failures.append(f"{key} appears in no rehearsed condition — nothing pre-registered it")
+                elif frozen[key] != receipt["image_sha256"]:
+                    dry_failures.append(
+                        f"{key} sent {str(receipt['image_sha256'])[:8]}…, the rehearsal froze "
+                        f"{str(frozen[key])[:8]}… — a different picture from the pre-registered one"
+                    )
+
+    with_image = {row["finding_id"]: row["image_sha256"] for row in _sample_rows(passes[OPAQUE_WITH_IMAGE], 1)}
+    mismatched = {row["finding_id"]: row["image_sha256"] for row in _sample_rows(passes[OPAQUE_MISMATCHED_IMAGE], 1)}
+    return {
+        "failures": failures,
+        "dry_receipt_failures": dry_failures,
+        "matches_dry_receipt": not dry_failures,
+        "samples_checked": samples,
+        "rows_checked": rows_checked,
+        "digests_differ": sum(1 for fid, ref in with_image.items() if mismatched.get(fid) != ref),
+        "findings": len(with_image),
+        "note": (
+            "A digest per finding per condition, and not a byte count: four of the seven findings "
+            "render the same photograph, so a count check would pass whether or not the frozen "
+            "permutation was honoured. The digests are the ones the drafter reported having sent."
+        ),
+    }
+
+
+def build_endpoint_report() -> dict[str, Any]:
+    """Re-derive the endpoint from the four frozen passes. Refuses an unsound pass or a bad receipt."""
+    passes = {condition: load_pass(condition) for condition in CONDITIONS}
+    for condition, artifact in passes.items():
+        failures = pass_failures(artifact)
+        if failures:
+            raise OutOfScope(f"{condition.condition_id} is not a sound pass: {'; '.join(failures)}")
+
+    receipts = receipt_assertion(passes)
+    if receipts["failures"] or receipts["dry_receipt_failures"]:
+        raise OutOfScope(
+            "the conditions did not send what the frozen mapping says, so D would be a statistic over "
+            f"an unknown manipulation: {'; '.join(receipts['failures'] + receipts['dry_receipt_failures'])}"
+        )
+
+    endpoint = endpoint_d(passes[OPAQUE_WITH_IMAGE], passes[OPAQUE_MISMATCHED_IMAGE])
+    null = null_rate(list(passes.values()))
+    return {
+        "artifact": "the primary endpoint: does the drafter attend to the pixels?",
+        "version": 1,
+        "note": (
+            "D counts the pool cases whose verdict moved when the WRONG picture was attached behind a "
+            "byte-identical prompt. Scored deterministically against the drafted verdicts, never by "
+            "the judge. All four conditions were drafted against PINNED candidate criteria, not live "
+            "retrieval, so none of them reflects what a live retriever would surface; the pinning is "
+            "identical across them and cannot move D. The prompts never say a picture is attached — "
+            "keeping the text identical is what the endpoint rests on, and it also means the model was "
+            "never told to look."
+        ),
+        "passes": {
+            condition.condition_id: {
+                "path": pass_path(condition).name,
+                "created_at": artifact["created_at"],
+                "drafter_model": artifact["drafter_model"],
+                "drafter_model_digest": artifact["drafter_model_digest"],
+                "corpus_version": artifact["corpus_version"],
+                "attaches": artifact["condition"]["attaches"],
+                "samples": len(artifact["samples"]),
+            }
+            for condition, artifact in passes.items()
+        },
+        "conditions": {
+            condition.condition_id: condition_summary(artifact)
+            for condition, artifact in passes.items()
+            if condition.carries_image
+        },
+        "instability": {condition.condition_id: instability(artifact) for condition, artifact in passes.items()},
+        "null_rate": null,
+        "receipts": receipts,
+        "endpoint": endpoint,
+        "reading": endpoint_reading(endpoint, null),
+    }
+
+
 def main() -> None:
     report = build_report()
     REPORT.parent.mkdir(parents=True, exist_ok=True)
@@ -400,6 +857,17 @@ def main() -> None:
     )
     stability = report["instability"][OPAQUE_NO_IMAGE.condition_id]
     print(f"  opaque stability: {stability['disagreeing_pairs']}/{stability['pairs']} pairs disagree")
+
+    endpoint_report = build_endpoint_report()
+    ENDPOINT_REPORT.write_text(json.dumps(endpoint_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    reading, receipts = endpoint_report["reading"], endpoint_report["receipts"]
+    print(f"\nwrote {ENDPOINT_REPORT.relative_to(Path.cwd())}")
+    print(f"  receipts: {receipts['rows_checked']} rows over {receipts['samples_checked']} samples, 0 failures")
+    print(
+        f"  D = {reading['d']} over {reading['retained']}/{endpoint_report['endpoint']['cells']} retained cells "
+        f"(null {reading['null_rate']:.5f} from {reading['null_rate_source']}, p = {reading['p_value']:.4f})"
+    )
+    print(f"  verdict: {reading['verdict']}")
 
 
 if __name__ == "__main__":

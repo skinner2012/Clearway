@@ -83,7 +83,10 @@ that does not move with correctness. Three pieces, each doing one job:
   than one, because a single field would let the deterministic value stand in for the model's answer
   and any later measurement over it would be measuring this module rather than the drafter.
 * **A row claiming `seen` against `visually_verified is False` fails**, and degrades through the
-  existing validate-retry-then-fallback contract rather than through a second failure mode.
+  existing validate-retry-then-fallback contract rather than through a second failure mode. The
+  refused claim leaves on `DraftResult.contradicted_claim`, because the fallback row it degrades to
+  is byte-identical to the unparseable one: without that field a caller cannot tell a model that
+  said nothing usable from one that claimed to have seen a picture nothing sent.
 
 `announce_image` defaults **off**, and that is a control rather than caution: shipped on
 unconditionally the announcement sentence moves every payload hash in
@@ -178,11 +181,19 @@ class DraftResult(NamedTuple):
     because a receipt that reconstructs the request it *thinks* was sent cannot detect the one failure
     that matters: a picture that never left this module. `None` means no call was recorded, which only
     a hand-built `DraftResult` (a test stub, an orchestrator fake) produces.
+
+    `contradicted_claim` is the visual-evidence claim the contradiction guard refused, on a result that
+    degraded because of it. It exists because the guard degrades to the *byte-identical* fallback row:
+    without this field a caller sees the same shape for an unparseable model and for one that claimed
+    to have seen a picture nothing sent, so it can neither tell them apart nor say what was claimed.
+    `None` is every other result, including a draft where a first attempt was contradicted and a retry
+    then produced a usable row — nothing was lost there, so there is nothing to carry out.
     """
 
     row: DraftRow
     usage: LLMUsage
     request: LLMRequest | None = None
+    contradicted_claim: VisualEvidence | None = None
 
 
 class _LLMDraft(BaseModel):
@@ -324,7 +335,10 @@ class Drafter:
 
         A row that claims it saw a picture this module never sent is refused exactly like an
         off-schema one: retry, then degrade to the visible fallback. One failure mode, not two — a
-        second one would need its own detector everywhere `is_fallback_draft` is already read.
+        second one would need its own detector everywhere `is_fallback_draft` is already read. What
+        the two do *not* share is what they say about the model: an unparseable response produced no
+        claim, a contradicted one produced a claim this module threw away. So the claim rides out on
+        the result, where a caller that cares can tell them apart and record what was said.
         """
         announces = _announces_image(finding, announce_image)
         schema = _LLMDraftVisualEvidence if announces else _LLMDraft
@@ -332,16 +346,19 @@ class Drafter:
         system = _system_prompt(announce_image=announces)
         user = _user_prompt(finding, citations, announce_image=announce_image, image_attached=image is not None)
         request = LLMRequest.of(system, user, schema, image)
+        contradicted: VisualEvidence | None = None
         for _ in range(self._retries + 1):
             completion = self._client.complete_json(system, user, schema, image)
             try:
                 out = schema.model_validate_json(completion.content)
             except ValidationError:
                 continue  # model drifted off-schema; try again, then fall back
-            if _claims_evidence_it_was_never_sent(out, verified):
-                continue  # a row claiming `seen` against the system's own record — same path
+            claim = _contradicted_claim(out, verified)
+            if claim is not None:
+                contradicted = claim  # a row claiming `seen` against the system's own record
+                continue
             return DraftResult(_assemble(finding, citations, out, verified), completion.usage, request)
-        return DraftResult(_fallback(finding), LLMUsage(), request)
+        return DraftResult(_fallback(finding), LLMUsage(), request, contradicted)
 
     def _draft_remediation(self, finding: Finding, citations: list[Citation], sc_ids: list[str]) -> DraftResult:
         """The confirmed-violation draft: code owns the verdict and the criteria; the model writes the
@@ -390,19 +407,25 @@ def _visually_verified(finding: Finding, image: ImagePart | None) -> bool | None
     return image is not None
 
 
-def _claims_evidence_it_was_never_sent(out: _LLMDraft, visually_verified: bool | None) -> bool:
-    """A row claiming it saw a picture the system records not having sent — a hallucination catchable
+def _contradicted_claim(out: _LLMDraft, visually_verified: bool | None) -> VisualEvidence | None:
+    """The claim this response makes that the system's own record contradicts, or `None`.
+
+    A row claiming it saw a picture the system records not having sent is a hallucination catchable
     with no model and no judge, which is the whole reason the claim and the fact are two fields.
 
     Only `seen` contradicts: `absent` and `not_needed` are both answers a blind draft may correctly
     give, and `seen` against `None` is not a contradiction either — that judgment was never one
     pixels decide, so the model is reporting on evidence this module does not track.
+
+    It returns the claim rather than a boolean so the refused value survives the refusal. The row that
+    carried it is discarded, and a caller told only *that* something was contradicted would have to
+    re-derive what — from a fallback row which, by design, carries nothing.
     """
-    return (
-        isinstance(out, _LLMDraftVisualEvidence)
-        and out.visual_evidence is VisualEvidence.SEEN
-        and visually_verified is False
-    )
+    if not isinstance(out, _LLMDraftVisualEvidence):
+        return None
+    if out.visual_evidence is VisualEvidence.SEEN and visually_verified is False:
+        return out.visual_evidence
+    return None
 
 
 def _system_prompt(announce_image: bool = False) -> str:

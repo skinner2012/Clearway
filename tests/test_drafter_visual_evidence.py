@@ -128,6 +128,36 @@ def test_a_row_claiming_seen_against_the_record_degrades_to_the_visible_fallback
     assert row.visual_evidence is None  # the degraded row makes no claim of its own
 
 
+def test_the_refused_claim_leaves_on_the_result_because_the_row_it_rode_in_on_is_gone() -> None:
+    """The channel out of the guard. A contradicted draft and an unparseable one degrade to the
+    byte-identical fallback row, so without this field a caller can neither tell them apart nor say
+    what was claimed — and a measurement of what the drafter reports would have to abort on the one
+    answer it exists to count."""
+    client = FakeLLMClient(_announced("seen"))
+    result = Drafter(client).draft_with_usage(_image_finding(), _cite(), announce_image=True)
+    assert is_fallback_draft(result.row) is True
+    assert result.contradicted_claim is VisualEvidence.SEEN
+
+
+def test_an_unparseable_draft_carries_no_refused_claim() -> None:
+    """The other half of the same distinction: nothing was claimed here, so there is nothing to carry
+    out — which is what lets a run abort on this one and record the other."""
+    result = Drafter(FakeLLMClient("not json", "still not json")).draft_with_usage(
+        _image_finding(), _cite(), announce_image=True
+    )
+    assert is_fallback_draft(result.row) is True
+    assert result.contradicted_claim is None
+
+
+def test_a_recovered_retry_carries_no_refused_claim() -> None:
+    """The shipped row is a real judgment and nothing was lost, so there is nothing to report — the
+    field marks a draft the guard *ended*, never one it merely interrupted."""
+    client = FakeLLMClient(_announced("seen"), _announced("absent"))
+    result = Drafter(client).draft_with_usage(_image_finding(), _cite(), announce_image=True)
+    assert is_fallback_draft(result.row) is False
+    assert result.contradicted_claim is None
+
+
 def test_a_retry_that_stops_claiming_seen_ships() -> None:
     """Retry-then-degrade, not abort: the guard is the same failure mode as an off-schema response."""
     client = FakeLLMClient(_announced("seen"), _announced("absent"))

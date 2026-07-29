@@ -1,0 +1,77 @@
+{
+  "created_at": "2026-07-29T23:33:30.311468+00:00",
+  "model_calls_spent": 0,
+  "judge_snapshot": {
+    "model": "gpt-5.6-luna",
+    "available": true,
+    "listed_model_count": 126,
+    "source": "GET https://api.openai.com/v1/models (model listing — metadata, no inference)",
+    "base_url_override": null,
+    "base_url_override_source": null
+  },
+  "judge_pins": {
+    "judge_model": "gpt-5.6-luna",
+    "reasoning_effort": "medium",
+    "judge_version": "rubric=e396f37f; effort=medium",
+    "reasoning_effort_source": "code default"
+  },
+  "budget_source": {
+    "path": "citation_grounding_run_1.json",
+    "sha256": "191e40e5efa83bb82799d1c83579b54246f9ff56781e615f459999df6bb52141",
+    "config_id": "m1-single@1",
+    "eval_set_id": "act-acceptance@1",
+    "cases": 40
+  },
+  "call_budget": {
+    "natural_drafts": 54,
+    "conformance_correct_drafts": 39,
+    "conformance_correct_share": 0.7222,
+    "passes_per_configuration": 3,
+    "anchored_per_pass": 147,
+    "anchored_total": 441,
+    "blind_per_pass": 54,
+    "blind_total": 162,
+    "grand_total_is_a_floor": 603,
+    "max_attempts_per_call": 2,
+    "grand_total_ceiling": 1206,
+    "retry_visibility": "a retried call leaves no trace in the run artifact — one row is written whether the verdict parsed on the first attempt or a later one, so the spend between floor and ceiling cannot be recovered afterwards and has to be read off the provider's usage",
+    "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+    "arithmetic": "anchored = 3 × (54 natural + 54 SC-swap + 39 conformance-flip) = 441; blind = 3 × 54 = 162; floor = 603; ceiling = 603 × 2 attempts = 1206"
+  },
+  "prior_judge_rows": {
+    "run_1.json": {
+      "drafts": 63,
+      "rows_with_all_judge_fields": 63,
+      "partial_rows": 0,
+      "replayable": true,
+      "fields": [
+        "judge_conformance_correct",
+        "judge_citation_correct",
+        "judge_verdict"
+      ]
+    },
+    "run_2.json": {
+      "drafts": 63,
+      "rows_with_all_judge_fields": 63,
+      "partial_rows": 0,
+      "replayable": true,
+      "fields": [
+        "judge_conformance_correct",
+        "judge_citation_correct",
+        "judge_verdict"
+      ]
+    },
+    "run_3.json": {
+      "drafts": 63,
+      "rows_with_all_judge_fields": 63,
+      "partial_rows": 0,
+      "replayable": true,
+      "fields": [
+        "judge_conformance_correct",
+        "judge_citation_correct",
+        "judge_verdict"
+      ]
+    }
+  },
+  "reproducible_digest": "ba5c1fb938921fd62c1b8077af04b17f7f16822603040a7461e0a51825ddd227"
+}

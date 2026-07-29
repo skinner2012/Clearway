@@ -78,7 +78,7 @@ from clearway.eval.image_conditions import (
     condition_by_id,
     receipt_failures,
 )
-from clearway.eval.image_opaque import ACT_IMAGE_OPAQUE, PERMUTATION
+from clearway.eval.image_opaque import ACT_IMAGE_OPAQUE, PERMUTATION, specificity_control_row
 from clearway.eval.image_pass import CANONICAL_SAMPLE, canonical_rows, load_pass, pass_failures, pass_path
 from clearway.eval.image_reachability import ARTIFACT as REACHABILITY
 from clearway.eval.offline_build import _REPORTS_DIR
@@ -494,18 +494,12 @@ def specificity_control(artifact: Path = PERMUTATION) -> dict[str, Any]:
     """The cell that should not move, read out of the frozen permutation rather than transcribed.
 
     Its `alt` is a hex digest: it describes neither the picture the case shows nor the one the
-    manipulation attaches, so its correct verdict is invariant under the swap. Derived from the frozen
-    mapping's own note, so a set that moved cannot leave a hard-coded id pointing at a case that is no
-    longer the control.
+    manipulation attaches, so its correct verdict is invariant under the swap. The identification
+    itself lives beside the note that authors it (`image_opaque.specificity_control_row`) — this cell
+    is also the instance the pixel-decided marking over-fires on, and a case named by two measurements
+    is named once. What this adds is D's reading of it.
     """
-    frozen = json.loads(artifact.read_text())
-    named = [row for row in frozen["mapping"] if "specificity control" in row["note"]]
-    if len(named) != 1:
-        raise OutOfScope(
-            f"the frozen permutation names {len(named)} specificity controls — the endpoint reports "
-            "exactly one cell that should not move, and neither zero nor two of them can play that part"
-        )
-    row = named[0]
+    row = specificity_control_row(artifact)
     return {
         "act_testcase_id": row["act_testcase_id"],
         "alt": row["alt"],

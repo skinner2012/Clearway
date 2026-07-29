@@ -344,6 +344,33 @@ def permutation(cases: list[dict[str, Any]], opaque_url_for: Mapping[str, str]) 
     }
 
 
+# The phrase `CELL_POWER` authors into the one note that names the control. Matched rather than the
+# id itself, so a set that moved cannot leave a transcribed id pointing at a case that is no longer
+# the control; a mapping carrying neither one nor exactly one is refused below.
+SPECIFICITY_CONTROL_MARK = "specificity control"
+
+
+def specificity_control_row(artifact: Path = PERMUTATION) -> dict[str, Any]:
+    """The frozen mapping's one specificity-control row, read out of the artifact rather than transcribed.
+
+    Its `alt` is a hex digest: it describes neither the picture the case shows nor the one the
+    manipulation attaches, so the finding is decidable from the text alone and its correct verdict is
+    invariant under the swap. That makes it two things at once, in two different measurements — the
+    cell of the image endpoint that should not move, and the instance a rule-keyed pixel-decided
+    marking fires on without needing to. Both read it from here, so the rule that identifies the case
+    has one home: two readers deriving it separately can be corrected in one and stay wrong in the
+    other, with nothing to show for it but a number.
+    """
+    frozen = json.loads(artifact.read_text())
+    named = [row for row in frozen["mapping"] if SPECIFICITY_CONTROL_MARK in row["note"]]
+    if len(named) != 1:
+        raise RuntimeError(
+            f"the frozen permutation names {len(named)} specificity controls — exactly one cell plays "
+            "that part, and neither zero nor two of them can"
+        )
+    return dict(named[0])
+
+
 def _minted_records(root: Path, cases: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
     """The findings each ablated case mints, in the shape the twin check reads."""
     return {

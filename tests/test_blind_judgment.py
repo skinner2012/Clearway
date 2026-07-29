@@ -6,8 +6,9 @@ What is asserted here:
   result rather than a rule that matches nothing;
 * run over every frozen image-condition row it finds **0 of 28** blind rows reporting it, which is
   the number a later measurement of the same question moves from;
-* the marking and the contradiction guard are counted over the **whole scoped corpus**, not over the
-  seven cases they were designed for;
+* the marking, the contradiction guard and the report's trust-label refusal are counted over the
+  **whole scoped corpus**, not over the seven cases they were designed for — the last of them in both
+  directions, since a refusal keyed by rule fires on a text-decidable instance of that rule too;
 * and **no frozen artifact of the image experiment moved** — asserted as a diff over the bytes on
   disk, because "the suite is green" is a claim about code and this one is a claim about files.
 """
@@ -30,6 +31,7 @@ from clearway.eval.image_conditions import (
     OPAQUE_WITH_IMAGE,
     RECEIPT,
 )
+from clearway.eval.image_opaque import specificity_control_row
 from clearway.eval.image_pass import pass_path
 
 # Every artifact of the image experiment that existed before the marking was built, with the digest
@@ -119,6 +121,46 @@ def test_the_guard_refuses_nothing_as_shipped_and_only_blind_image_rows_when_ann
     assert guard["degraded_as_shipped"] == 0
     assert guard["degraded_when_claiming_seen"] == 14
     assert len(guard["degraded_cases"]) == 7  # the same seven cases, in both image sets
+
+
+def test_the_trust_label_downgrade_is_counted_in_both_directions(frozen: dict[str, Any]) -> None:
+    """⚠️ The acceptance criterion. `oracle-verified` is the strongest thing the report says about a
+    row and it grades citations and signatures — neither of which is about pixels — so the refusal is
+    measured over the whole scoped corpus, and in both directions.
+
+    12 of the 14 blind rows lose the label because their judgment really did need a picture. The other
+    2 are one case, counted twice because it is in both image sets: the specificity control, whose
+    `alt` is a hex digest that describes nothing whatever the pixels hold. `PIXEL_DECIDED_RULES` is
+    keyed by the rule, so its instance is marked with the rest. That is over-firing, it is the
+    conservative direction, and it is a number here rather than a sentence.
+    """
+    label = frozen["blast_radius"]["trust_label"]
+    assert label["refused"] == "oracle-verified"
+    assert label["renders_as"] == "drafter-judged, no visual evidence"
+    assert (label["rows_downgraded"], label["rows_downgraded_correctly"], label["rows_over_downgraded"]) == (14, 12, 2)
+    assert label["rows_downgraded"] + label["rows_unmoved"] == frozen["blast_radius"]["findings"]
+    assert [case[:10] for case in label["over_downgraded_cases"]] == ["a2333ec76e"]
+
+
+def test_only_the_blind_rows_lose_the_label_and_the_other_54_keep_theirs(frozen: dict[str, Any]) -> None:
+    """The refusal is keyed to `visually_verified is False` and to nothing else. Every text finding in
+    the corpus reads `None` — the question does not arise — and keeps the label it had."""
+    rows = frozen["blast_radius"]["rows"]
+    downgraded = {
+        row["visually_verified"] for row in rows if row["trust_label"] == "drafter-judged, no visual evidence"
+    }
+    kept = {row["trust_label"] for row in rows if row["visually_verified"] is None}
+    assert downgraded == {False}
+    assert kept == {"oracle-verified"}
+
+
+def test_the_over_fired_case_is_the_one_the_frozen_permutation_names(frozen: dict[str, Any]) -> None:
+    """The text-decided set is read out of the frozen permutation, not transcribed here, and it is a
+    FLOOR: one case, because one case is what anybody labelled."""
+    label = frozen["blast_radius"]["trust_label"]
+    assert label["text_decided_cases"] == [specificity_control_row()["act_testcase_id"]]
+    assert label["over_downgraded_cases"] == label["text_decided_cases"]
+    assert "FLOOR" in label["note"]
 
 
 def test_the_blast_radius_re_derives_over_the_live_corpus(frozen: dict[str, Any], rebuilt: dict[str, Any]) -> None:

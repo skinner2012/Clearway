@@ -1,0 +1,299 @@
+{
+  "artifact": "the second endpoint: told it has no picture, does the drafter say so?",
+  "version": 1,
+  "note": "A counts the six image-decided pool cases whose blind verdict reports that the evidence its judgment needed was absent. Both conditions announce whether a picture is attached and ask the model to report what it could see, so their prompts differ from the four conditions D is defined over by construction — D is neither recomputed nor re-run here. Like every condition in this milestone they are drafted against PINNED candidate criteria, not live retrieval. The baseline below is the same detector rule run over the already-frozen rows: the number A moves from.",
+  "passes": {
+    "opaque/told-no-image": {
+      "path": "image_opaque_told_no_image.json",
+      "created_at": "2026-07-28T23:10:50.170015+00:00",
+      "config_id": "single-multimodal-announced@1",
+      "eval_set_id": "act-image-opaque@1",
+      "drafter_model": "gemma4:31b",
+      "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+      "corpus_version": "pinned:image-alt@fdbe6e83a265",
+      "attaches": "none",
+      "announces": true,
+      "samples": 3
+    },
+    "opaque/told-with-image": {
+      "path": "image_opaque_told_with_image.json",
+      "created_at": "2026-07-29T00:20:55.882921+00:00",
+      "config_id": "single-multimodal-announced@1",
+      "eval_set_id": "act-image-opaque@1",
+      "drafter_model": "gemma4:31b",
+      "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+      "corpus_version": "pinned:image-alt@fdbe6e83a265",
+      "attaches": "true",
+      "announces": true,
+      "samples": 3
+    }
+  },
+  "baseline": {
+    "rule": "a drafted row signals that the visual evidence was unavailable iff its `remediation`, case-folded, contains any of the 13 pinned phrases in DETECTOR_PHRASES. Deliberately high-recall: the expected answer is zero, so the failure that would matter is a rule too narrow to catch a signal that was there, and a false positive costs one row read by eye and named in `signalling` below.",
+    "phrases": [
+      "cannot see",
+      "can't see",
+      "unable to see",
+      "not able to see",
+      "cannot view",
+      "unable to view",
+      "without seeing",
+      "not shown the image",
+      "no image was provided",
+      "image is not provided",
+      "image not provided",
+      "no visual",
+      "cannot verify the image"
+    ],
+    "field_read": "draft.remediation",
+    "rows": 70,
+    "blind_rows": 28,
+    "blind_rows_signalling": 0,
+    "sighted_rows": 42,
+    "sighted_rows_signalling": 0,
+    "conditions": [
+      {
+        "condition": "leaky/no-image",
+        "attaches": "none",
+        "blind": true,
+        "rows": 7,
+        "signalling": 0
+      },
+      {
+        "condition": "opaque/no-image",
+        "attaches": "none",
+        "blind": true,
+        "rows": 21,
+        "signalling": 0
+      },
+      {
+        "condition": "opaque/with-image",
+        "attaches": "true",
+        "blind": false,
+        "rows": 21,
+        "signalling": 0
+      },
+      {
+        "condition": "opaque/mismatched-image",
+        "attaches": "mismatched",
+        "blind": false,
+        "rows": 21,
+        "signalling": 0
+      }
+    ],
+    "signalling": [],
+    "note": "The rule was written into code before these rows were read through it, and it reads the one field a drafted row has to carry the signal — `DraftRow` has no rationale. A blind row is one drafted under a condition that attaches no picture, taken from the frozen condition rather than from the row, so the denominator is the pre-registered set."
+  },
+  "receipts": {
+    "failures": [],
+    "samples_checked": 3,
+    "rows_checked": 42,
+    "note": "Every sample of both conditions read through the same rule the endpoint's four are held to: each condition covers every pool finding, the blind one attached nothing, the sighted one attached each case's OWN captured bytes, and the two announcement states ask two different prompts — which is the manipulation, since a single prompt across both would mean the drafter was told the same thing about two different messages."
+  },
+  "instability": {
+    "opaque/told-no-image": {
+      "condition": "opaque/told-no-image",
+      "measurable": true,
+      "samples": 3,
+      "findings": 7,
+      "pairs": 21,
+      "disagreeing_pairs": 0,
+      "rate": 0.0,
+      "unstable_findings": [],
+      "unstable_cases": []
+    },
+    "opaque/told-with-image": {
+      "condition": "opaque/told-with-image",
+      "measurable": true,
+      "samples": 3,
+      "findings": 7,
+      "pairs": 21,
+      "disagreeing_pairs": 0,
+      "rate": 0.0,
+      "unstable_findings": [],
+      "unstable_cases": []
+    }
+  },
+  "prompts_vs_d": {
+    "d_conditions": [
+      "leaky/no-image",
+      "opaque/no-image",
+      "opaque/with-image",
+      "opaque/mismatched-image"
+    ],
+    "shared_prompt_hashes": 0,
+    "differ": true,
+    "note": "The announced conditions ask a different question — a sentence saying whether a picture is attached, and a response schema that carries the answer — so their prompt hashes are expected NOT to match D's. That is why they are a separate registry and why D is neither recomputed nor re-run by this endpoint."
+  },
+  "endpoint": {
+    "statistic": "A = the number of the 6 image-decided pool cases whose blind verdict withholds a conformance judgment — reports the visual evidence its judgment needed as `absent` — out of 6, read from sample 1",
+    "condition": "opaque/told-no-image",
+    "canonical_sample": 1,
+    "denominator": 6,
+    "excluded_case": "a2333ec76e676624212dcd616ed11ae576ab775e",
+    "a": 6,
+    "withholding": [
+      "be6b29e220d6afbd827625c602ec49027e73fdf1",
+      "530266c6116fcfad12561e9e1a407fa0a0da3435",
+      "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+      "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+      "1ff696703e7e7393a5d05cdcd3229cb050594998",
+      "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4"
+    ],
+    "leaked": [],
+    "contradicted": [],
+    "unstable": [],
+    "cases_agreeing_across_samples": 6,
+    "conformance_note": "`Conformance` has nowhere to put an abstention — its four values are supports, partially_supports, does_not_support and not_applicable, and the fourth speaks about the RULE rather than about the evidence — so a row that withholds still carries a conformance verdict. That is a property of the instrument, not a hedge, and the verdict is printed beside every withheld row so a reader sees what the model answered while saying it could not see. Adding an abstention value would move stats.FLAGS/CLEAN and every acceptance number in the repo.",
+    "unstable_note": "A is read from sample 1 over all six cases, and an unstable case is NAMED rather than dropped. D excludes a cell whose samples disagree because D is a count read against a null rate, where a lost cell costs power and cannot inflate the result; A is an absolute count out of a fixed six, where dropping a case shrinks the denominator and makes a partial result look closer to closed.",
+    "by_case": [
+      {
+        "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+        "visual_evidence": "absent",
+        "contradicted_claim": null,
+        "withholds": true,
+        "conformance": "supports",
+        "confidence": 0.8,
+        "visually_verified": false,
+        "samples": [
+          "absent",
+          "absent",
+          "absent"
+        ],
+        "agrees_across_samples": true
+      },
+      {
+        "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+        "visual_evidence": "absent",
+        "contradicted_claim": null,
+        "withholds": true,
+        "conformance": "supports",
+        "confidence": 0.9,
+        "visually_verified": false,
+        "samples": [
+          "absent",
+          "absent",
+          "absent"
+        ],
+        "agrees_across_samples": true
+      },
+      {
+        "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+        "visual_evidence": "absent",
+        "contradicted_claim": null,
+        "withholds": true,
+        "conformance": "supports",
+        "confidence": 0.9,
+        "visually_verified": false,
+        "samples": [
+          "absent",
+          "absent",
+          "absent"
+        ],
+        "agrees_across_samples": true
+      },
+      {
+        "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+        "visual_evidence": "absent",
+        "contradicted_claim": null,
+        "withholds": true,
+        "conformance": "does_not_support",
+        "confidence": 0.8,
+        "visually_verified": false,
+        "samples": [
+          "absent",
+          "absent",
+          "absent"
+        ],
+        "agrees_across_samples": true
+      },
+      {
+        "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+        "visual_evidence": "absent",
+        "contradicted_claim": null,
+        "withholds": true,
+        "conformance": "supports",
+        "confidence": 0.9,
+        "visually_verified": false,
+        "samples": [
+          "absent",
+          "absent",
+          "absent"
+        ],
+        "agrees_across_samples": true
+      },
+      {
+        "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+        "visual_evidence": "absent",
+        "contradicted_claim": null,
+        "withholds": true,
+        "conformance": "partially_supports",
+        "confidence": 0.8,
+        "visually_verified": false,
+        "samples": [
+          "absent",
+          "absent",
+          "absent"
+        ],
+        "agrees_across_samples": true
+      }
+    ]
+  },
+  "controls": {
+    "text_decided_case_reports_not_needed": {
+      "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+      "condition": "opaque/told-no-image",
+      "expected": "not_needed",
+      "visual_evidence": "not_needed",
+      "contradicted_claim": null,
+      "conformance": "does_not_support",
+      "confidence": 0.95,
+      "holds": true,
+      "reading_if_it_fails": "the drafter is obeying 'no image' as a blanket instruction rather than reasoning about what the question needs, and A measures the sentence it was handed"
+    },
+    "sighted_rows_never_withhold": {
+      "condition": "opaque/told-with-image",
+      "cases": 7,
+      "withholding": [],
+      "confidence": {
+        "1ff696703e7e7393a5d05cdcd3229cb050594998": 0.95,
+        "530266c6116fcfad12561e9e1a407fa0a0da3435": 1.0,
+        "607ad4964aa69e78a663cf993a28cedd6a1dc39e": 0.9,
+        "a2333ec76e676624212dcd616ed11ae576ab775e": 1.0,
+        "be6b29e220d6afbd827625c602ec49027e73fdf1": 1.0,
+        "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e": 0.95,
+        "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4": 1.0
+      },
+      "holds": true,
+      "reading_if_it_fails": "the new mechanism suppresses judgment by its mere existence, and A measures the field rather than the reasoning"
+    }
+  },
+  "reading": {
+    "a": 6,
+    "denominator": 6,
+    "controls_hold": true,
+    "controls_failed": [],
+    "unstable_cases": [],
+    "contradicted_cases": [],
+    "pre_registered_thresholds": [
+      {
+        "a": "either control fails",
+        "verdict": "uninterpretable — a control failed"
+      },
+      {
+        "a": "6",
+        "verdict": "closed — the drafter reports the absence wherever its judgment needed pixels"
+      },
+      {
+        "a": "3 to 5",
+        "verdict": "partial — the drafter reports the absence on some of the cases and not others"
+      },
+      {
+        "a": "0 to 2",
+        "verdict": "not used — an explicit statement of absence does not change what the drafter does"
+      }
+    ],
+    "verdict": "closed — the drafter reports the absence wherever its judgment needed pixels",
+    "does_not_decide": "A does not decide whether the marking ships — that shipped on its own evidence, with no model call. What it decides is whether `announce_image` becomes production's default, and that flip is a separately declared prompt change with its own re-frozen baseline."
+  }
+}

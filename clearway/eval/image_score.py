@@ -1170,8 +1170,11 @@ def build_absence_report() -> dict[str, Any]:
             raise OutOfScope(f"{condition.condition_id} is not a sound pass: {'; '.join(failures)}")
 
     receipts: list[str] = []
-    for sample_n in range(1, max(len(artifact["samples"]) for artifact in passes.values()) + 1):
+    rows_checked = 0
+    samples = max(len(artifact["samples"]) for artifact in passes.values())
+    for sample_n in range(1, samples + 1):
         rows = [row for artifact in passes.values() for row in _sample_rows(artifact, sample_n)]
+        rows_checked += len(rows)
         receipts += [f"sample {sample_n}: {failure}" for failure in receipt_failures(rows, ANNOUNCED_CONDITIONS)]
     if receipts:
         raise OutOfScope(f"the announced conditions did not send what the frozen mapping says: {'; '.join(receipts)}")
@@ -1207,6 +1210,22 @@ def build_absence_report() -> dict[str, Any]:
             for condition, artifact in passes.items()
         },
         "baseline": baseline(),
+        # Recorded rather than merely enforced. The check above raises on any failure, so reaching
+        # here is already the proof — but a passing check that leaves no trace is indistinguishable in
+        # an artifact from a check nobody ran, which is the thing this repo refuses everywhere else.
+        "receipts": {
+            "failures": receipts,
+            "samples_checked": samples,
+            "rows_checked": rows_checked,
+            "note": (
+                "Every sample of both conditions read through the same rule the endpoint's four are "
+                "held to: each condition covers every pool finding, the blind one attached nothing, "
+                "the sighted one attached each case's OWN captured bytes, and the two announcement "
+                "states ask two different prompts — which is the manipulation, since a single prompt "
+                "across both would mean the drafter was told the same thing about two different "
+                "messages."
+            ),
+        },
         "instability": {condition.condition_id: instability(artifact) for condition, artifact in passes.items()},
         "prompts_vs_d": announced_prompts_differ_from_d(passes),
         "endpoint": endpoint,

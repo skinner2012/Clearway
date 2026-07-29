@@ -1,0 +1,688 @@
+{
+  "artifact": "one image condition drafted against the real model, all its samples",
+  "version": 1,
+  "condition": {
+    "condition": "opaque/told-with-image",
+    "scope": "image-opaque",
+    "attaches": "true",
+    "samples": 3,
+    "announces": true
+  },
+  "canonical_sample": 1,
+  "citations": {
+    "source": "pinned",
+    "sc_ids": [
+      "1.1.1"
+    ],
+    "note": "The candidate criteria were PINNED (eval/drafter_payload.PINNED_CITATIONS), not retrieved. The endpoint is defined over prompts that are byte-identical across conditions differing only in pixels, and a live retriever is a service whose ordering is one more thing that could move between two calls run hours apart. The cost is real and is not hidden: the block holds the one criterion this class is about, where production retrieval surfaces several candidates including distractors, so these conditions are drafted against an easier candidate set than a live scan would produce. It is the same set for all four conditions, so it cannot move a difference between them."
+  },
+  "run_ids": [
+    "image-opaque_told_with_image-sample1-2026-07-29T00:20:55.882921+00:00",
+    "image-opaque_told_with_image-sample2-2026-07-29T00:20:55.882921+00:00",
+    "image-opaque_told_with_image-sample3-2026-07-29T00:20:55.882921+00:00"
+  ],
+  "config_id": "single-multimodal-announced@1",
+  "eval_set_id": "act-image-opaque@1",
+  "corpus_version": "pinned:image-alt@fdbe6e83a265",
+  "drafter_model": "gemma4:31b",
+  "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+  "axe_core_version": "4.12.1",
+  "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+  "created_at": "2026-07-29T00:20:55.882921+00:00",
+  "samples": [
+    {
+      "sample": 1,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "a49b03b1e43197b9ffec85f5c90e76ac99fc5e82e427fa93075a319f6f56a3d1",
+            "payload_sha256": "0f9ef5acb1b89a9596ab70f1b4aac8e09aabd51e3ef89ffd3bd71e01ddab882c"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 1.0,
+            "remediation": "No remediation necessary as the alt text accurately identifies the organization in the logo.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "77229acae2050737c6798342aa96cbb6e67e8fbc5a152211d288da1adca009f3",
+            "payload_sha256": "c24306e28c7b70febabb35c71f8efeedf3ab3c219d3911f4326907d25ec2da17"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as 'W3C'.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "f269560846fdd900da1f5ba63594c10eca7821f5a3c99518c0b5931e0aed4030",
+            "payload_sha256": "1623e211a1b83cd0cb6698e3ba13a14d11078634c73ae925c0ee07f2381197ea"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text accurately identifies the subject of the image.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "3869e283a8e05a21c4ea739263f609385666552a2a07858d1ce9579a89d102e5",
+            "payload_sha256": "66f099bdc394361c0ff37e2d446e8be4c9ea2d2b19a4fb3987079dfc3c58a365"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the alt text 'pain' with a more descriptive and meaningful description, such as 'Freshly baked rustic bread loaves'.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "acb38df0b977c0c776137f76481aa6790969eec34735c1baab6acfef47758d28",
+            "payload_sha256": "7cf2667913f063111d17ae8c2da54939cd6b37ea401df34215a677cacf7b471a"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text accurately identifies the landmark.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "9d68d5a8bd0218dfa35c4154d0701eadb7471c59e06ebfa10953b0d932cf2a8d",
+            "payload_sha256": "4c0771bd0357d507cbd27e8c0361c6bd95880330a1584bd2f41862d89530b554"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as Nyhavn in Copenhagen rather than Paris.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "4afabf1fe797e7abbe90e92e0ef1c55fde9c0bf88c401abf5e69aeca1110940c",
+            "payload_sha256": "7905a650a3e151a8ca729efadde2e404cbc5612970212730dcd4b57d6cc8ff5f"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Replace the alphanumeric string in the alt attribute with a descriptive text that describes the image content.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        }
+      ]
+    },
+    {
+      "sample": 2,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "a49b03b1e43197b9ffec85f5c90e76ac99fc5e82e427fa93075a319f6f56a3d1",
+            "payload_sha256": "0f9ef5acb1b89a9596ab70f1b4aac8e09aabd51e3ef89ffd3bd71e01ddab882c"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 1.0,
+            "remediation": "No remediation necessary as the alt text accurately identifies the organization in the logo.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "77229acae2050737c6798342aa96cbb6e67e8fbc5a152211d288da1adca009f3",
+            "payload_sha256": "c24306e28c7b70febabb35c71f8efeedf3ab3c219d3911f4326907d25ec2da17"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as 'W3C'.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "f269560846fdd900da1f5ba63594c10eca7821f5a3c99518c0b5931e0aed4030",
+            "payload_sha256": "1623e211a1b83cd0cb6698e3ba13a14d11078634c73ae925c0ee07f2381197ea"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text accurately identifies the subject of the image.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "3869e283a8e05a21c4ea739263f609385666552a2a07858d1ce9579a89d102e5",
+            "payload_sha256": "66f099bdc394361c0ff37e2d446e8be4c9ea2d2b19a4fb3987079dfc3c58a365"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the alt text 'pain' with a more descriptive and meaningful description, such as 'Freshly baked rustic bread loaves'.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "acb38df0b977c0c776137f76481aa6790969eec34735c1baab6acfef47758d28",
+            "payload_sha256": "7cf2667913f063111d17ae8c2da54939cd6b37ea401df34215a677cacf7b471a"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text accurately identifies the landmark.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "9d68d5a8bd0218dfa35c4154d0701eadb7471c59e06ebfa10953b0d932cf2a8d",
+            "payload_sha256": "4c0771bd0357d507cbd27e8c0361c6bd95880330a1584bd2f41862d89530b554"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as Nyhavn in Copenhagen rather than Paris.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "4afabf1fe797e7abbe90e92e0ef1c55fde9c0bf88c401abf5e69aeca1110940c",
+            "payload_sha256": "7905a650a3e151a8ca729efadde2e404cbc5612970212730dcd4b57d6cc8ff5f"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Replace the alphanumeric string in the alt attribute with a descriptive text that describes the image content.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        }
+      ]
+    },
+    {
+      "sample": 3,
+      "rows": [
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "be6b29e220d6afbd827625c602ec49027e73fdf1",
+            "finding_id": "a054a5256af49de2",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "a49b03b1e43197b9ffec85f5c90e76ac99fc5e82e427fa93075a319f6f56a3d1",
+            "payload_sha256": "0f9ef5acb1b89a9596ab70f1b4aac8e09aabd51e3ef89ffd3bd71e01ddab882c"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 1.0,
+            "remediation": "No remediation necessary as the alt text accurately identifies the organization in the logo.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "530266c6116fcfad12561e9e1a407fa0a0da3435",
+            "finding_id": "8f4b06fe4a222907",
+            "target": "img",
+            "image_sha256": "083d533eb45c69231ca633a4fe6ad908324d8330902f29cf8397ae0499bcd45a",
+            "media_type": "image/png",
+            "prompt_sha256": "77229acae2050737c6798342aa96cbb6e67e8fbc5a152211d288da1adca009f3",
+            "payload_sha256": "c24306e28c7b70febabb35c71f8efeedf3ab3c219d3911f4326907d25ec2da17"
+          },
+          "gold": {
+            "rule_name": "Image accessible name is descriptive",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as 'W3C'.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "cfd1636ab41c1418d1ad510eb9802c31fb2c5c5e",
+            "finding_id": "bf7688e780305be4",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "f269560846fdd900da1f5ba63594c10eca7821f5a3c99518c0b5931e0aed4030",
+            "payload_sha256": "1623e211a1b83cd0cb6698e3ba13a14d11078634c73ae925c0ee07f2381197ea"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text accurately identifies the subject of the image.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "607ad4964aa69e78a663cf993a28cedd6a1dc39e",
+            "finding_id": "c398b407d79aca6f",
+            "target": "img",
+            "image_sha256": "bfd6e7326241f417b352867b52d03c97f74eab7b20b8a85041b44ba06b8e6c9d",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "3869e283a8e05a21c4ea739263f609385666552a2a07858d1ce9579a89d102e5",
+            "payload_sha256": "66f099bdc394361c0ff37e2d446e8be4c9ea2d2b19a4fb3987079dfc3c58a365"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 0.9,
+            "remediation": "Replace the alt text 'pain' with a more descriptive and meaningful description, such as 'Freshly baked rustic bread loaves'.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "1ff696703e7e7393a5d05cdcd3229cb050594998",
+            "finding_id": "bbede717e40ab60a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "acb38df0b977c0c776137f76481aa6790969eec34735c1baab6acfef47758d28",
+            "payload_sha256": "7cf2667913f063111d17ae8c2da54939cd6b37ea401df34215a677cacf7b471a"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "passed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "supports",
+            "cited_sc_ids": [],
+            "confidence": 0.95,
+            "remediation": "No remediation is necessary as the alt text accurately identifies the landmark.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "f7406b89f8e6769c01da5c305e3e6c921fd7c1e4",
+            "finding_id": "10f322c79b16872a",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "9d68d5a8bd0218dfa35c4154d0701eadb7471c59e06ebfa10953b0d932cf2a8d",
+            "payload_sha256": "4c0771bd0357d507cbd27e8c0361c6bd95880330a1584bd2f41862d89530b554"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Update the alt attribute to accurately describe the image as Nyhavn in Copenhagen rather than Paris.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        },
+        {
+          "receipt": {
+            "condition": "opaque/told-with-image",
+            "scope": "image-opaque",
+            "act_testcase_id": "a2333ec76e676624212dcd616ed11ae576ab775e",
+            "finding_id": "e14930e63599c863",
+            "target": "img",
+            "image_sha256": "c5cc0db745a1435fe7acffb9d63f9f346f42562bbbfa70bf00d99788b4d96dae",
+            "media_type": "image/jpeg",
+            "prompt_sha256": "4afabf1fe797e7abbe90e92e0ef1c55fde9c0bf88c401abf5e69aeca1110940c",
+            "payload_sha256": "7905a650a3e151a8ca729efadde2e404cbc5612970212730dcd4b57d6cc8ff5f"
+          },
+          "gold": {
+            "rule_name": "DEPRECATED — Image filename is accessible name for image",
+            "expected": "failed",
+            "gold_success_criteria": [
+              "1.1.1"
+            ]
+          },
+          "draft": {
+            "conformance": "does_not_support",
+            "cited_sc_ids": [
+              "1.1.1"
+            ],
+            "confidence": 1.0,
+            "remediation": "Replace the alphanumeric string in the alt attribute with a descriptive text that describes the image content.",
+            "visual_evidence": "seen",
+            "visually_verified": true,
+            "contradicted_claim": null
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -944,8 +944,73 @@ the verdict).
   **zero** objections — it took the pixels as the page's own and rewrote the remediation around them.
   The manipulation working is what D measures; that nothing in the pipeline notices the contradiction
   is a separate property of the product, and the report states it rather than leaving it implied.
+- **⚠️ That A being `closed` is not the finding**: four of the six withheld rows shipped `supports`
+  while reporting they could not see the image, named with the conformance and confidence each
+  carried. Reporting an absence and acting on it are two different things; M8 showed only the first.
+- **That neither kind of missing picture licenses `does_not_support`** — both pool rules map `passed`
+  *and* `inapplicable` to *"further testing needed"*, and M8's pictures were uncaptured, not missing.
+- **The announced-vs-silent accuracy comparison**, with its endpoint status explicitly denied.
+- **Why the drafter answered `supports` while blind**, reconstructed from the prompt rather than
+  guessed: the help text's adequacy test is decidable from text alone, and nothing in either prompt
+  links `visual_evidence` to `conformance`.
+- **That `visual_evidence` / `visually_verified` are a second field family nothing downstream
+  consumes** — the shape of the `confidence` defect M4 measured, arrived at a second time.
+- **Sources, because two of the above are in no report:** the ACT outcome mapping is the raw
+  `ruleAccessibilityRequirements` in the frozen export — the repo's parser keeps only the SC ids and
+  discards it — and the announced-vs-silent accuracy exists in no artifact, so it is computed from the
+  run artifacts under the `stats.is_flag` collapse.
 - **Rule: report ugly numbers as they are.** The unacceptable failure is not a low score but an
   untrustworthy one.
+- **Depends on:** T9
+
+### T11 — A blind judgment must not carry the report's highest trust label *(0 calls)*
+
+> **Goal.** `_trust_label` grades a row on citation verification and human review, and neither says
+> anything about pixels. So a judgment that needed a picture and was drafted without one can render as
+> **`oracle-verified`** — the strongest thing this product tells a reader. Close that, deterministically.
+
+**Requirements.**
+
+1. **Prove the hole before fixing it.** A test drafting a `PIXEL_DECIDED_RULES` finding with no image,
+   whose citations all verify, must show `oracle-verified` today. **If it cannot be made to fail, stop
+   the ticket** and record the non-result here, in this ticket's own artifacts — a hole looked for and
+   not found is a finding, and an unrecorded one is indistinguishable from one nobody checked.
+2. `_trust_label` takes the row's `visually_verified` and refuses `oracle-verified` when it is `False`.
+3. Such a row renders under its own label, `drafter-judged, no visual evidence`, not the existing
+   floor: *nothing confirmed this* and *this was decided without the evidence it needed* are different
+   facts, and the legend states the second.
+4. `human-reviewed` still outranks it — a specialist signed what they saw.
+5. **Blast radius over `ALL_SCOPES`, two counts, both recorded:** rows correctly downgraded, and rows
+   **over**-downgraded — `PIXEL_DECIDED_RULES` is keyed by the rule, so a text-decidable instance
+   (`a2333ec76e`, whose `alt` is a hex digest) is marked too. Over-firing is expected, conservative,
+   and must be a number rather than a sentence.
+
+**Constraints.**
+
+- **`Conformance` is untouched.** The row keeps the verdict the model gave; only what the report
+  claims *stands behind* it moves. Adding an abstention value moves `stats.FLAGS`/`CLEAN` and every
+  acceptance number — out of scope here as it was in T8.
+- **No acceptance number moves and no measurement is re-frozen.** Nothing outside `cli.py` reads a
+  trust label, so every run artifact and every endpoint report stays byte-identical — asserted by
+  `git diff`, not claimed. The one artifact that does move is `blind_judgment.json`, which is
+  model-free, rebuilt by its own test, and gains the new counts by design.
+- **`confidence` is not an input and must not become one** (`test_confidence_is_not_a_trust_signal`).
+- **T10's report is never amended by this ticket.** It freezes the honest read of what M8 *measured*,
+  as of T9; this is a fix that came after, and a frozen report edited to carry a later result is no
+  longer frozen. Whatever this ticket finds, it records on its own.
+- **Zero model calls.** The held-out run count is unchanged.
+
+**Sites.** `clearway/cli.py` (`_trust_label`, the legend); a blast-radius count beside the existing one
+in `eval/blind_judgment.py`.
+
+**Acceptance.**
+1. The reachability test exists and demonstrably fails before the change.
+2. A pixel-decided row drafted blind never renders `oracle-verified`; a `human-reviewed` one is
+   unaffected; every other class is byte-identical in the rendered report.
+3. Both blast-radius counts are recorded over the whole scoped corpus.
+4. `git diff` over `benchmark/runs/` and every endpoint report is empty; `blind_judgment.json` moves
+   only by gaining the new counts, and the suite passes unchanged rather than being updated to match.
+
 - **Depends on:** T9
 
 ---

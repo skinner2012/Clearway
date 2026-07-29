@@ -116,6 +116,16 @@ def frozen_pass_paths(label: str) -> list[Path]:
     return passes_in(_runs_dir(), label)
 
 
+def acceptance_pass_paths() -> list[Path]:
+    """The unlabelled acceptance-sweep passes, ordered — the runs that predate the labelling scheme.
+
+    They are the only case-shaped passes carrying per-finding JUDGE output, so anything replaying or
+    auditing a judge measurement wants exactly this list and not the labelled drafter-only runs beside
+    it. Here rather than at a call site because it is a filename pattern, which is what this module owns.
+    """
+    return sorted(_runs_dir().glob("run_*.json"))
+
+
 def case_shaped_passes() -> list[Path]:
     """Every frozen pass in `runs/` whose artifact is the `{cases: [{drafts: […]}]}` shape.
 
@@ -129,7 +139,7 @@ def case_shaped_passes() -> list[Path]:
     So the selection is by the naming scheme this module owns, and it is here rather than at a call
     site because the directory now has two conventions and only one place should know that.
     """
-    return sorted(_runs_dir().glob("run_*.json")) + [p for label in RUN_LABELS for p in frozen_pass_paths(label)]
+    return acceptance_pass_paths() + [p for label in RUN_LABELS for p in frozen_pass_paths(label)]
 
 
 def dry_gate_path(label: str) -> Path:

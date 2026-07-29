@@ -89,9 +89,10 @@ _WRAP_W = _RULE_W - _VALUE_COL
 
 
 # --- per-row verification-state ("trust") label -------------------------------
-# What actually stands behind one row, in three states, derived from verification state ONLY: the
-# validator's `CitationVerdict`s (did the oracle confirm every criterion this row cites?) and the
-# reviewer's `ReviewStatus` (did a specialist sign it?).
+# What actually stands behind one row, in four states, derived from verification state ONLY: the
+# validator's `CitationVerdict`s (did the oracle confirm every criterion this row cites?), the
+# reviewer's `ReviewStatus` (did a specialist sign it?), and the drafter's own record of whether the
+# judgment had the evidence it needed (`DraftRow.visually_verified`).
 #
 # `DraftRow.confidence` is deliberately NOT an input and must never become one. It is measured to
 # carry no usable signal — one populated bin, values pinned ~0.85-1.0 regardless of correctness —
@@ -100,12 +101,15 @@ _WRAP_W = _RULE_W - _VALUE_COL
 
 _TRUST_ORACLE_VERIFIED = "oracle-verified"
 _TRUST_HUMAN_REVIEWED = "human-reviewed"
+_TRUST_BLIND_JUDGED = "drafter-judged, no visual evidence"
 _TRUST_DRAFTER_JUDGED = "drafter-judged, unverified"
 
 _TRUST_LEGEND = (
     f"Trust labels -- {_TRUST_ORACLE_VERIFIED}: an automated oracle confirmed every criterion the "
     f"row cites. {_TRUST_HUMAN_REVIEWED}: a specialist approved or edited it. "
-    f"{_TRUST_DRAFTER_JUDGED}: model output that nothing has confirmed."
+    f"{_TRUST_BLIND_JUDGED}: the judgment turned on what a picture shows and none was available to "
+    f"it -- the model decided without the evidence the question needed. {_TRUST_DRAFTER_JUDGED}: "
+    f"model output that nothing has confirmed."
 )
 
 # A `supports` verdict is a "no problem here" claim, and it arises on the quality-review classes
@@ -116,20 +120,33 @@ _SUPPORTS_CAVEAT = "unverified claim, not a certified pass"
 
 
 def _trust_label(row: DraftRow, checks: list[CitationCheck], review_status: ReviewStatus | None) -> str:
-    """Which of the three verification states this row is in.
+    """Which of the four verification states this row is in.
 
-    Precedence is `human-reviewed` > `oracle-verified` > `drafter-judged, unverified`:
+    Precedence is `human-reviewed` > `drafter-judged, no visual evidence` > `oracle-verified` >
+    `drafter-judged, unverified`:
 
     - A specialist's APPROVED or EDITED resolution outranks everything. It is the later and stronger
       attestation, and on an EDITED row the remediation prose is the human's — the oracle never
-      grounded a word of it, so naming the oracle would misattribute what the reader is reading.
+      grounded a word of it, so naming the oracle would misattribute what the reader is reading. It
+      outranks the blind label too: a specialist signed what they saw, which is the one thing that
+      answers a judgment made without the picture.
+    - `visually_verified is False` is the system's own record that this judgment turned on what a
+      picture shows and the picture never reached the model. Citation verification grades the
+      criteria the row cites and says nothing whatever about pixels, so a perfectly verified blind
+      row would otherwise carry the strongest label this product has. It is a state of its own and
+      not the floor: *nothing confirmed this* and *this was decided without the evidence it needed*
+      are different facts, and only the second names what is missing.
     - `oracle-verified` requires at least one citation and EVERY citation VERIFIED. One
       HALLUCINATED (the oracle contradicted it) or UNVERIFIABLE (no oracle verdict to check against)
       citation leaves an unproven claim in the shipped row, and zero citations verify nothing at all.
     - Everything else is the honest floor: the drafter said it, nothing confirmed it.
+
+    The verdict itself is untouched. Only what the report claims *stands behind* it moves.
     """
     if review_status in (ReviewStatus.APPROVED, ReviewStatus.EDITED):
         return _TRUST_HUMAN_REVIEWED
+    if row.visually_verified is False:
+        return _TRUST_BLIND_JUDGED
     if row.conformance is Conformance.SUPPORTS:
         return _TRUST_DRAFTER_JUDGED
     if checks and all(c.verdict is CitationVerdict.VERIFIED for c in checks):

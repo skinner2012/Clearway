@@ -9,12 +9,19 @@ HITL gate holds back — a `NeedsReview` still `PENDING`, or one a specialist `R
 hallucinated citation, not a weak finding class. The report tells the reader how far to trust a row;
 it does not silently drop it.
 
-**The trust label.** Each row carries one of three verification states — `oracle-verified`,
-`human-reviewed`, `drafter-judged, unverified` — derived from the validator's `CitationVerdict`s and
-the reviewer's `ReviewStatus`, and from nothing else. In particular **never** from
+**The trust label.** Each row carries one of four verification states — `oracle-verified`,
+`human-reviewed`, `drafter-judged, no visual evidence`, `drafter-judged, unverified` — derived from
+the validator's `CitationVerdict`s, the reviewer's `ReviewStatus` and the drafter's own record of
+whether the judgment had the evidence it needed, and from nothing else. In particular **never** from
 `DraftRow.confidence`, which is measured to carry no signal (single populated bin, values pinned
 ~0.85-1.0 regardless of correctness); sourcing a client-facing assurance from it would launder a
 broken number. Both the behaviour and the absence of confidence from the derivation are asserted.
+
+**The fourth state closes a hole that was reachable.** Citation verification and a human signature are
+the only things the first three grade, and neither says anything about pixels — so a judgment that
+turned on what a picture shows, drafted without one, rendered as `oracle-verified`, the strongest
+thing this product tells a reader. The row that proves it is drafted through the real pipeline, and
+the rows of every other class are pinned to the exact bytes they printed before.
 
 The prompt-identity tests at the bottom are this change's blast-radius receipt: the drafter's
 `passes`-bucket prompt is a pure function of the finding, and this file pins its exact bytes, so a
@@ -27,13 +34,16 @@ import inspect
 from datetime import UTC, datetime
 
 from clearway.cli import (
+    _TRUST_BLIND_JUDGED,
     _TRUST_DRAFTER_JUDGED,
     _TRUST_HUMAN_REVIEWED,
     _TRUST_ORACLE_VERIFIED,
     _render_drafts,
     _trust_label,
 )
-from clearway.drafter.llm import _system_prompt, _user_prompt
+from clearway.drafter import Drafter
+from clearway.drafter.llm import PIXEL_DECIDED_RULES, _system_prompt, _user_prompt
+from clearway.llm import FakeLLMClient
 from clearway.normalizer.quality_review import QUALITY_REVIEW_RULES
 from clearway.oracle import AxeCoreOracle
 from clearway.orchestrator import InMemoryOrchestratorStore, execute
@@ -249,6 +259,140 @@ def test_the_renderer_labels_each_row_from_its_own_verification_state() -> None:
     assert _rendered_labels(out) == [_TRUST_ORACLE_VERIFIED, _TRUST_DRAFTER_JUDGED, _TRUST_HUMAN_REVIEWED]
 
 
+# --- a judgment made without the pixels it needed -----------------------------
+
+# Every row of the evidence block as it rendered before the blind label existed, legend excluded.
+_ROWS_BEFORE_THE_BLIND_LABEL = (
+    "[1] text-verified\n"
+    "  Trust       : oracle-verified\n"
+    "  Conformance : Does Not Support\n"
+    "  Severity    : serious\n"
+    "  WCAG        : 1.1.1 Non-text Content (Level A)\n"
+    "  Remediation : Add an alt attribute to the image.\n"
+    "\n"
+    "[2] text-unverified\n"
+    "  Trust       : drafter-judged, unverified\n"
+    "  Conformance : Does Not Support\n"
+    "  Severity    : serious\n"
+    "  WCAG        : 1.1.1 Non-text Content (Level A)\n"
+    "  Remediation : Add an alt attribute to the image.\n"
+    "\n"
+    "[3] text-signed\n"
+    "  Trust       : human-reviewed\n"
+    "  Conformance : Does Not Support\n"
+    "  Severity    : serious\n"
+    "  WCAG        : 1.1.1 Non-text Content (Level A)\n"
+    "  Remediation : Add an alt attribute to the image.\n"
+    "\n"
+    "[4] text-supports\n"
+    "  Trust       : drafter-judged, unverified\n"
+    "  Conformance : Supports -- unverified claim, not a certified pass\n"
+    "  Severity    : serious\n"
+    "  WCAG        : 1.1.1 Non-text Content (Level A)\n"
+    "  Remediation : Add an alt attribute to the image.\n"
+    "\n"
+    "[5] pixels-sent\n"
+    "  Trust       : oracle-verified\n"
+    "  Conformance : Does Not Support\n"
+    "  Severity    : serious\n"
+    "  WCAG        : 1.1.1 Non-text Content (Level A)\n"
+    "  Remediation : Add an alt attribute to the image."
+)
+
+
+def _blind_pixel_decided_row() -> DraftRow:
+    """A `PIXEL_DECIDED_RULES` row exactly as the production path produces one.
+
+    Drafted through the real `Drafter` against a canned answer with **no picture attached**, rather
+    than hand-built with `visually_verified=False`: what has to be shown is that the report's highest
+    label is reachable by a row the shipped pipeline actually emits, and a fixture asserting the field
+    would prove only that the label reads the field it was handed.
+    """
+    finding = Finding(
+        id="blind",
+        source_url="file://page.html",
+        rule_id=next(iter(PIXEL_DECIDED_RULES)),
+        axe_tags=[],
+        target="img",
+        html='<img src="a.png" alt="a photograph">',
+        help="Images must have alternate text",
+        source_bucket=AxeBucket.INCOMPLETE,
+    )
+    canned = '{"conformance":"does_not_support","cited_sc_ids":["1.1.1"],"remediation":"Describe it.","confidence":0.9}'
+    row = Drafter(FakeLLMClient(canned)).draft(finding, [Citation(sc_id="1.1.1")])
+    assert row.visually_verified is False, "the pipeline did not mark this row blind — the fixture is wrong"
+    return row
+
+
+def test_a_blind_pixel_decided_row_is_never_oracle_verified() -> None:
+    """⚠️ The acceptance criterion, and the hole this closes.
+
+    `oracle-verified` is the strongest thing this product says about a row, and it grades citation
+    verification alone — which says nothing about pixels. So a judgment that needed a picture, drafted
+    without one, carried it on the strength of citations that verify perfectly. Run against the
+    derivation before this label existed, this test fails with `oracle-verified` on both sides: the
+    hole was reachable by a row the shipped pipeline emits, not hypothetical.
+    """
+    row = _blind_pixel_decided_row()
+    assert _trust_label(row, [_check(CitationVerdict.VERIFIED)], None) == _TRUST_BLIND_JUDGED
+    assert _rendered_labels(
+        _render_drafts("page", [row], [], traces=[_trace(row.finding_id, [_check(CitationVerdict.VERIFIED)])])
+    ) == [_TRUST_BLIND_JUDGED]
+
+
+def test_the_blind_label_is_its_own_state_and_not_the_unverified_floor() -> None:
+    """*Nothing confirmed this* and *this was decided without the evidence it needed* are different
+    facts. A blind row lands on the second in every citation state — the missing picture is what the
+    reader has to be told, and it is missing whether or not the citations happened to verify."""
+    row = _blind_pixel_decided_row()
+    for checks in ([_check(CitationVerdict.VERIFIED)], [_check(CitationVerdict.UNVERIFIABLE)], []):
+        assert _trust_label(row, checks, None) == _TRUST_BLIND_JUDGED
+    assert _TRUST_BLIND_JUDGED != _TRUST_DRAFTER_JUDGED
+
+
+def test_human_review_still_outranks_the_blind_label() -> None:
+    """A specialist signed what they saw, which is the one attestation that answers a judgment made
+    without the picture. The row reads `human-reviewed`, exactly as it did before this label existed."""
+    row = _blind_pixel_decided_row()
+    for status in (ReviewStatus.APPROVED, ReviewStatus.EDITED):
+        assert _trust_label(row, [_check(CitationVerdict.VERIFIED)], status) == _TRUST_HUMAN_REVIEWED
+
+
+def test_a_pixel_decided_row_whose_picture_was_sent_is_unaffected() -> None:
+    """The refusal is keyed to `False`, never to "this is an image class". A judgment that DID get its
+    picture is verified in the one way this label cares about, and `None` — the question does not
+    arise — is the answer on every text class in the product."""
+    for verified in (True, None):
+        row = _row(visually_verified=verified)
+        assert _trust_label(row, [_check(CitationVerdict.VERIFIED)], None) == _TRUST_ORACLE_VERIFIED
+
+
+def test_no_other_class_moved_in_the_rendered_report() -> None:
+    """⚠️ The byte-identity receipt, captured from the renderer BEFORE this label existed.
+
+    Five rows covering every class the change must not touch — oracle-verified, the unverified floor,
+    human-reviewed, `supports`, and a pixel-decided row whose picture WAS sent — rendered as the
+    report renders them. The legend necessarily gains the fourth state and is excluded; everything a
+    row prints is pinned to the exact bytes it printed before.
+    """
+    rows = [
+        _row("text-verified"),
+        _row("text-unverified"),
+        _row("text-signed"),
+        _row("text-supports", conformance=Conformance.SUPPORTS),
+        _row("pixels-sent", visually_verified=True),
+    ]
+    traces = [
+        _trace("text-verified", [_check(CitationVerdict.VERIFIED)]),
+        _trace("text-unverified", [_check(CitationVerdict.UNVERIFIABLE)]),
+        _trace("text-signed", [_check(CitationVerdict.VERIFIED)]),
+        _trace("text-supports", [_check(CitationVerdict.VERIFIED)]),
+        _trace("pixels-sent", [_check(CitationVerdict.VERIFIED)]),
+    ]
+    out = _render_drafts("page", rows, [], traces=traces, reviewed=[_review("text-signed", ReviewStatus.APPROVED)])
+    assert out[out.index("[1] ") :] == _ROWS_BEFORE_THE_BLIND_LABEL
+
+
 # --- the label NEVER derives from confidence ---------------------------------
 
 
@@ -319,10 +463,12 @@ def test_supports_is_never_oracle_verified() -> None:
 
 
 def test_the_report_explains_its_labels() -> None:
-    """An unexplained label is a decoration. The block states what each of the three states means."""
+    """An unexplained label is a decoration. The block states what each of the four states means —
+    and the blind one has to say what is missing, not merely that something is."""
     out = _render_drafts("page", [_row("f1")], [])
-    for label in (_TRUST_ORACLE_VERIFIED, _TRUST_HUMAN_REVIEWED, _TRUST_DRAFTER_JUDGED):
+    for label in (_TRUST_ORACLE_VERIFIED, _TRUST_HUMAN_REVIEWED, _TRUST_BLIND_JUDGED, _TRUST_DRAFTER_JUDGED):
         assert label in out
+    assert "the model decided without the evidence the question needed" in " ".join(out.split())
 
 
 # --- blast radius: the drafter's `passes` prompt is byte-identical ------------

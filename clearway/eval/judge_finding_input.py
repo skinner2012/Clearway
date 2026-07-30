@@ -42,7 +42,8 @@ rebuild needs live services, no test can perform it — so the record also carri
 `reproducible_digest` over itself, and the test pins that digest and re-checks every block against
 its own hash.
 
-Judge calls: **zero**. The scanner and the embedder are live; the judge is not called here at all.
+Judge calls: **zero**. The scanner and the embedder are live; the judge is not called here at all, and
+no judge object is even constructed — `judge_version` is deliberately not recorded (see `pins`).
 
 Invoke: `uv run --env-file .env python -m clearway.eval.judge_finding_input`
 """
@@ -285,7 +286,6 @@ def build_record(
     rows: Sequence[dict[str, Any]],
     replay_path: Path,
     corpus_version: str,
-    judge_version: str,
     scope: RunScope = SCOPE,
 ) -> dict[str, Any]:
     """Assemble the record. Pure given the rebuilt rows, so its whole shape is testable offline."""
@@ -322,13 +322,19 @@ def build_record(
             "corpus_version": corpus_version,
             "retrieval_query": "the axe rule id + the finding's help text, as `Retriever._query_text` composes it",
             "normative_text_budget_chars": _normative_text_budget(),
-            "judge_version_at_build_time": judge_version,
-            "judge_version_caveat": (
-                "`judge_version` is the sha256 of the judge's SYSTEM rubric plus its reasoning effort. It "
-                "does NOT cover the finding-side template that produced these blocks, so it cannot "
-                "distinguish a judge reading this input from one reading the pre-referent input. The "
-                "template's tripwire is a whole-prompt literal in the judge's tests; the blocks' own "
-                "digests are on the rows here."
+            "no_judge_version_here_and_that_is_deliberate": (
+                "`judge_version` is the sha256 of the judge's SYSTEM rubric plus its reasoning effort, and "
+                "it is NOT recorded on this file. Three reasons, and the first decides it: the string is "
+                "SCHEDULED TO MOVE — extending the rubric hash to cover the finding-side template is an "
+                "open decision — and a field that moves for a reason unrelated to this record's content "
+                "would make a rebuild indistinguishable from an edit, which is precisely the volatile-field "
+                "defect the pre-flight record already has to be repaired for. Second, it is a property of "
+                "the JUDGE while this file is deliberately configuration-independent: the two "
+                "configurations that read these bytes will carry different version strings. Third, nothing "
+                "here could validate it against a live `Judge`, so it would go stale silently. The "
+                "provenance this file does carry is per-block — every row's own sha256 — and the template's "
+                "tripwire is a whole-prompt literal in the judge's tests, which is where a template edit "
+                "fails."
             ),
         },
         "candidate_list_provenance": {
@@ -408,22 +414,13 @@ def main() -> None:
     """Rebuild the finding-side input live and freeze it. Zero judge calls; the scanner and the
     embedder are live, and the run refuses if the rebuilt findings are not the frozen pass's."""
     from clearway.eval.run_artifacts import CITATION_GROUNDING, run_path
-    from clearway.judge import Judge
-    from clearway.llm import CloudLLMClient, LocalLLMClient
     from clearway.retriever import build_default_retriever
 
     replay_path = run_path(CITATION_GROUNDING, 1)
     retriever = build_default_retriever()
     print(f"rebuilding the judge's finding-side input over {SCOPE.scope_id} — 0 judge calls", flush=True)
     rows = rebuild_rows(SCOPE, retriever)
-    judge_version = Judge(CloudLLMClient(), drafter_model=LocalLLMClient().model).judge_version
-
-    record = build_record(
-        rows=rows,
-        replay_path=replay_path,
-        corpus_version=retriever.corpus_version,
-        judge_version=judge_version,
-    )
+    record = build_record(rows=rows, replay_path=replay_path, corpus_version=retriever.corpus_version)
     corroboration = record["candidate_list_provenance"]["corroboration"]
     print(f"  {corroboration['finding_set']['findings']} findings over {corroboration['finding_set']['cases']} cases")
     for row in record["per_class"]:

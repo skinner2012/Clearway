@@ -759,9 +759,17 @@ rate is reported with its absolute count and interpreted honestly.
    - the calibration record's rater provenance (`docs/M4-calibration-report.md`, κ 0.791 `judge_trusted`)
      names a `judge_version` that the judge still reports, on input the calibration never saw.
 
+   **⚠️ And it was not discovered here.** `docs/fable5-review-codebase.md` §2.4 had already documented
+   exactly this defect, with exactly the one-line fix (hash the rubric plus the template applied to a
+   fixed sentinel). T2 did not find it; T2 made it **load-bearing** — before T2 the unhashed half of the
+   prompt was four field labels, and after it the unhashed half carries the referent and the whole
+   candidate list. A known recommendation that nothing depended on now has a measurement resting on it.
+
    **What T2 did instead of moving the string:** the whole finding-side prompt is pinned as a literal in
    the judge's tests (a template edit fails there), and every frozen block carries its own sha256 in the
-   artifact. **What is still open, and it is T3a's:** either extend the hash to cover the template and
+   artifact. **The frozen input record deliberately records no `judge_version` at all** — a field
+   scheduled to move for reasons unrelated to that record's content would make a rebuild
+   indistinguishable from an edit, which is the defect T3a already has to repair once. **What is still open, and it is T3a's:** either extend the hash to cover the template and
    **re-record** the pre-flight (the tripwire's own instruction is to re-record rather than retype), or
    decide deliberately that the run artifact's block digests are the provenance and say so where
    `judge_version` is published. Not decided at T2, because moving the string invalidates a frozen
@@ -801,6 +809,12 @@ against 0.33 on real errors. **The fourth time must be recognised.**
    shared, it is *constant within a class*: on the SC axis the two readers are choosing from the same
    five ids in the same order on every finding of a rule, which is why that axis is expected to be quiet
    and why the size of the residual is a question this milestone still does not answer.
+   **⚠️ It is a shared prior and not a shared blind spot — a different fact, measured separately: every
+   case's ACT gold criterion is inside the candidate list its findings were shown, 54/54 findings and
+   75/75 gold-SC instances** (`retrieval_adequacy` in the same file, deliberately OUTSIDE the
+   corroboration block because adequacy says nothing about whether today's list is the drafter's). Had a
+   gold criterion been unreachable, the SC axis on that finding would have been measuring the retriever
+   rather than either rater.
    **How large the residual is, and whether it should be broken, is carried forward as an open
    requirement with no milestone attached** — no milestone is planned past this one, and naming a future
    one would be inventing a plan the results have not chosen yet.
@@ -986,12 +1000,44 @@ see the pre-flight block in the evidence ledger.
     for them, so neither reader is shown them.)
   - **The candidate list is rebuilt, not recovered, and the corroboration is stated with its limits.**
     `corpus_version`, `axe_core_version` and `act_export_hash` all match the replay pass; the finding ids
-    reproduce; and the one substantive check the artifacts allow: **33 of 54 drafts cite at least one SC,
-    and all 33 cite entirely inside today's rebuilt candidate list** (21 cite nothing, which corroborates
-    nothing either way). That is consistent with the list being the one the drafter answered and cannot
-    show it — a drafted citation absent from today's list would be either a moved list or a drafter that
-    ignored its candidates, and nothing on disk separates those. Recorded in the file as
-    `cannot_establish`, and the ledger's inference entry is updated rather than promoted.
+    reproduce; and the substantive checks the artifacts allow, on both axes rather than one. **Membership:
+    33 of 54 drafts cite at least one SC, and all 33 cite entirely inside today's rebuilt candidate list**
+    (21 cite nothing, which corroborates nothing either way). **Order: every one of those 33 citations
+    sits at rank 1 or rank 2 of today's ordered list — 14 at rank 1, 19 at rank 2, none below** — which is
+    consistent with today's ordering being the one the drafter read, given a drafter instructed to cite
+    the single most applicable candidate. A citation at the tail would have been the interesting result.
+    **⚠️ An earlier draft of this block filed order as uncheckable, and that was wrong**: what is genuinely
+    unreachable is the ordering *among the criteria the drafter did not cite*, and the record now says
+    that instead. Neither axis shows identity — a drafted citation absent from today's list would be
+    either a moved list or a drafter that ignored its candidates, and nothing on disk separates those.
+    Recorded in the file as `cannot_establish`; the ledger's inference entry is updated, not promoted.
+  - **⚠️ The referent flag is keyed to the drafter's builder, not to the block's text.** It reports
+    `referent_blocks(finding) != ""`. A first version sniffed the rendered block for a phrase, which keys
+    the answer to the data's surface — the block interpolates the page's raw multi-line HTML verbatim, so
+    a fixture whose markup carried the phrase would report a referent that was never injected, and that
+    false positive lands hardest on `empty-heading`, the one class whose zero carries meaning; the same
+    probe also misses a real `label` referent that resolved only a section heading. **The published
+    numbers do not move** — the corpus happens not to contain either case — which is exactly why the
+    keying was wrong rather than merely fragile, and the test now hands the builder a fully-populated
+    referent to establish that `empty-heading`'s 0/11 is a property of the CLASS.
+  - **⚠️ The parity claim is conditional, and the condition is now asserted.** The drafter's user prompt
+    opens with a per-finding provenance sentence keyed to `Finding.source_bucket`; the finding side here
+    carries no counterpart, and the judge's rubric states the quality-review stance once for every
+    finding it grades. Those agree **only while the set is single-bucket** — all 54 are `AxeBucket.PASSES`
+    because the gold's minting keeps only that bucket — so the builder now raises on any other bucket
+    rather than freezing a set whose parity has quietly gone. **A second surviving difference is the
+    ORDER of the shared material:** the drafter renders its candidates first and appends the referent
+    after its instruction line; this block renders the referent first and ends on the candidates. Same
+    sentences, different position, and position is framing. Exact positional parity is unreachable — the
+    drafter's referent sits after an instruction sentence the judge's finding side cannot have, because
+    the judge's instruction belongs to whichever configuration is asking — so it is recorded as a
+    limitation in the artifact rather than argued away.
+  - **The freeze is pinned in three layers, because self-consistency is not a freeze.** A digest computed
+    from a file's own bytes passes any edit that recomputes it. So: a **literal digest** in the test; a
+    **full re-derivation** — `build_record` re-run over the frozen rows, which is possible because it is
+    pure given `rows`, so the corroboration arithmetic, the ranks, the adequacy counts, `per_class` and
+    every line of provenance prose are compared against the file, leaving only the live scan and the live
+    retrieval outside the check; and **every block against its own sha256** on each read.
   - **The file carries no draft-side field**, asserted by test over the row keys: a configuration that
     must not see the draft reads whole rows from it, so the answer cannot live beside the question. The
     drafted citations are touched only in the provenance block, never on a row.
@@ -1052,7 +1098,14 @@ see the pre-flight block in the evidence ledger.
     the tripwire's own instruction — or decide that the frozen blocks' digests
     (`judge_finding_input.json`) are the provenance and say so wherever `judge_version` is published.
     Zero calls either way, and it has to be settled before a baseline is frozen under a version string
-    that cannot date it.
+    that cannot date it. **⚠️ `CONTRACTS.md` is part of the same decision, and it is TWO sites, not one:**
+    `JudgeResult.judge_version` (§3, `CONTRACTS.md:766`) and the offline report's field of the same name
+    (`CONTRACTS.md:989`) both describe it as *prompt* provenance — false today, and true again if the hash
+    is extended, so editing either before the decision means editing it twice. Fixing one site alone
+    leaves the other still claiming prompt provenance, and this repo's rule makes a §3 description change
+    oblige §5 + §6 in the same commit: **the two field descriptions, §5 and the change-log entry are one
+    unit of work.** *(Both deferrals — the hash and the contract — were put to the user at T2 and
+    **signed off** as T3a's; neither is an agent's unilateral call.)*
   - **Stabilise `judge_preflight.json`'s freeze check.** Its `reproducible_digest` covers
     `listed_model_count`, which is read live from the provider, so the digest moves whenever the
     provider's catalogue moves and a rebuild cannot be told apart from an edit. **It has already
@@ -1417,9 +1470,12 @@ and the freeze is pinned by file comparison rather than by a self-digest).
 **Settled at the finding-side-input stage — zero judge calls.** Frozen in
 `benchmark/reports/judge_finding_input.json` (rebuild:
 `uv run --env-file .env python -m clearway.eval.judge_finding_input`; the scanner and the embedder are
-live, the judge is not called. `created_at` is read off the replay pass, so the record is a deterministic
-function of its sources — **two live rebuilds came out byte-identical** — and it also self-digests,
-because no test can perform a rebuild that needs services).
+live, the judge is not called and no judge object is constructed. `created_at` is read off the replay
+pass, so the record is a deterministic function of its sources — **the committed file was reproduced by
+an independent live rebuild** — and because no test can run a rebuild that needs a browser and a
+database, the freeze is pinned in three layers instead: a **literal digest**, a **full re-derivation of
+every computed field from the frozen rows** inside the test suite, and **each block against its own
+sha256** on every read).
 
 1. **The judge's prompt is two halves now, and only one of them may vary.** Finding side first — rule,
    task, target, HTML, **referent**, retrieved candidates — then the presentation of the draft. `Judge`
@@ -1438,12 +1494,24 @@ because no test can perform a rebuild that needs services).
    with a companion test that a flip moves all 54 asks so the identity is not vacuous. The file carries
    **no draft-side field** — asserted over the row keys, because the blind configuration reads whole rows
    from it.
-4. **Rebuilt, not recovered — and the corroboration is spent rather than assumed.** Every matchable pin
-   matches (`corpus_version` `wcag22-nomic-embed-text-768@1`, axe-core, the ACT export hash), and **33 of
-   54 drafts cite at least one SC, all 33 inside today's rebuilt list**; the other 21 cite nothing and
-   corroborate nothing. The record states in its own text what that cannot establish: the per-query
-   vectors, the candidate *order*, and the drafter's own prompt, none of which was ever frozen.
-5. **⚠️ Not asked for, and each one changes a statement elsewhere in this spec:** Control 4 was **false**
+4. **Rebuilt, not recovered — and the corroboration is spent rather than assumed, on both axes.** Every
+   matchable pin matches (`corpus_version` `wcag22-nomic-embed-text-768@1`, axe-core, the ACT export
+   hash). **Membership: 33 of 54 drafts cite at least one SC, all 33 inside today's rebuilt list**; the
+   other 21 cite nothing and corroborate nothing. **Order: those 33 citations sit at rank 1 (14) or rank 2
+   (19) of today's ordered list, none below** — weak evidence, and strictly stronger than membership,
+   which is why filing order as uncheckable was itself a defect. What remains genuinely unreachable is the
+   per-query vectors, the ordering *among the criteria the drafter did not cite*, and the drafter's own
+   prompt — none of which was ever frozen. **Separately, and kept out of the corroboration block because
+   it is adequacy rather than provenance: every case's gold criterion is inside the list its findings were
+   shown, 54/54 findings and 75/75 gold-SC instances.**
+5. **Two conditions the parity claim rests on, recorded rather than assumed.** "The two readers are shown
+   the same facts" is true here and false in general: the drafter states each finding's **bucket** in its
+   prompt and this block does not, which agrees only because all 54 are `AxeBucket.PASSES` — now
+   **asserted at build time**, so a scope change fails instead of voiding the claim silently. And the
+   **order** of the shared material differs (drafter: candidates then referent; here: referent then
+   candidates), which is framing, is unreachable to fix while the drafter's referent follows an
+   instruction line the judge's finding side cannot carry, and is recorded as a limitation.
+6. **⚠️ Not asked for, and each one changes a statement elsewhere in this spec:** Control 4 was **false**
    (`judge_version` hashes the system rubric only, so this change is invisible to it and to the pre-flight
    tripwire — T3a now owns the decision, and a whole-prompt literal in the judge's tests is the interim
    tripwire); **the SC-swap mutation became answerable by list membership**, because none of the three

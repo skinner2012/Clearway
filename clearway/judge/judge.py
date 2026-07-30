@@ -14,11 +14,22 @@ Two disciplines this encodes:
   returns a parseable verdict, the judge raises rather than degrading to a made-up one (unlike the
   drafter, whose low-confidence fallback is a safe production behaviour, not a measurement).
 
-Reproducibility: `judge_model` + `judge_version` (rubric-prompt hash + reasoning effort) are recorded
-on every result. Cloud models are not bit-reproducible even so — a pinned snapshot + fixed effort +
-fixed rubric is the honest best available. **⚠️ `judge_version` hashes the SYSTEM rubric only**, so an
-edit to the finding-side template below moves the judge's input without moving the version string; the
-tripwire for that template is a whole-prompt literal in the judge's tests.
+Reproducibility: `judge_model` + `judge_version` (whole-prompt hash + reasoning effort) are recorded on
+every result. Cloud models are not bit-reproducible even so — a pinned snapshot + fixed effort + a fixed
+prompt is the honest best available.
+
+**`judge_version` hashes the WHOLE prompt**, not the system rubric alone: the system text plus the user
+prompt rendered over fixed sentinels (`_version_sentinels`), so a reworded finding-side line, a moved
+field, a changed candidate heading or an edited draft presentation all move the string. It hashed the
+rubric alone until the finding side grew a referent and a candidate list, at which point the unhashed
+half stopped being four field labels and started carrying the material a measurement rests on — a
+version string that cannot date the input it was taken under is not provenance.
+
+⚠️ Two consequences of that reach, both intended. The sentinels render through the **drafter's** own
+`referent_blocks` / `candidate_lines`, so a drafter-side reword moves the judge's version string — which
+is true, because it moves the judge's prompt. And the string moved once when the hash was widened, so a
+`JudgeResult` carrying the older `rubric=…` form was taken under a prompt this module can no longer
+produce; the older form is historical and is never re-derivable from here.
 
 The judge is for no-oracle judgment items only, and only once calibrated (κ); this module builds the
 instrument — calibration lives elsewhere.
@@ -56,7 +67,18 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from clearway.drafter.llm import candidate_lines, referent_blocks
 from clearway.llm import LLMClient
-from clearway.schemas.models import Citation, DraftRow, Finding, JudgeResult, JudgeVerdict
+from clearway.schemas.models import (
+    Citation,
+    Conformance,
+    ConformanceLevel,
+    DraftRow,
+    Finding,
+    JudgeResult,
+    JudgeVerdict,
+    NodeReferent,
+    ReferentExcerpt,
+    ReferentSource,
+)
 
 
 class JudgeError(RuntimeError):
@@ -81,10 +103,6 @@ _RUBRIC_SYSTEM = (
     "Do NOT judge severity or remediation wording. Output ONLY the JSON object with "
     "citation_correct, conformance_correct, and a one-sentence rationale."
 )
-
-# Hash the rubric text so `judge_version` tracks any prompt edit automatically — a stale hand-bumped
-# version string would let a changed rubric masquerade as the calibrated one.
-_RUBRIC_HASH = hashlib.sha256(_RUBRIC_SYSTEM.encode()).hexdigest()[:8]
 
 
 class _JudgeVerdict(BaseModel):
@@ -150,7 +168,7 @@ class Judge:
         self._client = client
         self._retries = retries
         effort = getattr(client, "reasoning_effort", None)
-        parts = [f"rubric={_RUBRIC_HASH}"]
+        parts = [f"prompt={prompt_hash()}"]
         if effort:
             parts.append(f"effort={effort}")
         self._judge_version = "; ".join(parts)
@@ -248,3 +266,100 @@ def _drafted_row_block(draft: DraftRow) -> str:
 def _judge_user_prompt(prepared: FindingInput, draft: DraftRow) -> str:
     """The anchored configuration's user prompt: the frozen finding side, then the draft to grade."""
     return prepared.block + _drafted_row_block(draft)
+
+
+# ---------------------------------------------------------------------------------------------
+# What `judge_version` hashes: the system rubric plus the user prompt over fixed sentinels.
+# ---------------------------------------------------------------------------------------------
+#
+# One sentinel cannot reach the whole template. The referent block is gated by CLASS — `label`,
+# `document-title` and `link-name` each have their own builder and a finding carries one rule id — so a
+# single sentinel would leave two of the three builders outside the hash, and a reword there would move
+# the judge's prompt invisibly again. The set below covers every branch a judged finding can take:
+# the three referent classes, a class with no referent block at all, a candidate carrying normative text
+# and one carrying none, an empty candidate list, and a draft presentation with and without citations.
+#
+# The values are arbitrary; only their STABILITY matters. Changing one re-dates every measurement taken
+# under the old string, which is why they are frozen here rather than derived from the corpus.
+
+_LONG_NORMATIVE_TEXT = "The purpose of each link can be determined from the link text alone. " * 8
+
+
+def _sentinel_referent() -> NodeReferent:
+    """A referent populated on every source, so no per-class builder's branch escapes the hash."""
+    return NodeReferent(
+        accessible_name=ReferentExcerpt(text="sentinel name", source=ReferentSource.ACCESSIBLE_NAME),
+        document_title=ReferentExcerpt(text="sentinel title", source=ReferentSource.DOCUMENT_TITLE),
+        page_topic=ReferentExcerpt(text="sentinel topic", source=ReferentSource.H1),
+        section_heading=ReferentExcerpt(
+            text="sentinel heading", source=ReferentSource.NEAREST_SECTION_HEADING, in_accessibility_tree=True
+        ),
+        surrounding_context=ReferentExcerpt(
+            text="sentinel context", source=ReferentSource.ANCESTOR_TEXT, ancestor_depth=2
+        ),
+    )
+
+
+def _sentinel_finding(rule_id: str, *, referent: NodeReferent | None) -> Finding:
+    return Finding(
+        id=f"version-sentinel:{rule_id}",
+        source_url="file://version-sentinel.html",
+        rule_id=rule_id,
+        target="#sentinel",
+        html="<span>sentinel</span>",
+        help="sentinel task",
+        referent=referent,
+    )
+
+
+def _sentinel_citation(sc_id: str, text: str) -> Citation:
+    return Citation(
+        sc_id=sc_id,
+        title="Sentinel Criterion",
+        level=ConformanceLevel.A,
+        source="WCAG-SC",
+        url=f"https://www.w3.org/TR/WCAG22/#sentinel-{sc_id}",
+        text=text,
+    )
+
+
+def _sentinel_draft(finding: Finding, conformance: Conformance, *sc_ids: str) -> DraftRow:
+    return DraftRow(
+        finding_id=finding.id,
+        conformance=conformance,
+        citations=[Citation(sc_id=s) for s in sc_ids],
+        remediation="sentinel remediation",
+        confidence=0.5,
+    )
+
+
+def _version_sentinels() -> tuple[tuple[Finding, list[Citation], DraftRow], ...]:
+    referent = _sentinel_referent()
+    label = _sentinel_finding("label", referent=referent)
+    title = _sentinel_finding("document-title", referent=referent)
+    link = _sentinel_finding("link-name", referent=referent)
+    bare = _sentinel_finding("empty-heading", referent=None)
+    with_text = _sentinel_citation("3.3.2", "Labels or instructions are provided.")
+    over_budget = _sentinel_citation("2.4.4", _LONG_NORMATIVE_TEXT)
+    text_less = _sentinel_citation("2.4.2", "")
+    return (
+        (label, [with_text], _sentinel_draft(label, Conformance.DOES_NOT_SUPPORT, "3.3.2")),
+        (title, [text_less], _sentinel_draft(title, Conformance.PARTIALLY_SUPPORTS, "2.4.2", "1.3.1")),
+        (link, [over_budget], _sentinel_draft(link, Conformance.NOT_APPLICABLE)),
+        (bare, [], _sentinel_draft(bare, Conformance.SUPPORTS)),
+    )
+
+
+def version_prompts() -> tuple[str, ...]:
+    """Every prompt the version hash is taken over — the system text, then one user prompt per sentinel.
+
+    Public so a test can assert what the hash reaches rather than restate the hash: a pin on the digest
+    alone would pass a sentinel that silently stopped rendering a block.
+    """
+    asks = [_judge_user_prompt(finding_input(f, c), d) for f, c, d in _version_sentinels()]
+    return (_RUBRIC_SYSTEM, *asks)
+
+
+def prompt_hash() -> str:
+    """The first 8 hex of the sha256 over every prompt surface a judged finding can produce."""
+    return hashlib.sha256("\x00".join(version_prompts()).encode()).hexdigest()[:8]

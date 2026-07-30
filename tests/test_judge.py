@@ -2,8 +2,7 @@
 
 - **offline** (default): verdict derivation across all four boolean combinations, the judge≠drafter
   guard, recorded provenance, raise-not-fabricate on unparseable output, and the **user-prompt
-  template** — pinned as a whole-prompt literal, because `judge_version` hashes the SYSTEM rubric
-  alone and cannot see this template move.
+  template** — pinned as a whole-prompt literal, and separately as what `judge_version` reaches.
 - **gated** (`openai_up`): the real cloud judge grades a judgment item, and a face-validity smoke
   confirms it calls obvious right/wrong drafts correctly. Skips when OPENAI_API_KEY is absent.
 """
@@ -16,6 +15,8 @@ import pytest
 
 from clearway.drafter.llm import candidate_lines, referent_blocks
 from clearway.judge import CANDIDATE_HEADING, FindingInput, Judge, JudgeError, finding_input, verdict_from
+from clearway.judge import judge as judge_module
+from clearway.judge.judge import _RUBRIC_SYSTEM, version_prompts
 from clearway.llm import CloudLLMClient, FakeLLMClient
 from clearway.schemas.models import (
     Citation,
@@ -105,7 +106,7 @@ def test_assembles_result_with_derived_verdict_and_provenance() -> None:
     assert result.finding_id == finding.id  # identity from code, never the model
     assert result.run_id == "run-1"
     assert result.judge_model == _JUDGE_MODEL
-    assert "rubric=" in result.judge_version  # rubric-hash provenance recorded
+    assert "prompt=" in result.judge_version  # whole-prompt provenance recorded
     assert result.rationale == "right SC and verdict"
 
 
@@ -173,11 +174,11 @@ def _sentinel_finding() -> Finding:
 
 # The whole user prompt, byte for byte, for a referent-carrying class with one grounded candidate.
 #
-# ⚠️ THIS IS THE TEMPLATE'S ONLY TRIPWIRE. `judge_version` is the sha256 of `_RUBRIC_SYSTEM` plus the
-# reasoning effort, so it does NOT move when this template moves: reword a line here and every
-# `JudgeResult` still carries the version string the judge was calibrated under. A failure here is not
-# a literal to retype — it means the judge's input changed, so any measurement taken under the old
-# template (the calibration κ, a frozen baseline) describes an instrument that no longer exists.
+# ⚠️ A failure here is not a literal to retype — it means the judge's input changed, so any measurement
+# taken under the old template (the calibration κ, a frozen baseline) describes an instrument that no
+# longer exists. `judge_version` now moves with it, which is a second signal and not a replacement: the
+# version string says THAT the prompt moved, this literal says WHAT moved, and only the second is
+# readable in a diff.
 _EXPECTED_USER_PROMPT = (
     "FINDING\n"
     "- axe rule: link-name\n"
@@ -203,16 +204,58 @@ _EXPECTED_USER_PROMPT = (
 )
 
 
-def test_the_whole_user_prompt_is_pinned_because_judge_version_cannot_see_it() -> None:
+def test_the_whole_user_prompt_is_pinned_line_by_line() -> None:
     finding = _sentinel_finding()
     draft = _draft(finding, Conformance.DOES_NOT_SUPPORT, "2.4.4")
     client = FakeLLMClient(_resp(True, True), model=_JUDGE_MODEL)
     Judge(client, drafter_model=_DRAFTER_MODEL).judge(finding, draft, "r", citations=[_SENTINEL_CANDIDATE])
     assert client.requests[0].user == _EXPECTED_USER_PROMPT, (
-        "the judge's user prompt moved. `judge_version` hashes the system rubric only, so nothing else "
-        "in this repo records that — re-read what the change does to any baseline measured under the "
-        "previous template before updating this literal"
+        "the judge's user prompt moved. `judge_version` moves with it, so every result taken under the "
+        "previous template is now dated — re-read what the change does to any baseline measured under "
+        "it, and re-record the pre-flight, before updating this literal"
     )
+
+
+def test_the_version_hash_reaches_every_prompt_surface_a_judged_finding_can_take() -> None:
+    """`judge_version` is provenance only if it covers what actually varies.
+
+    Asserted on the surfaces rather than on the digest: a pin on the hash alone stays green if a
+    sentinel silently stops rendering a block, which is the failure that put the referent and the
+    candidate list outside the string in the first place. One sentinel cannot do this — the referent
+    block is gated by class, so a single rule id leaves two of the three builders unreached.
+    """
+    surfaces = version_prompts()
+    assert surfaces[0] == _RUBRIC_SYSTEM  # the system half is still in there
+    joined = "\n".join(surfaces)
+    for rule in ("label", "document-title", "link-name", "empty-heading"):
+        assert f"- axe rule: {rule}\n" in joined, f"no sentinel renders {rule}"
+    for marker in (
+        'Resolved accessible name: "',  # label + link-name referent builders
+        "Nearest section heading: ",
+        'Resolved page title: "',  # document-title referent builder
+        "Page topic signal (source: ",
+        "Surrounding context (ancestor depth ",
+        CANDIDATE_HEADING,  # the candidate block and both of its shapes
+        "  What it requires: ",
+        "- (none retrieved)",
+        "(normative text truncated at ",
+        "DRAFTED ROW (grade this)",  # the draft presentation, cited and not
+        "- cited WCAG SC(s): (none)",
+    ):
+        assert marker in joined, f"the version hash does not reach {marker!r}"
+
+
+def test_the_version_string_moves_when_the_judges_prompt_moves(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The property the whole decision rests on: an edit to the user template re-dates every result.
+
+    Exercised through the candidate heading, which lives in the finding side and is exactly the kind of
+    wording change the rubric-only hash used to swallow.
+    """
+    before = Judge(FakeLLMClient(model=_JUDGE_MODEL), drafter_model=_DRAFTER_MODEL).judge_version
+    monkeypatch.setattr(judge_module, "CANDIDATE_HEADING", "Some other heading:")
+    after = Judge(FakeLLMClient(model=_JUDGE_MODEL), drafter_model=_DRAFTER_MODEL).judge_version
+    assert after != before
+    assert after.startswith("prompt=")
 
 
 def test_the_referent_and_the_candidates_are_the_drafters_own_sentences() -> None:
@@ -296,7 +339,7 @@ def test_real_judge_returns_wellformed_result_for_a_judgment_item() -> None:
     assert result.judge_model != _DRAFTER_MODEL
     assert result.verdict in (JudgeVerdict.CORRECT, JudgeVerdict.PARTIAL, JudgeVerdict.INCORRECT)
     assert result.rationale
-    assert "rubric=" in result.judge_version
+    assert "prompt=" in result.judge_version
 
 
 @openai_up

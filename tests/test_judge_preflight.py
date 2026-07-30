@@ -238,21 +238,25 @@ def test_judge_pins_fall_back_to_the_code_default(monkeypatch: pytest.MonkeyPatc
     assert pins["reasoning_effort_source"] == "code default"
 
 
-def test_the_rubric_hash_the_budget_was_counted_under_is_a_deliberate_tripwire(
+def test_the_prompt_hash_the_budget_was_counted_under_is_a_deliberate_tripwire(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """INTENTIONAL PIN, expected to fail the first time the rubric text is edited.
+    """INTENTIONAL PIN, expected to fail the first time the judge's prompt is edited.
 
-    The pre-flight numbers were counted against this rubric, and the comparison they feed treats the
-    rubric as the one thing that changes between configurations. So an edit must not slide in silently:
-    when this fails, re-read the pre-flight record rather than retyping the hash — a rubric that moved
-    means the baseline's instrument moved with it.
+    The pre-flight numbers were counted against this prompt, and the comparison they feed treats the
+    prompt as the one thing that changes between configurations. So an edit must not slide in silently:
+    when this fails, RE-RECORD the pre-flight rather than retyping the hash — a prompt that moved means
+    the baseline's instrument moved with it.
+
+    ⚠️ It now watches the whole prompt, not the system rubric alone. The widening is itself why this
+    literal moved once: the same rubric, the same effort, a different string, because the string finally
+    covers the finding side.
     """
     monkeypatch.delenv("CLEARWAY_JUDGE_EFFORT", raising=False)
     monkeypatch.delenv("CLEARWAY_JUDGE_MODEL", raising=False)
-    assert judge_pins()["judge_version"] == "rubric=e396f37f; effort=medium", (
-        "the rubric text changed since the pre-flight was recorded — the recorded budget and the "
-        "anchored baseline were both counted under the previous rubric, so re-record rather than "
+    assert judge_pins()["judge_version"] == "prompt=afadca26; effort=medium", (
+        "the judge's prompt changed since the pre-flight was recorded — the recorded budget and the "
+        "anchored baseline were both counted under the previous prompt, so re-record rather than "
         "updating this expectation in place"
     )
 

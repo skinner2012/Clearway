@@ -157,7 +157,7 @@ def snapshot_availability(
 
 def judge_pins() -> dict[str, str]:
     """The judge provenance a run would carry right now: snapshot, effective reasoning effort, and the
-    `judge_version` those two produce with the current rubric.
+    `judge_version` those two produce with the current prompt.
 
     Read by CONSTRUCTING the real client and the real judge — neither makes a call — rather than by
     restating the defaults here. A second copy of a pin is a copy that can be right while the code is

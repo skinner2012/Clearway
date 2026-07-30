@@ -813,7 +813,11 @@ class JudgeResult(BaseModel):
     run_id: str
     judge_model: str = Field(..., description="judge model id — MUST differ from the drafter model (self-preference)")
     judge_version: str = Field(
-        ..., description="pinned judge snapshot + temperature/prompt provenance, for reproducibility"
+        ...,
+        description="whole-prompt provenance: the judge model's pinned snapshot plus a sha256 over its "
+        "ENTIRE prompt — system rubric AND user template — and its reasoning effort. A `rubric=…` value "
+        "is HISTORICAL: it was recorded while the hash covered the system text alone, so it cannot date "
+        "the finding-side input the result was taken under",
     )
     verdict: JudgeVerdict = Field(
         ..., description="correct | incorrect | partial (partial = one dimension right, the other wrong)"
@@ -1161,7 +1165,12 @@ class OfflineEvalReport(BaseModel):
     )
     judge_model: str = Field(..., description="judge model tag, for readability")
     judge_model_digest: str = Field(..., description="judge model IMMUTABLE digest — the freeze key")
-    judge_version: str = Field(..., description="pinned judge snapshot + prompt / temperature provenance")
+    judge_version: str = Field(
+        ...,
+        description="whole-prompt provenance: pinned judge snapshot + a sha256 over the judge's ENTIRE "
+        "prompt (system rubric AND user template) + reasoning effort. A `rubric=…` value is HISTORICAL "
+        "— see `JudgeResult.judge_version`",
+    )
     axe_core_version: str = Field(..., description="pinned axe-core version — the coverage gate for every Finding")
     act_export_hash: str = Field(
         ..., description="content hash of the vendored ACT export — the gold is pinned, never fetched live"

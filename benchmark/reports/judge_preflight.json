@@ -1,10 +1,10 @@
 {
-  "created_at": "2026-07-30T14:31:40.117050+00:00",
+  "created_at": "2026-07-30T14:54:39.262333+00:00",
   "model_calls_spent": 0,
   "judge_snapshot": {
     "model": "gpt-5.6-luna",
     "available": true,
-    "listed_model_count": 126,
+    "listed_model_count": 125,
     "source": "GET https://api.openai.com/v1/models (model listing — metadata, no inference)",
     "base_url_override": null,
     "base_url_override_source": null
@@ -12,7 +12,7 @@
   "judge_pins": {
     "judge_model": "gpt-5.6-luna",
     "reasoning_effort": "medium",
-    "judge_version": "rubric=e396f37f; effort=medium",
+    "judge_version": "prompt=afadca26; effort=medium",
     "reasoning_effort_source": "code default"
   },
   "budget_source": {
@@ -73,5 +73,5 @@
       ]
     }
   },
-  "reproducible_digest": "5392557ebbe5812dadb578040fbf0dab1838c8ec3fda1a44d6fcf2aafc4b6946"
+  "reproducible_digest": "80a0e1426fac0db094c57b0a82a34677ae634035acf0cc0a9140d578df29759b"
 }

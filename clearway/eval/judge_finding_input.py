@@ -459,18 +459,19 @@ def build_record(
             "retrieval_query": "the axe rule id + the finding's help text, as `Retriever._query_text` composes it",
             "normative_text_budget_chars": _normative_text_budget(),
             "no_judge_version_here_and_that_is_deliberate": (
-                "`judge_version` is the sha256 of the judge's SYSTEM rubric plus its reasoning effort, and "
-                "it is NOT recorded on this file. Three reasons, and the first decides it: the string is "
-                "SCHEDULED TO MOVE — extending the rubric hash to cover the finding-side template is an "
-                "open decision — and a field that moves for a reason unrelated to this record's content "
-                "would make a rebuild indistinguishable from an edit, which is precisely the volatile-field "
-                "defect the pre-flight record already has to be repaired for. Second, it is a property of "
-                "the JUDGE while this file is deliberately configuration-independent: the two "
-                "configurations that read these bytes will carry different version strings. Third, nothing "
-                "here could validate it against a live `Judge`, so it would go stale silently. The "
-                "provenance this file does carry is per-block — every row's own sha256 — and the template's "
-                "tripwire is a whole-prompt literal in the judge's tests, which is where a template edit "
-                "fails."
+                "`judge_version` is the sha256 of the judge's WHOLE prompt — the system rubric plus the "
+                "user template rendered over fixed sentinels — plus its reasoning effort, and it is NOT "
+                "recorded on this file. Three reasons, and the first decides it: the string MOVES on any "
+                "prompt edit, by design, and a field that moves for a reason unrelated to this record's "
+                "content would make a rebuild indistinguishable from an edit — the volatile-field defect "
+                "the pre-flight record had to be repaired for. That the hash now covers the finding-side "
+                "template strengthens this rather than settling it: the string tracks more, so it moves "
+                "more often, while these bytes stay put. Second, it is a property of the JUDGE while this "
+                "file is deliberately configuration-independent: the two configurations that read these "
+                "bytes carry the same string today and need not tomorrow. Third, nothing here could "
+                "validate it against a live `Judge`, so it would go stale silently. The provenance this "
+                "file does carry is per-block — every row's own sha256 — and a template edit fails against "
+                "both the whole-prompt literal in the judge's tests and the version string itself."
             ),
         },
         "candidate_list_provenance": {

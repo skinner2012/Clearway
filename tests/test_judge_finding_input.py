@@ -110,7 +110,7 @@ def replay() -> dict[str, Any]:
 # and the live embedder — so a failure here means either the input genuinely changed (in which case the
 # blocks any judge configuration would send have changed, and nothing measured under the old ones
 # describes the new ones) or the file was edited by hand.
-_FROZEN_DIGEST = "8979e1a1638f07aa9aa804f0d268a72f60e3b4b20a2ed0c0d1ea0442384b62f3"
+_FROZEN_DIGEST = "bd12b2c85c66037ac29abe49b505b5416e12e8becf5e30aa04a36620873bff66"
 
 
 def test_the_record_reproduces_its_own_digest(record: dict[str, Any]) -> None:

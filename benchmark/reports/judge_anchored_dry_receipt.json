@@ -18,7 +18,7 @@
     "frozen_finding_side": {
       "path": "judge_finding_input.json",
       "rows": 54,
-      "reproducible_digest": "8979e1a1638f07aa9aa804f0d268a72f60e3b4b20a2ed0c0d1ea0442384b62f3"
+      "reproducible_digest": "bd12b2c85c66037ac29abe49b505b5416e12e8becf5e30aa04a36620873bff66"
     }
   },
   "asks_per_pass": {

@@ -1,0 +1,1268 @@
+{
+  "artifact": "the judge's finding-side prompt input, frozen once for both configurations",
+  "version": 1,
+  "judge_calls_spent": 0,
+  "created_at": "2026-07-25T02:41:41.406015+00:00",
+  "both_configurations_read_this_file": "Both judge configurations take their finding-side prompt from `rows[].finding_block`, verbatim, through `judge.Judge.judge_prepared`. The configuration that grades a draft appends its presentation of that draft AFTER this block; the configuration that never sees the draft sends the block alone. So the finding side is not merely equal across the two — it is the same bytes, and the test asserts that against this file rather than against a second rendering of it.",
+  "carries_no_draft_side_field": "No row carries the drafted conformance or the drafted citations. The configuration that must not see the draft reads whole rows from this file, so the file cannot hold the answer.",
+  "sources": {
+    "replay_pass": {
+      "path": "citation_grounding_run_1.json",
+      "sha256": "191e40e5efa83bb82799d1c83579b54246f9ff56781e615f459999df6bb52141",
+      "config_id": "m1-single@1",
+      "eval_set_id": "act-acceptance@1",
+      "corpus_version": "wcag22-nomic-embed-text-768@1",
+      "axe_core_version": "4.12.1",
+      "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+      "created_at": "2026-07-25T02:41:41.406015+00:00"
+    },
+    "scope": {
+      "scope_id": "acceptance",
+      "manifest": "expected_act.json",
+      "eval_set_id": "act-acceptance@1",
+      "axe_rules": [
+        "document-title",
+        "empty-heading",
+        "label",
+        "link-name"
+      ]
+    }
+  },
+  "pins": {
+    "corpus_version": "wcag22-nomic-embed-text-768@1",
+    "retrieval_query": "the axe rule id + the finding's help text, as `Retriever._query_text` composes it",
+    "normative_text_budget_chars": 400,
+    "judge_version_at_build_time": "rubric=e396f37f; effort=medium",
+    "judge_version_caveat": "`judge_version` is the sha256 of the judge's SYSTEM rubric plus its reasoning effort. It does NOT cover the finding-side template that produced these blocks, so it cannot distinguish a judge reading this input from one reading the pre-referent input. The template's tripwire is a whole-prompt literal in the judge's tests; the blocks' own digests are on the rows here."
+  },
+  "candidate_list_provenance": {
+    "rebuilt_not_recovered": true,
+    "statement": "The candidate list on every row was REBUILT by re-running retrieval today; it was not recovered from the drafter's run, because the list the drafter was shown was never recorded anywhere. Retrieval is deterministic on a frozen corpus and every available pin matches (see corroboration), so this is the same list the same query returns — but that is corroboration, not verification. Freezing discharges the comparison this file exists for: both judge configurations read these bytes. It does NOT establish that the judge's input equals the drafter's.",
+    "corroboration": {
+      "corpus_version_matches_the_replay_pass": true,
+      "axe_core_version_matches_the_replay_pass": true,
+      "act_export_hash_matches_the_replay_pass": true,
+      "finding_set": {
+        "cases": 40,
+        "findings": 54,
+        "finding_ids_and_targets_identical_to_the_replay_pass": true,
+        "checked": "act_testcase_id → ((finding_id, target), …), compared as a whole rather than counted"
+      },
+      "drafted_citations": {
+        "drafts_citing_at_least_one_sc": 33,
+        "drafts_whose_every_cited_sc_is_in_todays_candidate_list": 33,
+        "drafts_citing_outside_todays_candidate_list": [],
+        "drafts_citing_nothing": 21,
+        "reading": "A citation inside the rebuilt list is consistent with the list being the one the drafter answered; a citation outside it would be either a moved list or a drafter that ignored its candidates, and nothing on disk separates those two. This corroborates and cannot verify."
+      }
+    },
+    "cannot_establish": "What no check here can establish: (1) that the embedder returned the same vector then as now — the model is pinned by tag and the corpus_version welds the model and dimension to the stored vectors, but no per-query vector was retained; (2) that the ORDER of the candidates is the order the drafter saw, since only the set's membership can be cross-checked against what the drafter cited; (3) that a drafted citation appearing in today's list proves the list is unchanged — a different list containing the same criterion would look identical on that check; (4) anything about the drafter's own prompt, which was never frozen either. The honest status is the spec's: corroborated at best, never asserted as verified."
+  },
+  "per_class": [
+    {
+      "axe_rule": "document-title",
+      "findings": 5,
+      "findings_with_a_rendered_referent": 5,
+      "referent_sources_captured": [
+        "accessible_name",
+        "document_title",
+        "page_topic"
+      ],
+      "candidates_per_finding": {
+        "5": 5
+      },
+      "distinct_candidate_lists": 1
+    },
+    {
+      "axe_rule": "empty-heading",
+      "findings": 11,
+      "findings_with_a_rendered_referent": 0,
+      "referent_sources_captured": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "candidates_per_finding": {
+        "5": 11
+      },
+      "distinct_candidate_lists": 1
+    },
+    {
+      "axe_rule": "label",
+      "findings": 17,
+      "findings_with_a_rendered_referent": 17,
+      "referent_sources_captured": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "candidates_per_finding": {
+        "5": 17
+      },
+      "distinct_candidate_lists": 1
+    },
+    {
+      "axe_rule": "link-name",
+      "findings": 21,
+      "findings_with_a_rendered_referent": 21,
+      "referent_sources_captured": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "candidates_per_finding": {
+        "5": 21
+      },
+      "distinct_candidate_lists": 1
+    }
+  ],
+  "rows": [
+    {
+      "act_testcase_id": "0ed8074a5bee7052a1a28f9fd718b7d35a645cfd",
+      "axe_rule": "label",
+      "target": "#fname",
+      "finding_id": "0ad128777582043b",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #fname\n- HTML: <input id=\"fname\" type=\"text\" name=\"fname\">\nResolved accessible name: \"First name:\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "09251404220498f0e41a4257a1ae10dc33aba6cf6d083d71c79810a082980b43"
+    },
+    {
+      "act_testcase_id": "90d77d3e5b2fdc19bce47f9f9362283861d3903b",
+      "axe_rule": "label",
+      "target": "#fname",
+      "finding_id": "f6cfda892d1c6e32",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #fname\n- HTML: <input id=\"fname\" type=\"text\" name=\"fname\">\nResolved accessible name: \"First name:\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "09251404220498f0e41a4257a1ae10dc33aba6cf6d083d71c79810a082980b43"
+    },
+    {
+      "act_testcase_id": "2a3113551e8b6285b44b1495356235222b75542f",
+      "axe_rule": "label",
+      "target": "input",
+      "finding_id": "41e92ab9518e3426",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: input\n- HTML: <input aria-labelledby=\"label_fname\" type=\"text\" name=\"fname\">\nResolved accessible name: \"First name:\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "1b3b38998d85c09821215e05ca966306ff0abb0001e3a68f1e86e2a1e28083a9"
+    },
+    {
+      "act_testcase_id": "88a1646138c707f4d488ac76215fde0fd398bb94",
+      "axe_rule": "label",
+      "target": "input",
+      "finding_id": "12eaeadaad25d018",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: input\n- HTML: <input aria-labelledby=\"label_fname\" type=\"text\" name=\"fname\">\nResolved accessible name: \"First name:\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "1b3b38998d85c09821215e05ca966306ff0abb0001e3a68f1e86e2a1e28083a9"
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "target": "#shipping-name",
+      "finding_id": "c572eabdf3f973cd",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #shipping-name\n- HTML: <input id=\"shipping-name\" type=\"text\" name=\"name\">\nResolved accessible name: \"Name\"\nNearest section heading: \"Shipping\" (in accessibility tree: yes)\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "8bf6bc1c42750bf588b1fa3b641c8ef1cc97473df57c209514756f6e9b8fb7a8"
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "target": "#shipping-street",
+      "finding_id": "6e1818fe3e66f076",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #shipping-street\n- HTML: <input id=\"shipping-street\" type=\"text\" name=\"street\">\nResolved accessible name: \"Street\"\nNearest section heading: \"Shipping\" (in accessibility tree: yes)\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "ceb6bf3b1a2ca1232144ec84323a5a81b8aae1f7bc2d6e8dcfba5dbe09a6bda0"
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "target": "#billing-name",
+      "finding_id": "2b0e0fe48ea9e1f5",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #billing-name\n- HTML: <input id=\"billing-name\" type=\"text\" name=\"name\">\nResolved accessible name: \"Name\"\nNearest section heading: \"Billing\" (in accessibility tree: yes)\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "b282c6661150d4188baf58e7988275a86263f3108e7e5650840524d99d2ccc91"
+    },
+    {
+      "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+      "axe_rule": "label",
+      "target": "#billing-street",
+      "finding_id": "f59abb85da2b4b02",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #billing-street\n- HTML: <input id=\"billing-street\" type=\"text\" name=\"street\">\nResolved accessible name: \"Street\"\nNearest section heading: \"Billing\" (in accessibility tree: yes)\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "6d608920d81f6b1837fb4c66456b7c19fa5ee4ddc3a3cc8223d9bff942b63993"
+    },
+    {
+      "act_testcase_id": "467ca5a8f029d0f7a099ccf81b19872df5ccd117",
+      "axe_rule": "label",
+      "target": "#shipping-name",
+      "finding_id": "b382f99e869c9aa2",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #shipping-name\n- HTML: <input id=\"shipping-name\" type=\"text\" name=\"name\" aria-labelledby=\"shipping name\">\nResolved accessible name: \"Shipping Name\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "d1694a022afc1422fd0a2b550f2229b47e8a369be88828d35f6ab8355faa5fa7"
+    },
+    {
+      "act_testcase_id": "94d3003abb03281265a5423caf07d3dc4cc2a190",
+      "axe_rule": "label",
+      "target": "#fname",
+      "finding_id": "21282c4ea572127c",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #fname\n- HTML: <input id=\"fname\" type=\"text\" name=\"fname\">\nResolved accessible name: \"Menu\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "8f7633d489cb33840d9961903c55359a574e4bf206d2ec8f24c7870f454c08b7"
+    },
+    {
+      "act_testcase_id": "ec284879633645f114751de5cf1d14978030ab77",
+      "axe_rule": "label",
+      "target": "#fname",
+      "finding_id": "eb42a07564869770",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: #fname\n- HTML: <input id=\"fname\" type=\"text\" name=\"fname\">\nResolved accessible name: \"Menu\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "8f7633d489cb33840d9961903c55359a574e4bf206d2ec8f24c7870f454c08b7"
+    },
+    {
+      "act_testcase_id": "80c83d04972e8a4a4127ced657b3d724435d06b0",
+      "axe_rule": "label",
+      "target": "input",
+      "finding_id": "a9f3145eb6d99207",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: input\n- HTML: <input aria-labelledby=\"label_fname\" type=\"text\" name=\"fname\">\nResolved accessible name: \"Menu\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "64ea81521a4b302fbf58b706da08fef23420d54ace8199a079c5083d020119f9"
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "target": "input[name=\"shipping-name\"]",
+      "finding_id": "432e6f6ed81a6dfe",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: input[name=\"shipping-name\"]\n- HTML: <input type=\"text\" name=\"shipping-name\">\nResolved accessible name: \"Name:\"\nNearest section heading: \"Shipping address\" (in accessibility tree: yes)\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "e0f6e314bf94279ef65fc309eacd60ff79b8941fbd521202e42786a898285801"
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "target": "input[name=\"shipping-street\"]",
+      "finding_id": "21c767c6107505a1",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: input[name=\"shipping-street\"]\n- HTML: <input type=\"text\" name=\"shipping-street\">\nResolved accessible name: \"Street:\"\nNearest section heading: \"Shipping address\" (in accessibility tree: yes)\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "558c6aa4ea2c8ac6fa96f0234dbc429a6e235cc54a1a0695fc4e28a8daf25a9e"
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "target": "input[name=\"billing-name\"]",
+      "finding_id": "71f00ccb5e0c3baf",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: input[name=\"billing-name\"]\n- HTML: <input type=\"text\" name=\"billing-name\">\nResolved accessible name: \"Name:\"\nNearest section heading: \"Billing address\" (in accessibility tree: yes)\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "2bb1b9a67b444735045c0dd2bdb465eccfc5d5b021316bd67131294abb09e3a0"
+    },
+    {
+      "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+      "axe_rule": "label",
+      "target": "input[name=\"billing-street\"]",
+      "finding_id": "12f433560ab01474",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: input[name=\"billing-street\"]\n- HTML: <input type=\"text\" name=\"billing-street\">\nResolved accessible name: \"Street:\"\nNearest section heading: \"Billing address\" (in accessibility tree: yes)\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "92e4669436eea5731e8520168c158f64c71f170fd28a7a5455ee3462dc7a833d"
+    },
+    {
+      "act_testcase_id": "925f5da9291c3ff7ee2c98cf43773ff6933be5a9",
+      "axe_rule": "label",
+      "target": "input",
+      "finding_id": "2857711c7313f4de",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.5.3",
+        "3.3.2",
+        "4.1.2",
+        "2.4.6",
+        "1.3.6"
+      ],
+      "finding_block": "FINDING\n- axe rule: label\n- task: The form field has a programmatic label — judge whether it clearly identifies the field's PURPOSE for WCAG 1.3.1 / 3.3.2; a placeholder-as-label or a vague label does NOT.\n- target element: input\n- HTML: <input type=\"text\" name=\"search\" aria-labelledby=\"submit search\">\nResolved accessible name: \"Go Search\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.5.3 (https://www.w3.org/TR/WCAG22/#label-in-name)\n  What it requires: Label in Name. For user interface components with labels that include text or images of text, the name contains the text that is presented visually. NoteA best practice is to have the text of the label at the start of the name\n- 3.3.2 (https://www.w3.org/TR/WCAG22/#labels-or-instructions)\n  What it requires: Labels or Instructions. Labels or instructions are provided when content requires user input\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.6 (https://www.w3.org/TR/WCAG22/#identify-purpose)\n  What it requires: Identify Purpose. In content implemented using markup languages, the purpose of user interface components, icons, and regions can be programmatically determined",
+      "finding_block_sha256": "77c673dcbea1f381f5e6af484ca6d86679ac733ade17917ec5c9124d79ef292a"
+    },
+    {
+      "act_testcase_id": "30ea3b43777437566f35f235de3fc94a16c87a96",
+      "axe_rule": "empty-heading",
+      "target": "h1",
+      "finding_id": "07e86f20111d107d",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: h1\n- HTML: <h1>Opening Hours</h1>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "a54e8a7a858aefaf479018ddadad2a9b8e2ee58b7213678770045b300bb5a1d1"
+    },
+    {
+      "act_testcase_id": "b81884710c18ce810cbed8a926188609aead5786",
+      "axe_rule": "empty-heading",
+      "target": "span",
+      "finding_id": "6c38b10855194400",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: span\n- HTML: <span role=\"heading\" aria-level=\"1\">Opening Hours</span>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "a016ad4f1ded20dfdd87e0a20d1b597e9f6156040f842a75d65c1dac20b1d08e"
+    },
+    {
+      "act_testcase_id": "439e4f0379f4b0920aa858fadc663681ec15536b",
+      "axe_rule": "empty-heading",
+      "target": "span",
+      "finding_id": "13eca0e01ed59e65",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: span\n- HTML: <span role=\"heading\">Opening Hours</span>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "c35e9515ed4066d02d930962a3525332d1a8e64ae99d01d4a7f622d9cd67bbbc"
+    },
+    {
+      "act_testcase_id": "49a6b0a208fa118829c6622ffc1dc2ce150a1ce1",
+      "axe_rule": "empty-heading",
+      "target": "h1",
+      "finding_id": "49248f9403e063c0",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: h1\n- HTML: <h1>\n\t\t<img src=\"/test-assets/descriptive-heading-b49b2e/opening_hours_icon.png\" alt=\"Opening hours\">\n\t</h1>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "b6e01ba4a2ef87a37211e07e97d180972e917ad6cbf3d35bc239888875b20356"
+    },
+    {
+      "act_testcase_id": "aee358f45b40658fcc5c42d12a6df82dbdf94e0c",
+      "axe_rule": "empty-heading",
+      "target": "h1",
+      "finding_id": "bee7ee5f916ce43d",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: h1\n- HTML: <h1>A</h1>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "96799e7c9cf8309751dd5a604b6da8d76343dd03304d3e7854b7fa8ba2b2e86e"
+    },
+    {
+      "act_testcase_id": "ffb1127189b433a4d64fe895c24db7a8e3816080",
+      "axe_rule": "empty-heading",
+      "target": "span",
+      "finding_id": "54f5db462728661c",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: span\n- HTML: <span role=\"heading\" aria-level=\"1\" style=\"position: absolute; top: -9999px; left: -9999px;\">Opening Hours</span>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "82da1451b79af16b661ea3ccd10bf5e779b0f82b7139ce88ccc960b69afe31fb"
+    },
+    {
+      "act_testcase_id": "f32765d70e0f730a7a3a859dc8cd396c186bce4a",
+      "axe_rule": "empty-heading",
+      "target": "h1",
+      "finding_id": "ed48016d4cfaf6a7",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: h1\n- HTML: <h1>Opening Hours</h1>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "a54e8a7a858aefaf479018ddadad2a9b8e2ee58b7213678770045b300bb5a1d1"
+    },
+    {
+      "act_testcase_id": "680f45d618bff74142de42e6ed6c7ee2e33b0f6c",
+      "axe_rule": "empty-heading",
+      "target": "h1",
+      "finding_id": "f2ba326493d8331b",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: h1\n- HTML: <h1>Weather</h1>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "0fa772c2957e7c3a827040d7d3df2dbd5255b717616f019240bd33ea3ce7864e"
+    },
+    {
+      "act_testcase_id": "b21c77db7674e58bccfe50adfe6ecd6bb715efd9",
+      "axe_rule": "empty-heading",
+      "target": "span",
+      "finding_id": "82402aafad29a23a",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: span\n- HTML: <span role=\"heading\" aria-level=\"1\">Weather</span>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "eaea6225a79d3a725f7aac30e32aef94180168c05f4db013538e5c35c24324b9"
+    },
+    {
+      "act_testcase_id": "5310147eff2036b05df603cd66f32d8ac9163c6b",
+      "axe_rule": "empty-heading",
+      "target": "span",
+      "finding_id": "f460971bca6914d6",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: span\n- HTML: <span role=\"heading\" style=\"position: absolute; top: -9999px; left: -9999px;\">Weather</span>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "dc1471648c66d4239f2ce3fa05ecfb422a93a8bb1cabf60fc40ec6aead2a6bab"
+    },
+    {
+      "act_testcase_id": "14551f2cbf465d95236ef1417e0e2b5fb82249a6",
+      "axe_rule": "empty-heading",
+      "target": "h1",
+      "finding_id": "24e1e9a6474310e6",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": false,
+      "candidate_sc_ids": [
+        "2.4.10",
+        "2.4.6",
+        "1.3.4",
+        "1.1.1",
+        "2.2.2"
+      ],
+      "finding_block": "FINDING\n- axe rule: empty-heading\n- task: The heading has non-empty text — judge whether it DESCRIBES the section's topic for WCAG 2.4.6; a generic or off-topic heading (e.g. 'Weather' over opening hours) does NOT.\n- target element: h1\n- HTML: <h1>Weather</h1>\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 2.4.6 (https://www.w3.org/TR/WCAG22/#headings-and-labels)\n  What it requires: Headings and Labels. Headings and labels describe topic or purpose\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.1.1 (https://www.w3.org/TR/WCAG22/#non-text-content)\n  What it requires: Non-text Content. All non-text content that is presented to the user has a text alternative that serves the equivalent purpose, except for the situations listed below. Controls, Input If non-text content is a control or accepts user input, then it has a name that describes its purpose. (Refer to Success Criterion 4.1.2 for additional requirements for controls and content that accepts user input.)  (normative text truncated at 400 characters)\n- 2.2.2 (https://www.w3.org/TR/WCAG22/#pause-stop-hide)\n  What it requires: Pause, Stop, Hide. For moving, blinking, scrolling, or auto-updating information, all of the following are true: Moving, blinking, scrolling For any moving, blinking or scrolling information that (1) starts automatically, (2) lasts more than five seconds, and (3) is presented in parallel with other content, there is a mechanism for the user to pause, stop, or hide it unless the movement, blinking, (normative text truncated at 400 characters)",
+      "finding_block_sha256": "0fa772c2957e7c3a827040d7d3df2dbd5255b717616f019240bd33ea3ce7864e"
+    },
+    {
+      "act_testcase_id": "30012df5a74ec5df2f74d8522c451233882d5f3a",
+      "axe_rule": "document-title",
+      "target": "html",
+      "finding_id": "dbe2bcfa1df0a2ad",
+      "referent_sources": [
+        "accessible_name",
+        "document_title",
+        "page_topic"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.2",
+        "2.4.10",
+        "4.1.2",
+        "1.3.4",
+        "1.4.8"
+      ],
+      "finding_block": "FINDING\n- axe rule: document-title\n- task: The page has a non-empty <title> — judge whether it DESCRIBES the page's topic or purpose for WCAG 2.4.2; a generic 'Untitled' / 'Home' / boilerplate title does NOT.\n- target element: html\n- HTML: <html lang=\"en\">\nResolved page title: \"Clementine harvesting season\"\nPage topic signal (source: rendered_body_text): \"Clementines will be ready to harvest from late October through February.\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.2 (https://www.w3.org/TR/WCAG22/#page-titled)\n  What it requires: Page Titled. Web pages have titles that describe topic or purpose\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.4.8 (https://www.w3.org/TR/WCAG22/#visual-presentation)\n  What it requires: Visual Presentation. For the visual presentation of blocks of text, a mechanism is available to achieve the following: Foreground and background colors can be selected by the user. Width is no more than 80 characters or glyphs (40 if CJK). Text is not justified (aligned to both the left and the right margins). Line spacing (leading) is at least space-and-a-half within paragraphs, and paragraph spa (normative text truncated at 400 characters)",
+      "finding_block_sha256": "3b142c4cd08ce009e7a25da2e359a774798419d6b986c36eb163519875b41594"
+    },
+    {
+      "act_testcase_id": "23ecf6c48bb8c1619c59cdbc5fe2e6def8f80d6e",
+      "axe_rule": "document-title",
+      "target": "html",
+      "finding_id": "0db45aeaf3a0a261",
+      "referent_sources": [
+        "accessible_name",
+        "document_title",
+        "page_topic"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.2",
+        "2.4.10",
+        "4.1.2",
+        "1.3.4",
+        "1.4.8"
+      ],
+      "finding_block": "FINDING\n- axe rule: document-title\n- task: The page has a non-empty <title> — judge whether it DESCRIBES the page's topic or purpose for WCAG 2.4.2; a generic 'Untitled' / 'Home' / boilerplate title does NOT.\n- target element: html\n- HTML: <html lang=\"en\">\nResolved page title: \"Clementine harvesting season\"\nPage topic signal (source: rendered_body_text): \"Clementines will be ready to harvest from late October through February.\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.2 (https://www.w3.org/TR/WCAG22/#page-titled)\n  What it requires: Page Titled. Web pages have titles that describe topic or purpose\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.4.8 (https://www.w3.org/TR/WCAG22/#visual-presentation)\n  What it requires: Visual Presentation. For the visual presentation of blocks of text, a mechanism is available to achieve the following: Foreground and background colors can be selected by the user. Width is no more than 80 characters or glyphs (40 if CJK). Text is not justified (aligned to both the left and the right margins). Line spacing (leading) is at least space-and-a-half within paragraphs, and paragraph spa (normative text truncated at 400 characters)",
+      "finding_block_sha256": "3b142c4cd08ce009e7a25da2e359a774798419d6b986c36eb163519875b41594"
+    },
+    {
+      "act_testcase_id": "5e5cb1efed740d903d45d885d47363a5b068274f",
+      "axe_rule": "document-title",
+      "target": "html",
+      "finding_id": "b1f895653c7d3540",
+      "referent_sources": [
+        "accessible_name",
+        "document_title",
+        "page_topic"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.2",
+        "2.4.10",
+        "4.1.2",
+        "1.3.4",
+        "1.4.8"
+      ],
+      "finding_block": "FINDING\n- axe rule: document-title\n- task: The page has a non-empty <title> — judge whether it DESCRIBES the page's topic or purpose for WCAG 2.4.2; a generic 'Untitled' / 'Home' / boilerplate title does NOT.\n- target element: html\n- HTML: <html lang=\"en\">\nResolved page title: \"Clementine harvesting season\"\nPage topic signal (source: rendered_body_text): \"Clementines will be ready to harvest from late October through February.\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.2 (https://www.w3.org/TR/WCAG22/#page-titled)\n  What it requires: Page Titled. Web pages have titles that describe topic or purpose\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.4.8 (https://www.w3.org/TR/WCAG22/#visual-presentation)\n  What it requires: Visual Presentation. For the visual presentation of blocks of text, a mechanism is available to achieve the following: Foreground and background colors can be selected by the user. Width is no more than 80 characters or glyphs (40 if CJK). Text is not justified (aligned to both the left and the right margins). Line spacing (leading) is at least space-and-a-half within paragraphs, and paragraph spa (normative text truncated at 400 characters)",
+      "finding_block_sha256": "3b142c4cd08ce009e7a25da2e359a774798419d6b986c36eb163519875b41594"
+    },
+    {
+      "act_testcase_id": "64ad3868e9022dcfa3f8ba5a3ac1943fd1a9a240",
+      "axe_rule": "document-title",
+      "target": "html",
+      "finding_id": "fdc8da892fb3b7c4",
+      "referent_sources": [
+        "accessible_name",
+        "document_title",
+        "page_topic"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.2",
+        "2.4.10",
+        "4.1.2",
+        "1.3.4",
+        "1.4.8"
+      ],
+      "finding_block": "FINDING\n- axe rule: document-title\n- task: The page has a non-empty <title> — judge whether it DESCRIBES the page's topic or purpose for WCAG 2.4.2; a generic 'Untitled' / 'Home' / boilerplate title does NOT.\n- target element: html\n- HTML: <html lang=\"en\">\nResolved page title: \"Apple harvesting season\"\nPage topic signal (source: rendered_body_text): \"Clementines will be ready to harvest from late October through February.\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.2 (https://www.w3.org/TR/WCAG22/#page-titled)\n  What it requires: Page Titled. Web pages have titles that describe topic or purpose\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.4.8 (https://www.w3.org/TR/WCAG22/#visual-presentation)\n  What it requires: Visual Presentation. For the visual presentation of blocks of text, a mechanism is available to achieve the following: Foreground and background colors can be selected by the user. Width is no more than 80 characters or glyphs (40 if CJK). Text is not justified (aligned to both the left and the right margins). Line spacing (leading) is at least space-and-a-half within paragraphs, and paragraph spa (normative text truncated at 400 characters)",
+      "finding_block_sha256": "e012f3e6e8cb4cd45083d84c55a7d96b27ae075a01f1dda8939e9af0fe77d98e"
+    },
+    {
+      "act_testcase_id": "e53e988e29ce9f96fb282825cc089df9b5b65753",
+      "axe_rule": "document-title",
+      "target": "html",
+      "finding_id": "cb7137a5742eb8db",
+      "referent_sources": [
+        "accessible_name",
+        "document_title",
+        "page_topic"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.2",
+        "2.4.10",
+        "4.1.2",
+        "1.3.4",
+        "1.4.8"
+      ],
+      "finding_block": "FINDING\n- axe rule: document-title\n- task: The page has a non-empty <title> — judge whether it DESCRIBES the page's topic or purpose for WCAG 2.4.2; a generic 'Untitled' / 'Home' / boilerplate title does NOT.\n- target element: html\n- HTML: <html lang=\"en\">\nResolved page title: \"First title is incorrect\"\nPage topic signal (source: rendered_body_text): \"Clementines will be ready to harvest from late October through February.\"\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.2 (https://www.w3.org/TR/WCAG22/#page-titled)\n  What it requires: Page Titled. Web pages have titles that describe topic or purpose\n- 2.4.10 (https://www.w3.org/TR/WCAG22/#section-headings)\n  What it requires: Section Headings. Section headings are used to organize the content. Note 1\"Heading\" is used in its general sense and includes titles and other ways to add a heading to different types of content. Note 2This success criterion covers sections within writing, not user interface components. User interface components are covered under Success Criterion 4.1.2\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 1.3.4 (https://www.w3.org/TR/WCAG22/#orientation)\n  What it requires: Orientation. Content does not restrict its view and operation to a single display orientation, such as portrait or landscape, unless a specific display orientation is essential. NoteExamples where a particular display orientation may be essential are a bank check, a piano application, slides for a projector or television, or virtual reality content where content is not necessarily restricted to la (normative text truncated at 400 characters)\n- 1.4.8 (https://www.w3.org/TR/WCAG22/#visual-presentation)\n  What it requires: Visual Presentation. For the visual presentation of blocks of text, a mechanism is available to achieve the following: Foreground and background colors can be selected by the user. Width is no more than 80 characters or glyphs (40 if CJK). Text is not justified (aligned to both the left and the right margins). Line spacing (leading) is at least space-and-a-half within paragraphs, and paragraph spa (normative text truncated at 400 characters)",
+      "finding_block_sha256": "16628676a7e9cb0cd8660f8907776dc29455bd43a519da8645d29cd4ebd51f75"
+    },
+    {
+      "act_testcase_id": "6fc68d363695e29f480d6a99bbcc7be08f68d1bc",
+      "axe_rule": "link-name",
+      "target": "a",
+      "finding_id": "a604109d9c8853a7",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: a\n- HTML: <a href=\"#desc\">See the description of this product.</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"See the description of this product.\"\nSurrounding context (ancestor depth 2, bounded to at most 3 ancestor levels and 500 characters): \"See the description of this product. This product consists of several web pages.\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "21ea4d56b1ff3a6ea8c96a159515fcbfa0c3282be15eae8eefb269ce6969205c"
+    },
+    {
+      "act_testcase_id": "d876314b6053a53e45138b7a1aabc4dbdb431bdd",
+      "axe_rule": "link-name",
+      "target": "a",
+      "finding_id": "6cad789f495ab8af",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: a\n- HTML: <a href=\"#main\"><img src=\"/test-assets/5effbb/main.png\" alt=\"Go to the main content\"></a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Go to the main content\"\nSurrounding context (ancestor depth 2, bounded to at most 3 ancestor levels and 500 characters): \"This is the main content.\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "cd29435c03829fb970a4681e72525b05ce6974260f286ff83afc00d46be00c22"
+    },
+    {
+      "act_testcase_id": "5e67cab9c6586318a6186eeca1ac536542e5e437",
+      "axe_rule": "link-name",
+      "target": "a",
+      "finding_id": "b1f2120450762d82",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: a\n- HTML: <a href=\"#desc\">this product</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"this product\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"See the description of this product. This product consists of several web pages.\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "8ae01280d486ba45422afe3431865907f5f84a189218617aeacfbab6236b37dc"
+    },
+    {
+      "act_testcase_id": "6566c139dc811b5a566a8e58c85d1f7f3c550d04",
+      "axe_rule": "link-name",
+      "target": "li:nth-child(1) > a",
+      "finding_id": "fd2066941a2aea09",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: li:nth-child(1) > a\n- HTML: <a href=\"https://www.gutenberg.org/files/4300/4300-h/4300-h.htm\"> HTML </a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"HTML\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "6e8c40c928e5bf4afcd760f0b8ff710af9cbe4baeb9c8314162ecc1c505d6eba"
+    },
+    {
+      "act_testcase_id": "6566c139dc811b5a566a8e58c85d1f7f3c550d04",
+      "axe_rule": "link-name",
+      "target": "li:nth-child(2) > a",
+      "finding_id": "657cf74bfee3b20a",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: li:nth-child(2) > a\n- HTML: <a href=\"https://www.gutenberg.org/ebooks/4300.epub.images?session_id=04cd710372888de8d8d322215cdfe8ce5b0f8d73\">\n\t\t\t\t\tEPUB\n\t\t\t\t</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"EPUB\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "ee3c2227af9005e02903aa23cc744d4df9d1f848e22088d542188b2678299171"
+    },
+    {
+      "act_testcase_id": "6566c139dc811b5a566a8e58c85d1f7f3c550d04",
+      "axe_rule": "link-name",
+      "target": "li:nth-child(3) > a",
+      "finding_id": "f7e7cbc65b70798a",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: li:nth-child(3) > a\n- HTML: <a href=\"https://www.gutenberg.org/files/4300/4300-0.txt\"> Plain text </a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Plain text\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "f4899462907077f0aadf7a7c920e5dbed0ca6d4ad20faee1ba72eda7f1194378"
+    },
+    {
+      "act_testcase_id": "970cf7f07cc3acd3d99ac57f73f5e622df0fe19b",
+      "axe_rule": "link-name",
+      "target": "td:nth-child(1) > a",
+      "finding_id": "c5c4962bdcedb125",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: td:nth-child(1) > a\n- HTML: <a href=\"https://www.gutenberg.org/files/4300/4300-h/4300-h.htm\">HTML</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"HTML\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "4a90129d06dd4806a9fa750baf62242c0d33ad76deaadda7608fcd09362d9df4"
+    },
+    {
+      "act_testcase_id": "970cf7f07cc3acd3d99ac57f73f5e622df0fe19b",
+      "axe_rule": "link-name",
+      "target": "td:nth-child(2) > a",
+      "finding_id": "bb2806c34ea5251d",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: td:nth-child(2) > a\n- HTML: <a href=\"https://www.gutenberg.org/ebooks/4300.epub.images?session_id=04cd710372888de8d8d322215cdfe8ce5b0f8d73\">EPUB</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"EPUB\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "a0d83a0664ce0c7d266dfbe38ac908cabc2a26bb91f63fe38212cf38180e902e"
+    },
+    {
+      "act_testcase_id": "970cf7f07cc3acd3d99ac57f73f5e622df0fe19b",
+      "axe_rule": "link-name",
+      "target": "td:nth-child(3) > a",
+      "finding_id": "ef8175e5c0bf4293",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: td:nth-child(3) > a\n- HTML: <a href=\"https://www.gutenberg.org/files/4300/4300-0.txt\">Plain text</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Plain text\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "55640d7299e22439f23c40bc69041d1d30ec80aee790f2b7d214fe0f4c1fd9e8"
+    },
+    {
+      "act_testcase_id": "1ba642803c6137b0206c7bc909f3dbb8cfb4a654",
+      "axe_rule": "link-name",
+      "target": "a",
+      "finding_id": "77e24af577f4e301",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: a\n- HTML: <a href=\"#main\" aria-labelledby=\"instructions\">\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Go to the main content.\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Go to the main content. This is the main content.\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "93e5f948aef2de3aae028f3606836044e8fc34e29d6c24119c7e1f5de4147421"
+    },
+    {
+      "act_testcase_id": "95f35d6374bc2e0fb1852882923fad9601ecd810",
+      "axe_rule": "link-name",
+      "target": "td:nth-child(1) > a",
+      "finding_id": "181c6383239f185d",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: td:nth-child(1) > a\n- HTML: <a href=\"https://www.gutenberg.org/files/4300/4300-h/4300-h.htm\">HTML</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"HTML\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Download Ulysses in HTML Download Ulysses in EPUB\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "f940b0bbf324abcee3953fe4e63ee6dd2ccb9d221acf08f7f52fb28e6ad00794"
+    },
+    {
+      "act_testcase_id": "95f35d6374bc2e0fb1852882923fad9601ecd810",
+      "axe_rule": "link-name",
+      "target": "td:nth-child(2) > a",
+      "finding_id": "b04268bdf5c9445c",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: td:nth-child(2) > a\n- HTML: <a href=\"https://www.gutenberg.org/ebooks/4300.epub.images?session_id=04cd710372888de8d8d322215cdfe8ce5b0f8d73\">EPUB</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"EPUB\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Download Ulysses in HTML Download Ulysses in EPUB\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "286e718f677f677f6ceed872da95d04ac60af25b168723ab7dec14e01fc00587"
+    },
+    {
+      "act_testcase_id": "b476205199c222e357cdfd5930562da3c31b6ec3",
+      "axe_rule": "link-name",
+      "target": "li:nth-child(1) > a",
+      "finding_id": "80bc53cccfaa5bc6",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: li:nth-child(1) > a\n- HTML: <a href=\"https://act-rules.github.io/rules/97a4e1#applicability\" aria-describedby=\"rule\">Applicability</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Applicability\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Button has accessible name Applicability Expectation\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "42195d2784e9923a4829d032cf2ed8724450b97ddee6bcd6e31a4edc601aa5f4"
+    },
+    {
+      "act_testcase_id": "b476205199c222e357cdfd5930562da3c31b6ec3",
+      "axe_rule": "link-name",
+      "target": "li:nth-child(2) > a",
+      "finding_id": "9b0950d9cd9cae67",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "section_heading",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: li:nth-child(2) > a\n- HTML: <a href=\"https://act-rules.github.io/rules/97a4e1#expectation\" aria-describedby=\"rule\">Expectation</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Expectation\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Button has accessible name Applicability Expectation\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "ec75abd3f9f2d6c9673326fa46fa96500cbefde3ebe13a09115e50946e441663"
+    },
+    {
+      "act_testcase_id": "760ba6c011ab590d5d50a186fd237f025c317292",
+      "axe_rule": "link-name",
+      "target": "a",
+      "finding_id": "1ade7b72b24c4099",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: a\n- HTML: <a href=\"#desc\">More</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"More\"\nSurrounding context (ancestor depth 2, bounded to at most 3 ancestor levels and 500 characters): \"More This product consists of several web pages.\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "adc6b2c292a4fbb783e043104f405289f3f2186a64b67aca996d663bbdd1cd23"
+    },
+    {
+      "act_testcase_id": "f29d1450d6a5f9dbe127b65ce545b2090f25a7e6",
+      "axe_rule": "link-name",
+      "target": "a",
+      "finding_id": "06f2646c98f0577c",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: a\n- HTML: <a href=\"#main\">\n\t\t<text x=\"20\" y=\"20\">\n\t\t\tGo\n\t\t</text>\n\t</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Go\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Go This is the main content.\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "c0f0b93f633028e3a27dce08d902bc8976f6d4d79961a6d05988c394cc92ced4"
+    },
+    {
+      "act_testcase_id": "3bb1986371e1ad785428f87c89a1dd7071604ee0",
+      "axe_rule": "link-name",
+      "target": "a",
+      "finding_id": "744cf2672b989482",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: a\n- HTML: <a href=\"https://www.w3.org/2005/04/FSWS/workshop-report.html\">Workshop</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Workshop\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"The W3C held a workshop on June 9-10, 2005 at DERI Innsbruck (Austria), to gather information about potential standardization work on Semantics in Web Services. Workshop\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "e3dcf603fe78cd0686aa93f9cb7d10d37f7a398bfd0f2cc3bbd149345a9116a5"
+    },
+    {
+      "act_testcase_id": "0f20115dd3962dc390c9de33df2793a71ef40845",
+      "axe_rule": "link-name",
+      "target": "li:nth-child(1) > a",
+      "finding_id": "27603372784c2eb4",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: li:nth-child(1) > a\n- HTML: <a href=\"https://www.gutenberg.org/files/4300/4300-h/4300-h.htm\"> HTML </a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"HTML\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "6e8c40c928e5bf4afcd760f0b8ff710af9cbe4baeb9c8314162ecc1c505d6eba"
+    },
+    {
+      "act_testcase_id": "0f20115dd3962dc390c9de33df2793a71ef40845",
+      "axe_rule": "link-name",
+      "target": "li:nth-child(2) > a",
+      "finding_id": "e4b2381de602cce5",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: li:nth-child(2) > a\n- HTML: <a href=\"https://www.gutenberg.org/ebooks/4300.epub.images?session_id=04cd710372888de8d8d322215cdfe8ce5b0f8d73\">\n\t\t\tEPUB\n\t\t</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"EPUB\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "80ae387fa103b78ab93187694b69c53d17a95c5e7909a18a5346ce05234cb47b"
+    },
+    {
+      "act_testcase_id": "0f20115dd3962dc390c9de33df2793a71ef40845",
+      "axe_rule": "link-name",
+      "target": "li:nth-child(3) > a",
+      "finding_id": "244ec49519ad0237",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: li:nth-child(3) > a\n- HTML: <a href=\"https://www.gutenberg.org/files/4300/4300-0.txt\"> Plain text </a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Plain text\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Ulysses HTML EPUB Plain text\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "f4899462907077f0aadf7a7c920e5dbed0ca6d4ad20faee1ba72eda7f1194378"
+    },
+    {
+      "act_testcase_id": "064d2d8664a3c53a268fc24f5ba33ea4bb777e48",
+      "axe_rule": "link-name",
+      "target": "a",
+      "finding_id": "2b478aba0f1c2f01",
+      "referent_sources": [
+        "accessible_name",
+        "page_topic",
+        "surrounding_context"
+      ],
+      "referent_rendered": true,
+      "candidate_sc_ids": [
+        "2.4.4",
+        "2.4.9",
+        "4.1.2",
+        "2.5.6",
+        "1.4.13"
+      ],
+      "finding_block": "FINDING\n- axe rule: link-name\n- task: The link has an accessible name — judge whether it describes the link's PURPOSE in context for WCAG 2.4.4; 'click here', 'read more', or a bare URL does NOT.\n- target element: a\n- HTML: <a href=\"https://www.gutenberg.org/files/4300/4300-h/4300-h.htm\">Download</a>\nReferent (captured deterministically at scan time, not by a model):\nResolved accessible name: \"Download\"\nSurrounding context (ancestor depth 3, bounded to at most 3 ancestor levels and 500 characters): \"Books Ulysses Download 1.61MB\"\nLink destination: not available — the surrounding context is a proxy for it, not the destination; judge the link's purpose from the accessible name and surrounding context only, and do not invent a target URL.\nCandidate WCAG success criteria retrieved for this finding:\n- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: Link Purpose (In Context). The purpose of each link can be determined from the link text alone or from the link text together with its programmatically determined link context, except where the purpose of the link would be ambiguous to users in general\n- 2.4.9 (https://www.w3.org/TR/WCAG22/#link-purpose-link-only)\n  What it requires: Link Purpose (Link Only). A mechanism is available to allow the purpose of each link to be identified from link text alone, except where the purpose of the link would be ambiguous to users in general\n- 4.1.2 (https://www.w3.org/TR/WCAG22/#name-role-value)\n  What it requires: Name, Role, Value. For all user interface components (including but not limited to: form elements, links and components generated by scripts), the name and role can be programmatically determined; states, properties, and values that can be set by the user can be programmatically set; and notification of changes to these items is available to user agents, including assistive technologies. NoteThis  (normative text truncated at 400 characters)\n- 2.5.6 (https://www.w3.org/TR/WCAG22/#concurrent-input-mechanisms)\n  What it requires: Concurrent Input Mechanisms. Web content does not restrict use of input modalities available on a platform except where the restriction is essential, required to ensure the security of the content, or required to respect user settings\n- 1.4.13 (https://www.w3.org/TR/WCAG22/#content-on-hover-or-focus)\n  What it requires: Content on Hover or Focus. Where receiving and then removing pointer hover or keyboard focus triggers additional content to become visible and then hidden, the following are true: Dismissible A mechanism is available to dismiss the additional content without moving pointer hover or keyboard focus, unless the additional content communicates an input error or does not obscure or replace other conten (normative text truncated at 400 characters)",
+      "finding_block_sha256": "23ab6c82954dca2a0668ea3b74a3d77365f5187c1e7fe286d7899863a90d8732"
+    }
+  ],
+  "reproducible_digest": "23ef817df4aea0694cd227bb4d97dabd7fec96aa9e6f0f8b061127fe6a641c45"
+}

@@ -330,23 +330,96 @@ Reusing the mechanism M6 pre-registered and M7 exercised: **one-sided exact sign
 scored on discordant pairs.**
 
 **⚠️ The test's threshold is registered after T3, not here.** The sign test asks whether blind won on
-more findings than it lost on, and that question has no answer until it is known how many findings flip
-**when nothing changes at all**. A cloud judge run twice under one configuration produces discordant
-pairs of its own; a threshold chosen before that count is known can be cleared by jitter alone. **T3
-measures the floor, and the discordant count required for a result is fixed from it, in writing, before
-T4's first call.** What is fixed *here* is the test family — one-sided exact sign test, α = 0.05, on
-the unit T1 pins. What is not fixed here is how many discordant pairs constitute a result.
+more **cases** than it lost on, and that question has no answer until it is known how many flip **when
+nothing changes at all**. A cloud judge run twice under one configuration produces discordant pairs of
+its own; a threshold chosen before that count is known can be cleared by jitter alone. **T3 measures the
+floor, and the discordant count required for a result is fixed from it, in writing, before T4's first
+call.** What is fixed *here* is the test family — one-sided exact sign test, α = 0.05 — and the unit,
+which **T1 settled at the case (40 units)**. What is not fixed here is how many discordant pairs
+constitute a result.
 
 **⚠️ Each configuration's routing decision comes from its N passes, never from one.** A single pass of
-a non-reproducible judge is one draw. The per-finding decision that enters the paired test is that
-configuration's **majority verdict across its passes**, and the pass-to-pass disagreement is reported
-beside the result.
+a non-reproducible judge is one draw. The **per-finding** decision is that configuration's **majority
+verdict across its passes**, and the pass-to-pass disagreement is reported beside the result. That
+per-finding decision is then aggregated to the unit the test is scored on — see immediately below —
+so **two collapses apply, in this order and not the other:** majority across passes first, per
+finding; then flag-if-any across the findings within a case. Reversing them answers a different
+question and can land on a different case decision.
 
-**⚠️ The observation unit must be fixed and pre-registered before any run.** M6 set the drafter's unit
-to per-case precisely to avoid pseudo-replication, and M8 abandoned a statistic entirely for the same
-reason. Clustering looks lighter here, but **the judge's observations must not be treated as
-independent units without stating the ground.** T1 measures the real structure and pins the unit before
-anything runs.
+### ⚠️ The observation unit: settled at **per case**, before any run
+
+M6 set the drafter's unit to per-case precisely to avoid pseudo-replication, and M8 abandoned a
+statistic entirely for the same reason. Clustering looks lighter here, but **the judge's observations
+must not be treated as independent units without stating the ground**, so the ground was measured
+first — zero model calls, over the frozen replay pass and the earlier judged passes — and frozen at
+`benchmark/reports/judge_observation_unit.json` (rebuild:
+`uv run python -m clearway.eval.judge_observation_unit`).
+
+**The structure.** 54 observations — one judge call per minted finding — in **40 clusters**, one per
+minting ACT case. **The manifest carries 44 rows**: the other 4 mint no finding, are never judged, and
+are therefore not clusters at all. Dividing by them gives 54/44 = 1.23 findings per row against the
+true 54/40 = **1.35 per cluster**, which is why the observations are counted and the manifest rows are
+not. 33 clusters are singletons; **7 hold more than one finding (sizes 2, 2, 3, 3, 3, 4, 4) and carry
+21 of the 54 observations — 38.9%.** The size-weighted (Kish) mean cluster size `Σm²/Σm` is **1.852**.
+**All of the clustering lives in two of the four classes:** `document-title` (5 cases / 5 findings) and
+`empty-heading` (11 / 11) are entirely singletons, so the unit cannot move a number on them;
+`label` is 11 cases / 17 findings and `link-name` 13 / 21.
+
+**The correlation, on the axis a test consumes.** The judge's own routing decision
+(`judge_conformance_correct`, negated: it raises its hand when it grades the draft incorrect) is read
+off the three earlier judged passes, restricted to the four scored rules — where the case set **and the
+per-case finding ids are identical to the replay pass**, asserted rather than assumed. Within-case pair
+agreement against the marginal chance rate gives an intracluster correlation of **+0.168 / +0.464 /
++0.524** across the three passes of that one configuration, and **+0.424 on the majority verdict** —
+the quantity the paired test actually consumes (19 of 23 within-case pairs agree against a chance rate
+of 0.698; 5 of the 7 multi-finding cases answered one value throughout).
+
+**The decision is arithmetic, not preference.** Design effect `1 + (1.852 − 1)·ρ`, effective n
+`54 / design effect`:
+
+| within-case ρ | source | per-finding effective n | beats the 40 clusters? |
+|---|---|---|---|
+| 0.000 | independence, for reference | 54.0 | yes |
+| **+0.424** | **judge routing, majority across passes** (pairwise estimator) | **39.7** | **no** |
+| **+0.384** | **the same quantity under the one-way ANOVA estimator** | **40.7** | **marginally yes** |
+| +0.168 / +0.464 / +0.524 | judge routing, the three individual passes | 47.3 / 38.7 / 37.3 | 1 of 3 |
+| +1.000 | the bound (total within-case agreement) | 29.2 | no |
+
+**⚠️ Both estimators are quoted because the decision sits on the boundary and a strict inequality here
+would flip with the estimator.** The pairwise form lands 0.3 observations below the cluster count, the
+textbook one-way random-effects form 0.7 above it. **The honest statement is that the two units differ
+by less than one observation** — so a per-finding unit buys nothing measurable, while costing an
+independence assumption the data does not support on a set where 2 clusters hold 15% of the
+observations. Two further grounds point the same way and neither is marginal: the repo's frozen
+per-class drafter κ is a **per-case** number keyed by `act_testcase_id`, so the side-by-side comparison
+in Group B is only like-for-like at the case; and ACT gold is a case-level label, so every finding
+inside a case is scored against the same answer key. **What would have decided the other way:** a
+within-case correlation at or below zero, which would have left the per-finding effective n near 54
+against 40 and made the extra observations real by a wide margin rather than a rounding error. The
+*drafter's* verdicts do sit there (ρ = **−0.142** on raw four-value conformance; only 1 of 7
+multi-finding cases homogeneous), and that is exactly why the judge's own number is the one the pin
+rests on: **the two raters cluster differently, and only one of them is the subject.**
+
+**Two declared costs, both carried rather than argued away.**
+
+1. **The case collapse is flag-if-any, and it hides what it aggregates.** Measured on the judge's
+   majority stream: **2 of the 7 multi-finding cases are internally split** (6 findings), and
+   flag-if-any lands on a different answer from a within-case majority on **2 of 40** cases. This
+   project has already been burnt by a case-level figure that was false one level below it, so **the
+   per-finding table is reported beside the test, never instead of it.**
+2. **⚠️ The disagreement rate keeps the FINDING as its denominator** — it is a queue-volume number and
+   disagreement is per-finding by construction (code compares the judge's answer against *that
+   finding's* draft), so collapsing it would report fewer people-visits than the queue holds. **Two
+   units live in this milestone and every figure names which one it is on**, with the count of distinct
+   cases the disagreements touch quoted beside the per-finding count.
+
+**⚠️ What this does not settle.** The correlation is measured on *levels* — each configuration's own
+routing decision — and the sign test consumes a *difference* between two configurations. Nothing on
+disk carries two configurations' judge output, so the within-case correlation of the difference is
+**unmeasured**, and T3 (three passes of one configuration, whose differences are null by construction)
+is the first place it can be measured. The judge-side numbers above are also a **prior, not the thing
+itself**: they come from the anchored rubric on referent-free input over a different draft set. The
+clusters are the same; the instrument is not.
 
 **Power is this milestone's chief hope, and it is not yet a fact.**
 
@@ -356,7 +429,7 @@ whether that helps are unknown at spec time:**
 
 | | status at spec time |
 |---|---|
-| **Observations** | the frozen M7 run's findings, at the unit T1 pins — **not M5's count**, which was a different and larger draft set |
+| **Observations** | **settled at T1: 40 cases** — the frozen M7 run's 54 findings collapsed to the pinned unit. **Not M5's 63**, which was a different and larger draft set, and not 54, which is the disagreement rate's denominator rather than the test's |
 | **The repairable ceiling** — how many routing decisions are currently wrong | **T3 measures it.** M5's missed errors and false alarms were counted on M5's drafts; M6–M8 then cut the drafter's false positives, so fewer drafts are wrong now and that ceiling does not transfer |
 | **Discordant pairs needed for α = 0.05** | **derived from T3's noise floor.** Five suffices only if exactly five pairs are discordant and all five point one way |
 
@@ -372,7 +445,7 @@ anchored judge has no verdict of its own, so several of these do not exist on th
 
 | Metric | Why | Configuration |
 |---|---|---|
-| **Disagreement rate**, as a rate **and an absolute count** — *the milestone's primary deliverable* | the queue volume — and a rate alone hides the workload, so it is never reported without the number of people-visits it implies | **both**, but they are different events: anchored = *it graded the draft incorrect*; blind = *its own answer differs*. Never averaged together |
+| **Disagreement rate**, as a rate **and an absolute count** — *the milestone's primary deliverable*. **Unit: the finding (denominator 54), with the count of distinct cases touched beside it** | the queue volume — and a rate alone hides the workload, so it is never reported without the number of people-visits it implies | **both**, but they are different events: anchored = *it graded the draft incorrect*; blind = *its own answer differs*. Never averaged together |
 | **Disagreement rate per finding-class** | concentrated in referent-weak classes, or uniform? mechanism evidence | both, same caveat |
 | **Composition of disagreements** | conformance only / SC only / both — three shares | both |
 | **⚠️ Direction of disagreement** | when conformance differs, is the drafter or the judge systematically stricter? A one-sided skew means these are **not peer raters** — likely a stronger cloud model correcting a weaker local one, which is useful but a different claim | **blind only** — it needs the judge's own conformance value |
@@ -381,6 +454,16 @@ anchored judge has no verdict of its own, so several of these do not exist on th
 > **⚠️ `drafter–judge κ` is descriptive and must never become a target.** Raising it means moving the
 > drafter toward the judge, which is optimising against the judge — Goodhart. It is reported because it
 > characterises the pair, not because it should go up.
+>
+> **Its unit is the finding**, because that is where the two raters' answers pair one-to-one with no
+> aggregation at all — and it is therefore **not** on the same unit as Group B's per-class κ against
+> gold, which is per-case. Both are labelled where they appear. **No interval on it is read as tight:**
+> the measured within-case correlation puts its effective n near 40, not 54.
+
+**⚠️ Group A is reported per finding and Comparison 1 is tested per case.** That is not an
+inconsistency — a queue-volume number counts visits and a paired test counts independent units — but an
+unlabelled figure is ambiguous between them, so every number here carries its unit as well as its
+comparison.
 
 **Group B — requires ACT gold. Offline measurement only; never computed in production.** The first
 three belong to **Comparison 1**; the last is **Comparison 2**'s only gold-scored metric and the one
@@ -402,8 +485,13 @@ and it is the uglier one.
 
 Putting the blind judge's per-class κ beside the drafter's frozen baseline is the point of that last
 row, and the two *are* comparable: one eval set, one gold export, one axe-core version, one corpus
-version, one collapse rule, and a join on `finding_id` that is exact rather than approximate.
-**Four things would break it, and all four are declared here rather than argued afterwards.**
+version, one collapse rule, and an exact join. **⚠️ The join key is `act_testcase_id`, not
+`finding_id`** — corrected at T1: `DrafterKappaBaseline` is a **per-case** measurement ("the unit is one
+ACT case, not one finding", `drafter_kappa.py`), so there is no per-finding row on the drafter's side to
+join to, and the judge's κ has to be computed at the case to sit beside it at all. That is the same unit
+the paired test is pinned to, so one collapse serves both.
+**Four things would break the comparison, and all four are declared here rather than argued
+afterwards.**
 
 1. **⚠️ The two raters do not carry the same variance, and the table must show it.** The drafter's
    frozen passes are bit-identical, so its κ is a point estimate. A cloud judge is not bit-reproducible
@@ -420,10 +508,13 @@ version, one collapse rule, and a join on `finding_id` that is exact rather than
    finding-side prompt therefore reuses the drafter's wording as closely as the two roles allow, and any
    surviving difference is quoted in the written read** — otherwise a per-class difference may be the
    framing sentence rather than the rater.
-4. **⚠️ Per-class n did not grow, so per-class comparison is descriptive only.** The classes are the
-   sizes M6 and M7 already worked with, and the smallest cannot be certified at any effect size — the
-   bar M7 recorded. **No per-class number is tested.** Say so in the table, rather than letting a reader
-   infer significance from a bold figure.
+4. **⚠️ Per-class n did not grow, so per-class comparison is descriptive only.** At the pinned unit the
+   classes are exactly the sizes M6 and M7 already worked with — `document-title` 5, `empty-heading` 11,
+   `label` 11, `link-name` 13 cases — and the smallest cannot be certified at any effect size, the bar
+   M7 recorded. **No per-class number is tested.** Say so in the table, rather than letting a reader
+   infer significance from a bold figure. *(Per-finding the two larger classes would read 17 and 21, and
+   the two smaller ones would not move at all, because all of their cases are singletons — one more
+   reason a per-finding class table would flatter only where the clustering is.)*
 
 ### The injected-versus-real gap
 
@@ -553,15 +644,18 @@ check on how the number was arrived at, not the thing being delivered.
    the two smallest classes), so part of its disagreement is formatting and is reported as such. The
    conformance axis carries the signal; see *what code compares*.
 4. **The two configurations are compared at the routing-decision level**, each configuration's decision
-   taken from its majority verdict across passes, scored against ACT gold into M5's four cells, under
-   the one-sided sign test (α = 0.05) at **the discordant threshold derived from T3's noise floor** — or
-   reported under one of the other pre-committed verdicts.
+   taken from its majority verdict across passes and then collapsed to the case with flag-if-any, scored
+   against ACT gold into M5's four cells, under the one-sided sign test (α = 0.05) **on 40 case-level
+   units** at **the discordant threshold derived from T3's noise floor** — or reported under one of the
+   other pre-committed verdicts.
 5. **All Group A and Group B metrics reported**, with the disagreement rate carrying its absolute count,
    `drafter–judge κ` labelled descriptive-only, and **the two raters' per-class κ against ACT gold set
    side by side under the four declared comparison conditions**.
 6. **The injected-versus-real gap re-measured on the anchored configuration** and compared against M5's
    threefold gap, with the reason it is not computed under blind recorded in the read.
-7. **The observation unit pinned before any run**, with measured clustering behind it.
+7. **The observation unit pinned before any run**, with measured clustering behind it. **Settled: per
+   case, keyed by `act_testcase_id`, flag-if-any within the case, applied after the per-finding majority
+   across passes.** The disagreement rate stays per-finding and says so wherever it is quoted.
 8. **All runs frozen**, carrying `judge_model`, `judge_version` and full provenance.
 9. **The stale M6 scaffold references clarified** — the composite-metric and reflection-counter fields
    were documented as "filled by M9's reflection loop"; M9 is not that milestone. **Correct the
@@ -629,6 +723,21 @@ see the pre-flight block in the evidence ledger.
   statistic entirely for the same reason. **The judge's observations must not be treated as independent
   without stating the ground.**
 - **Acceptance:** the clustering profile is frozen; the unit and its rationale are in the spec.
+- **Settled — zero model calls.** The unit is **per case**, keyed by `act_testcase_id`, with the case
+  decision taken **flag-if-any** over the findings, applied *after* the per-finding majority across
+  passes. The full profile and its arithmetic are in *the observation unit* section above and frozen in
+  `benchmark/reports/judge_observation_unit.json` (rebuild:
+  `uv run python -m clearway.eval.judge_observation_unit`; deterministic — `created_at` is read off the
+  replay pass, so a rebuild is byte-identical). **54 observations in 40 clusters against 44 manifest
+  rows**; the deciding number is that the judge's own majority routing decision carries a within-case
+  correlation of **+0.424** (pairwise) / **+0.384** (ANOVA), putting the per-finding effective n at
+  **39.7 / 40.7 against 40 clusters** — the two estimators straddle the boundary, so the finer unit buys
+  **under one observation**, which is nothing. The pin is a code constant (`OBSERVATION_UNIT`) rather than prose, so the
+  later stages import it instead of restating it. Three things this turned up that were **not** asked
+  for, all recorded above: the Group B join key is `act_testcase_id` and not `finding_id`; the
+  disagreement rate has to stay per-finding while the test is per-case; and the within-case correlation
+  of the *difference* between two configurations — which is what the sign test actually consumes — is
+  still unmeasured and lands on T3.
 - **Depends on:** T0
 
 ### T2 — Give the judge what the drafter saw
@@ -652,7 +761,18 @@ see the pre-flight block in the evidence ledger.
 - **Acceptance:** the baseline is frozen with per-run variance; M5's figures are retained **as
   historical context only**, never as the paired comparator. **⚠️ The discordant count required by T5's
   sign test is derived from this floor and written into the spec here — before T4 makes its first
-  call.**
+  call.** **⚠️ The floor is measured at the unit T1 pinned** — a case-level discordant count, taken
+  after both collapses in their pinned order — because a threshold counted per finding cannot govern a
+  test scored per case. Two figures are reported, not one: the **per-case** discordant count that fixes
+  the threshold, and the **per-finding** count beside it, so the flag-if-any collapse's cost stays
+  visible.
+- **⚠️ Also measured here, and only here:** the within-case correlation of the **difference** between two
+  passes of one configuration. T1 could measure the correlation of each configuration's routing *levels*
+  but not of the contrast the sign test consumes — no artifact carried two configurations' judge output.
+  Three passes of one configuration do: their pairwise differences are null by construction, so the
+  correlation of a null difference is measurable here and is what the pinned unit's justification
+  ultimately rests on. Report it beside the threshold; if it comes out materially **negative**, say so,
+  because a per-case collapse would then be costing power rather than buying honesty.
 - **Depends on:** T2
 
 ### T4 — The blind configuration
@@ -683,11 +803,16 @@ see the pre-flight block in the evidence ledger.
 - **Produces:** **both** comparisons, kept apart — Comparison 1 (anchored ↔ blind) and Comparison 2
   (blind judge ↔ frozen drafter). Neither is reported without naming which it is.
 - **Detail:** map each configuration's output to a **binary routing decision** (flag / release) from
-  its **majority verdict across passes**, score that decision against ACT gold into M5's four cells,
-  and run the **one-sided exact sign test (α = 0.05)** on the unit pinned in T1, at the discordant
+  its **majority verdict across passes**, collapse that to the case with **flag-if-any** (the pinned
+  order — passes first, findings second), score the case decision against ACT gold into M5's four cells,
+  and run the **one-sided exact sign test (α = 0.05)** on that per-case unit, at the discordant
   threshold pinned in T3. Report the full Group A and Group B metric sets, the two raters' per-class κ
   against gold side by side under the four declared conditions, and the injected-versus-real gap
   **on the anchored configuration**.
+- **⚠️ The per-finding table is reported beside the test, never instead of it.** The case collapse
+  disagrees with a within-case majority on 2 of 40 cases and hides an internal split in 2 of the 7
+  multi-finding cases; a case-level figure that is false one level below it is a mistake this project has
+  already made once.
 - **⚠️ Acceptance:** if injected detection rises while real detection does not, the verdict is
   **effective only on clean signal** — success may not be claimed. **The guard is read on anchored
   only**; blind's injected numbers are arithmetic and are not eligible to trip it. Degenerate endpoints
@@ -708,9 +833,11 @@ see the pre-flight block in the evidence ledger.
 - **⚠️ Rule: lead with the disagreement rate, not the p-value.** The rate and its absolute count are
   the deliverable; Comparison 1's test is a check on how it was arrived at. A report that opens on a
   significance verdict has buried its own result.
-- **⚠️ Rule: every number names its comparison.** Comparison 1 is judge vs judge; Comparison 2 is the
-  blind judge vs the frozen drafter. They share a run and several metric names, so an unlabelled figure
-  is ambiguous even to someone who read this spec.
+- **⚠️ Rule: every number names its comparison and its unit.** Comparison 1 is judge vs judge;
+  Comparison 2 is the blind judge vs the frozen drafter. They share a run and several metric names, so an
+  unlabelled figure is ambiguous even to someone who read this spec. **And two units are in play** — the
+  tested comparison is per case (40), the disagreement rate is per finding (54) — so a bare count is
+  ambiguous even once its comparison is named.
 - **⚠️ Rule: write it for someone who did not build it.** Three metric families land here and they
   answer three different questions — **how much human work the mechanism creates** (disagreement rate),
   **how alike the two readers are** (drafter–judge κ), and **which of them is more often right** (each
@@ -829,9 +956,8 @@ positives is a symptom of anchoring: the symptom matches the mechanism the liter
 output generates fields in schema order, and therefore that field order can enforce commitment: this
 is general behaviour of strict json-schema mode and **has not been verified against this repo's cloud
 client**. That blinding restores κ to its "two independent raters" definition is a methodological
-argument, not an experimental result. That clustering is light is an impression, not a measurement, and
-the obvious way to get it is wrong — **a case that mints no finding sits in the manifest but contributes
-no observation**, so dividing two totals flatters the structure; T1 measures it properly. That sharing
+argument, not an experimental result. ~~That clustering is light is an impression, not a
+measurement~~ — **measured at T1 and no longer an inference; see the settled block below.** That sharing
 the retrieved candidate list keeps disagreement attributable to judgment is a design argument; the size
 of the residual shared bias is unmeasured. That today's retrieval reproduces the list the drafter
 answered follows from a deterministic embedder over a frozen corpus — **nothing on disk records the
@@ -878,6 +1004,54 @@ original, so this can be corroborated but never verified**.
    `grand_total_ceiling` rather than a single `grand_total` — a bare total would be read as the spend.
    The attempt count is derived from `Judge`'s declared default, and a test fails if any call site starts
    overriding it.
+
+**Settled at the observation-unit stage — zero model calls.** Frozen in
+`benchmark/reports/judge_observation_unit.json` (rebuild:
+`uv run python -m clearway.eval.judge_observation_unit`; deterministic, so a rebuild is byte-identical
+and the freeze is pinned by file comparison rather than by a self-digest).
+
+1. **The structure: 54 observations in 40 clusters, against 44 manifest rows.** One judge call per minted
+   finding; one cluster per minting ACT case. The 4 non-minting rows are honest misses that are never
+   judged, so they are rows and not clusters — 54/44 = 1.23 against the true 54/40 = **1.35**. Sizes
+   1×33, 2×2, 3×3, 4×2; **7 multi-finding cases hold 21 of the 54 observations (38.9%)**; Kish mean
+   cluster size `Σm²/Σm` = **1.852**. **All the clustering is in two classes** — `label` (11 cases / 17
+   findings) and `link-name` (13 / 21); `document-title` (5 / 5) and `empty-heading` (11 / 11) are
+   entirely singletons, so the unit cannot move a number on them.
+2. **The judge's own routing decision clusters within a case; the drafter's verdicts do not.** Read off
+   the three earlier judged passes restricted to the four scored rules — **the same 40 cases with the
+   same per-case finding ids as the replay pass, asserted rather than assumed** — the within-case
+   intracluster correlation of `judge_conformance_correct` is **+0.168 / +0.464 / +0.524** across the
+   three passes and **+0.424 on the majority verdict** (19 of 23 within-case pairs agree against a
+   chance rate of 0.698; 5 of 7 multi-finding cases uniform). The drafter's own verdicts on the replay
+   pass go the other way: **ρ = −0.142** on raw four-value conformance, 1 of 7 multi-finding cases
+   uniform, within-case pair agreement 8/23 = 0.348 against a chance rate of 0.429 — *below* chance.
+   Under the FLAG/CLEAN collapse the drafter reads ρ = +0.042; on the cited-SC set, +0.363; on the joint
+   (conformance, SC set) pair, +0.177.
+3. **Therefore per case, and it is arithmetic rather than preference.** Design effect
+   `1 + (1.852 − 1)·ρ`: the per-finding effective n is **39.7 at ρ = +0.424** against the **40** clusters
+   a per-case unit gives outright, 38.7 and 37.3 at two of the three individual passes, 54.0 only at
+   ρ = 0 and **29.2** at the ρ = 1 bound (below the cluster count, because unequal sizes weight the big
+   clusters). **⚠️ Two estimators, deliberately both quoted:** the same majority stream gives
+   ρ = **+0.384** under the one-way random-effects (ANOVA) form, hence an effective n of **40.7** —
+   *above* the cluster count. The two straddle it, so the claim is not a strict inequality but the
+   weaker and more defensible one: **the two units differ by under a single observation**, so the finer
+   one buys nothing measurable while costing an independence assumption the data does not support, with
+   2 clusters holding 15% of the observations. The other two grounds are not marginal and carry the pin
+   on their own.
+4. **⚠️ Two statements elsewhere in the repo that this measurement makes false, recorded rather than
+   silently edited.** `drafter_score.py` justifies per-case scoring with "within one ACT case the
+   elements are homogeneous (the same judgment repeated)" — the *gold* is homogeneous by construction
+   (`act_gold.py`, and that claim stands), but **the raters' answers are not**: 6 of the 7 multi-finding
+   cases carry mixed drafted verdicts and within-case agreement is below chance. The per-case unit
+   survives on the three grounds above; **its stated reason in that docstring does not.** And
+   `MetricCI.effective_n`'s clustering caveat — "cases cluster in ~5 rules … the honest precision is
+   `effective_n` (≈ #rules)" — **does not describe the judge's routing stream**: at the rule layer the
+   correlation is **−0.048** over 411 pairs, so the routing correlation lives at the case, not at the
+   rule. It also does not transfer to a paired contrast in the first place, because both configurations
+   receive the same per-rule framing and a shared level effect cancels.
+5. **Context, not part of the pin: the judge disagreed with itself on 15 of 54 findings** across three
+   passes of one fixed configuration (27.8%) — a prior on why the repeat-pass collapse exists at all, and
+   on why T3 measures the floor before T5 fixes a threshold.
 
 **A partial judge noise floor already exists, on the wrong input.** `benchmark/reports/noise_floor.json`
 records a 3-pass SD of **0.158 on judge κ** and **0.105 on the judge miss rate**, and the four routing

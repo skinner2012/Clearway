@@ -25,6 +25,7 @@ from clearway.eval.judge_observation_unit import (
     Clustering,
     DegenerateClustering,
     aggregation_divergence,
+    anova_icc,
     assert_same_clusters,
     build_record,
     drafter_streams,
@@ -251,18 +252,45 @@ def test_flag_if_any_and_a_within_case_majority_part_company_on_a_minority_flag(
 
 def test_the_judges_measured_correlation_leaves_per_finding_no_better_than_per_case() -> None:
     """The ground the unit rests on. At the judge's majority-verdict correlation the per-finding
-    effective n does not exceed the cluster count, so the finer unit buys no observations — and two of
-    the three individual passes land below it. If this ever flips, the pin has to be re-argued rather
-    than inherited."""
+    effective n sits within one observation of the cluster count — and two of the three individual
+    passes land below it. If this ever moves materially, the pin has to be re-argued rather than
+    inherited."""
     record = build_record(replay_path=_REPLAY, judged_paths=_JUDGED)
     effective = record["effective_n"]
     rows = {row["icc_source"]: row for row in effective["per_finding_at"]}
     majority = rows["judge routing, majority across passes"]
     assert majority["icc"] > 0.0
     assert majority["beats_per_case"] is False
-    assert majority["effective_n"] <= effective["per_case_units"]
+    assert abs(majority["effective_n"] - effective["per_case_units"]) < 1.0
     below = [r for r in rows.values() if r["icc_source"].startswith("judge routing, pass") and not r["beats_per_case"]]
     assert len(below) == 2
+
+
+def test_the_two_estimators_straddle_the_cluster_count() -> None:
+    """Both are reported because the decision sits at the boundary: the pairwise form puts the
+    per-finding effective n just under 40 and the ANOVA form just over it. Claiming a strict inequality
+    from either alone would be a result that flips with the estimator, so the record carries both."""
+    record = build_record(replay_path=_REPLAY, judged_paths=_JUDGED)
+    rows = {row["icc_source"]: row for row in record["effective_n"]["per_finding_at"]}
+    pairwise = rows["judge routing, majority across passes"]
+    anova = rows["judge routing, majority across passes — ANOVA estimator"]
+    clusters = record["effective_n"]["per_case_units"]
+    assert pairwise["effective_n"] < clusters < anova["effective_n"]
+    assert anova["effective_n"] - pairwise["effective_n"] < 2.0
+    majority = record["homogeneity"]["judge_routing_majority_across_passes"]
+    assert majority["icc_anova"] == anova["icc"]
+
+
+def test_the_anova_estimator_refuses_a_stream_it_cannot_code() -> None:
+    with pytest.raises(DegenerateClustering, match="binary"):
+        anova_icc([["supports", "does_not_support"], ["partially_supports", "supports"]])
+
+
+def test_the_anova_estimator_agrees_with_the_pairwise_one_at_total_agreement() -> None:
+    """Both estimators return 1.0 when every cluster is internally uniform and the clusters differ."""
+    streams = [[True, True], [False, False], [True, True], [False, False]]
+    assert anova_icc(streams) == pytest.approx(1.0)
+    assert within_cluster_agreement(streams).icc == pytest.approx(1.0)
 
 
 def test_the_bound_at_total_agreement_falls_below_the_cluster_count() -> None:

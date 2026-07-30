@@ -5,7 +5,7 @@
     "within_case_aggregation": "flag-if-any",
     "aggregation_order": "majority verdict across the configuration's passes, per finding; then flag-if-any across the findings within the case",
     "disagreement_rate_unit": "finding",
-    "preregistration": "Pinned before any judge call is spent, from the clustering measured over the frozen replay pass and the earlier judged passes on the same case set. The paired routing test is scored PER CASE, keyed by act_testcase_id, on discordant pairs — the same unit every other paired test in this repo is already pre-registered on. Three grounds, and the first is arithmetic rather than preference: (1) at the measured within-case correlation of the judge's own majority routing decision the per-finding effective n falls to the cluster count, so a per-finding unit buys no observations while costing an independence assumption the data does not support; (2) the repo's frozen per-class drafter kappa is a per-case number keyed by act_testcase_id, so the side-by-side comparison against it is only like-for-like at the case; (3) the gold label is a property of the case, so every finding inside one is scored against the same answer key. What would have decided the other way: a within-case correlation at or below zero — the drafter's own verdicts measure there — which would have left the per-finding effective n near the raw finding count and made the extra observations real. Declared costs: the case collapse needs flag-if-any, which hides within-case disagreement, so the per-finding table is reported beside the test rather than replaced by it; and the disagreement rate stays per-finding because it counts people-visits, so every reported figure names its unit."
+    "preregistration": "Pinned before any judge call is spent, from the clustering measured over the frozen replay pass and the earlier judged passes on the same case set. The paired routing test is scored PER CASE, keyed by act_testcase_id, on discordant pairs — the same unit every other paired test in this repo is already pre-registered on. Three grounds, and the first is arithmetic rather than preference: (1) at the measured within-case correlation of the judge's own majority routing decision the per-finding effective n lands within ONE observation of the cluster count — below it under the pairwise estimator and above it under the ANOVA one — so a per-finding unit buys nothing measurable while costing an independence assumption the data does not support; (2) the repo's frozen per-class drafter kappa is a per-case number keyed by act_testcase_id, so the side-by-side comparison against it is only like-for-like at the case; (3) the gold label is a property of the case, so every finding inside one is scored against the same answer key. What would have decided the other way: a within-case correlation at or below zero — the drafter's own verdicts measure there — which would have left the per-finding effective n near the raw finding count and made the extra observations real. Declared costs: the case collapse needs flag-if-any, which hides within-case disagreement, so the per-finding table is reported beside the test rather than replaced by it; and the disagreement rate stays per-finding because it counts people-visits, so every reported figure names its unit."
   },
   "sources": {
     "replay_pass": {
@@ -199,7 +199,9 @@
       "icc": 0.4237,
       "multi_observation_clusters": 7,
       "homogeneous_clusters": 5,
-      "distinct_values": 2
+      "distinct_values": 2,
+      "icc_anova": 0.3843,
+      "note": "Two estimators for one quantity, and they are reported together because the decision sits at the boundary: the pairwise form and the one-way random-effects (ANOVA) form straddle the cluster count, so the per-finding effective n lands just below it under one and just above it under the other. The honest reading is that the two units differ by less than a single observation, which is what 'the finer unit buys nothing' means here — not a strict inequality that would flip with the estimator."
     },
     "judge_routing_within_rule": {
       "observations": 54,
@@ -230,7 +232,7 @@
   },
   "effective_n": {
     "formula": "design_effect = 1 + (kish_mean_cluster_size - 1) * icc; effective_n = observations / design_effect",
-    "reading": "The rows to decide on are the judge's, because the judge is the rater the test scores. A row with a NEGATIVE icc returns an effective n above the observation count: that is the correct arithmetic for anti-clustering — a cluster whose members disagree more than random draws — and it is not extra data, so it is never read as a power gain. The icc = 1 row is the bound, and it lands BELOW the cluster count because unequal cluster sizes weight the larger clusters more heavily than a per-cluster analysis would.",
+    "reading": "The rows to decide on are the judge's, because the judge is the rater the test scores — and its two estimators STRADDLE the cluster count, so the finer unit's advantage is under one observation either way and `beats_per_case` must not be read as a strict result. A row with a NEGATIVE icc returns an effective n above the observation count: that is the correct arithmetic for anti-clustering — a cluster whose members disagree more than random draws — and it is not extra data, so it is never read as a power gain. The icc = 1 row is the bound, and it lands BELOW the cluster count because unequal cluster sizes weight the larger clusters more heavily than a per-cluster analysis would.",
     "kish_mean_cluster_size": 1.8519,
     "per_case_units": 40,
     "per_finding_at": [
@@ -261,6 +263,13 @@
         "design_effect": 1.3609,
         "effective_n": 39.68,
         "beats_per_case": false
+      },
+      {
+        "icc_source": "judge routing, majority across passes — ANOVA estimator",
+        "icc": 0.3843,
+        "design_effect": 1.3274,
+        "effective_n": 40.68,
+        "beats_per_case": true
       },
       {
         "icc_source": "drafter four-value conformance on the replay pass",

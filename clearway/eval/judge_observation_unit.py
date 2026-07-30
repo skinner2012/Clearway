@@ -86,8 +86,9 @@ UNIT_PREREGISTRATION = (
     "keyed by act_testcase_id, on discordant pairs — the same unit every other paired test in this "
     "repo is already pre-registered on. Three grounds, and the first is arithmetic rather than "
     "preference: (1) at the measured within-case correlation of the judge's own majority routing "
-    "decision the per-finding effective n falls to the cluster count, so a per-finding unit buys no "
-    "observations while costing an independence assumption the data does not support; (2) the "
+    "decision the per-finding effective n lands within ONE observation of the cluster count — below it "
+    "under the pairwise estimator and above it under the ANOVA one — so a per-finding unit buys nothing "
+    "measurable while costing an independence assumption the data does not support; (2) the "
     "repo's frozen per-class drafter kappa is a per-case number keyed by act_testcase_id, so the "
     "side-by-side comparison against it is only like-for-like at the case; (3) the gold label is a "
     "property of the case, so every finding inside one is scored against the same answer key. What "
@@ -272,6 +273,44 @@ def within_cluster_agreement(streams: Sequence[Sequence[Hashable]]) -> WithinClu
         homogeneous_clusters=homogeneous,
         distinct_values=len(marginal),
     )
+
+
+def anova_icc(streams: Sequence[Sequence[Hashable]]) -> float:
+    """The one-way random-effects intracluster correlation of a BINARY stream — a second estimator.
+
+    Reported beside the pairwise one on purpose. The two are not identical at these cluster sizes and
+    the decision they inform sits right at the boundary, so a reader who recomputes with the textbook
+    ANOVA form must find that figure in the record rather than a different answer to the same question.
+    `(MSB − MSW) / (MSB + (m₀ − 1)·MSW)` with the usual unequal-size correction
+    `m₀ = (n − Σm²/n) / (k − 1)`.
+
+    Binary only, and refused otherwise: the pairwise estimator handles a categorical stream (any two
+    observations either match or do not), while this one needs a numeric coding, and silently coding a
+    four-value verdict onto 0/1 would answer a question nobody asked.
+    """
+    values = [value for stream in streams for value in stream]
+    levels = sorted({str(value) for value in values})
+    if len(levels) != 2:
+        raise DegenerateClustering(
+            f"the ANOVA estimator needs a binary stream and this one carries {len(levels)} distinct "
+            "values; coding a categorical verdict onto 0/1 to make it fit would change the question"
+        )
+    if len(streams) < 2:
+        raise DegenerateClustering("the ANOVA estimator needs at least two clusters")
+    coded = [[float(str(value) == levels[1]) for value in stream] for stream in streams]
+    n, clusters = len(values), len(coded)
+    grand = sum(v for stream in coded for v in stream) / n
+    means = [sum(stream) / len(stream) for stream in coded]
+    between = sum(len(stream) * (mean - grand) ** 2 for stream, mean in zip(coded, means, strict=True)) / (clusters - 1)
+    within_ss = sum((v - mean) ** 2 for stream, mean in zip(coded, means, strict=True) for v in stream)
+    if n == clusters:
+        raise DegenerateClustering("every cluster holds one observation — there is no within-cluster variance")
+    within = within_ss / (n - clusters)
+    size_correction = (n - sum(len(stream) ** 2 for stream in coded) / n) / (clusters - 1)
+    denominator = between + (size_correction - 1.0) * within
+    if denominator == 0.0:
+        raise DegenerateClustering("no variance to partition — the ANOVA estimator is undefined here")
+    return (between - within) / denominator
 
 
 # ---------------------------------------------------------------------------------------------
@@ -496,8 +535,10 @@ def _effective_n(clustering: Clustering, icc_sources: list[tuple[str, float]]) -
     return {
         "formula": "design_effect = 1 + (kish_mean_cluster_size - 1) * icc; effective_n = observations / design_effect",
         "reading": (
-            "The rows to decide on are the judge's, because the judge is the rater the test scores. A row "
-            "with a NEGATIVE icc returns an effective n above the observation count: that is the correct "
+            "The rows to decide on are the judge's, because the judge is the rater the test scores — and "
+            "its two estimators STRADDLE the cluster count, so the finer unit's advantage is under one "
+            "observation either way and `beats_per_case` must not be read as a strict result. A row with a "
+            "NEGATIVE icc returns an effective n above the observation count: that is the correct "
             "arithmetic for anti-clustering — a cluster whose members disagree more than random draws — "
             "and it is not extra data, so it is never read as a power gain. The icc = 1 row is the bound, "
             "and it lands BELOW the cluster count because unequal cluster sizes weight the larger clusters "
@@ -545,8 +586,10 @@ def build_record(*, replay_path: Path, judged_paths: Sequence[Path]) -> dict[str
         by_rule.setdefault(RULE_TO_AXE[case.rule_name], []).extend(stream)
     rule_row = within_cluster_agreement(list(by_rule.values()))
 
+    majority_anova = anova_icc(majority)
     icc_sources = [(f"judge routing, pass {i}", row.icc) for i, row in enumerate(pass_rows, start=1)]
     icc_sources.append(("judge routing, majority across passes", majority_row.icc))
+    icc_sources.append(("judge routing, majority across passes — ANOVA estimator", majority_anova))
     icc_sources.append(("drafter four-value conformance on the replay pass", drafter["conformance_four_value"]["icc"]))
     icc_sources.extend([("independence, for reference", 0.0), ("total within-case agreement, the bound", 1.0)])
 
@@ -579,7 +622,18 @@ def build_record(*, replay_path: Path, judged_paths: Sequence[Path]) -> dict[str
             "conformance_collapse_rule": COLLAPSE_RULE,
             "drafter_on_the_replay_pass": drafter,
             "judge_routing_per_pass": [row.to_dict() for row in pass_rows],
-            "judge_routing_majority_across_passes": majority_row.to_dict(),
+            "judge_routing_majority_across_passes": {
+                **majority_row.to_dict(),
+                "icc_anova": round(majority_anova, 4),
+                "note": (
+                    "Two estimators for one quantity, and they are reported together because the decision "
+                    "sits at the boundary: the pairwise form and the one-way random-effects (ANOVA) form "
+                    "straddle the cluster count, so the per-finding effective n lands just below it under "
+                    "one and just above it under the other. The honest reading is that the two units "
+                    "differ by less than a single observation, which is what 'the finer unit buys nothing' "
+                    "means here — not a strict inequality that would flip with the estimator."
+                ),
+            },
             "judge_routing_within_rule": {
                 **rule_row.to_dict(),
                 "note": (

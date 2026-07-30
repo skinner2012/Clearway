@@ -587,6 +587,15 @@ real difference exists.** The judge-side numbers here are also a **prior, not th
 come from the anchored rubric on referent-free input over a different draft set. The clusters are the
 same; the instrument is not.
 
+**⚠️ Measured at T3b, and the prior was pessimistic in the direction that matters.** The instrument the
+milestone actually runs moves **less** than the earlier passes did: 3, 4 and 7 discordant cases per
+same-configuration pass-pair against the prior's 9, 7 and 8, and a largest one-way movement of **4**
+against the prior's 6. The nearest available real difference — this run against the earlier judged
+passes, where **the prompt and the drafts moved together** and nothing is attributable — carries a
+within-case correlation of **+0.330**, positive, so the case collapse absorbs discordance rather than
+cancelling it. **The contrast the sign test consumes still does not exist**; it needs a second
+configuration's judge output over these same drafts, which is T4's.
+
 **Power is this milestone's chief hope, and it is not yet a fact.**
 
 The judge is measured across the whole frozen set at once rather than inside a single finding-class, so
@@ -596,9 +605,9 @@ whether that helps are unknown at spec time:**
 | | status at spec time |
 |---|---|
 | **Observations** | **settled at T1: 40 cases** — the frozen M7 run's 54 findings collapsed to the pinned unit. **Not M5's 63**, which was a different and larger draft set, and not 54, which is the disagreement rate's denominator rather than the test's |
-| **The repairable ceiling** — how many routing decisions are currently wrong | **Settled at T1 for the drafter side: 7 of the 40 case-level units are act-wrong** (15 of 54 findings; 9 of the drafter's 44, 2 of them unreachable). M5's figures do not transfer — they were counted on M5's drafts. What still needs T3b is how many of those 7 the *judge* currently routes wrongly, which needs judge output |
-| **Discordant pairs needed for α = 0.05** | **derived from T3b's noise floor.** Five suffices only if exactly five pairs are discordant and all five point one way — and **T1 measured the null producing b = 5 on its own**, so five is demonstrably not a safe bar |
-| **⚠️ Effect against noise** | **measured at T1 and it is tight: a ceiling of 7 against a mean null movement of 8.0 cases per pass-pair.** Stated here rather than discovered at T5 |
+| **The repairable ceiling** — how many routing decisions are currently wrong | **Settled at T1 for the drafter side: 7 of the 40 case-level units are act-wrong** (15 of 54 findings; 9 of the drafter's 44, 2 of them unreachable). M5's figures do not transfer — they were counted on M5's drafts. **Settled at T3b for the judge side: it routes 7 of the 40 cases wrongly** — 4 act-wrong cases released, 3 clean ones flagged — and catches **3 of the 7** act-wrong |
+| **Discordant pairs needed for α = 0.05** | **Settled at T3b from the measured floor: `b ≥ 5` over `n ≥ 5`**, the two bars coinciding at `n` = 5 and the statistical bar binding from `n` = 6. Five *does* suffice here, and only because the realized floor came in at 4 one-way case wins rather than T1's prior of 6; below `n` = 5 no split is attainable |
+| **⚠️ Effect against noise** | **measured at T1 as a ceiling of 7 against a mean null movement of 8.0 cases per pass-pair, and re-measured on the real instrument at T3b: mean 4.67 cases per pass-pair** (3, 4, 7). Still the same order as the ceiling — stated here rather than discovered at T5 |
 
 **⚠️ Do not carry M5's figures into this table.** They were measured on a draft set this milestone does
 not use, and quoting them as the margin would pre-register a bar against numbers that no longer apply.
@@ -1215,6 +1224,35 @@ from `n` = 9 the statistical bar binds again. **Set that beside the repairable c
 cases and the power statement gets tighter, not looser**, which is the honest direction for a correction
 to move.
 
+#### ⚠️ The realized floor, measured at T3b — and it supersedes the prior above
+
+**The prior in this section is T1's, taken off the earlier judged passes, and it was not the
+instrument.** Those passes ran the anchored rubric on referent-free input over a different draft set;
+the configuration this milestone compares against was run at T3b, and its own same-configuration
+pass-pairs move less. **Read the paragraph above as the reasoning that fixed the rule, and the numbers
+here as the ones the rule is applied at.**
+
+| | T1's prior | **realized at T3b** |
+|---|---|---|
+| discordant cases per same-configuration pass-pair | 9, 7, 8 | **3, 4, 7** |
+| largest one-way movement, order-invariant | 6 | **4** |
+| **floor bar** (`null_wins + 1`) | 7 | **5** |
+| **smallest attainable `n`** | 7 | **5** |
+
+**So T5 runs at `b ≥ 5` over `n ≥ 5`**, frozen in `benchmark/reports/judge_anchored_baseline.json`
+(`threshold.floor_bar`, `threshold.smallest_attainable_n`, and the full `required_wins` table out to
+`n` = 14). At `n` = 5 the two bars coincide at all five; from `n` = 6 the statistical bar binds, and the
+floor bar never binds again. **The uncomfortable arithmetic did not go away, it moved:** five one-way
+wins with none pointing back is still most of a repairable ceiling of 7, and the same-configuration
+pairs already reach 7 discordant cases on their own — so a clean sweep of five is the smallest thing
+that can count, and it is not a low bar. **Nothing here was chosen after seeing a result**; the rule was
+pre-registered at T3a and this stage supplied the one number it was waiting for.
+
+**⚠️ The per-finding figure is reported beside it and does not govern.** The same pass-pairs move 5, 5
+and 8 findings, largest one-way movement **4** — the same 4 at a denominator of 54 rather than 40, which
+is what the flag-if-any collapse costs. A threshold counted per finding cannot govern a test scored per
+case, so it is context, not an input.
+
 `threshold()` returns both halves and names the **binding** one, so the written read can say whether a
 result was limited by the evidence, by the judge's own jitter, or by the count itself.
 
@@ -1331,6 +1369,78 @@ the unit.
   **b ≥ 7 over n ≥ 7**. Whatever this stage measures must be justified against those figures rather than
   against α alone. If the arithmetic says no attainable effect can clear the floor, that is a finding to
   record here, not a reason to loosen the test.
+- **Settled — the calls are spent and the configuration is frozen.** Three passes of 147 asks
+  (54 natural + 54 SC-swap + 39 conformance-flip) = **441 asks**, made through the harness T3a proved,
+  under `gpt-5.6-luna` at `judge_version` `prompt=afadca26; effort=medium` — the same string the
+  pre-flight's budget was counted under, so the recorded budget dates this run. Frozen at
+  `benchmark/reports/judge_anchored_baseline.json`, pinned in three layers: a literal digest, a full
+  re-derivation of every computed field from the responses in the file, and a re-render of all 147 asks
+  against the prompt digests the paid calls were made under. Nine pieces:
+  - **What the calls cost, which no earlier stage could observe.** **441 transport calls for 441 asks —
+    zero beyond one per ask**, counted at the client seam so a judge-level retry would have shown up
+    there. It is still a floor: a retry *inside* the provider client is invisible, and the spend is read
+    off the provider. **⚠️ And `cost_usd` is a local price table applied to the provider's token counts,
+    not an amount anyone was billed** — LiteLLM prices each response, all 441 priced. On that basis:
+    **$0.999812 total, mean $0.002267, median $0.001929, range $0.000483–$0.010244.** Latency measured
+    locally around each call: **mean 3581 ms, median 3044 ms, range 1078–13467 ms**, 1580.8 s of wall
+    clock for the three passes. Tokens are the provider's own: 428,688 in, 112,839 out — the output
+    count including whatever reasoning the effort setting bought.
+  - **The routing baseline, at both units.** Per case (the pinned unit, the sign test's): **40 units,
+    30 / 4 / 3 / 3** release/miss/false-alarm/catch, **κ 0.3578**, miss rate 0.5714 of 7, false-alarm rate
+    0.0909 of 33. Per finding: **54 units, 36 / 11 / 3 / 4**, **κ 0.227**, miss rate 0.7333 of 15,
+    false-alarm rate 0.0769 of 39. **The pair Group B insists on being read together:** of the flagged
+    set, **3 of 6 are genuinely wrong** per case (4 of 7 per finding) — and of all real errors,
+    **3 of 7 are flagged** per case, **4 of 15** per finding. **⚠️ The judge routes 7 of 40 cases
+    wrongly against a repairable ceiling of 7**, which is the judge-side half T1 could not measure.
+  - **The disagreement rate — the milestone's primary deliverable on this side.** **28 of 54 findings
+    (0.5185), touching 19 distinct cases.** Per class: `document-title` 0/5, `empty-heading` 2/11,
+    `label` 8/17, `link-name` 18/21. Composition: conformance only 6, SC only 21, both 1.
+    **⚠️ Read the next bullet before quoting any of it.**
+  - **⚠️ The SC axis is a citation-formatting artefact almost in its entirety, and the mirror of the one
+    the spec warned about.** The warning above anticipated a *blind* judge citing where the drafter
+    stayed silent. What the anchored judge does is the reflection: **21 of the 22 SC-axis disagreements
+    are exactly the 21 clean drafts that cite nothing — all 21 of them, without exception** — the judge
+    marking `citation_correct` false because the row it was shown named no criterion. Of the 26 rows
+    that do cite, **1** is disputed; of the 7 clean-but-citing rows the spec's original caveat named,
+    **0**. So the axis carries almost no difference of opinion, and the overall rate of 28/54 is
+    **7 conformance-axis disagreements plus a formatting habit**. Both halves are now counted in the
+    artifact; the earlier version reported only the 7-row half, whose zero reads as *this axis is clean*
+    and is the opposite of what happened.
+  - **The noise floor.** Per-case κ across the three passes **0.4805 / 0.4815 / 0.4805** (mean 0.4808,
+    SD 0.0006); per-finding **0.2994 / 0.2961 / 0.2270** (mean 0.2742, SD 0.0409). The routing decision
+    is non-unanimous on **9 of 54 findings** (0.1667). Same-configuration pass-pairs move **3, 4 and 7**
+    cases (5, 5 and 8 findings), and the case collapse erases **4 of the 18** finding-level differences
+    (0.2222).
+  - **⚠️ A κ SD of 0.0006 is not stability, and the number is a trap.** Passes 1 and 3 produce identical
+    cells and pass 2 different ones, yet all three land within 0.001 of each other — while the same three
+    passes disagree on up to 7 of 40 case decisions. **A spread taken on a summary statistic says nothing
+    about whether the decisions underneath it moved**, which is precisely why the floor bar is a
+    discordant *count* and not a κ SD.
+  - **⚠️ The pinned collapse costs the judge its best cells, at both units.** Per case the three passes
+    read 30/3/3/4, 28/2/5/5, 30/3/3/4 and the majority reads **30/4/3/3** — one fewer catch and one more
+    miss than *any* individual pass, κ 0.3578 against a per-pass 0.4805–0.4815. Per finding the same
+    happens (5, 6, 4 catches; majority 4). The reason is mechanical: the judge's catches are not
+    unanimous, so requiring two passes out of three discards the ones it found on a single draw. This is
+    the pinned aggregation working as specified, both configurations get it, and the comparison stays
+    fair — **but the baseline κ here may never be set beside a single-pass κ**, and a report that quotes
+    the noise floor's per-pass figures beside the headline is comparing two different estimators.
+  - **The injected-versus-real gap, on the anchored configuration.** **SC swap 1.000 (n = 54)**,
+    conformance flip **0.8974 (n = 39)**, both per mutated draft, against real detection of **0.4286 per
+    case** and **0.2667 per finding**. Against M5's 1.00 / 0.82 / 0.33 the gap has **not** closed.
+    ⚠️ The swap figure is the one T2 devalued — no decoy criterion appears in any class's candidate list,
+    which this configuration now shows the judge, so 1.000 is answerable by list membership and carries
+    *less* judge behaviour than M5's did. **⚠️ A defect found and fixed before the freeze: both detection
+    rates were being read off `conformance_correct`.** A swap edits the citation and leaves the verdict
+    alone, so that axis says nothing about it; each mutation is now read on the axis it moved, keyed to
+    the acceptance builder's own rule.
+  - **The between-configuration correlation, as near as it can be had.** This run against the earlier
+    judged passes: **11 of 54 findings and 10 of 40 cases route differently, within-case correlation
+    +0.330**. Positive, so the case collapse absorbs discordance rather than cancelling it — the
+    negative result that would have said the collapse costs power did not occur. **⚠️ Confounded and
+    labelled as such in the artifact: the prompt and the drafts moved together**, so it is a real
+    difference attributable to nothing. The contrast the sign test consumes still does not exist.
+  - **The threshold.** Floor bar **5** from a largest one-way case movement of **4**; smallest attainable
+    `n` = **5**. The full table and the correction to T1's prior are under *the threshold rule*.
 - **Depends on:** T3a
 
 ### T4 — The blind configuration
@@ -1474,10 +1584,18 @@ false-alarm denominator (39) are numerically equal and mean different things ove
 
 For scale: M7's drafter passes took 2–3.5 hours each (a local thinking model at ~11 tok/s with no cap
 on its reasoning budget). **M9 makes no drafter calls at all** — every draft is reused from the frozen
-artifact. **⚠️ The per-call cost and latency of the cloud judge remain UNVERIFIED and cannot be settled
+artifact. ~~**⚠️ The per-call cost and latency of the cloud judge remain UNVERIFIED and cannot be settled
 by T0** — no frozen artifact records judge token usage, so the only way to observe them is to make a
-call, which T0 does not do. The order of magnitude is nonetheless far below the preceding three
-milestones; the first anchored pass is where the real figure appears, and it is recorded there.
+call, which T0 does not do.~~ — **true at spec time, settled at T3b:** the anchored half was run and
+recorded, mean **$0.002267** and **3581 ms** per call, in `judge_anchored_baseline.json`. ⚠️ The dollar
+figure is a local price table applied to the provider's token counts, not a billed amount; the billed
+total is still read off the provider. The order of magnitude is far below the preceding three
+milestones.
+
+**⚠️ The anchored half realized its floor exactly: 441 transport calls for 441 asks, zero retries at the
+client seam.** So the anchored side did not approach its ceiling of 882 — but the count is a floor for
+the same reason it always was: a retry inside the provider client leaves no trace above it. **Blind's
+162 remain unspent**, so the milestone total is still quoted as *≥ 603, ceiling 1206*.
 
 **This is the cheapest and best-powered milestone in the project.**
 
@@ -1741,10 +1859,17 @@ figure measured at T1, which is the directly comparable number.)* It is, however
 this judge's own run-to-run movement is already the size of the effects M9 hopes to detect, which is
 exactly why T3b measures the floor before T5 fixes a threshold.
 
-**Unverified — settle in the Plan phase.** The judge's actual run-to-run variance under a fixed
+**⚠️ Measured at T3b on the instrument itself, and the two SDs point opposite ways.** The referent-carrying
+configuration's own 3-pass κ SD is **0.0409 per finding** and **0.0006 per case** — far below the 0.158
+above, which invites reading it as a stable judge. **It is not one:** the same three passes disagree on
+up to **7 of 40** case decisions. A spread on a summary statistic and a count of moved decisions are
+different quantities, and only the second is what the floor bar is made of.
+
+**Unverified — settle in the Plan phase.** ~~The judge's actual run-to-run variance under a fixed
 configuration **on referent-carrying input** (T3b). **The real unit cost and latency of cloud judge
 calls — ⚠️ not settleable at T0:** no frozen artifact records judge token usage, so observing them
-requires a call, and the first anchored pass is the earliest honest place to record them. What
+requires a call, and the first anchored pass is the earliest honest place to record them.~~ — **both
+settled at T3b**, in `benchmark/reports/judge_anchored_baseline.json`. What
 disagreement rate the blind configuration actually produces, and therefore what human workload it
 implies.
 

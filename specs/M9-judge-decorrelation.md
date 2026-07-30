@@ -978,7 +978,8 @@ see the pre-flight block in the evidence ledger.
     citation and one that makes its own.
   - **⚠️ The class asymmetry is inherited, and it is not small.** A class with no referent injection
     contributes no referent line to *either* reader: the frozen record renders referent material on
-    `label` 17/17, `link-name` 21/21, `document-title` 5/5 and **`empty-heading` 0/11**. `empty-heading`
+    `label` 17/17 findings, `link-name` 21/21, `document-title` 5/5 and **`empty-heading` 0/11** — the
+    unit here is the FINDING, not the case. `empty-heading`
     is a fifth of the set and its judge sees exactly what it saw before this ticket, so any per-class
     read that treats "the judge now sees what the drafter sees" as uniform across the four classes is
     wrong. (The scan *captures* referent sources on `empty-heading` findings — the drafter has no block
@@ -1429,8 +1430,8 @@ because no test can perform a rebuild that needs services).
 2. **The freeze is 54 rows over 40 cases, and it is refused unless it is the replay pass's own findings.**
    The check compares `act_testcase_id → ((finding_id, target), …)` whole, not counts — and `finding_id`
    hashes the case's `file://` URL, so reproducing it says the same scan ran over the same file and minted
-   the same element. Per class the referent lands on `label` 17/17, `link-name` 21/21, `document-title`
-   5/5, **`empty-heading` 0/11** — the drafter has no block for that class, so neither reader gets one, and
+   the same element. Per class, PER FINDING, the referent lands on `label` 17/17, `link-name` 21/21,
+   `document-title` 5/5, **`empty-heading` 0/11** — the drafter has no block for that class, so neither reader gets one, and
    the asymmetry is inherited rather than introduced.
 3. **Byte-identity across the two configurations is asserted against the file**, per row, under three
    presentations of one draft (natural, SC-swapped, conformance-flipped) plus the presentation-less case,

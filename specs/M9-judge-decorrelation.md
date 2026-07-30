@@ -1032,6 +1032,10 @@ see the pre-flight block in the evidence ledger.
     names every one, including the provisioned Grafana dashboard and its README. Either publish the
     case-level figures under **new** names, or re-base the existing series deliberately — updating the
     dashboard panels and the README sentence in the same change — and record which was done.
+    **⚠️ One of those panels also changed meaning at T2, independently of the unit:**
+    `benchmark_judge_injected_swap_detection` (dashboard panel *injected swap detection ↑bound*) now
+    measures something a candidate-list membership check answers — see *the injected-versus-real gap*. It
+    stays per finding, so the unit work does not touch it, and it needs the annotation anyway.
   - **Pre-register the threshold *rule* as arithmetic, before the floor exists.** Given `n` discordant
     pairs, the minimum `b` clearing α = 0.05 is a closed form the repo already owns
     (`drafter_kappa.sign_test_p`). Fix the rule here; T3b plugs in the realized `n`. **T1's prior is the

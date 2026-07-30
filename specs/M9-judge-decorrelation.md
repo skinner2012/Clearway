@@ -59,7 +59,7 @@ a number, and it is what M9 exists to fix.
 
 **⚠️ Those figures are M5's, on M5's drafts, and they are the motivation — not the starting point.**
 M6–M8 changed the drafter, so the frozen run this milestone replays has a different number of wrong
-drafts. Nothing above may be reused as M9's baseline; T3 measures the baseline that applies.
+drafts. Nothing above may be reused as M9's baseline; T3b measures the baseline that applies.
 
 ### The diagnosis: M5 guessed shared input; the literature names anchoring
 
@@ -329,10 +329,10 @@ routing decision**, not the correctness of any verdict.
 Reusing the mechanism M6 pre-registered and M7 exercised: **one-sided exact sign test, α = 0.05,
 scored on discordant pairs.**
 
-**⚠️ The test's threshold is registered after T3, not here.** The sign test asks whether blind won on
+**⚠️ The test's threshold is registered after T3b, not here.** The sign test asks whether blind won on
 more **cases** than it lost on, and that question has no answer until it is known how many flip **when
 nothing changes at all**. A cloud judge run twice under one configuration produces discordant pairs of
-its own; a threshold chosen before that count is known can be cleared by jitter alone. **T3 measures the
+its own; a threshold chosen before that count is known can be cleared by jitter alone. **T3b measures the
 floor, and the discordant count required for a result is fixed from it, in writing, before T4's first
 call.** What is fixed *here* is the test family — one-sided exact sign test, α = 0.05 — and the unit,
 which **T1 settled at the case (40 units)**. What is not fixed here is how many discordant pairs
@@ -492,7 +492,7 @@ is one of the three the pin rests on.** What survives:
    Either the case-level figures publish under **new** names, or the existing series are re-based
    deliberately, the dashboard panels and the README sentence are updated in the same change, and the
    re-basing is recorded. **This is a scope handoff, not a redesign: nothing about the dashboard is fixed
-   here.** *(Not in scope either: `calibration_snapshot.py` and `metrics.py`'s bare `judge_kappa`, plus
+   here — it lands in T3a, which spends no calls, so it is settled before the anchored run starts.** *(Not in scope either: `calibration_snapshot.py` and `metrics.py`'s bare `judge_kappa`, plus
    the four panels reading it, `judge_trusted`, `judge_agreement_rate` and `judgment_correctness_rate` —
    those are the judge-vs-human κ on the self-built gold, already marked *superseded* on the dashboard,
    a different measurement that must not be "fixed" to match.)*
@@ -518,7 +518,7 @@ retains 80% of the finding-level discordant count and **erases 13.3%** of it out
 #### ⚠️ The repairable ceiling, and the power statement it forces
 
 Deterministic from the replay pass and ACT gold, under the acceptance scorer's own correctness
-predicate — **this was measurable here and the power table wrongly deferred all of it to T3:**
+predicate — **this was measurable here and the power table wrongly deferred all of it to T3b:**
 
 | unit | act-wrong | total | note |
 |---|---|---|---|
@@ -532,7 +532,7 @@ Per class (findings / judge-visible cases / drafter cases): `document-title` 0/0
 only of the drafter.
 
 **Now set the two numbers beside each other, because the comparison is uncomfortable and it is the
-honest power statement this milestone owes T3:**
+honest power statement this milestone owes T3b:**
 
 - **Repairable ceiling: 7 of 40 cases.**
 - **Null movement, same configuration, nothing changed: mean 8.0 of 40 cases per pass-pair** (7, 8 and 9),
@@ -545,14 +545,14 @@ honest power statement this milestone owes T3:**
 wrong drafts to repair in total.** For Comparison 1 to certify, blind would have to convert nearly the
 entire ceiling one-way while jitter scatters ~8 flips at random. That does not invalidate the design —
 it is exactly why the threshold is derived from the floor rather than assumed, and why **the
-disagreement rate, not the p-value, is the deliverable.** T3 fixes the threshold against these figures;
+disagreement rate, not the p-value, is the deliverable.** T3b fixes the threshold against these figures;
 nothing here pre-registers it.
 
 **⚠️ What is still genuinely unmeasurable at this stage** — and must not be confused with the erasure
 above, which *was* measurable and is now measured. The correlation is estimated on *levels*, each
 configuration's own routing decision. The within-case correlation of a **real between-configuration
 difference** needs two configurations' judge output, and no artifact carries that; the null differences
-above are the closest available substitute and they are null by construction. **T3 is the first place a
+above are the closest available substitute and they are null by construction. **T3b is the first place a
 real difference exists.** The judge-side numbers here are also a **prior, not the thing itself**: they
 come from the anchored rubric on referent-free input over a different draft set. The clusters are the
 same; the instrument is not.
@@ -566,8 +566,8 @@ whether that helps are unknown at spec time:**
 | | status at spec time |
 |---|---|
 | **Observations** | **settled at T1: 40 cases** — the frozen M7 run's 54 findings collapsed to the pinned unit. **Not M5's 63**, which was a different and larger draft set, and not 54, which is the disagreement rate's denominator rather than the test's |
-| **The repairable ceiling** — how many routing decisions are currently wrong | **Settled at T1 for the drafter side: 7 of the 40 case-level units are act-wrong** (15 of 54 findings; 9 of the drafter's 44, 2 of them unreachable). M5's figures do not transfer — they were counted on M5's drafts. What still needs T3 is how many of those 7 the *judge* currently routes wrongly, which needs judge output |
-| **Discordant pairs needed for α = 0.05** | **derived from T3's noise floor.** Five suffices only if exactly five pairs are discordant and all five point one way — and **T1 measured the null producing b = 5 on its own**, so five is demonstrably not a safe bar |
+| **The repairable ceiling** — how many routing decisions are currently wrong | **Settled at T1 for the drafter side: 7 of the 40 case-level units are act-wrong** (15 of 54 findings; 9 of the drafter's 44, 2 of them unreachable). M5's figures do not transfer — they were counted on M5's drafts. What still needs T3b is how many of those 7 the *judge* currently routes wrongly, which needs judge output |
+| **Discordant pairs needed for α = 0.05** | **derived from T3b's noise floor.** Five suffices only if exactly five pairs are discordant and all five point one way — and **T1 measured the null producing b = 5 on its own**, so five is demonstrably not a safe bar |
 | **⚠️ Effect against noise** | **measured at T1 and it is tight: a ceiling of 7 against a mean null movement of 8.0 cases per pass-pair.** Stated here rather than discovered at T5 |
 
 **⚠️ Do not carry M5's figures into this table.** They were measured on a draft set this milestone does
@@ -797,7 +797,7 @@ check on how the number was arrived at, not the thing being delivered.
 4. **The two configurations are compared at the routing-decision level**, each configuration's decision
    taken from its majority verdict across passes and then collapsed to the case with flag-if-any, scored
    against ACT gold into M5's four cells, under the one-sided sign test (α = 0.05) **on 40 case-level
-   units** at **the discordant threshold derived from T3's noise floor** — or reported under one of the
+   units** at **the discordant threshold derived from T3b's noise floor** — or reported under one of the
    other pre-committed verdicts.
 5. **All Group A and Group B metrics reported**, with the disagreement rate carrying its absolute count,
    `drafter–judge κ` labelled descriptive-only, and **the two raters' per-class κ against ACT gold set
@@ -823,7 +823,9 @@ touch.
 
 **T0** is pre-flight, **makes no model calls**, and can redirect the whole milestone. **T1** fixes the
 observation unit. **T2** gives the judge the referent — the shared precondition for both
-configurations. **T3** rebuilds the anchored baseline and the noise floor. **T4** is the blind
+configurations. **T3a** fits the scoring path to the pinned unit and settles everything the anchored run
+needs that costs no call; **T3b** then spends the calls and rebuilds the anchored baseline and the noise
+floor. **T4** is the blind
 configuration. **T5** runs the comparison and the diagnostic decomposition. **T6** freezes and writes
 the read. The appendix configuration, if run, slots between T4 and T5.
 
@@ -888,13 +890,13 @@ see the pre-flight block in the evidence ledger.
   the case collapse **erases** from the sign test's currency (13.3% of the finding-level discordance
   under the null; 8.0 case-level discordant pairs per pass-pair), and the **repairable ceiling** — 7 of
   40 judge-visible cases act-wrong, 15 of 54 findings, 9 of the drafter's 44 with 2 unreachable. Those
-  two numbers together are the power statement handed to T3, and it is tight. Things this turned up that
+  two numbers together are the power statement handed to T3b, and it is tight. Things this turned up that
   were **not** asked for, all recorded above: the Group B join key is `act_testcase_id` and not
   `finding_id`; the disagreement rate has to stay per-finding while the test is per-case; the two raters'
   per-class denominators differ **44 against 40**, so ground (2) is *necessary, not sufficient*;
   **`DrafterKappaBaseline` is the pre-referent drafter and must not supply the drafter's side**; the
   confusion matrix's unit change reaches four unit-free published gauges; and the within-case correlation
-  of a *real* between-configuration difference remains unmeasurable until T3.
+  of a *real* between-configuration difference remains unmeasurable until T3b.
 - **Depends on:** T0
 
 ### T2 — Give the judge what the drafter saw
@@ -909,10 +911,53 @@ see the pre-flight block in the evidence ledger.
   not recovered**, so no later reader mistakes it for the one the drafter saw.
 - **Depends on:** T1
 
-### T3 — Rebuild the anchored baseline + the judge noise floor
+### T3a — Fit the scoring path to the pinned unit *(no model calls)*
+- **Produces:** everything the anchored run needs that can be settled without spending a call — a
+  judge-scoring path that works at the pinned unit, Group B's comparator recomputed from the right
+  drafter, every published surface reconciled with the unit change, and the threshold *rule* fixed in
+  writing.
+- **Rationale:** the discipline the pre-flight already proved, applied to the expensive stage. **T3b
+  spends 441 calls, and every question below is answerable for nothing** — so a harness defect, a wrong
+  comparator or a silently redefined gauge is found while finding it is still free. T0 redirected
+  nothing and still corrected a rubric fact and a call budget before either could cost anything.
+- **Detail:**
+  - **Collapse the judged rows to the case before they reach the scorer, and record the unit beside the
+    cells.** `judge_score.score_judge` tallies the four cells from one `JudgedDraft` per **finding**, and
+    `JudgeConfusion` has no field saying which unit its cells are on, so two matrices at two units are
+    indistinguishable on disk. **Default: no `CONTRACTS.md` change** — the unit goes in the run artifact,
+    where every other eval-only field already lives. If the collapse turns out to need a schema field,
+    **stop and raise it** rather than editing §3.
+  - **⚠️ Recompute the drafter's per-class κ from the replay pass and freeze it as Group B's comparator.**
+    `DrafterKappaBaseline` is the **pre-referent** drafter — see *what ground (2) can bear*.
+    Deterministic; no calls.
+  - **Reconcile the published surfaces with the unit change.** The table under *the observation unit*
+    names every one, including the provisioned Grafana dashboard and its README. Either publish the
+    case-level figures under **new** names, or re-base the existing series deliberately — updating the
+    dashboard panels and the README sentence in the same change — and record which was done.
+  - **Pre-register the threshold *rule* as arithmetic, before the floor exists.** Given `n` discordant
+    pairs, the minimum `b` clearing α = 0.05 is a closed form the repo already owns
+    (`drafter_kappa.sign_test_p`). Fix the rule here; T3b plugs in the realized `n`. **T1's prior is the
+    justification — a null `b` reaching 5 against a ceiling of 7** — so "five pairs certifies" cannot be
+    the rule.
+  - **Dry-run the whole anchored path** on stubbed or recorded judge responses, so the harness is proven
+    before a call is spent. The `dry_gate` pattern exists for exactly this.
+  - **Stabilise `judge_preflight.json`'s freeze check.** Its `reproducible_digest` covers
+    `listed_model_count`, which is read live from the provider, so the digest moves whenever the
+    provider's catalogue moves and a rebuild cannot be told apart from an edit. **It has already
+    drifted.** Take the volatile field out of the digest — or out of the record — and say which.
+- **Acceptance:** **zero model calls**; the confusion path is per-case and the artifact says so; Group B's
+  drafter comparator is the replay pass, with `DrafterKappaBaseline` labelled pre-referent and historical
+  only; every surface in the publisher table is updated or explicitly deferred **with its reason**; the
+  threshold rule is in the spec; the dry run passes end to end; the pre-flight record rebuilds to a stable
+  digest.
+- **Depends on:** T2
+
+### T3b — Rebuild the anchored baseline + the judge noise floor *(the 441 calls)*
 - **Produces:** the current rubric's performance on **referent-carrying** input, and its own variance.
 - **Detail:** replay the judge over M7's frozen drafts, **running the same configuration N times**
-  (N ≥ 3). Compute the full Group A and Group B metric set.
+  (N ≥ 3), through the scoring path T3a fitted to the pinned unit. Compute the full Group A and Group B
+  metric set. **⚠️ The per-call cost and latency of the cloud judge are recorded here** — no earlier
+  stage can observe them without making a call, so this is the first honest place.
 - **Rationale:** cloud models are not bit-reproducible even at temperature 0. **Without a noise floor,
   any difference could be cloud jitter.**
 - **Acceptance:** the baseline is frozen with per-run variance; M5's figures are retained **as
@@ -923,12 +968,9 @@ see the pre-flight block in the evidence ledger.
   test scored per case. Two figures are reported, not one: the **per-case** discordant count that fixes
   the threshold, and the **per-finding** count beside it, so the flag-if-any collapse's cost stays
   visible.
-- **⚠️ The scorer it would be natural to reuse is on the wrong unit.** `judge_score.score_judge` tallies
-  the four cells from one `JudgedDraft` per **finding**, and `JudgeConfusion` has no field that records
-  which unit its cells are on. So the judged rows must be collapsed to the case *before* they reach the
-  scorer, and the unit must be written into the run artifact beside the cells — otherwise this stage
-  freezes a per-finding matrix that a later reader takes for a per-case one, and the two are
-  indistinguishable on disk. See *the observation unit*.
+- **⚠️ Do not re-fit the scorer here.** The judged rows are collapsed to the case, and the unit written
+  into the artifact beside the cells, **by T3a** — because that work costs nothing and this stage costs
+  441 calls. If the collapse is still open when this stage starts, the stage is not ready to start.
 - **⚠️ Also measured here, and only here:** the within-case correlation of a **real**
   between-configuration difference. T1 measured the correlation of each configuration's routing *levels*,
   and it measured the *null* difference between passes of one configuration — but the contrast the sign
@@ -941,7 +983,7 @@ see the pre-flight block in the evidence ledger.
   whatever is fixed here must be justified against those two figures rather than against α alone. If the
   arithmetic says no attainable effect can clear the floor, that is a finding to record here, not a
   reason to loosen the test.
-- **Depends on:** T2
+- **Depends on:** T3a
 
 ### T4 — The blind configuration
 - **Produces:** a judge that never sees the draft and only answers independently; agreement computed in
@@ -963,9 +1005,9 @@ see the pre-flight block in the evidence ledger.
   SC"* under blind — same field names, different questions. Without a marker the two artifacts are
   indistinguishable on disk and will eventually be compared wrongly.
 - **⚠️ Acceptance:** the model's output contains **no** assessment of the draft; agreement is decided
-  entirely in code and reproducible from the frozen artifact; run-to-run variance is read against T3's
+  entirely in code and reproducible from the frozen artifact; run-to-run variance is read against T3b's
   noise floor.
-- **Depends on:** T3
+- **Depends on:** T3b
 
 ### T5 — Comparison and diagnostic decomposition
 - **Produces:** **both** comparisons, kept apart — Comparison 1 (anchored ↔ blind) and Comparison 2
@@ -974,7 +1016,7 @@ see the pre-flight block in the evidence ledger.
   its **majority verdict across passes**, collapse that to the case with **flag-if-any** (the pinned
   order — passes first, findings second), score the case decision against ACT gold into M5's four cells,
   and run the **one-sided exact sign test (α = 0.05)** on that per-case unit, at the discordant
-  threshold pinned in T3. Report the full Group A and Group B metric sets, the two raters' per-class κ
+  threshold pinned in T3b. Report the full Group A and Group B metric sets, the two raters' per-class κ
   against gold side by side under the four declared conditions, and the injected-versus-real gap
   **on the anchored configuration**.
 - **⚠️ The per-finding table is reported beside the test, never instead of it.** The case collapse
@@ -1120,7 +1162,7 @@ source.
 
 **Inference — reasoned, not directly observed.** That Clearway's judge co-signing 15 of 16 false
 positives is a symptom of anchoring: the symptom matches the mechanism the literature describes, but
-**this has not been measured on Clearway** — T3 and T4 are what would verify it. That structured
+**this has not been measured on Clearway** — T3b and T4 are what would verify it. That structured
 output generates fields in schema order, and therefore that field order can enforce commitment: this
 is general behaviour of strict json-schema mode and **has not been verified against this repo's cloud
 client**. That blinding restores κ to its "two independent raters" definition is a methodological
@@ -1135,7 +1177,7 @@ original, so this can be corroborated but never verified**.
 (rebuild: `uv run --env-file .env python -m clearway.eval.judge_preflight`).
 
 1. **The `gpt-5.6-luna` snapshot is still addressable on the account.** Established from the provider's
-   **model listing** (`GET /v1/models`, 125 ids, `gpt-5.6-luna` present, alongside `gpt-5.6-sol` — the
+   **model listing** (`GET /v1/models`, `gpt-5.6-luna` present, alongside `gpt-5.6-sol` — the
    technique classifier's pin — and `gpt-5.6-terra`). A listing is metadata: no inference, no tokens,
    no cost. **⚠️ It proves the id resolves, not that a Responses call at `effort=medium` will succeed**
    — that is one call away and is not spent here. **Stop-loss outcome: proceed as written.** An
@@ -1144,7 +1186,12 @@ original, so this can be corroborated but never verified**.
    reach** — the endpoint follows `OPENAI_BASE_URL` / `OPENAI_API_BASE`, which the `litellm` route the
    cloud client uses also honours, and the record states that **no override was in force** when this
    answer was taken. A check against a hardcoded host could otherwise confirm a snapshot on a provider
-   the judge never calls.
+   the judge never calls. **⚠️ No id count is quoted here, deliberately.** The record's
+   `listed_model_count` is read live and has already moved since this paragraph was first written, and it
+   sits **inside** `reproducible_digest` — so the pre-flight's freeze check drifts whenever the provider
+   adds a model, and a genuine edit becomes indistinguishable from a catalogue change. **T3a stabilises
+   it.** What the answer rests on is that the id is *present*, which a count neither strengthens nor
+   dates.
 2. **M5's per-finding judge results were retained in full — but they are on the wrong drafts.** All
    three M5 passes (`benchmark/runs/run_{1,2,3}.json`) carry `judge_conformance_correct`,
    `judge_citation_correct` and `judge_verdict` on **63/63 rows each**, and run_1 re-derives the frozen
@@ -1219,7 +1266,7 @@ and the freeze is pinned by file comparison rather than by a self-digest).
    receive the same per-rule framing and a shared level effect cancels.
 5. **Context, not part of the pin: the judge disagreed with itself on 15 of 54 findings** across three
    passes of one fixed configuration (27.8%) — a prior on why the repeat-pass collapse exists at all, and
-   on why T3 measures the floor before T5 fixes a threshold.
+   on why T3b measures the floor before T5 fixes a threshold.
 6. **What the pin does not reach, stated so it is not assumed to:** the two injected-detection rates
    (per mutated draft, n = 54 and 39), the call budget (call counts, not observations), and — the one
    with a code consequence — the confusion matrix, whose cells now sum to 40 rather than 63 while
@@ -1246,20 +1293,20 @@ and the freeze is pinned by file comparison rather than by a self-digest).
    rather than reports.
 8. **The repairable ceiling and the null floor** — `7/40` cases against a mean `8.0/40` per pass-pair,
    with the full tables and the b/c split in *the observation unit*. Both were measurable here; the power
-   table previously deferred all of the first to T3.
+   table previously deferred all of the first to T3b.
 
 **A partial judge noise floor already exists, on the wrong input *and on the other unit*.**
 `benchmark/reports/noise_floor.json` records a 3-pass SD of **0.158 on judge κ** and **0.105 on the judge
 miss rate**, and the four routing cells move materially across those passes — 31/16/8/8, 28/21/11/3,
-31/18/8/6. **⚠️ Those cells are PER FINDING and sum to 63**, M5's unscoped draft count; T3's floor is a
+31/18/8/6. **⚠️ Those cells are PER FINDING and sum to 63**, M5's unscoped draft count; T3b's floor is a
 **per-case** discordant count over 40, so the two are not the same quantity and neither figure may be
 substituted for the other. *(The scoped per-case null movement over the same passes is the 8.0-per-pair
 figure measured at T1, which is the directly comparable number.)* It is, however, a prior worth stating:
 this judge's own run-to-run movement is already the size of the effects M9 hopes to detect, which is
-exactly why T3 measures the floor before T5 fixes a threshold.
+exactly why T3b measures the floor before T5 fixes a threshold.
 
 **Unverified — settle in the Plan phase.** The judge's actual run-to-run variance under a fixed
-configuration **on referent-carrying input** (T3). **The real unit cost and latency of cloud judge
+configuration **on referent-carrying input** (T3b). **The real unit cost and latency of cloud judge
 calls — ⚠️ not settleable at T0:** no frozen artifact records judge token usage, so observing them
 requires a call, and the first anchored pass is the earliest honest place to record them. What
 disagreement rate the blind configuration actually produces, and therefore what human workload it

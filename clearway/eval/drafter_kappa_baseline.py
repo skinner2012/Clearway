@@ -1,4 +1,18 @@
-"""Assemble the frozen per-class drafter-κ baseline — the reference every future drafter claim is measured against.
+"""Assemble the frozen per-class drafter-κ baseline — the reference the drafter's fixes were measured against.
+
+⚠️ HISTORICAL: this is the PRE-REFERENT drafter, and it is not the current one
+------------------------------------------------------------------------------
+The committed `benchmark/reports/drafter_kappa_baseline.json` was frozen from the acceptance sweep, whose
+`run_ids` are `acceptance-2026-07-15…` — the drafter as it stood **before** the referent reached its prompt.
+It is exactly right as what the referent work was measured against, and it is **wrong as a description of
+today's drafter**: recomputing the same κ over the pass two prompt revisions later moves two of the four
+classes, and they are the two that work repaired.
+
+The substitution is invisible on inspection, which is why the warning is here rather than left to be noticed:
+the frozen file and the later pass agree on 44 cases and 54 findings, and every per-class row still parses.
+Anything that needs the drafter's per-class κ as a **comparator for a current measurement** recomputes it —
+`eval/judge_drafter_comparator.py` does, from the pass its comparison replays, using this module's own
+`class_kappas` rather than a second implementation.
 
 The per-class functions in `drafter_kappa.py` each answer one question — κ (`class_kappas`), its bootstrap
 interval (`class_kappa_cis`), the detectable-improvement ceiling (`class_ceilings`). This module joins them,

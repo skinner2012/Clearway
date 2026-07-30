@@ -1,0 +1,164 @@
+{
+  "artifact": "the drafter's per-class kappa against ACT gold, on the pass the judge comparison replays",
+  "version": 1,
+  "model_calls_spent": 0,
+  "created_at": "2026-07-25T02:41:41.406015+00:00",
+  "unit": {
+    "observation_unit": "case",
+    "unit_key": "act_testcase_id",
+    "within_case_aggregation": "flag-if-any",
+    "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+    "note": "The drafter's kappa exists only per case, which is what makes the case the only unit at which the two raters can be set beside each other."
+  },
+  "source": {
+    "path": "citation_grounding_run_1.json",
+    "sha256": "191e40e5efa83bb82799d1c83579b54246f9ff56781e615f459999df6bb52141",
+    "run_ids": [
+      "citation-grounding-pass1-2026-07-25T02:41:41.406015+00:00"
+    ],
+    "config_id": "m1-single@1",
+    "eval_set_id": "act-acceptance@1",
+    "corpus_version": "wcag22-nomic-embed-text-768@1",
+    "drafter_model": "gemma4:31b",
+    "drafter_model_digest": "6316f0629137b426c9d9b853ffc4c8209589f30ee39aebede6285096c0ff47e7",
+    "axe_core_version": "4.12.1",
+    "act_export_hash": "a805d865d61ae2418e56a6a9d303fe60c85089c792b897eb9472ea5513156293",
+    "created_at": "2026-07-25T02:41:41.406015+00:00"
+  },
+  "per_class": [
+    {
+      "axe_rule": "document-title",
+      "rule_names": [
+        "HTML page title is descriptive"
+      ],
+      "drafter_units": 5,
+      "judge_visible_units": 5,
+      "unit_gap": 0,
+      "gap_rows_whose_gold_is_failed": 0,
+      "gap_row_ids": [],
+      "findings": 5,
+      "failed": 2,
+      "passed": 3,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "kappa": 1.0,
+      "raw_agreement": 1.0
+    },
+    {
+      "axe_rule": "empty-heading",
+      "rule_names": [
+        "Heading is descriptive"
+      ],
+      "drafter_units": 13,
+      "judge_visible_units": 11,
+      "unit_gap": 2,
+      "gap_rows_whose_gold_is_failed": 1,
+      "gap_row_ids": [
+        "c3ed1f47a0892ce17a390e0953c715e5ed1ae5db",
+        "dce627a3a49f90c4638695e93314b6bad5bf65e2"
+      ],
+      "findings": 11,
+      "failed": 5,
+      "passed": 8,
+      "tp": 4,
+      "fp": 1,
+      "fn": 1,
+      "tn": 7,
+      "kappa": 0.675,
+      "raw_agreement": 0.8462
+    },
+    {
+      "axe_rule": "label",
+      "rule_names": [
+        "Form field label is descriptive"
+      ],
+      "drafter_units": 11,
+      "judge_visible_units": 11,
+      "unit_gap": 0,
+      "gap_rows_whose_gold_is_failed": 0,
+      "gap_row_ids": [],
+      "findings": 17,
+      "failed": 5,
+      "passed": 6,
+      "tp": 5,
+      "fp": 1,
+      "fn": 0,
+      "tn": 5,
+      "kappa": 0.8197,
+      "raw_agreement": 0.9091
+    },
+    {
+      "axe_rule": "link-name",
+      "rule_names": [
+        "Link in context is descriptive"
+      ],
+      "drafter_units": 15,
+      "judge_visible_units": 13,
+      "unit_gap": 2,
+      "gap_rows_whose_gold_is_failed": 1,
+      "gap_row_ids": [
+        "75db8879bf7db22dcb4455dd0ebc7e244fdde2ae",
+        "bd4aaff1b51fa2fbf5c0f326266aa83844602967"
+      ],
+      "findings": 21,
+      "failed": 6,
+      "passed": 9,
+      "tp": 4,
+      "fp": 4,
+      "fn": 2,
+      "tn": 5,
+      "kappa": 0.2105,
+      "raw_agreement": 0.6
+    }
+  ],
+  "totals": {
+    "drafter_units": 44,
+    "judge_visible_units": 40,
+    "unit_gap": 4,
+    "gap_rows_whose_gold_is_failed": 2,
+    "findings": 54
+  },
+  "denominators": "Two denominators are recorded per class and neither is chosen. The drafter's stream carries the cases that minted no finding, because a failed one is an automatic recall miss and dropping it would overstate recall; the judge's stream cannot hold them, because a case that mints nothing produces no finding to judge. Quoting each rater on its own denominator keeps two honest numbers and forbids arithmetic that subtracts one from the other; restricting the drafter to the judge-visible cases buys one denominator at the cost of dropping real errors from the drafter's count, which flatters it. The stage that publishes the side-by-side table declares which; this record makes both derivable and neither accidental.",
+  "superseded_baseline": {
+    "path": "drafter_kappa_baseline.json",
+    "sha256": "9eae478bac695277c1a321db4246682bd58e0e56d77cce35f43586b4675bd06f",
+    "run_ids": [
+      "acceptance-2026-07-15T01:55:47.047521+00:00",
+      "acceptance-2026-07-15T04:16:36.867992+00:00",
+      "acceptance-2026-07-15T06:03:41.204807+00:00"
+    ],
+    "config_id": "m1-single@1",
+    "eval_set_id": "act-acceptance@1",
+    "created_at": "2026-07-15T01:55:47.047521Z",
+    "per_class": [
+      {
+        "axe_rule": "document-title",
+        "n": 5,
+        "kappa": 0.0
+      },
+      {
+        "axe_rule": "empty-heading",
+        "n": 13,
+        "kappa": 0.675
+      },
+      {
+        "axe_rule": "label",
+        "n": 11,
+        "kappa": 0.127
+      },
+      {
+        "axe_rule": "link-name",
+        "n": 15,
+        "kappa": 0.2105
+      }
+    ],
+    "classes_whose_kappa_moved": [
+      "document-title",
+      "label"
+    ],
+    "historical_only": true,
+    "why": "The frozen per-class drafter baseline was built from the acceptance sweep (run_ids acceptance-2026-07-15…), which is the drafter BEFORE the referent reached its prompt. This comparison replays a pass two prompt revisions later. The two agree on their finding count (54) and on their case count (44), so a substitution is invisible on inspection — and the per-class kappa is materially different on the two classes the referent work repaired. The frozen file remains correct as the record of the run it was built from, and it is historical: it is not this drafter, and it must not be read as the comparator the judge is set beside."
+  }
+}

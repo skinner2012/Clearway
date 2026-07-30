@@ -119,6 +119,12 @@ page-topic signal, the surrounding context.
 
 **But `_judge_user_prompt` passes only `finding.html`. The judge cannot see the referent.**
 
+**⚠️ Present tense as of spec time only — closed at T2.** `_judge_user_prompt` now carries the
+referent and the retrieved candidate list, rendered by the drafter's own builders, and the finding-side
+input is frozen at `benchmark/reports/judge_finding_input.json`. The diagnosis below stands as the
+reason the work was done; the code statement it rests on is superseded, and the settled block under T2
+records what that cost and what it did not buy.
+
 So the judge is grading a verdict formed from information it does not have. On `label`, the drafter
 sees the resolved accessible name; the judge sees only the raw markup.
 
@@ -682,6 +688,18 @@ real errors                 0.33   ← a threefold gap
 is explicitly out of scope here. This decomposes M5's two-cause diagnosis quantitatively, and **both
 outcomes are results.**
 
+**⚠️ T2 gave the anchored judge a mechanical shortcut to the SC swap, and the rebuilt figure has to be
+read knowing it.** The swap substitutes one of three decoy criteria (`offline_inject._DECOY_SCS`:
+1.4.3, 2.1.1, 1.4.1), and the finding-side input now shows the judge the retrieved candidate list —
+**none of the three decoys appears in any of the four classes' candidate lists** (re-derivable from
+`benchmark/reports/judge_finding_input.json`: 15 distinct candidate ids over the four lists, no
+intersection with the decoys). So "is this citation wrong" is answerable by **list membership**, with no
+WCAG judgment involved at all. M5 measured 1.00 without that cue; a rebuilt 1.00 is therefore *less*
+informative than M5's, not more, and it must not be read as the judge getting better. The conformance
+flip is unaffected — it changes a verdict, and no candidate list speaks to a verdict. **Neither figure
+may be quoted without this note**, and the guard row in the pre-committed rules is read against real
+detection, exactly as it already says.
+
 **⚠️ The gap is measured on the anchored configuration only — a property of the method, not a
 shortcut.** Both mutations edit the **draft**, and a blind judge never reads the draft: its model call
 is byte-identical whether the draft is natural, SC-swapped or conformance-flipped. "Caught" then
@@ -721,13 +739,33 @@ rate is reported with its absolute count and interpreted honestly.
    a frozen corpus, but nothing on disk proves today's list is the one the drafter answered. Freezing
    discharges the comparison this milestone tests (anchored vs blind); the weaker claim — that the
    judge's input equals the drafter's — is **carried as a limitation, corroborated at best, never
-   asserted as verified**.
+   asserted as verified**. **Discharged at T2:** `benchmark/reports/judge_finding_input.json`, read by
+   both configurations through `Judge.judge_prepared`, with the corroboration and its limits recorded in
+   the file itself.
 3. **⚠️ Build the judge's own noise floor first.** `judge.py`'s own docstring states that cloud models
    are not bit-reproducible even at temperature 0. **Re-run the anchored configuration N times and
    measure its own variance.** Without this, any improvement could be cloud jitter. This is what M5 did
    for the drafter, applied to the judge.
-4. **`judge_version` tracks the change automatically.** The rubric text's sha256 already feeds
-   `judge_version`, so the configurations carry distinct version strings by construction.
+4. **⚠️ `judge_version` does NOT track the finding-side prompt — corrected at T2.** The row that used to
+   sit here claimed the rubric text's sha256 makes the configurations carry distinct version strings by
+   construction. It does not: `_RUBRIC_HASH` covers `_RUBRIC_SYSTEM` alone, so the whole finding-side
+   template — its wording, its field selection, the referent and the candidate list T2 added — is
+   **outside** the hash. The consequences are concrete and none of them is hypothetical:
+   - the M9 anchored configuration and M5's are **indistinguishable by `judge_version`** while reading
+     materially different input (T0 already noted the string could not tell them apart; T2 is the edit
+     that makes them genuinely different instruments);
+   - the pre-flight's tripwire test (`test_the_rubric_hash_the_budget_was_counted_under_is_a_deliberate_tripwire`)
+     stays **green** across T2, because it watches the rubric it names;
+   - the calibration record's rater provenance (`docs/M4-calibration-report.md`, κ 0.791 `judge_trusted`)
+     names a `judge_version` that the judge still reports, on input the calibration never saw.
+
+   **What T2 did instead of moving the string:** the whole finding-side prompt is pinned as a literal in
+   the judge's tests (a template edit fails there), and every frozen block carries its own sha256 in the
+   artifact. **What is still open, and it is T3a's:** either extend the hash to cover the template and
+   **re-record** the pre-flight (the tripwire's own instruction is to re-record rather than retype), or
+   decide deliberately that the run artifact's block digests are the provenance and say so where
+   `judge_version` is published. Not decided at T2, because moving the string invalidates a frozen
+   record whose stabilisation is already T3a's work.
 5. **Iterate the rubric on the dev set, never on the frozen set.** The same overfitting risk M7 faced
    with prompts. Freeze, then touch ACT once, and record how many times it was touched. **The drafter's
    cite-nothing-when-clean convention must be in the rubric before that freeze** — see *what code
@@ -757,6 +795,12 @@ against 0.33 on real errors. **The fourth time must be recognised.**
    receives*), and its residual correlation is not quantified here. **⚠️ It is a stronger shared prior
    than the phrase suggests**: the query is built from the rule and its help text, so every finding of a
    rule receives the same criteria in the same order, and both readers inherit that ordering intact.
+   **⚠️ Measured at T2 rather than left as a phrase: there are exactly FOUR candidate lists across all 54
+   findings — one per class, identical for every finding in it** (`per_class.distinct_candidate_lists`
+   is 1 in all four rows of `benchmark/reports/judge_finding_input.json`). So the prior is not merely
+   shared, it is *constant within a class*: on the SC axis the two readers are choosing from the same
+   five ids in the same order on every finding of a rule, which is why that axis is expected to be quiet
+   and why the size of the residual is a question this milestone still does not answer.
    **How large the residual is, and whether it should be broken, is carried forward as an open
    requirement with no milestone attached** — no milestone is planned past this one, and naming a future
    one would be inventing a plan the results have not chosen yet.
@@ -909,6 +953,60 @@ see the pre-flight block in the evidence ledger.
   configurations read**, and byte-identity across the two is asserted by test against that file; only
   the presentation of the draft differs. The artifact records that the candidate list was **rebuilt,
   not recovered**, so no later reader mistakes it for the one the drafter saw.
+- **Settled — zero judge calls** (the scanner and the embedder are live; the judge is not called).
+  `_judge_user_prompt` is now **finding side + draft presentation**, assembled in that order and never
+  interleaved. The finding side carries the rule, the task, the target, the HTML, **`Finding.referent`**
+  and the **retrieved candidate criteria**, and it is frozen once at
+  `benchmark/reports/judge_finding_input.json` (rebuild:
+  `uv run --env-file .env python -m clearway.eval.judge_finding_input`). **54 rows over 40 cases,
+  refused unless the rebuilt `act_testcase_id → (finding_id, target)` map equals the replay pass's
+  whole** — the ids are reproduced, not merely the counts, so the input demonstrably belongs to the
+  drafts it will be compared against. Two live rebuilds were **byte-identical**, and the record also
+  carries a `reproducible_digest` because no test can rebuild it.
+  - **Byte-identity is a property of one file.** Both configurations read `rows[].finding_block` through
+    `Judge.judge_prepared`, which re-renders nothing; the anchored side appends its draft presentation
+    after those bytes and the blind side sends them alone. The test asserts, per row and against the
+    file, that the ask equals `block + draft presentation` under **three** presentations of the same
+    draft (natural, SC-swapped, conformance-flipped) and that a flip moves all 54 asks — so the identity
+    is not vacuous.
+  - **The referent and the candidates are the drafter's own sentences, not a paraphrase of them** —
+    rendered by `drafter.llm.referent_blocks` / `candidate_lines`, which is what *Comparing the two
+    raters* asks for and costs a `judge → drafter` import (`ARCHITECTURE.md` 0.13; the model separation
+    is untouched). **One wording difference survives and is deliberate:** the drafter heads its
+    candidates *"you may cite"* — an instruction to a rater that cites — and the shared block heads them
+    *"retrieved for this finding"*, because the same bytes are read by a configuration that grades a
+    citation and one that makes its own.
+  - **⚠️ The class asymmetry is inherited, and it is not small.** A class with no referent injection
+    contributes no referent line to *either* reader: the frozen record renders referent material on
+    `label` 17/17, `link-name` 21/21, `document-title` 5/5 and **`empty-heading` 0/11**. `empty-heading`
+    is a fifth of the set and its judge sees exactly what it saw before this ticket, so any per-class
+    read that treats "the judge now sees what the drafter sees" as uniform across the four classes is
+    wrong. (The scan *captures* referent sources on `empty-heading` findings — the drafter has no block
+    for them, so neither reader is shown them.)
+  - **The candidate list is rebuilt, not recovered, and the corroboration is stated with its limits.**
+    `corpus_version`, `axe_core_version` and `act_export_hash` all match the replay pass; the finding ids
+    reproduce; and the one substantive check the artifacts allow: **33 of 54 drafts cite at least one SC,
+    and all 33 cite entirely inside today's rebuilt candidate list** (21 cite nothing, which corroborates
+    nothing either way). That is consistent with the list being the one the drafter answered and cannot
+    show it — a drafted citation absent from today's list would be either a moved list or a drafter that
+    ignored its candidates, and nothing on disk separates those. Recorded in the file as
+    `cannot_establish`, and the ledger's inference entry is updated rather than promoted.
+  - **The file carries no draft-side field**, asserted by test over the row keys: a configuration that
+    must not see the draft reads whole rows from it, so the answer cannot live beside the question. The
+    drafted citations are touched only in the provenance block, never on a row.
+  - **Turned up and not asked for, all written into this spec above rather than only reported:**
+    Control 4 was **false** — `judge_version` cannot see this template move, so the M9 anchored judge and
+    M5's are indistinguishable by version string and the pre-flight tripwire stays green across the
+    change (T3a now owns the decision, and the template is pinned by a whole-prompt literal in the
+    meantime); the **SC-swap mutation is now answerable by list membership**, because no decoy criterion
+    appears in any class's candidate list, so a rebuilt 1.00 is *less* informative than M5's; and the
+    shared retrieval prior is **constant within a class** — four candidate lists over 54 findings.
+    Two consequences outside this milestone are recorded and not acted on: a rebuild of the M4
+    calibration set would now run a judge whose input the κ = 0.791 measurement never saw (`_record`
+    threads the citations through, so the code is correct and the frozen κ describes a prompt that no
+    longer exists), and three dated reports in `docs/` describe the judge as seeing only the finding's
+    markup — left as dated, in the same way M6's scaffold description is corrected in the read rather
+    than edited.
 - **Depends on:** T1
 
 ### T3a — Fit the scoring path to the pinned unit *(no model calls)*
@@ -941,6 +1039,15 @@ see the pre-flight block in the evidence ledger.
     the rule.
   - **Dry-run the whole anchored path** on stubbed or recorded judge responses, so the harness is proven
     before a call is spent. The `dry_gate` pattern exists for exactly this.
+  - **⚠️ Decide what records the finding-side prompt, since `judge_version` does not — written back here
+    by T2.** The rubric hash covers `_RUBRIC_SYSTEM` alone, so T2's template change moved the judge's
+    input while every `JudgeResult` kept reporting `rubric=e396f37f; effort=medium`. Either extend
+    `_RUBRIC_HASH` to cover the finding-side template applied to a fixed sentinel — which moves the string
+    and therefore obliges **re-recording** `judge_preflight.json` and the tripwire test in the same change,
+    the tripwire's own instruction — or decide that the frozen blocks' digests
+    (`judge_finding_input.json`) are the provenance and say so wherever `judge_version` is published.
+    Zero calls either way, and it has to be settled before a baseline is frozen under a version string
+    that cannot date it.
   - **Stabilise `judge_preflight.json`'s freeze check.** Its `reproducible_digest` covers
     `listed_model_count`, which is read live from the provider, so the digest moves whenever the
     provider's catalogue moves and a rebuild cannot be told apart from an edit. **It has already
@@ -1123,11 +1230,14 @@ milestones; the first anchored pass is where the real figure appears, and it is 
 still pins `_DEFAULT_MODEL = "gpt-5.6-luna"`, overridable via `CLEARWAY_JUDGE_MODEL`; the judge module
 is intact and **was not removed**. `judge.py` raises at construction if the judge model equals the
 drafter model, so the "use a different family" half of the standard advice **is already done**.
-`judge_version` is the first 8 hex of the rubric text's sha256 plus reasoning effort, so any rubric
-edit is tracked automatically. `_JudgeVerdict` uses `extra="forbid"`, required for the cloud Responses
-API's strict json-schema mode. `_judge_user_prompt` passes only `finding.rule_id`, `help`, `target`,
+`judge_version` is the first 8 hex of the rubric text's sha256 plus reasoning effort, so any **rubric**
+edit is tracked automatically — **and no edit to the user-prompt template is, which T2 established the
+hard way; see Control 4.** `_JudgeVerdict` uses `extra="forbid"`, required for the cloud Responses
+API's strict json-schema mode. ~~`_judge_user_prompt` passes only `finding.rule_id`, `help`, `target`,
 `html`, plus the draft's conformance and cited SCs — **it does not pass `Finding.referent`**, which
-exists post-M7 and which the drafter does use. `DraftRow` carries `conformance` (a four-value enum),
+exists post-M7 and which the drafter does use.~~ — **true at spec time, closed at T2:** it passes the
+referent and the retrieved candidate list too, rendered by the drafter's own builders, and the finding
+side is frozen as one file both configurations read. `DraftRow` carries `conformance` (a four-value enum),
 `citations`, `remediation`, `severity` and `confidence`, the last documented in-schema as decorative.
 `stats.py` defines `FLAGS = {does_not_support, partially_supports}` and
 `CLEAN = {supports, not_applicable}`, with a `partial_flags` knob for sensitivity. In the frozen M7
@@ -1169,9 +1279,13 @@ client**. That blinding restores κ to its "two independent raters" definition i
 argument, not an experimental result. ~~That clustering is light is an impression, not a
 measurement~~ — **measured at T1 and no longer an inference; see the settled block below.** That sharing
 the retrieved candidate list keeps disagreement attributable to judgment is a design argument; the size
-of the residual shared bias is unmeasured. That today's retrieval reproduces the list the drafter
-answered follows from a deterministic embedder over a frozen corpus — **nothing on disk records the
-original, so this can be corroborated but never verified**.
+of the residual shared bias is unmeasured — **though its shape is no longer an inference: T2 measured
+four candidate lists over 54 findings, one per class and constant inside it.** That today's retrieval
+reproduces the list the drafter answered follows from a deterministic embedder over a frozen corpus —
+**nothing on disk records the original, so this can be corroborated but never verified.** **T2 spent the
+available corroboration and it came out clean: every pin matches and all 33 citing drafts cite inside
+today's list. The status does not change** — a citation inside the list is consistent with identity and
+cannot demonstrate it, and the 21 clean drafts that cite nothing contribute nothing either way.
 
 **Settled at pre-flight — zero model calls spent.** Frozen in `benchmark/reports/judge_preflight.json`
 (rebuild: `uv run --env-file .env python -m clearway.eval.judge_preflight`).
@@ -1294,6 +1408,45 @@ and the freeze is pinned by file comparison rather than by a self-digest).
 8. **The repairable ceiling and the null floor** — `7/40` cases against a mean `8.0/40` per pass-pair,
    with the full tables and the b/c split in *the observation unit*. Both were measurable here; the power
    table previously deferred all of the first to T3b.
+
+**Settled at the finding-side-input stage — zero judge calls.** Frozen in
+`benchmark/reports/judge_finding_input.json` (rebuild:
+`uv run --env-file .env python -m clearway.eval.judge_finding_input`; the scanner and the embedder are
+live, the judge is not called. `created_at` is read off the replay pass, so the record is a deterministic
+function of its sources — **two live rebuilds came out byte-identical** — and it also self-digests,
+because no test can perform a rebuild that needs services).
+
+1. **The judge's prompt is two halves now, and only one of them may vary.** Finding side first — rule,
+   task, target, HTML, **referent**, retrieved candidates — then the presentation of the draft. `Judge`
+   gained `judge_prepared`, which takes the finding side as a **value** and renders nothing, so the
+   comparison's two configurations cannot drift apart in it: the frozen bytes are the bytes sent.
+   `citations` is required and keyword-only on `judge()`, so no call site can silently judge under a
+   `(none retrieved)` candidate block.
+2. **The freeze is 54 rows over 40 cases, and it is refused unless it is the replay pass's own findings.**
+   The check compares `act_testcase_id → ((finding_id, target), …)` whole, not counts — and `finding_id`
+   hashes the case's `file://` URL, so reproducing it says the same scan ran over the same file and minted
+   the same element. Per class the referent lands on `label` 17/17, `link-name` 21/21, `document-title`
+   5/5, **`empty-heading` 0/11** — the drafter has no block for that class, so neither reader gets one, and
+   the asymmetry is inherited rather than introduced.
+3. **Byte-identity across the two configurations is asserted against the file**, per row, under three
+   presentations of one draft (natural, SC-swapped, conformance-flipped) plus the presentation-less case,
+   with a companion test that a flip moves all 54 asks so the identity is not vacuous. The file carries
+   **no draft-side field** — asserted over the row keys, because the blind configuration reads whole rows
+   from it.
+4. **Rebuilt, not recovered — and the corroboration is spent rather than assumed.** Every matchable pin
+   matches (`corpus_version` `wcag22-nomic-embed-text-768@1`, axe-core, the ACT export hash), and **33 of
+   54 drafts cite at least one SC, all 33 inside today's rebuilt list**; the other 21 cite nothing and
+   corroborate nothing. The record states in its own text what that cannot establish: the per-query
+   vectors, the candidate *order*, and the drafter's own prompt, none of which was ever frozen.
+5. **⚠️ Not asked for, and each one changes a statement elsewhere in this spec:** Control 4 was **false**
+   (`judge_version` hashes the system rubric only, so this change is invisible to it and to the pre-flight
+   tripwire — T3a now owns the decision, and a whole-prompt literal in the judge's tests is the interim
+   tripwire); **the SC-swap mutation became answerable by list membership**, because none of the three
+   decoy criteria appears in any class's candidate list, so a rebuilt injected-swap detection of 1.00
+   carries *less* judge behaviour than M5's did; and the shared retrieval prior is **constant within a
+   class** — four candidate lists across the whole set. Outside the milestone: a rebuild of the M4
+   calibration set would now judge under input its κ = 0.791 never saw, and three dated reports in `docs/`
+   still describe the judge as seeing only the markup — left dated, corrected in the read.
 
 **A partial judge noise floor already exists, on the wrong input *and on the other unit*.**
 `benchmark/reports/noise_floor.json` records a 3-pass SD of **0.158 on judge κ** and **0.105 on the judge

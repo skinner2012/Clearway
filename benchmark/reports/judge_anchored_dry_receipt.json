@@ -1,0 +1,73 @@
+{
+  "artifact": "a dry run of the anchored judging path over stubbed responses",
+  "version": 1,
+  "model_calls_spent": 0,
+  "stubbed": true,
+  "stub_disclaimer": "Every judge response in this record came from a DETERMINISTIC STUB, not from a model: the two booleans are read off the sha256 of the ask. Zero model calls were made and zero tokens were spent. So every rate, cell and kappa below describes the HARNESS — that the asks assemble from the frozen finding side, that each one parses, that the two collapses apply in their pinned order, and that the scorer records the unit its cells are on. None of them describes the judge, and none may be quoted as a baseline, a floor or a result.",
+  "stub_responses_served": 441,
+  "created_at": "2026-07-25T02:41:41.406015+00:00",
+  "judge_version": "prompt=afadca26; effort=stub",
+  "sources": {
+    "frozen_drafts": {
+      "path": "citation_grounding_run_1.json",
+      "config_id": "m1-single@1",
+      "eval_set_id": "act-acceptance@1",
+      "cases": 40,
+      "honest_misses": 4
+    },
+    "frozen_finding_side": {
+      "path": "judge_finding_input.json",
+      "rows": 54,
+      "reproducible_digest": "8979e1a1638f07aa9aa804f0d268a72f60e3b4b20a2ed0c0d1ea0442384b62f3"
+    }
+  },
+  "asks_per_pass": {
+    "natural": 54,
+    "sc_swap": 54,
+    "conformance_flip": 39,
+    "total": 147,
+    "arithmetic": "54 natural + 54 SC-swap + 39 conformance-flip = 147"
+  },
+  "passes": 3,
+  "asks_over_the_whole_configuration": 441,
+  "ask_digest": "0cb098be027f74201faa96e597c3e90fd07d6f37bf6e92f53ced4c534dfa9bac",
+  "collapse": {
+    "order": "majority verdict across the configuration's passes, per finding; then flag-if-any across the findings within the case",
+    "findings": 54,
+    "cases": 40,
+    "findings_the_majority_decided": 54
+  },
+  "confusion": {
+    "per_case": {
+      "unit": "case",
+      "observations": 40,
+      "correct_release": 19,
+      "missed_error": 1,
+      "false_alarm": 14,
+      "correct_catch": 6,
+      "kappa": 0.25,
+      "miss_rate": 0.1429,
+      "miss_rate_n": 7,
+      "false_alarm_rate": 0.4242,
+      "false_alarm_rate_n": 33
+    },
+    "per_finding": {
+      "unit": "finding",
+      "observations": 54,
+      "correct_release": 22,
+      "missed_error": 7,
+      "false_alarm": 17,
+      "correct_catch": 8,
+      "kappa": 0.0809,
+      "miss_rate": 0.4667,
+      "miss_rate_n": 15,
+      "false_alarm_rate": 0.4359,
+      "false_alarm_rate_n": 39
+    }
+  },
+  "injected": {
+    "conformance_flip_n": 39,
+    "sc_swap_n": 54,
+    "denominator": "per mutated DRAFT at both units — a mutation is applied to a draft, never to a case"
+  }
+}

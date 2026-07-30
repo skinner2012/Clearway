@@ -47,6 +47,11 @@ _ALLOWED_READS: dict[str, str] = {
         "artifact and in no predicate: A counts `visual_evidence` values, and both controls are "
         "equalities on that field"
     ),
+    "eval/judge_anchored.py": (
+        "rebuilds a frozen draft record into the `DraftRow` the judge is shown, receipt field included "
+        "— carried so the row is the row that was drafted, and never interpreted: the judge's prompt "
+        "renders the verdict and the cited criteria only, and the mutations copy the field untouched"
+    ),
     "eval/offline.py": "reads the frozen artifact back",
     "eval/kappa.py": "replays frozen drafts into receipt points",
     "eval/drafter_score.py": "the benchmark's receipt — ECE and over-confidence gap per run",

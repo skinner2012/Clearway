@@ -5,6 +5,12 @@ stubbed one does not: that a restart replays instead of re-spending, that a repl
 refused when it answers a different question, that usage survives the seam the judge drops it at,
 that the floor bar is the order-invariant movement rather than the larger `improved` column, and
 that the two axes are collapsed independently so a three-way split on the pair cannot tie.
+
+The frozen record is pinned in three layers at the bottom of this file, because a record's own digest
+passes any edit that recomputes it: a literal digest, a full re-derivation of every computed field
+from the answers in the file, and — the layer only a paid artifact can have — a re-render of all 147
+asks against the prompt digests the calls were made under, so the frozen answers are demonstrably
+answers to today's questions.
 """
 
 from __future__ import annotations
@@ -15,23 +21,27 @@ from typing import Any
 
 import pytest
 
-from clearway.eval.judge_anchored import NATURAL, anchored_asks
+from clearway.eval.judge_anchored import NATURAL, anchored_asks, run_pass
 from clearway.eval.judge_anchored_baseline import (
     CallLedger,
     LedgerMismatch,
     RecordingJudgeClient,
     axis_majorities,
+    between_configuration_difference,
     build_record,
     case_act_wrong,
     disagreement_profile,
     one_way_wins,
     record_digest,
+    rederive_frozen_record,
+    report_path,
     result_rows,
     results_from_rows,
     routing_flag_streams,
 )
+from clearway.eval.judge_observation_unit import DegenerateClustering
 from clearway.judge import Judge, verdict_from
-from clearway.llm import FakeLLMClient, LLMUsage
+from clearway.llm import Completion, FakeLLMClient, ImagePart, LLMRequest, LLMUsage
 from clearway.schemas.models import JudgeResult
 
 _REPO = Path(__file__).resolve().parent.parent
@@ -251,3 +261,124 @@ def test_the_record_is_a_function_of_its_own_frozen_rows() -> None:
     assert first["reproducible_digest"] == second["reproducible_digest"] == record_digest(first)
     assert first["cost"]["transport_calls"] == len(asks) * 3
     assert first["cost"]["calls_beyond_one_per_ask"] == 0
+
+
+def test_the_two_halves_of_the_citation_habit_are_counted_separately() -> None:
+    """A judge can dispute a citation it was shown, or dispute the absence of one — different events.
+
+    Counting only the first makes an axis made entirely of the second read as clean, which is the
+    misreading the artefact block exists to prevent.
+    """
+    artifact = _artifact()
+    asks = anchored_asks(artifact)
+    # a pass that disputes every citation and endorses every verdict: the whole SC axis lights up
+    profile = disagreement_profile(artifact, asks, [_results(asks, [(False, True)])] * 3)
+    artefact = profile["sc_axis_artefact"]
+
+    rows = profile["rows"]
+    cites_while_clean = {r["finding_id"] for r in rows if r["drafter_cites_on_a_clean_row"]}
+    cites_nothing = {r["finding_id"] for r in rows if r["drafter_cites_nothing"]}
+    assert not cites_while_clean & cites_nothing  # a row cites or it does not
+    assert artefact["drafter_rows_that_cite_while_clean"] == len(cites_while_clean)
+    assert artefact["drafter_rows_that_cite_nothing"] == len(cites_nothing)
+    # with every row disagreeing on the SC axis, each half's landing count is its own size
+    assert artefact["sc_axis_disagreements"] == len(rows)
+    assert artefact["sc_axis_disagreements_on_rows_that_cite_while_clean"] == len(cites_while_clean)
+    assert artefact["sc_axis_disagreements_on_rows_that_cite_nothing"] == len(cites_nothing)
+
+
+def test_the_recorded_cost_says_it_is_a_price_table_rather_than_a_bill() -> None:
+    """The client prices each call from a local table; nothing here observed what was charged."""
+    from clearway.eval.judge_anchored_baseline import cost_block
+
+    block = cost_block([{"tokens_in": 10, "tokens_out": 2, "cost_usd": 0.01, "latency_ms": 100.0}], asks_made=1)
+    assert "not " in block["pricing_source"] and "billed" in block["pricing_source"]
+    assert block["cost_priced_on"] == "1 of 1 calls"
+
+    unpriced = cost_block([{"tokens_in": 10, "tokens_out": 2, "cost_usd": None, "latency_ms": 100.0}], asks_made=1)
+    assert unpriced["cost_priced_on"] == "0 of 1 calls"
+    assert unpriced["cost_usd"]["n"] == 0
+
+
+def test_two_configurations_are_refused_when_their_finding_orders_differ() -> None:
+    """The earlier passes are ordered by the scoped cluster map and this run by the artifact's cases.
+
+    They coincide today. A silent divergence would zip one configuration's answers against another's
+    findings and publish the misalignment as a difference of opinion, so it is asserted, not assumed.
+    """
+    from clearway.eval.run_artifacts import acceptance_pass_paths
+
+    artifact = _artifact()
+    asks = anchored_asks(artifact)
+    passes = [_results(asks, [(True, True)])] * 3
+    # a case the scoped map drops — its rule is not one the gold still scores — leaves the artifact's
+    # case order one cluster longer than the stream the earlier passes are read into
+    artifact["cases"][0]["rule_name"] = "a rule the gold does not score"
+    with pytest.raises(DegenerateClustering, match="cannot be paired position by position"):
+        between_configuration_difference(artifact, asks, passes, acceptance_pass_paths())
+
+
+# ---------------------------------------------------------------------------------------------
+# The freeze — three layers, because a record's own digest passes any edit that recomputes it
+# ---------------------------------------------------------------------------------------------
+
+# The frozen record's digest over everything a re-derivation reproduces. Moving it means the
+# measurement moved: re-record it by running the builder (`--rederive` for a computation change, the
+# paid entry point for anything that moves an ask), never by retyping this string.
+_FROZEN_DIGEST = "dfb7acd4a1ff534388ad49727e0bda197b379548e3e71490e5f9614c1ec1efd9"
+
+
+def _frozen() -> dict[str, Any]:
+    return json.loads(report_path().read_text())
+
+
+def test_the_frozen_record_re_derives_from_the_answers_it_holds() -> None:
+    """Every computed field, rebuilt by its own builder over the file's own responses."""
+    frozen = _frozen()
+    assert frozen["reproducible_digest"] == _FROZEN_DIGEST
+    assert record_digest(frozen) == _FROZEN_DIGEST
+    assert rederive_frozen_record() == frozen
+
+
+def test_the_frozen_answers_are_answers_to_the_asks_as_they_stand_today() -> None:
+    """The layer a digest cannot give: re-render every ask and match the digest it was answered under.
+
+    A frozen response is only evidence while the question it answered is the question the code still
+    asks. This re-assembles all 147 asks through the real judge — no model, only the prompt — and
+    compares each one against the digest the paid call recorded, per pass.
+    """
+    from clearway.eval.judge_finding_input import load_record, prepared_inputs
+
+    frozen = _frozen()
+    asks = anchored_asks(_artifact())
+    recorder = _DigestRecorder()
+    run_pass(Judge(recorder, drafter_model=_DRAFTER_MODEL), prepared_inputs(load_record()), asks, run_id="freeze")
+
+    for index in range(frozen["passes"]):
+        recorded = [row["prompt_sha256"] for row in frozen["transport"] if row["pass"] == index + 1]
+        assert recorded == recorder.digests, f"pass {index + 1} answered a different set of asks"
+
+
+def test_the_frozen_ledger_is_one_row_per_ask_in_the_order_they_were_made() -> None:
+    """A gap or a repeat in the ordinals would break the replay the ledger exists to make safe."""
+    frozen = _frozen()
+    asks_per_pass = frozen["asks_per_pass"]["total"]
+    for index in range(frozen["passes"]):
+        rows = [row for row in frozen["transport"] if row["pass"] == index + 1]
+        assert [row["ordinal"] for row in rows] == list(range(asks_per_pass))
+    assert frozen["cost"]["transport_calls"] == asks_per_pass * frozen["passes"]
+    assert [len(block["results"]) for block in frozen["pass_results"]] == [asks_per_pass] * frozen["passes"]
+
+
+class _DigestRecorder:
+    """An `LLMClient` that answers nothing and records what each ask would have been sent as."""
+
+    model = "fake-judge"
+    reasoning_effort = "medium"
+
+    def __init__(self) -> None:
+        self.digests: list[str] = []
+
+    def complete_json(self, system: str, user: str, schema: type[Any], image: ImagePart | None = None) -> Completion:
+        self.digests.append(LLMRequest.of(system, user, schema, image).prompt_sha256)
+        return Completion(_VERDICT, LLMUsage(tokens_in=0, tokens_out=0, cost_usd=0.0, latency_ms=0.0))

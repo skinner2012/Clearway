@@ -35,6 +35,11 @@ axis's majority is taken on its own boolean, where three passes always have one.
 is unaffected: it was only ever the conformance axis.
 
 Invoke: `uv run --env-file .env python -m clearway.eval.judge_anchored_baseline`
+
+**To rebuild the frozen record after a change to how something is COMPUTED, add `--rederive`** — it
+re-runs the whole builder over the responses already in the file and needs no key, no network and no
+call. Every number in the record is a function of those responses; only when the *asks* move does a
+paid re-run become the honest answer, and that is what the ledger's digest check refuses to hide.
 """
 
 from __future__ import annotations
@@ -328,6 +333,16 @@ def _drafter_inconsistent_findings(artifact: dict[str, Any]) -> set[str]:
     }
 
 
+def _findings_citing_nothing(artifact: dict[str, Any]) -> set[str]:
+    """The drafts with an empty `cited_sc_ids` — the other side of the same unwritten convention.
+
+    Both halves are counted because a rubric can only be wrong one way at a time: told to stay silent
+    when clean it mismatches the rows that cite anyway, told to always cite it mismatches these. Which
+    half the SC-axis disagreements land on is what says whether that axis carries opinion or format.
+    """
+    return {d["finding_id"] for case in artifact["cases"] for d in case["drafts"] if not d["cited_sc_ids"]}
+
+
 def disagreement_profile(
     artifact: dict[str, Any], asks: Sequence[AnchoredAsk], passes: Sequence[Sequence[JudgeResult]]
 ) -> dict[str, Any]:
@@ -344,6 +359,7 @@ def disagreement_profile(
     naturals = [a for a in asks if a.mutation == NATURAL]
     majorities = axis_majorities(asks, passes)
     inconsistent = _drafter_inconsistent_findings(artifact)
+    silent = _findings_citing_nothing(artifact)
 
     rows: list[dict[str, Any]] = []
     for ask in naturals:
@@ -356,6 +372,7 @@ def disagreement_profile(
                 "conformance_disagreement": not axes["conformance_correct"],
                 "sc_disagreement": not axes["citation_correct"],
                 "drafter_cites_on_a_clean_row": ask.finding_id in inconsistent,
+                "drafter_cites_nothing": ask.finding_id in silent,
             }
         )
 
@@ -401,21 +418,29 @@ def disagreement_profile(
                 "axe_rule": rule,
                 **_shares(group),
                 "drafter_cites_on_a_clean_row": sum(1 for r in group if r["drafter_cites_on_a_clean_row"]),
+                "drafter_cites_nothing": sum(1 for r in group if r["drafter_cites_nothing"]),
             }
             for rule, group in sorted(by_rule.items())
         ],
         "sc_axis_artefact": {
             "drafter_rows_that_cite_while_clean": len(inconsistent),
+            "drafter_rows_that_cite_nothing": len(silent),
             "sc_axis_disagreements": len(sc_rows),
-            "sc_axis_disagreements_on_those_rows": sum(1 for r in sc_rows if r["drafter_cites_on_a_clean_row"]),
+            "sc_axis_disagreements_on_rows_that_cite_while_clean": sum(
+                1 for r in sc_rows if r["drafter_cites_on_a_clean_row"]
+            ),
+            "sc_axis_disagreements_on_rows_that_cite_nothing": sum(1 for r in sc_rows if r["drafter_cites_nothing"]),
             "note": (
                 "The drafter's clean rows usually cite nothing and sometimes cite anyway, and nobody "
-                "told the judge which. The share of the SC axis landing on the inconsistent rows is a "
-                "formatting habit rather than a difference of opinion, and the per-class SC figures are "
-                "quoted beside that count, never on their own. ⚠️ On THIS configuration the judge is "
-                "grading a citation rather than making one, so the artefact reaches it through the "
-                "graded row's `(none)` and not through a set comparison; the count is reported at the "
-                "same denominator so the two configurations' SC axes can be read side by side."
+                "told the judge which. ⚠️ BOTH halves are counted, because the axis can be a formatting "
+                "habit in either direction — a judge that disputes a citation it was shown, and a judge "
+                "that disputes the ABSENCE of one — and a count of only the first makes an axis "
+                "dominated by the second look clean. Read either count against its own denominator "
+                "above before reading any SC-axis figure, overall or per class; a figure quoted on its "
+                "own is not interpretable. ⚠️ On THIS configuration the judge is grading a citation "
+                "rather than making one, so the artefact reaches it through the graded row's `(none)` "
+                "and not through a set comparison; the counts are reported at the same denominator so "
+                "the two configurations' SC axes can be read side by side."
             ),
         },
         "rows": rows,
@@ -622,7 +647,19 @@ def between_configuration_difference(
     level does, and because a materially negative figure would mean the case collapse costs power
     rather than buying honesty. Refused rather than defaulted when the difference stream is constant.
     """
+    from clearway.eval.judge_observation_unit import _scoped_finding_map
+
     order = [[d["finding_id"] for d in case["drafts"]] for case in artifact["cases"]]
+    # ⚠️ Asserted rather than assumed. The earlier passes' streams are ordered by the scoped finding
+    # map and this run's by the artifact's own case list; the two coincide today because every scoped
+    # case mints, and a silent divergence would zip one configuration's answers against another's
+    # findings and report the misalignment as a difference of opinion.
+    scoped = [list(fids) for fids in _scoped_finding_map(artifact).values()]
+    if scoped != order:
+        raise DegenerateClustering(
+            "the scoped finding order and the artifact's case order differ, so the two configurations' "
+            "streams cannot be paired position by position"
+        )
     earlier = [json.loads(path.read_text()) for path in judged_paths]
     earlier_streams = judge_routing_streams(earlier, artifact)
     earlier_majority = majority_stream(earlier_streams)
@@ -722,6 +759,15 @@ def cost_block(transport: Sequence[dict[str, Any]], *, asks_made: int) -> dict[s
         "unit": (
             "per transport call, never per ask: usage is captured below the judge, and the judge does "
             "not report which of its attempts produced the verdict it returned"
+        ),
+        "pricing_source": (
+            "⚠️ `cost_usd` is a LOCAL PRICE TABLE applied to the provider's reported token counts, not "
+            "an amount anyone was billed: the client asks LiteLLM to price each response, and a table "
+            "that is stale for a snapshot prices it wrongly while one that has never heard of it "
+            "prices it not at all — which is what `cost_priced_on` counts. The token counts themselves "
+            "are the provider's own, and the output count includes whatever reasoning tokens the "
+            "effort setting bought. Latency is measured locally around the call, so it carries this "
+            "machine's network path as well as the model's. Read the billed total off the provider."
         ),
     }
 
@@ -932,8 +978,44 @@ def live_run(passes: int = 3) -> dict[str, Any]:
     )
 
 
+def rederive_frozen_record() -> dict[str, Any]:
+    """Rebuild the frozen record from the answers already in it — no model, no network, no clock.
+
+    Every derived field in the record is a function of the judge's frozen responses, so a change to
+    how something is *computed* must never be a reason to buy the responses again. Three facts are not
+    derivable and are carried through from the file rather than re-observed: when the calls were made,
+    how long they took, and what this process spent — re-observing them would date a re-computation as
+    if it were the measurement.
+
+    It is also what the freeze rests on: the same function the test re-derives the file with, so a
+    record edited by hand and a record rebuilt by its own builder are distinguishable.
+    """
+    from clearway.eval.run_artifacts import CITATION_GROUNDING, acceptance_pass_paths, run_path
+
+    frozen = json.loads(report_path().read_text())
+    replay_path = run_path(CITATION_GROUNDING, 1)
+    return build_record(
+        artifact=json.loads(replay_path.read_text()),
+        replay_path=replay_path,
+        input_record=load_record(),
+        pass_rows=[block["results"] for block in frozen["pass_results"]],
+        transport=frozen["transport"],
+        judge_model=frozen["judge_model"],
+        judge_version=frozen["judge_version"],
+        judged_paths=acceptance_pass_paths(),
+        created_at=frozen["created_at"],
+        wall_clock_seconds=frozen["wall_clock_seconds"],
+        ledger=frozen["ledger"],
+    )
+
+
 def main() -> None:
-    record = live_run()
+    import sys
+
+    rederive = "--rederive" in sys.argv[1:]
+    record = rederive_frozen_record() if rederive else live_run()
+    if rederive:
+        print("re-derived from the frozen responses — no call was made")
     print(f"\nanchored baseline — {record['cost']['transport_calls']} transport calls (a floor)")
     for unit in ("per_case", "per_finding"):
         block = record["confusion"][unit]

@@ -56,6 +56,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from clearway.drafter.llm import referent_blocks
 from clearway.eval.run_scope import ACCEPTANCE, RunScope, cases_for
 from clearway.judge import FindingInput, finding_input
 from clearway.schemas.models import Citation, Finding
@@ -119,7 +120,17 @@ def _referent_sources(finding: Finding) -> list[str]:
 
 
 def _row(case: dict[str, Any], finding: Finding, citations: Sequence[Citation]) -> dict[str, Any]:
-    """One finding-side input row: the identity to join on, and the block itself with its own digest."""
+    """One finding-side input row: the identity to join on, and the block itself with its own digest.
+
+    `referent_rendered` is keyed to the **boundary** — the drafter's own builder returning anything at
+    all — and never to the block's text. Sniffing the rendered block for a phrase would key the answer
+    to the data's surface: the block interpolates the page's raw multi-line HTML verbatim, so a fixture
+    whose markup happened to contain the phrase would report a referent that was never injected, and
+    that false positive would land hardest on the one class whose zero carries meaning. It cuts the
+    other way too — the `label` block renders the section heading alone when no accessible name was
+    resolved, which a name-shaped probe would miss. The builder is the fact; its output is not evidence
+    about itself.
+    """
     prepared = finding_input(finding, citations)
     return {
         "act_testcase_id": case["act_testcase_id"],
@@ -127,7 +138,7 @@ def _row(case: dict[str, Any], finding: Finding, citations: Sequence[Citation]) 
         "target": finding.target,
         "finding_id": finding.id,
         "referent_sources": _referent_sources(finding),
-        "referent_rendered": "Resolved " in prepared.block or "Referent (" in prepared.block,
+        "referent_rendered": referent_blocks(finding) != "",
         "candidate_sc_ids": [c.sc_id for c in citations],
         "finding_block": prepared.block,
         "finding_block_sha256": hashlib.sha256(prepared.block.encode()).hexdigest(),

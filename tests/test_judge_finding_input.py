@@ -21,8 +21,10 @@ from typing import Any
 
 import pytest
 
+from clearway.drafter.llm import referent_blocks
 from clearway.eval.judge_finding_input import (
     RebuiltInputMismatch,
+    _row,
     assert_matches_replay_pass,
     drafted_citations_inside_the_candidates,
     load_record,
@@ -33,7 +35,40 @@ from clearway.eval.judge_finding_input import (
 )
 from clearway.eval.offline_inject import conformance_flip, sc_swap
 from clearway.judge.judge import _drafted_row_block, _judge_user_prompt
-from clearway.schemas.models import Citation, Conformance, DraftRow
+from clearway.schemas.models import (
+    Citation,
+    Conformance,
+    DraftRow,
+    Finding,
+    NodeReferent,
+    ReferentExcerpt,
+    ReferentSource,
+)
+
+# One retrieved candidate, so a hand-built row renders a real candidate block.
+_CITATION = Citation(sc_id="2.4.6", url="https://www.w3.org/TR/WCAG22/#headings-and-labels", source="WCAG-SC")
+
+
+def _referent_finding(rule_id: str) -> Finding:
+    """A finding of `rule_id` carrying every referent source populated — the maximal input a class's
+    injection could possibly use, so a class that still renders nothing renders nothing by class."""
+    excerpt = ReferentExcerpt(text="x", source=ReferentSource.ACCESSIBLE_NAME)
+    return Finding(
+        id=f"f:{rule_id}",
+        source_url="file://q.html",
+        rule_id=rule_id,
+        target="x",
+        html="<x/>",
+        help="h",
+        referent=NodeReferent(
+            accessible_name=excerpt,
+            document_title=excerpt,
+            page_topic=excerpt,
+            section_heading=excerpt,
+            surrounding_context=excerpt,
+        ),
+    )
+
 
 _RUNS = Path(__file__).resolve().parent.parent / "benchmark" / "runs"
 _REPLAY = _RUNS / "citation_grounding_run_1.json"
@@ -222,10 +257,59 @@ def test_the_referent_reaches_the_block_wherever_the_drafter_had_one(record: dic
             "that carries the material on only some of its findings is an asymmetry inside one class, "
             "which no per-class read of the comparison would expect"
         )
-    expected = {row["axe_rule"]: bool(row["findings_with_a_rendered_referent"]) for row in record["per_class"]}
-    for row in record["rows"]:
-        has_line = "Resolved " in row["finding_block"] or "Referent (" in row["finding_block"]
-        assert has_line is expected[row["axe_rule"]] is row["referent_rendered"]
+        assert rendered == sum(1 for r in record["rows"] if r["axe_rule"] == row["axe_rule"] and r["referent_rendered"])
+
+
+def test_a_class_reporting_zero_reports_it_because_the_drafter_has_no_block_for_it() -> None:
+    """The 0/11 has to be a property of the CLASS, not of what those pages happened to contain.
+
+    Established by handing the drafter's builder a finding of that class carrying **every** referent
+    source populated: it still renders nothing. Without this the zero is indistinguishable from eleven
+    fixtures that merely captured no referent, and only one of those two says the judge is seeing what
+    the drafter saw.
+    """
+    for row_rule in ("empty-heading",):
+        finding = _referent_finding(row_rule)
+        assert referent_blocks(finding) == ""
+    for injected in ("label", "document-title", "link-name"):
+        assert referent_blocks(_referent_finding(injected)) != ""
+
+
+@pytest.mark.parametrize(
+    "html,sources,expected",
+    [
+        # The false positive the old text probe would have produced: the page's own markup carries the
+        # phrase, and the block interpolates that HTML verbatim.
+        ("<h2>Resolved (Referent (issues</h2>", {}, False),
+        # The false negative: a `label` finding whose accessible name did not resolve still injects the
+        # nearest section heading, and that line names neither "Resolved" nor "Referent (".
+        ("<input id='x'>", {"section_heading": "Billing address"}, True),
+    ],
+)
+def test_the_referent_flag_is_the_builders_answer_and_not_a_phrase_in_the_block(
+    html: str, sources: dict[str, str], expected: bool
+) -> None:
+    rule = "empty-heading" if not sources else "label"
+    finding = Finding(
+        id="f",
+        source_url="file://q.html",
+        rule_id=rule,
+        target="x",
+        html=html,
+        help="h",
+        referent=NodeReferent(
+            **{k: ReferentExcerpt(text=v, source=ReferentSource.NEAREST_SECTION_HEADING) for k, v in sources.items()}
+        )
+        if sources
+        else None,
+    )
+    row = _row({"act_testcase_id": "c", "axe_rule": rule}, finding, [_CITATION])
+    assert row["referent_rendered"] is expected
+    if expected:
+        assert "Nearest section heading" in row["finding_block"]
+        assert "Resolved " not in row["finding_block"]  # the false-negative path, in one line
+    else:
+        assert "Resolved " in row["finding_block"]  # the phrase is present; the flag still says no
 
 
 # --- the corroboration arithmetic (pure) --------------------------------------------------------

@@ -24,6 +24,8 @@ htmlcov/
 
 # Transient benchmark checkpoint (per-case resume state; removed on clean completion)
 benchmark/*.partial.json
+# Transient call ledger (per-call resume state for a paid run; its rows are copied into the record)
+benchmark/*.partial.jsonl
 
 # OS / editor
 .DS_Store

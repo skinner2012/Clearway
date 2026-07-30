@@ -186,14 +186,16 @@ def run_acceptance(created_at: str) -> dict[str, Any]:
         for finding in findings:
             citations = retriever.retrieve(finding)
             draft = _draft_checked(drafter, finding, citations)
-            drafts.append(_draft_record(finding, draft, judge.judge(finding, draft, run_id)))
+            # The judge is shown the SAME candidate list the drafter answered — shared question,
+            # independent answer — so a disagreement is not a difference of retrieval.
+            drafts.append(_draft_record(finding, draft, judge.judge(finding, draft, run_id, citations=citations)))
 
             # SC-swap: a wrong citation on every draft → caught = judge flags the CITATION as wrong.
-            swapped = judge.judge(finding, sc_swap(draft, gold), run_id)
+            swapped = judge.judge(finding, sc_swap(draft, gold), run_id, citations=citations)
             sc_swaps.append({"rule_name": rule, "caught": not swapped.citation_correct})
             # Conformance-flip: ONLY on conformance-correct drafts (else the flip could land on right).
             if is_flag(draft.conformance) == (case["expected"] == "failed"):
-                flipped = judge.judge(finding, conformance_flip(draft), run_id)
+                flipped = judge.judge(finding, conformance_flip(draft), run_id, citations=citations)
                 conf_flip.append({"rule_name": rule, "caught": not flipped.conformance_correct})
 
         cases.append(

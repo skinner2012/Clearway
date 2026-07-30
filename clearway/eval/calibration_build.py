@@ -207,12 +207,23 @@ def _elicit(client: LLMClient, finding: Finding, citations: list[Citation], user
 
 
 def _record(
-    finding: Finding, gold: GoldLabel, draft: DraftRow, lever: str, judge: Judge, run_id: str
+    finding: Finding,
+    gold: GoldLabel,
+    draft: DraftRow,
+    lever: str,
+    judge: Judge,
+    run_id: str,
+    citations: list[Citation],
 ) -> dict[str, Any]:
     """One artifact row: the raw draft + its gold (so the human verdict is re-derivable at replay) +
     the judge's raw booleans/verdict. The 3-way verdicts are stored for readability; the replay test
-    recomputes them from the raw fields, so the frozen data is self-checking, never merely trusted."""
-    result = judge.judge(finding, draft, run_id)
+    recomputes them from the raw fields, so the frozen data is self-checking, never merely trusted.
+
+    The judge is handed the finding's own retrieved candidates — the same list the draft was made
+    against — because its finding-side prompt renders them. ⚠️ A rebuild of this set therefore runs a
+    judge whose input is not the one the frozen calibration was measured under; the frozen rows stay
+    valid, a re-freeze would be a new measurement."""
+    result = judge.judge(finding, draft, run_id, citations=citations)
     return {
         "finding_id": finding.id,
         "target": finding.target,
@@ -253,7 +264,9 @@ def build_calibration_set(created_at: str) -> dict[str, Any]:
     negatives_kept = 0
     for i, (finding, gold) in enumerate(pairs, start=1):
         citations = retriever.retrieve(finding)
-        natural_row = _record(finding, gold, drafter.draft(finding, citations), "natural", judge, _CALIBRATION_VERSION)
+        natural_row = _record(
+            finding, gold, drafter.draft(finding, citations), "natural", judge, _CALIBRATION_VERSION, citations
+        )
         rows.append(natural_row)
         note = f"natural={natural_row['human_verdict']}"
         # Authentic negatives: only false-supports on does_not_support findings, kept only when the
@@ -261,7 +274,7 @@ def build_calibration_set(created_at: str) -> dict[str, Any]:
         if gold.gold_conformance is Conformance.DOES_NOT_SUPPORT:
             negative = _elicit(drafter_client, finding, citations, _false_supports_prompt(finding, citations))
             if human_verdict(negative, gold) is not JudgeVerdict.CORRECT:
-                rows.append(_record(finding, gold, negative, "false_supports", judge, _CALIBRATION_VERSION))
+                rows.append(_record(finding, gold, negative, "false_supports", judge, _CALIBRATION_VERSION, citations))
                 negatives_kept += 1
                 note += " | negative=KEPT"
             else:

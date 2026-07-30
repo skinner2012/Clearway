@@ -10,8 +10,7 @@ plugs them in.
 
 1. **The statistical bar.** Given `n` realized discordant pairs, the fewest one-way wins whose one-sided
    exact p is at most α — `min{b ≤ n : sign_test_p(b, n − b) ≤ α}`. Closed form; the repo already owns
-   `sign_test_p`. Below `smallest_attainable_n()` no `b` exists at all, and that is a result to record
-   ("uncertifiable at this n"), never a reason to move α.
+   `sign_test_p`. Below n = 5 no `b` exists at all.
 
 2. **The floor bar.** Strictly more one-way wins than the largest a SAME-configuration pair produces
    when nothing has changed. This is the repo's existing convention for a paired floor — the noise-floor
@@ -20,6 +19,14 @@ plugs them in.
    of its own, and the cheapest passing configuration under bar 1 (five wins, no losses, p = 0.031) is a
    count the null has already been observed to reach. **"Five pairs certifies" is therefore not the
    rule.** Both bars use the same one-sided direction, because the hypothesis is directional.
+
+**⚠️ Either bar can put the result out of reach, and that is a verdict rather than a failure.** `b` is
+bounded by `n`, so a required count above the realized `n` cannot be met however the pairs fall — and
+the floor bar, unlike the statistical one, is not chosen with `n` in view. `smallest_attainable_n` takes
+the floor for exactly this reason: at a floor of 6 the statistical bar first admits a result at n = 5
+and the combined rule not until n = 7. Below that the comparison is **uncertifiable at this n** — a
+finding to record, never a reason to move α, drop the one-sided direction, or re-cut the unit — and it
+must not be reported as a bar the evidence missed, which is a different pre-committed outcome.
 
 Pure arithmetic — no model, no network, no artifact. The two inputs are measured elsewhere: `n` and `b`
 come from the realized comparison, `null_wins` from the same-configuration repeat passes at the same
@@ -48,9 +55,12 @@ THRESHOLD_RULE = (
     "bar alone is satisfied by five wins and no losses (p = 0.031), and the null has been observed to "
     "produce five one-way wins on its own, so that bar would certify jitter. The max across pass-pairs "
     "is used rather than the mean, matching the paired convention the noise floor already states — a "
-    "change at or below the same-config discordance is jitter, not progress. Below the smallest n at "
-    "which any b clears alpha, the comparison is UNCERTIFIABLE at that n: that is a finding to record, "
-    "never a reason to loosen alpha, drop the one-sided direction, or re-cut the unit."
+    "change at or below the same-config discordance is jitter, not progress. Because b cannot exceed n, "
+    "EITHER bar can sit above the realized n and put a result out of reach: below the smallest n at "
+    "which both bars can be met — which is NOT the smallest n at which b clears alpha, since the floor "
+    "bar is fixed without reference to n — the comparison is UNCERTIFIABLE at that n. That is a finding "
+    "to record, and it is a different outcome from a bar the evidence missed; neither is a reason to "
+    "loosen alpha, drop the one-sided direction, or re-cut the unit."
 )
 
 
@@ -66,21 +76,33 @@ def minimum_wins_at(discordant: int, alpha: float = ALPHA) -> int | None:
     return None
 
 
-def smallest_attainable_n(alpha: float = ALPHA) -> int:
-    """The fewest discordant pairs at which any result is possible — the all-one-way case."""
+def smallest_attainable_n(*, null_wins: int, alpha: float = ALPHA) -> int:
+    """The fewest discordant pairs at which any result is possible — the all-one-way case.
+
+    ⚠️ `null_wins` is required, because BOTH bars gate attainability and the statistical one alone gives
+    the wrong answer. `b` cannot exceed `n`, so a floor bar above `n` is unreachable however the pairs
+    fall: at `null_wins = 6` the statistical bar first admits a result at n = 5, and the combined rule
+    does not until n = 7. Defaulting this to 0 would answer a question nobody asks — the floor exists
+    precisely because the statistical bar alone certifies jitter.
+    """
     pairs = 0
-    while minimum_wins_at(pairs, alpha) is None:
+    while True:
+        statistical = minimum_wins_at(pairs, alpha)
+        if statistical is not None and max(statistical, null_wins + 1) <= pairs:
+            return pairs
         pairs += 1
-    return pairs
 
 
 @dataclass(frozen=True)
 class Threshold:
     """The bar for one realized comparison, with both halves kept visible.
 
-    `required_wins` is None when the statistical bar is unattainable at `discordant`; `binding_bar` names
-    which half decided, so a report can say whether a result was limited by the evidence or by the
-    judge's own jitter rather than leaving that to be inferred from two numbers.
+    `required_wins` is None when no result is reachable at this `discordant` count — either because no
+    split of them clears alpha, or because the bar the two halves produce is larger than `n` and `b`
+    cannot exceed `n`. `binding_bar` names which half decided, so a report can say whether a result was
+    limited by the evidence, by the judge's own jitter, or by the count itself, rather than leaving that
+    to be inferred from two numbers. **`statistical_bar` and `floor_bar` are reported even when
+    `required_wins` is None**, because "the bar was 7 and only 6 pairs existed" is the finding.
     """
 
     discordant: int
@@ -110,8 +132,18 @@ def threshold(discordant: int, *, null_wins: int, alpha: float = ALPHA) -> Thres
     statistical = minimum_wins_at(discordant, alpha)
     floor = null_wins + 1
     required = None if statistical is None else max(statistical, floor)
-    if required is None:
+    # ⚠️ `b` cannot exceed `n`. A bar above the realized discordant count is unreachable however the
+    # pairs fall, so it is reported as UNATTAINABLE rather than as a bar that was missed: "required 7,
+    # observed 6" reads as an effect that failed, and "uncertifiable at this n" is the honest verdict —
+    # a different pre-committed outcome. The statistical bar can never trip this (it is chosen from
+    # `range(discordant + 1)`); the floor bar can, and under a measured floor it is the common case at
+    # small n.
+    if required is not None and required > discordant:
+        required = None
+    if required is None and statistical is None:
         binding = "unattainable — no split of this many discordant pairs clears alpha"
+    elif required is None:
+        binding = "unattainable — the floor bar exceeds the discordant pairs available at this n"
     elif statistical is not None and floor > statistical:
         binding = "floor — the judge's own jitter, not the evidence, sets the bar"
     elif statistical is not None and floor < statistical:

@@ -50,10 +50,35 @@ def test_the_statistical_bar_is_the_exact_one_sided_tail() -> None:
 
 def test_no_result_is_available_below_five_discordant_pairs() -> None:
     """A property of the count, never of the effect — and the reason an n this small is a finding."""
-    assert smallest_attainable_n() == 5
+    assert smallest_attainable_n(null_wins=0) == 5
     assert all(minimum_wins_at(n) is None for n in range(5))
     assert minimum_wins_at(5) == 5
     assert _one_sided_tail(5, 0) == pytest.approx(0.03125)
+
+
+def test_the_floor_bar_also_gates_attainability_and_the_statistical_one_cannot_see_it() -> None:
+    """`b` is bounded by `n`, so a floor above `n` is unreachable however the pairs fall.
+
+    The statistical bar is chosen from `range(n + 1)` and so can never exceed `n`; the floor bar is
+    fixed from the same-configuration passes with no reference to `n` at all, and under a measured floor
+    it sits above the cheapest statistically-attainable counts. Reporting those as a bar the evidence
+    missed would file an uncertifiable comparison as a failed effect — two different pre-committed
+    verdicts.
+    """
+    assert smallest_attainable_n(null_wins=6) == 7
+    for pairs in (5, 6):
+        bar = threshold(pairs, null_wins=6)
+        assert bar.statistical_bar is not None, "the statistical bar alone admits a result at this n"
+        assert bar.required_wins is None, "a bar above n is unattainable, not merely unmet"
+        assert "floor bar exceeds" in bar.binding_bar
+        assert not bar.clears(pairs), "a clean sweep of every pair still cannot reach a bar above n"
+        assert bar.floor_bar == 7, "both halves stay visible — 'the bar was 7 and only n existed'"
+
+
+def test_the_two_reasons_a_result_is_unreachable_are_reported_apart() -> None:
+    """Too few pairs to clear alpha, and a floor above the pairs there are, are different findings."""
+    assert "clears alpha" in threshold(4, null_wins=6).binding_bar
+    assert "floor bar exceeds" in threshold(5, null_wins=6).binding_bar
 
 
 def test_the_null_this_judge_already_produces_makes_five_wins_an_unsafe_bar() -> None:
@@ -65,15 +90,19 @@ def test_the_null_this_judge_already_produces_makes_five_wins_an_unsafe_bar() ->
     """
     directional = json.loads(_OBSERVATION_UNIT.read_text())["discordant_pairs_under_the_null"]["directional"]
     null_wins = max(max(pair["improved"], pair["regressed"]) for pair in directional)
-    assert null_wins >= minimum_wins_at(smallest_attainable_n()), (
+    assert null_wins >= minimum_wins_at(smallest_attainable_n(null_wins=0)), (
         "the null no longer reaches the cheapest certifying win count — re-read whether the second bar "
         "is still justified rather than deleting it"
     )
-    bar = threshold(smallest_attainable_n(), null_wins=null_wins)
-    assert bar.statistical_bar == 5
-    assert bar.required_wins == null_wins + 1 > 5
-    assert bar.clears(bar.required_wins) and not bar.clears(5)
-    assert bar.binding_bar.startswith("floor")
+    cheapest = smallest_attainable_n(null_wins=0)
+    bar = threshold(cheapest, null_wins=null_wins)
+    assert bar.statistical_bar == 5, "the statistical bar alone would certify five wins here"
+    assert bar.floor_bar == null_wins + 1 > 5, "the measured null already reaches that count"
+    # And the consequence the first bar cannot express: at the count where alpha is cheapest to clear,
+    # the measured floor is not merely higher — it is out of reach, because b cannot exceed n.
+    assert bar.required_wins is None
+    assert not bar.clears(cheapest)
+    assert threshold(smallest_attainable_n(null_wins=null_wins), null_wins=null_wins).required_wins == null_wins + 1
 
 
 def test_the_binding_bar_is_named_so_a_report_can_say_which_limited_it() -> None:

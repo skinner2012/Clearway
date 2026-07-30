@@ -1621,13 +1621,31 @@ the case count alone.
 *(The optional commit-first probe would add 441 if the injected gap is wanted there, or 162 if not —
 outside the 603, and nothing in the exit criterion depends on it.)*
 
-**⚠️ 603 is the floor and the ceiling is 1206, because a retry leaves no trace on disk.** `Judge` takes
+**⚠️ 603 is the floor and the ceiling was 1206, because a retry leaves no trace on disk.** `Judge` takes
 `retries: int = 1` and neither harness that constructs it overrides that, so **one logical call may
 reach the model twice** when the first response is off-schema. The run artifact writes one row either
 way, so the difference between floor and ceiling **cannot be recovered from the artifact afterwards** —
 it is only visible in the provider's usage. This project has already been caught by exactly this: the
 image-channel work reported a call total that was a floor for the same reason. **Quote the figure as
-"≥ 603 calls, ceiling 1206", never as "603 calls",** and read the real spend off the provider.
+"≥ 603 calls", never as "603 calls",** and read the real spend off the provider.
+
+**⚠️ The judge-level half of that ceiling is now measured away for the anchored side, and the number is
+765, not 1206.** T3b's recording client sits **below** the judge, so a judge-level retry appends its own
+row: **441 rows for 441 asks means the anchored side retried zero times**, and its contribution to the
+ceiling collapses from 882 to its measured 441. Blind's 162 are unspent, so they still carry the ×2.
+**Judge-level ceiling = 441 + 2 × 162 = 765.**
+
+**⚠️ That retirement is specific, and it must not be read as retiring the uncertainty.** What 441 rows
+rule out is a retry *inside `Judge`*. A retry inside the **provider client**, below the seam that
+counts, is a **different and unbounded** uncertainty — no number here bounds it, which is why every
+total in this milestone stays a floor and the spend is read off the provider. Letting the
+provider-internal caveat justify keeping 1206 would be backfilling a retired number with an unrelated
+one.
+
+**The pre-flight record keeps its 1206 and is not re-recorded.** `judge_preflight.json` was a
+*pre-measurement* estimate and is correct as the estimate it was; rewriting it with knowledge acquired
+after the spend would date a measurement to a stage that could not have made it — the same reason the
+calibration report is left dated rather than amended.
 
 Frozen at `benchmark/reports/judge_preflight.json`; reproduce with
 `uv run --env-file .env python -m clearway.eval.judge_preflight`. **The record carries a
@@ -1649,9 +1667,10 @@ total is still read off the provider. The order of magnitude is far below the pr
 milestones.
 
 **⚠️ The anchored half realized its floor exactly: 441 transport calls for 441 asks, zero retries at the
-client seam.** So the anchored side did not approach its ceiling of 882 — but the count is a floor for
-the same reason it always was: a retry inside the provider client leaves no trace above it. **Blind's
-162 remain unspent**, so the milestone total is still quoted as *≥ 603, ceiling 1206*.
+client seam.** So the anchored side did not approach its ceiling of 882 — it **retired** it, by direct
+measurement. **Blind's 162 remain unspent**, so the milestone total is quoted as
+*≥ 603 calls, judge-level ceiling 765* — and still a floor, for the provider-internal reason above,
+which is a separate and unbounded uncertainty rather than a survival of the 1206.
 
 **This is the cheapest and best-powered milestone in the project.**
 
@@ -1763,7 +1782,9 @@ cannot demonstrate it, and the 21 clean drafts that cite nothing contribute noth
    same instrument M5 measured, and the rebuilt baseline will differ from M5's by its *input* alone.
    **`judge_version` therefore cannot tell the two anchored measurements apart**; only a T2 or T4 rubric
    edit moves it, and until one lands the version string is not the thing that distinguishes runs.
-4. **The call budget is ≥ 603 judge calls, ceiling 1206** — anchored 3 × 147 = 441, blind 3 × 54 = 162 —
+4. **The call budget is ≥ 603 judge calls, ceiling 1206 as estimated here — measured down to a
+   judge-level 765 at T3b**, once the anchored side's 441 rows showed zero judge-level retries; the
+   record below is left as the pre-measurement estimate it was. Anchored 3 × 147 = 441, blind 3 × 54 = 162 —
    counted from 54 natural drafts of which 39 (0.722) are conformance-correct under
    `stats.COLLAPSE_RULE`. Full arithmetic in *Runs and cost*. The correctness predicate is pinned by test
    to the acceptance scorer's own `act_correct`, so the budget is counted under the rule the run will be

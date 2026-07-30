@@ -27,13 +27,13 @@ import pytest
 
 from clearway.drafter.llm import (
     NORMATIVE_TEXT_CHARS,
-    _candidate_lines,
     _document_title_referent_block,
     _label_referent_block,
     _link_name_referent_block,
     _resolve_citations,
     _system_prompt,
     _user_prompt,
+    candidate_lines,
 )
 from clearway.schemas.models import (
     AxeBucket,
@@ -94,7 +94,7 @@ def _finding(rule_id: str = "link-name", referent: NodeReferent | None = None) -
 def test_the_candidate_block_carries_the_normative_text_verbatim() -> None:
     """The point of the whole change: the model is shown what the criterion requires, not just its
     number. Pinned as whole bytes — an indented line under the id/url line it already had."""
-    assert _candidate_lines([_GROUNDED]) == (
+    assert candidate_lines([_GROUNDED]) == (
         f"- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)\n  What it requires: {_SC_2_4_4}"
     )
 
@@ -104,7 +104,7 @@ def test_a_long_criterion_is_prefix_truncated_at_the_pinned_budget_and_says_so()
     exceptions after, so a suffix cut would keep the footnotes and lose the rule), and the excerpt
     announces itself — an unmarked excerpt would read as the whole criterion."""
     long_text = "REQUIREMENT. " + "x" * NORMATIVE_TEXT_CHARS + " EXCEPTION-TAIL"
-    line = _candidate_lines([_GROUNDED.model_copy(update={"text": long_text})]).splitlines()[1]
+    line = candidate_lines([_GROUNDED.model_copy(update={"text": long_text})]).splitlines()[1]
 
     body = line.removeprefix("  What it requires: ")
     assert body.startswith("REQUIREMENT. ")
@@ -117,7 +117,7 @@ def test_a_long_criterion_is_prefix_truncated_at_the_pinned_budget_and_says_so()
 def test_a_criterion_exactly_at_the_budget_is_whole_and_unmarked() -> None:
     """The boundary: the note claims text was dropped, so it must not appear when none was."""
     exact = "y" * NORMATIVE_TEXT_CHARS
-    line = _candidate_lines([_GROUNDED.model_copy(update={"text": exact})]).splitlines()[1]
+    line = candidate_lines([_GROUNDED.model_copy(update={"text": exact})]).splitlines()[1]
     assert line == f"  What it requires: {exact}"
 
 
@@ -134,7 +134,7 @@ def test_the_candidate_block_is_bounded_whatever_retrieval_returns() -> None:
     huge = [_GROUNDED.model_copy(update={"sc_id": f"1.1.{i}", "text": "z" * 5_000}) for i in range(5)]
     ungrounded = [c.model_copy(update={"text": ""}) for c in huge]
 
-    added = len(_candidate_lines(huge)) - len(_candidate_lines(ungrounded))
+    added = len(candidate_lines(huge)) - len(candidate_lines(ungrounded))
     per_line = (
         len("\n  What it requires: ")
         + NORMATIVE_TEXT_CHARS
@@ -169,11 +169,11 @@ def test_the_whole_grounded_prompt_is_byte_identical() -> None:
 def test_a_citation_without_text_renders_the_pre_grounding_line() -> None:
     """Gating, at the block level. `''` is "no grounding chunk supplied one", and the honest render of
     that is silence — an empty `What it requires:` line would assert the criterion requires nothing."""
-    assert _candidate_lines([_BARE]) == "- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)"
+    assert candidate_lines([_BARE]) == "- 2.4.4 (https://www.w3.org/TR/WCAG22/#link-purpose-in-context)"
 
 
 def test_no_candidates_still_renders_the_none_retrieved_marker() -> None:
-    assert _candidate_lines([]) == "- (none retrieved)"
+    assert candidate_lines([]) == "- (none retrieved)"
 
 
 @pytest.mark.parametrize("rule_id", ["document-title", "empty-heading", "label", "link-name"])

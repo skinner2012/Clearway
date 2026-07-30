@@ -620,7 +620,19 @@ def _image_announcement_block(finding: Finding, announce_image: bool, image_atta
     return "\nVisual evidence: NO picture of this element is attached to this message."
 
 
-def _candidate_lines(citations: list[Citation]) -> str:
+def referent_blocks(finding: Finding) -> str:
+    """Every per-class referent block this finding carries, composed in class order — or `''`.
+
+    Public because it is the *material* rather than the prompt: a second reader that has to be given
+    the same facts as the drafter has to be given the same **sentences**, and a copy of them in
+    another module is a copy that drifts one edit later. The three builders stay disjoint by class and
+    gated on presence, so this returns `''` for a class with no injection and for a finding that
+    carries no referent — which is what keeps every no-referent prompt byte-identical.
+    """
+    return _label_referent_block(finding) + _document_title_referent_block(finding) + _link_name_referent_block(finding)
+
+
+def candidate_lines(citations: list[Citation]) -> str:
     """The candidate-criteria block: the id/url line each citation has always rendered, plus — where
     the corpus supplied one — the criterion's bounded normative text on an indented line beneath it.
 
@@ -628,6 +640,10 @@ def _candidate_lines(citations: list[Citation]) -> str:
     line and nothing else, so a bare `Citation(sc_id=…)` (an SC named but never retrieved) produces
     the pre-grounding block byte-for-byte. Truncation is prefix-only and announced — see
     `NORMATIVE_TEXT_CHARS` for the budget and why the cut runs that way.
+
+    Public for the same reason as `referent_blocks`: a second reader given the *same candidate list*
+    must be shown it in the same words and under the same character budget, or a difference between
+    the two readers' answers could be a difference in how the candidates were rendered.
     """
     lines: list[str] = []
     for citation in citations:
@@ -661,7 +677,7 @@ def _user_prompt(
         )
     else:
         bucket = "a NEEDS-REVIEW item the scanner could not decide"
-    candidates = _candidate_lines(citations)
+    candidates = candidate_lines(citations)
     base = (
         f"Finding ({bucket}): axe rule '{finding.rule_id}' — {finding.help or '(no description)'}\n"
         f"Target element: {finding.target}\n"
@@ -675,13 +691,7 @@ def _user_prompt(
     # compose in class order and the run keeps clean per-class attribution. The image announcement is
     # the same idiom on the same terms, and is last because it is about the message rather than the
     # element: default off, disjoint by class, `''` everywhere it does not apply.
-    return (
-        base
-        + _label_referent_block(finding)
-        + _document_title_referent_block(finding)
-        + _link_name_referent_block(finding)
-        + _image_announcement_block(finding, announce_image, image_attached)
-    )
+    return base + referent_blocks(finding) + _image_announcement_block(finding, announce_image, image_attached)
 
 
 def _resolve_citations(citations: list[Citation], sc_ids: list[str]) -> list[Citation]:

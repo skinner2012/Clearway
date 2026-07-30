@@ -1506,6 +1506,23 @@ the unit.
   result — which is correct and is the point, but it means the blind configuration's rows are **not**
   comparable to the anchored ones by version string, and the pre-flight tripwire will fail. **Re-record
   the pre-flight; do not retype the hash.**
+- **⚠️ Two things T3b hands this ticket, both of them measurements this stage must actually make.**
+  1. **The duplicate-ask correlation, and it is WORSE here than it was there.** T3b measured 54 findings
+     rendering only **45 distinct** finding-side blocks, in 8 duplicate groups **none of which lies
+     inside a single case** — so two clusters can be sent a byte-identical question (full write-up under
+     *a correlation the case unit cannot reach*). **The asymmetry that makes it this ticket's problem:
+     the anchored ask is the block PLUS a draft presentation, and the blind ask is the block ALONE**, so
+     removing the draft can only merge more asks together, never fewer. **45 is an upper bound on
+     blind's distinct-ask count, not its value — measure it and report it**, per class, beside the
+     per-class figures. Assuming 45 would be assuming the draft presentation contributed nothing.
+  2. **The within-case correlation of the REAL between-configuration difference.** T3b's ticket asks for
+     it "here, and only here", and T3b **could not deliver it**: only one configuration had judge output,
+     so what it reported is a confounded proxy (this run against the earlier judged passes, where the
+     prompt and the drafts moved together) explicitly labelled as attributing nothing. **This ticket is
+     the first place the real contrast exists** — anchored ↔ blind over the same drafts, same finding
+     side, one variable. Compute it on the difference stream, report it beside the threshold, and **if it
+     comes out materially negative, say so**: the per-case collapse would then be costing power rather
+     than buying honesty, and nothing measured so far can rule that out.
 - **Depends on:** T3b
 
 ### T5 — Comparison and diagnostic decomposition

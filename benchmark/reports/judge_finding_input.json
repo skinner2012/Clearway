@@ -70,6 +70,16 @@
     "findings_with_an_unreachable_gold_criterion": [],
     "reading": "A gold criterion outside the candidate list would mean the criterion the case turns on was unreachable for BOTH readers, and the SC axis on that finding would be measuring the retriever rather than either rater. Full coverage is what makes a candidate list that is constant within a class a shared prior rather than a shared blind spot. Adequacy only: it says nothing about whether this list is the one the drafter saw."
   },
+  "parity_with_the_drafters_prompt": {
+    "claim": "The referent and the candidate criteria are the DRAFTER'S OWN sentences here, not a paraphrase of them: `drafter.llm.referent_blocks` and `candidate_lines` render both, so the two readers are shown the same facts in the same words under the same character budget.",
+    "conditional_on_a_single_bucket_set": "⚠️ The claim is unconditional only because this set is. The drafter's user prompt opens with a per-finding PROVENANCE sentence keyed to `Finding.source_bucket` — a confirmed failure, a quality-review item, or a needs-review item — and this block carries no counterpart, so on a mixed set the two readers would not be shown the same framing. Every finding here is `AxeBucket.PASSES` (the gold's minting keeps only that bucket), so the drafter's sentence is the quality-review one on all of them, and the judge's SYSTEM rubric already states that same stance unconditionally for every finding it grades. The builder ASSERTS the single bucket rather than trusting it, so a scope change that admits another bucket fails here instead of quietly voiding the parity.",
+    "surviving_differences": [
+      "The ORDER of the shared material differs. The drafter renders the candidate block inside its prompt body and appends the referent last, after its instruction sentence; this block renders the referent immediately after the HTML and the candidates last. Same sentences, different position — and position is part of the framing this milestone treats as a live confound, so it is recorded rather than claimed away. Exact positional parity is not reachable: the drafter's referent sits after an instruction line that has no counterpart on the judge's finding side at all, because the judge's instruction belongs to whichever configuration is asking.",
+      "The candidate heading differs by one phrase: the drafter's reads 'you may cite', an instruction to a rater that cites, and this one reads 'retrieved for this finding', because the same bytes are read by a configuration that grades a citation and one that makes its own.",
+      "The judge's system rubric and the drafter's system prompt are different texts with different roles, and nothing here changes that. This record is about the FINDING-SIDE material only."
+    ],
+    "source_bucket_asserted_on_every_finding": "passes"
+  },
   "per_class": [
     {
       "axe_rule": "document-title",
@@ -1276,5 +1286,5 @@
       "finding_block_sha256": "23ab6c82954dca2a0668ea3b74a3d77365f5187c1e7fe286d7899863a90d8732"
     }
   ],
-  "reproducible_digest": "685879dc32ab988262786f5c11c3b3cae653c4b0e78c63ed04c51375a37b2eda"
+  "reproducible_digest": "8979e1a1638f07aa9aa804f0d268a72f60e3b4b20a2ed0c0d1ea0442384b62f3"
 }

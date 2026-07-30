@@ -60,7 +60,7 @@ from typing import Any
 from clearway.drafter.llm import referent_blocks
 from clearway.eval.run_scope import ACCEPTANCE, RunScope, cases_for
 from clearway.judge import FindingInput, finding_input
-from clearway.schemas.models import Citation, Finding
+from clearway.schemas.models import AxeBucket, Citation, Finding
 
 # The scope the replay pass covers: the acceptance case set, its four scored classes, its own minting.
 SCOPE = ACCEPTANCE
@@ -90,6 +90,39 @@ CANNOT_ESTABLISH = (
     "either. The honest status is the spec's: corroborated at best, never asserted as verified."
 )
 
+PARITY = {
+    "claim": (
+        "The referent and the candidate criteria are the DRAFTER'S OWN sentences here, not a paraphrase "
+        "of them: `drafter.llm.referent_blocks` and `candidate_lines` render both, so the two readers are "
+        "shown the same facts in the same words under the same character budget."
+    ),
+    "conditional_on_a_single_bucket_set": (
+        "⚠️ The claim is unconditional only because this set is. The drafter's user prompt opens with a "
+        "per-finding PROVENANCE sentence keyed to `Finding.source_bucket` — a confirmed failure, a "
+        "quality-review item, or a needs-review item — and this block carries no counterpart, so on a "
+        "mixed set the two readers would not be shown the same framing. Every finding here is "
+        "`AxeBucket.PASSES` (the gold's minting keeps only that bucket), so the drafter's sentence is the "
+        "quality-review one on all of them, and the judge's SYSTEM rubric already states that same stance "
+        "unconditionally for every finding it grades. The builder ASSERTS the single bucket rather than "
+        "trusting it, so a scope change that admits another bucket fails here instead of quietly voiding "
+        "the parity."
+    ),
+    "surviving_differences": [
+        "The ORDER of the shared material differs. The drafter renders the candidate block inside its "
+        "prompt body and appends the referent last, after its instruction sentence; this block renders the "
+        "referent immediately after the HTML and the candidates last. Same sentences, different position — "
+        "and position is part of the framing this milestone treats as a live confound, so it is recorded "
+        "rather than claimed away. Exact positional parity is not reachable: the drafter's referent sits "
+        "after an instruction line that has no counterpart on the judge's finding side at all, because the "
+        "judge's instruction belongs to whichever configuration is asking.",
+        "The candidate heading differs by one phrase: the drafter's reads 'you may cite', an instruction "
+        "to a rater that cites, and this one reads 'retrieved for this finding', because the same bytes "
+        "are read by a configuration that grades a citation and one that makes its own.",
+        "The judge's system rubric and the drafter's system prompt are different texts with different "
+        "roles, and nothing here changes that. This record is about the FINDING-SIDE material only.",
+    ],
+}
+
 BOTH_CONFIGURATIONS_READ_THIS_FILE = (
     "Both judge configurations take their finding-side prompt from `rows[].finding_block`, verbatim, "
     "through `judge.Judge.judge_prepared`. The configuration that grades a draft appends its "
@@ -107,6 +140,33 @@ class RebuiltInputMismatch(RuntimeError):
     render, every hash would check out, and the comparison it fed would silently be about other
     findings than the frozen drafts it is joined to.
     """
+
+
+class ParityBroken(RuntimeError):
+    """A finding whose provenance framing the drafter states and this block does not.
+
+    The drafter opens its user prompt with a sentence keyed to `Finding.source_bucket`; the finding side
+    here carries none, and the judge's rubric states the quality-review stance unconditionally instead.
+    Those two arrangements agree only while every finding is a quality-review item. Raised rather than
+    recorded, because the artifact would otherwise be a perfectly well-formed file whose central claim —
+    the two readers are shown the same material — had quietly become false for some of its rows.
+    """
+
+
+# The one bucket whose framing the judge's rubric already carries unconditionally, so a finding-side
+# block that states no bucket is still shown the same stance the drafter states per finding.
+PARITY_BUCKET = AxeBucket.PASSES
+
+
+def assert_single_bucket(finding: Finding) -> None:
+    if finding.source_bucket is not PARITY_BUCKET:
+        raise ParityBroken(
+            f"finding {finding.id} ({finding.rule_id}) is a {finding.source_bucket.value!r} item, and this "
+            f"input is only at parity with the drafter's prompt while every finding is "
+            f"{PARITY_BUCKET.value!r}: the drafter states its bucket per finding and the judge's rubric "
+            "states the quality-review stance once, for all of them. Give the finding side a bucket "
+            "sentence of its own before admitting another bucket — do not freeze this set."
+        )
 
 
 def _referent_sources(finding: Finding) -> list[str]:
@@ -162,6 +222,7 @@ def rebuild_rows(scope: RunScope = SCOPE, retriever: Any = None) -> list[dict[st
     for case in cases_for(scope):
         findings = scope.minting_findings(scope.root / case["path"], case["axe_rule"])
         for finding in findings:
+            assert_single_bucket(finding)
             rows.append(_row(case, finding, retriever.retrieve(finding)))
     return rows
 
@@ -414,6 +475,7 @@ def build_record(
             "cannot_establish": CANNOT_ESTABLISH,
         },
         "retrieval_adequacy": gold_sc_reachability(rows, replay),
+        "parity_with_the_drafters_prompt": {**PARITY, "source_bucket_asserted_on_every_finding": PARITY_BUCKET.value},
         "per_class": _per_class(rows),
         "rows": list(rows),
     }

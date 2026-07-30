@@ -21,11 +21,13 @@ from typing import Any
 
 import pytest
 
-from clearway.drafter.llm import referent_blocks
+from clearway.drafter.llm import _user_prompt, referent_blocks
 from clearway.eval.judge_finding_input import (
+    ParityBroken,
     RebuiltInputMismatch,
     _row,
     assert_matches_replay_pass,
+    assert_single_bucket,
     drafted_citations_inside_the_candidates,
     gold_sc_reachability,
     load_record,
@@ -35,8 +37,10 @@ from clearway.eval.judge_finding_input import (
     rows_finding_map,
 )
 from clearway.eval.offline_inject import conformance_flip, sc_swap
+from clearway.judge import finding_input
 from clearway.judge.judge import _drafted_row_block, _judge_user_prompt
 from clearway.schemas.models import (
+    AxeBucket,
     Citation,
     Conformance,
     DraftRow,
@@ -52,7 +56,10 @@ _CITATION = Citation(sc_id="2.4.6", url="https://www.w3.org/TR/WCAG22/#headings-
 
 def _referent_finding(rule_id: str) -> Finding:
     """A finding of `rule_id` carrying every referent source populated — the maximal input a class's
-    injection could possibly use, so a class that still renders nothing renders nothing by class."""
+    injection could possibly use, so a class that still renders nothing renders nothing by class.
+
+    `source_bucket` is stated rather than defaulted: the schema's default is `violations`, and every
+    finding in the set this module freezes is a quality-review `passes` item."""
     excerpt = ReferentExcerpt(text="x", source=ReferentSource.ACCESSIBLE_NAME)
     return Finding(
         id=f"f:{rule_id}",
@@ -61,6 +68,7 @@ def _referent_finding(rule_id: str) -> Finding:
         target="x",
         html="<x/>",
         help="h",
+        source_bucket=AxeBucket.PASSES,
         referent=NodeReferent(
             accessible_name=excerpt,
             document_title=excerpt,
@@ -311,6 +319,50 @@ def test_the_referent_flag_is_the_builders_answer_and_not_a_phrase_in_the_block(
         assert "Resolved " not in row["finding_block"]  # the false-negative path, in one line
     else:
         assert "Resolved " in row["finding_block"]  # the phrase is present; the flag still says no
+
+
+# --- parity with the drafter's prompt, and the condition it rests on -----------------------------
+
+
+def test_the_parity_claim_names_the_single_bucket_condition_and_the_surviving_differences(
+    record: dict[str, Any],
+) -> None:
+    """ "The two readers are shown the same facts" is TRUE HERE and false in general.
+
+    The drafter opens its user prompt with a provenance sentence keyed to the finding's bucket; this
+    block has no counterpart, and the judge's rubric states the quality-review stance once for every
+    finding it grades. Those agree only while the set is single-bucket, so the record has to say so.
+    """
+    parity = record["parity_with_the_drafters_prompt"]
+    assert parity["source_bucket_asserted_on_every_finding"] == AxeBucket.PASSES.value
+    assert "source_bucket" in parity["conditional_on_a_single_bucket_set"]
+    assert any("ORDER" in difference for difference in parity["surviving_differences"])
+    assert any("you may cite" in difference for difference in parity["surviving_differences"])
+
+
+def test_a_finding_from_another_bucket_is_refused_rather_than_frozen() -> None:
+    """A scope change that admits another bucket must fail here, not quietly void the parity claim."""
+    for bucket in (AxeBucket.VIOLATIONS, AxeBucket.INCOMPLETE):
+        finding = _referent_finding("label").model_copy(update={"source_bucket": bucket})
+        with pytest.raises(ParityBroken, match="only at parity"):
+            assert_single_bucket(finding)
+    assert_single_bucket(_referent_finding("label"))  # the bucket this set is entirely made of
+
+
+def test_the_order_of_the_shared_material_really_does_differ_between_the_two_readers() -> None:
+    """The recorded limitation, pinned rather than asserted in prose alone.
+
+    Same sentences, different position: the drafter appends the referent after its instruction line, so
+    its candidates come first; the judge's finding side renders the referent first and ends on the
+    candidates. If a later change made the two orders agree, this test fails and the limitation comes
+    out of the record — which is the outcome the limitation is documented to invite.
+    """
+    finding = _referent_finding("link-name")
+    drafter_prompt = _user_prompt(finding, [_CITATION])
+    judge_block = finding_input(finding, [_CITATION]).block
+    referent = referent_blocks(finding)
+    assert drafter_prompt.index("Candidate WCAG") < drafter_prompt.index(referent.strip().splitlines()[0])
+    assert judge_block.index(referent.strip().splitlines()[0]) < judge_block.index("Candidate WCAG")
 
 
 # --- the corroboration arithmetic (pure) --------------------------------------------------------

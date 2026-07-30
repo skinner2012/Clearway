@@ -139,8 +139,10 @@ def snapshot_availability(
     """Whether `model` appears in a listing that was successfully read — pure, so it is testable.
 
     `listed_model_count` rides along because "absent from a list of 125" and "absent from a list of 0"
-    are different claims, and only the first is evidence. The route is recorded rather than described,
-    so a later reader can see which host answered and whether an override was in force when it did.
+    are different claims, and only the first is evidence. It is deliberately OUTSIDE the record's
+    freeze check (`_VOLATILE_PATHS`) — it describes the provider's catalogue on the day, not this
+    record. The route is recorded rather than described, so a later reader can see which host answered
+    and whether an override was in force when it did.
     """
     resolved = route or provider_route()
     return {
@@ -343,21 +345,51 @@ def call_budget(
     )
 
 
-# The two keys a rebuild is allowed to move: the wall clock, and the digest computed over everything
-# else. Excluded from that digest so "did this record change?" is answerable at all — every other frozen
-# artifact in this tree is byte-identical on rebuild, and a bare timestamp would put this one outside
-# that check while still calling itself frozen.
-_VOLATILE_KEYS: tuple[str, ...] = ("created_at", "reproducible_digest")
+# What a rebuild is allowed to move without that reading as an edit, named by PATH rather than by
+# top-level key — one of the three sits two levels down.
+#
+#   * `created_at` — the wall clock.
+#   * `reproducible_digest` — the digest computed over everything else.
+#   * `judge_snapshot.listed_model_count` — ⚠️ the one that is not obvious, and the one this list exists
+#     for. It is read LIVE from the provider's catalogue, so it moves whenever the provider adds or
+#     retires any model, none of which is a fact about this record. Inside the digest it made a re-run
+#     after a catalogue change indistinguishable from an edit — and it had already drifted once.
+#
+# The count stays IN the record, because "absent from a list of 126" and "absent from a list of 0" are
+# different claims and only the first is evidence. What it is taken out of is the FREEZE CHECK: the
+# answer rests on the id being *present*, which is `available`, and that stays inside the digest — so a
+# snapshot that genuinely disappears still moves it.
+_VOLATILE_PATHS: tuple[tuple[str, ...], ...] = (
+    ("created_at",),
+    ("reproducible_digest",),
+    ("judge_snapshot", "listed_model_count"),
+)
+
+
+def _without_volatile(record: dict[str, Any]) -> dict[str, Any]:
+    """The record with every declared volatile path removed — the part a rebuild must reproduce."""
+    stable: dict[str, Any] = json.loads(json.dumps(record, ensure_ascii=False))
+    for path in _VOLATILE_PATHS:
+        node: Any = stable
+        for key in path[:-1]:
+            node = node.get(key) if isinstance(node, dict) else None
+            if not isinstance(node, dict):
+                break
+        else:
+            node.pop(path[-1], None)
+    return stable
 
 
 def record_digest(record: dict[str, Any]) -> str:
-    """sha256 over the record minus its timestamp and its own digest — the part a rebuild must reproduce.
+    """sha256 over the record minus the volatile paths — the part a rebuild must reproduce.
 
     This is what a freeze test pins. Without it the only available check is the file's byte digest, which
-    a fresh `created_at` breaks on every rebuild, so a genuine change and a re-run would look alike.
+    a fresh `created_at` breaks on every rebuild, so a genuine change and a re-run would look alike. The
+    same argument is why the provider's live catalogue size is excluded: a digest that moves for a reason
+    outside the record cannot answer "did this record change?" either.
     """
-    stable = {k: v for k, v in record.items() if k not in _VOLATILE_KEYS}
-    return hashlib.sha256(json.dumps(stable, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    stable = json.dumps(_without_volatile(record), sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(stable.encode()).hexdigest()
 
 
 def build_record(
@@ -437,7 +469,10 @@ def main() -> None:
     path = _report_path()
     path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n")
     print(f"\nwrote {path.relative_to(Path.cwd())} — 0 model calls")
-    print(f"reproducible digest {record['reproducible_digest'][:12]}… (everything but the timestamp)")
+    print(
+        f"reproducible digest {record['reproducible_digest'][:12]}… (everything but the timestamp and "
+        "the provider's live catalogue size)"
+    )
     raise SystemExit(0 if snapshot["available"] else 1)
 
 

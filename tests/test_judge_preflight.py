@@ -310,11 +310,11 @@ def test_availability_records_the_host_that_answered_not_a_constant() -> None:
 # --- reproducibility of the frozen record -------------------------------------------------------
 
 
-def _record(created_at: str) -> dict:
+def _record(created_at: str, listed_ids: tuple[str, ...] = ("gpt-5.6-luna",)) -> dict:
     return build_record(
         frozen_artifact=_FROZEN,
         prior_passes={"run_1.json": _RUNS / "run_1.json"},
-        listed_ids=("gpt-5.6-luna",),
+        listed_ids=listed_ids,
         pins={"judge_model": "gpt-5.6-luna", "reasoning_effort": "medium"},
         created_at=created_at,
         route={"base_url_override": None, "base_url_override_source": None, "endpoint": MODELS_ENDPOINT},
@@ -328,6 +328,28 @@ def test_a_rebuild_reproduces_everything_except_the_timestamp() -> None:
     assert first != second
     assert first["reproducible_digest"] == second["reproducible_digest"]
     assert record_digest(first) == first["reproducible_digest"]
+
+
+def test_the_providers_catalogue_growing_is_not_an_edit_to_this_record() -> None:
+    """The freeze check must answer "did THIS record change?", and a live catalogue size cannot.
+
+    `listed_model_count` is read off the provider, so it moves whenever any unrelated model is added or
+    retired — and it had already drifted once while inside the digest, which made a re-run and a genuine
+    edit the same bytes. It stays in the record as evidence and out of the check.
+    """
+    small = _record("2026-07-29T00:00:00+00:00", ("gpt-5.6-luna",))
+    grown = _record("2026-07-29T00:00:00+00:00", ("gpt-5.6-luna", "some-new-model", "another-one"))
+    assert grown["judge_snapshot"]["listed_model_count"] != small["judge_snapshot"]["listed_model_count"]
+    assert grown["reproducible_digest"] == small["reproducible_digest"]
+
+
+def test_the_snapshot_actually_disappearing_still_moves_the_digest() -> None:
+    """The exclusion is keyed to the catalogue's SIZE, never to the availability answer it supports."""
+    present = _record("2026-07-29T00:00:00+00:00", ("gpt-5.6-luna", "x"))
+    retired = _record("2026-07-29T00:00:00+00:00", ("x", "y"))
+    assert present["judge_snapshot"]["listed_model_count"] == retired["judge_snapshot"]["listed_model_count"]
+    assert retired["judge_snapshot"]["available"] is False
+    assert retired["reproducible_digest"] != present["reproducible_digest"]
 
 
 def test_the_digest_covers_a_change_that_matters() -> None:

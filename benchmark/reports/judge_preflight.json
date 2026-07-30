@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-29T23:33:30.311468+00:00",
+  "created_at": "2026-07-30T14:31:40.117050+00:00",
   "model_calls_spent": 0,
   "judge_snapshot": {
     "model": "gpt-5.6-luna",
@@ -73,5 +73,5 @@
       ]
     }
   },
-  "reproducible_digest": "ba5c1fb938921fd62c1b8077af04b17f7f16822603040a7461e0a51825ddd227"
+  "reproducible_digest": "5392557ebbe5812dadb578040fbf0dab1838c8ec3fda1a44d6fcf2aafc4b6946"
 }

@@ -25,6 +25,7 @@ from clearway.eval.judge_observation_unit import (
     WITHIN_CASE_AGGREGATION,
     Clustering,
     DegenerateClustering,
+    act_wrong_profile,
     aggregation_divergence,
     anova_icc,
     assert_distinct_case_bytes,
@@ -35,6 +36,8 @@ from clearway.eval.judge_observation_unit import (
     majority_stream,
     manifest_rows,
     minting_cases,
+    null_discordance,
+    null_routing_sign_test,
     unanimity,
     within_cluster_agreement,
 )
@@ -367,6 +370,123 @@ def test_the_coarser_rule_layer_carries_no_routing_correlation() -> None:
     the judge's routing correlation sits at the case, and at the rule it is absent."""
     record = build_record(replay_path=_REPLAY, judged_paths=_JUDGED)
     assert record["homogeneity"]["judge_routing_within_rule"]["icc"] <= 0.0
+
+
+# --- what the collapse erases from the test's currency ------------------------------------------
+
+
+def test_the_collapse_erases_a_pair_when_two_passes_flag_the_same_case_differently() -> None:
+    """The mechanism a design effect cannot see: both passes raise a hand on the case, but on different
+    findings. Two findings differ, the collapsed decision does not, and the discordant pair vanishes."""
+    left = [[True, False]]
+    right = [[False, True]]
+    null = null_discordance([left, right])
+    row = null["pairs"][0]
+    assert row["findings_differing"] == 2
+    assert row["cases_differing"] == 0
+    assert row["cases_holding_a_differing_finding_that_collapse_the_same"] == 1
+    assert row["findings_erased_by_the_collapse"] == 2
+    assert row["share_of_finding_discordance_erased"] == 1.0
+
+
+def test_a_collapsed_decision_that_really_moves_is_not_counted_as_erased() -> None:
+    null = null_discordance([[[True, True]], [[False, False]]])
+    row = null["pairs"][0]
+    assert (row["findings_differing"], row["cases_differing"]) == (2, 1)
+    assert row["findings_erased_by_the_collapse"] == 0
+
+
+def test_an_erasure_rate_needs_two_passes() -> None:
+    with pytest.raises(DegenerateClustering, match="at least two passes"):
+        null_discordance([[[True]]])
+
+
+def test_the_null_movement_on_the_real_passes_is_the_floor_a_real_effect_must_clear() -> None:
+    """Three passes of ONE configuration: the difference is null by construction, so every discordant
+    case here is jitter. Pinned because the pinned unit's threshold is derived from it downstream."""
+    record = build_record(replay_path=_REPLAY, judged_paths=_JUDGED)
+    null = record["discordant_pairs_under_the_null"]
+    assert null["pass_pairs"] == 3
+    assert null["findings_differing_mean_per_pair"] == 10.0
+    assert null["cases_differing_mean_per_pair"] == 8.0
+    assert null["findings_erased_total"] == 4
+    assert null["share_of_finding_discordance_erased"] == pytest.approx(4 / 30, abs=1e-4)
+    assert null["findings_that_moved_across_all_passes"] == 15
+    assert null["cases_whose_collapsed_decision_moved_across_all_passes"] == 12
+
+
+def test_the_null_already_produces_the_one_sided_bar_the_sign_test_asks_for() -> None:
+    """The uncomfortable one. `minimum_wins(0.05)` is 5 improvements at zero regressions, and one
+    pass-pair of a FIXED configuration improves 5 cases on its own — it fails only on its regressions."""
+    from clearway.eval.drafter_kappa import minimum_wins
+
+    record = build_record(replay_path=_REPLAY, judged_paths=_JUDGED)
+    directional = record["discordant_pairs_under_the_null"]["directional"]
+    assert max(row["improved"] for row in directional) >= minimum_wins(0.05)
+    assert all(row["one_sided_p"] > 0.05 for row in directional), "the null must not clear alpha"
+
+
+def test_the_null_sign_test_reads_a_hand_countable_pair() -> None:
+    """One case act-wrong, one act-right. Pass 1 flags neither; pass 2 flags both — so the wrong case
+    improves and the right case regresses."""
+    rows = null_routing_sign_test([[[False], [False]], [[True], [True]]], [True, False])
+    assert rows[0]["improved"] == 1
+    assert rows[0]["regressed"] == 1
+    assert rows[0]["discordant"] == 2
+
+
+# --- how much there is to repair ----------------------------------------------------------------
+
+
+def test_the_repairable_ceiling_shrinks_sharply_with_the_unit() -> None:
+    """The number the ticket owes the noise-floor stage: what the routing signal could possibly catch.
+    Flag-if-any folds most of the wrong findings into fewer wrong cases, so the ceiling is a property of
+    the unit and not only of the drafter."""
+    profile = act_wrong_profile(_load(_REPLAY))
+    totals = profile["totals"]
+    assert (totals["findings_wrong"], totals["findings"]) == (15, 54)
+    assert (totals["judge_visible_cases_wrong"], totals["judge_visible_cases"]) == (7, 40)
+    assert (totals["drafter_cases_wrong"], totals["drafter_cases"]) == (9, 44)
+    assert totals["unreachable_errors"] == 2
+    assert profile["collapse_absorbs"] == 8
+
+
+def test_the_case_level_count_matches_the_independent_kappa_implementation() -> None:
+    """Pinned to `class_kappas`' own 2×2 rather than trusted: its `fp + fn` per class is the same
+    quantity on the same 44-case denominator, computed by code this module does not share."""
+    from clearway.eval.drafter_kappa import class_kappas
+
+    artifact = _load(_REPLAY)
+    mine = {row["axe_rule"]: row["drafter_cases_wrong"] for row in act_wrong_profile(artifact)["per_class"]}
+    theirs = {c.axe_rule: c.fp + c.fn for c in class_kappas(artifact)}
+    assert mine == theirs
+
+
+def test_the_finding_level_count_matches_the_preflights_own_budget_denominator() -> None:
+    """The pre-flight counted 39 conformance-correct drafts of 54 before any call was spent; the wrong
+    count here is the complement, so the two records cannot drift apart."""
+    from clearway.eval.judge_preflight import call_budget
+
+    artifact = _load(_REPLAY)
+    budget = call_budget(artifact)
+    totals = act_wrong_profile(artifact)["totals"]
+    assert totals["findings_wrong"] == budget.natural_drafts - budget.conformance_correct_drafts
+
+
+def test_the_unreachable_errors_are_the_baselines_honest_miss_errors() -> None:
+    """The failed honest misses: no finding minted, so no draft and no judgment. They sit in the
+    drafter's denominator and outside the routing mechanism entirely."""
+    from clearway.eval.drafter_kappa import class_ceilings
+    from clearway.schemas.models import UnreachableErrorKind
+
+    artifact = _load(_REPLAY)
+    mine = {row["axe_rule"]: row["unreachable_errors"] for row in act_wrong_profile(artifact)["per_class"]}
+    theirs = {
+        c.axe_rule: sum(1 for u in c.unreachable if u.kind == UnreachableErrorKind.HONEST_MISS)
+        for c in class_ceilings(artifact)
+    }
+    assert mine == theirs
+    assert sum(theirs.values()) == 2
 
 
 # --- the frozen record --------------------------------------------------------------------------

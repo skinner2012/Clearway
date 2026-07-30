@@ -1,4 +1,5 @@
 {
+  "model_calls_spent": 0,
   "unit": {
     "observation_unit": "case",
     "unit_key": "act_testcase_id",
@@ -299,5 +300,140 @@
         "beats_per_case": false
       }
     ]
+  },
+  "discordant_pairs_under_the_null": {
+    "pairs": [
+      {
+        "passes": [
+          1,
+          2
+        ],
+        "findings_differing": 10,
+        "cases_differing": 9,
+        "cases_holding_a_differing_finding_that_collapse_the_same": 0,
+        "findings_erased_by_the_collapse": 0,
+        "share_of_finding_discordance_erased": 0.0
+      },
+      {
+        "passes": [
+          1,
+          3
+        ],
+        "findings_differing": 10,
+        "cases_differing": 7,
+        "cases_holding_a_differing_finding_that_collapse_the_same": 2,
+        "findings_erased_by_the_collapse": 2,
+        "share_of_finding_discordance_erased": 0.2
+      },
+      {
+        "passes": [
+          2,
+          3
+        ],
+        "findings_differing": 10,
+        "cases_differing": 8,
+        "cases_holding_a_differing_finding_that_collapse_the_same": 2,
+        "findings_erased_by_the_collapse": 2,
+        "share_of_finding_discordance_erased": 0.2
+      }
+    ],
+    "pass_pairs": 3,
+    "findings_differing_total": 30,
+    "cases_differing_total": 24,
+    "findings_differing_mean_per_pair": 10.0,
+    "cases_differing_mean_per_pair": 8.0,
+    "findings_erased_total": 4,
+    "share_of_finding_discordance_erased": 0.1333,
+    "findings_that_moved_across_all_passes": 15,
+    "cases_whose_collapsed_decision_moved_across_all_passes": 12,
+    "reading": "The cases column is the sign test's discordant count under the null — the number of pairs the judge produces when NOTHING changes — and the erased column is what the collapse removes from the finer count on its way there. Neither is visible in a design effect.",
+    "directional": [
+      {
+        "passes": [
+          1,
+          2
+        ],
+        "improved": 3,
+        "regressed": 6,
+        "discordant": 9,
+        "one_sided_p": 0.9102
+      },
+      {
+        "passes": [
+          1,
+          3
+        ],
+        "improved": 3,
+        "regressed": 4,
+        "discordant": 7,
+        "one_sided_p": 0.7734
+      },
+      {
+        "passes": [
+          2,
+          3
+        ],
+        "improved": 5,
+        "regressed": 3,
+        "discordant": 8,
+        "one_sided_p": 0.3633
+      }
+    ]
+  },
+  "repairable_ceiling": {
+    "per_class": [
+      {
+        "axe_rule": "document-title",
+        "findings_wrong": 0,
+        "findings": 5,
+        "judge_visible_cases_wrong": 0,
+        "judge_visible_cases": 5,
+        "drafter_cases_wrong": 0,
+        "drafter_cases": 5,
+        "unreachable_errors": 0
+      },
+      {
+        "axe_rule": "empty-heading",
+        "findings_wrong": 1,
+        "findings": 11,
+        "judge_visible_cases_wrong": 1,
+        "judge_visible_cases": 11,
+        "drafter_cases_wrong": 2,
+        "drafter_cases": 13,
+        "unreachable_errors": 1
+      },
+      {
+        "axe_rule": "label",
+        "findings_wrong": 6,
+        "findings": 17,
+        "judge_visible_cases_wrong": 1,
+        "judge_visible_cases": 11,
+        "drafter_cases_wrong": 1,
+        "drafter_cases": 11,
+        "unreachable_errors": 0
+      },
+      {
+        "axe_rule": "link-name",
+        "findings_wrong": 8,
+        "findings": 21,
+        "judge_visible_cases_wrong": 5,
+        "judge_visible_cases": 13,
+        "drafter_cases_wrong": 6,
+        "drafter_cases": 15,
+        "unreachable_errors": 1
+      }
+    ],
+    "totals": {
+      "findings_wrong": 15,
+      "findings": 54,
+      "judge_visible_cases_wrong": 7,
+      "judge_visible_cases": 40,
+      "drafter_cases_wrong": 9,
+      "drafter_cases": 44,
+      "unreachable_errors": 2
+    },
+    "collapse_absorbs": 8,
+    "predicate": "per finding: is_flag(conformance) == (expected == 'failed'), the acceptance scorer's act_correct; per case: the same comparison against flag-if-any over the case's drafts",
+    "reading": "The judge-visible column is the repairable ceiling at the pinned unit — every error the routing signal could possibly catch. `collapse_absorbs` is how many wrong findings flag-if-any folds into an already-wrong or now-correct case, and it is large: the ceiling is a property of the unit, not only of the drafter. `unreachable_errors` are failed cases that minted nothing, so no draft and no judgment exist for them — they sit in the drafter's denominator and outside the mechanism's reach entirely."
   }
 }

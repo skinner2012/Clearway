@@ -53,7 +53,7 @@ from typing import Any
 
 from clearway.eval.act_gold import _ACT_GOLD, _MANIFEST, RULE_TO_AXE
 from clearway.eval.drafter_kappa import _grouped
-from clearway.eval.drafter_score import DraftedCase
+from clearway.eval.drafter_score import FAILED, DraftedCase, _flagged
 from clearway.eval.stats import COLLAPSE_RULE, is_flag
 
 # ---------------------------------------------------------------------------------------------
@@ -515,6 +515,107 @@ def aggregation_divergence(flag_streams: Sequence[Sequence[bool]]) -> dict[str, 
     }
 
 
+def null_discordance(per_pass_flags: Sequence[Sequence[Sequence[bool]]]) -> dict[str, Any]:
+    """What the case collapse ERASES from the paired test's currency, measured under the null.
+
+    **A design effect cannot see this.** Effective n describes the precision of a *proportion*; the
+    sign test's currency is discordant pairs, and flag-if-any can delete one outright — if two
+    configurations raise their hand on the same case for *different* findings, the case-level decision
+    is identical and the pair vanishes. So the erasure is counted directly rather than inferred.
+
+    Measured between every pair of passes of ONE configuration, where the difference is null by
+    construction: any discordance is the judge disagreeing with itself, which is both the erasure
+    substrate and the floor a real effect has to clear. Each row reports the findings whose routing
+    decision differs, the cases whose collapsed decision differs, and the cases that hold a differing
+    finding yet collapse to the same answer — those are the erased pairs.
+    """
+    if len(per_pass_flags) < 2:
+        raise DegenerateClustering("an erasure rate needs at least two passes to difference")
+    rows: list[dict[str, Any]] = []
+    for left, right in itertools.combinations(range(len(per_pass_flags)), 2):
+        findings = cases = erased_cases = erased_findings = 0
+        for cluster in range(len(per_pass_flags[left])):
+            a, b = per_pass_flags[left][cluster], per_pass_flags[right][cluster]
+            differing = sum(1 for x, y in zip(a, b, strict=True) if x != y)
+            findings += differing
+            if any(a) != any(b):
+                cases += 1
+            elif differing:
+                erased_cases += 1
+                erased_findings += differing
+        rows.append(
+            {
+                "passes": [left + 1, right + 1],
+                "findings_differing": findings,
+                "cases_differing": cases,
+                "cases_holding_a_differing_finding_that_collapse_the_same": erased_cases,
+                "findings_erased_by_the_collapse": erased_findings,
+                "share_of_finding_discordance_erased": round(erased_findings / findings, 4) if findings else 0.0,
+            }
+        )
+    findings_total = sum(r["findings_differing"] for r in rows)
+    cases_total = sum(r["cases_differing"] for r in rows)
+    erased_total = sum(r["findings_erased_by_the_collapse"] for r in rows)
+    moved_findings = sum(
+        1
+        for cluster in range(len(per_pass_flags[0]))
+        for position in range(len(per_pass_flags[0][cluster]))
+        if len({streams[cluster][position] for streams in per_pass_flags}) > 1
+    )
+    moved_cases = sum(
+        1 for cluster in range(len(per_pass_flags[0])) if len({any(streams[cluster]) for streams in per_pass_flags}) > 1
+    )
+    return {
+        "pairs": rows,
+        "pass_pairs": len(rows),
+        "findings_differing_total": findings_total,
+        "cases_differing_total": cases_total,
+        "findings_differing_mean_per_pair": round(findings_total / len(rows), 4),
+        "cases_differing_mean_per_pair": round(cases_total / len(rows), 4),
+        "findings_erased_total": erased_total,
+        "share_of_finding_discordance_erased": round(erased_total / findings_total, 4) if findings_total else 0.0,
+        "findings_that_moved_across_all_passes": moved_findings,
+        "cases_whose_collapsed_decision_moved_across_all_passes": moved_cases,
+        "reading": (
+            "The cases column is the sign test's discordant count under the null — the number of pairs "
+            "the judge produces when NOTHING changes — and the erased column is what the collapse "
+            "removes from the finer count on its way there. Neither is visible in a design effect."
+        ),
+    }
+
+
+def null_routing_sign_test(
+    per_pass_flags: Sequence[Sequence[Sequence[bool]]], act_wrong: Sequence[bool]
+) -> list[dict[str, Any]]:
+    """The sign test run on a difference that is null by construction — the jitter the real one competes with.
+
+    A case's routing decision is CORRECT when it raises its hand exactly on a case whose drafted verdict
+    is act-wrong. Because gold is fixed per case, a flip of the decision is always a flip of correctness,
+    so every discordant case here is a discordant pair the real test would count. `b` and `c` are the
+    improvements and regressions between two passes of one configuration: both should be noise.
+    """
+    from clearway.eval.drafter_kappa import sign_test_p
+
+    rows: list[dict[str, Any]] = []
+    for left, right in itertools.combinations(range(len(per_pass_flags)), 2):
+        b = c = 0
+        for cluster, wrong in enumerate(act_wrong):
+            before = any(per_pass_flags[left][cluster]) == wrong
+            after = any(per_pass_flags[right][cluster]) == wrong
+            b += (not before) and after
+            c += before and not after
+        rows.append(
+            {
+                "passes": [left + 1, right + 1],
+                "improved": b,
+                "regressed": c,
+                "discordant": b + c,
+                "one_sided_p": round(sign_test_p(b, c), 4),
+            }
+        )
+    return rows
+
+
 def unanimity(per_pass: Sequence[Sequence[Sequence[Hashable]]]) -> dict[str, Any]:
     """How often the passes of ONE configuration disagreed with themselves, per observation.
 
@@ -537,6 +638,73 @@ def unanimity(per_pass: Sequence[Sequence[Sequence[Hashable]]]) -> dict[str, Any
 # ---------------------------------------------------------------------------------------------
 # The record
 # ---------------------------------------------------------------------------------------------
+
+
+def act_wrong_profile(artifact: dict[str, Any]) -> dict[str, Any]:
+    """How much there is to repair: the units whose drafted verdict is WRONG against ACT gold.
+
+    The routing signal exists to catch these, so their count is the ceiling on `correct_catch` and the
+    denominator of the signal's recall — and it changes with the unit, sharply. Reported on all three
+    denominators the milestone has, because each answers a different question:
+
+    * **per finding (54)** — what the judge is actually shown;
+    * **per judge-visible case (40)** — the pinned unit, flag-if-any collapsed;
+    * **per drafter case (44)** — the drafter's own denominator, which includes the honest misses the
+      judge can never see. On the failed side those are automatic misses: an error the mechanism cannot
+      reach, because nothing was minted, drafted or judged.
+
+    Predicates are borrowed, never re-implemented: the per-finding axis is the pre-flight's
+    `conformance_correct` (pinned by test to the acceptance scorer's own `act_correct`), and the case
+    axis is the drafter scorer's own `_flagged` — the same flag-if-any this unit is pinned to.
+    """
+    from clearway.eval.judge_preflight import conformance_correct
+
+    grouped = _grouped(artifact)
+    rows: list[dict[str, Any]] = []
+    for axe_rule, group in sorted(grouped.items()):
+        minting = [c for c in group if c.drafts]
+        findings = [(c, d) for c in minting for d in c.drafts]
+        rows.append(
+            {
+                "axe_rule": axe_rule,
+                "findings_wrong": sum(1 for c, d in findings if not conformance_correct(d.conformance, c.expected)),
+                "findings": len(findings),
+                "judge_visible_cases_wrong": sum(1 for c in minting if _flagged(c) != (c.expected == FAILED)),
+                "judge_visible_cases": len(minting),
+                "drafter_cases_wrong": sum(1 for c in group if _flagged(c) != (c.expected == FAILED)),
+                "drafter_cases": len(group),
+                "unreachable_errors": sum(1 for c in group if not c.drafts and c.expected == FAILED),
+            }
+        )
+    totals = {
+        key: sum(row[key] for row in rows)
+        for key in (
+            "findings_wrong",
+            "findings",
+            "judge_visible_cases_wrong",
+            "judge_visible_cases",
+            "drafter_cases_wrong",
+            "drafter_cases",
+            "unreachable_errors",
+        )
+    }
+    return {
+        "per_class": rows,
+        "totals": totals,
+        "collapse_absorbs": totals["findings_wrong"] - totals["judge_visible_cases_wrong"],
+        "predicate": (
+            "per finding: is_flag(conformance) == (expected == 'failed'), the acceptance scorer's "
+            "act_correct; per case: the same comparison against flag-if-any over the case's drafts"
+        ),
+        "reading": (
+            "The judge-visible column is the repairable ceiling at the pinned unit — every error the "
+            "routing signal could possibly catch. `collapse_absorbs` is how many wrong findings "
+            "flag-if-any folds into an already-wrong or now-correct case, and it is large: the ceiling "
+            "is a property of the unit, not only of the drafter. `unreachable_errors` are failed cases "
+            "that minted nothing, so no draft and no judgment exist for them — they sit in the drafter's "
+            "denominator and outside the mechanism's reach entirely."
+        ),
+    }
 
 
 def _per_class(artifact: dict[str, Any]) -> list[dict[str, Any]]:
@@ -653,7 +821,11 @@ def build_record(*, replay_path: Path, judged_paths: Sequence[Path]) -> dict[str
     icc_sources.append(("drafter four-value conformance on the replay pass", drafter["conformance_four_value"]["icc"]))
     icc_sources.extend([("independence, for reference", 0.0), ("total within-case agreement, the bound", 1.0)])
 
+    flag_streams = [[[not v for v in cluster] for cluster in stream] for stream in per_pass]
+    act_wrong = [_flagged(case) != (case.expected == FAILED) for case in minting_cases(replay)]
+
     return {
+        "model_calls_spent": 0,
         "unit": {
             "observation_unit": OBSERVATION_UNIT,
             "unit_key": "act_testcase_id",
@@ -707,6 +879,11 @@ def build_record(*, replay_path: Path, judged_paths: Sequence[Path]) -> dict[str
             "case_collapse_cost": aggregation_divergence([[not v for v in stream] for stream in majority]),
         },
         "effective_n": _effective_n(clustering, icc_sources),
+        "discordant_pairs_under_the_null": {
+            **null_discordance(flag_streams),
+            "directional": null_routing_sign_test(flag_streams, act_wrong),
+        },
+        "repairable_ceiling": act_wrong_profile(replay),
     }
 
 
@@ -735,6 +912,19 @@ def main() -> None:
     for row in record["effective_n"]["per_finding_at"]:
         verdict = "beats per-case" if row["beats_per_case"] else "does not beat per-case"
         print(f"    n_eff {row['effective_n']:>6} at ICC {row['icc']:+.4f} — {verdict} ({row['icc_source']})")
+    null = record["discordant_pairs_under_the_null"]
+    ceiling = record["repairable_ceiling"]["totals"]
+    print(
+        f"  repairable ceiling: {ceiling['findings_wrong']}/{ceiling['findings']} findings, "
+        f"{ceiling['judge_visible_cases_wrong']}/{ceiling['judge_visible_cases']} judge-visible cases, "
+        f"{ceiling['drafter_cases_wrong']}/{ceiling['drafter_cases']} drafter cases "
+        f"({ceiling['unreachable_errors']} unreachable)"
+    )
+    print(
+        f"  null movement: {null['cases_differing_mean_per_pair']} cases per pass-pair "
+        f"(findings {null['findings_differing_mean_per_pair']}); the collapse erases "
+        f"{null['share_of_finding_discordance_erased']:.3f} of the finding-level discordance"
+    )
     print(f"  unit pinned: per {record['unit']['observation_unit']}, {record['unit']['within_case_aggregation']}")
 
     path = _report_path()

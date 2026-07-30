@@ -17,8 +17,14 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from clearway.eval.drafter_score import DraftedCase, DraftedFinding, score_drafter
-from clearway.eval.judge_score import InjectedResult, JudgedDraft, score_judge
+from clearway.eval.drafter_score import FAILED, DraftedCase, DraftedFinding, _flagged, score_drafter
+from clearway.eval.judge_score import (
+    CONFUSION_UNIT_FINDING,
+    InjectedResult,
+    JudgedCase,
+    JudgedDraft,
+    score_judge,
+)
 from clearway.eval.stats import COLLAPSE_RULE, is_flag
 from clearway.schemas.models import (
     Conformance,
@@ -118,6 +124,41 @@ def _judged_drafts(artifact: dict[str, Any]) -> list[JudgedDraft]:
     return drafts
 
 
+def judged_cases(artifact: dict[str, Any]) -> list[JudgedCase]:
+    """The same judged rows as `_judged_drafts`, grouped into the cases they were minted on.
+
+    The twin of `_judged_drafts` and deliberately beside it, because the two differ in exactly one place
+    that is easy to get wrong: `act_correct` here is the CASE-level predicate — flag-if-any over the
+    case's drafts against the gold outcome, `drafter_score._flagged`, the acceptance scorer's own rule —
+    and not a roll-up of the per-finding correctness the sibling computes. A case's findings can be
+    mostly wrong while the case is right, so the two denominators disagree by construction and the
+    collapse is where that shows.
+
+    Non-minting cases are absent by construction: they carry no drafts, so the artifact's `cases` list
+    does not hold them (they live in `honest_misses`, which the drafter's stream carries and the judge's
+    cannot). Public because the paired routing comparison scores on this unit while the frozen
+    per-finding acceptance scorecard scores on the other.
+    """
+    cases: list[JudgedCase] = []
+    for c in artifact["cases"]:
+        drafted = DraftedCase(
+            act_testcase_id=c["act_testcase_id"],
+            rule_name=c["rule_name"],
+            expected=c["expected"],
+            gold_success_criteria=tuple(c["gold_success_criteria"]),
+            drafts=tuple(_drafted_finding(d) for d in c["drafts"]),
+        )
+        cases.append(
+            JudgedCase(
+                act_testcase_id=c["act_testcase_id"],
+                rule_name=c["rule_name"],
+                act_correct=_flagged(drafted) == (c["expected"] == FAILED),
+                judge_passes=tuple(d["judge_conformance_correct"] for d in c["drafts"]),
+            )
+        )
+    return cases
+
+
 def _injected(artifact: dict[str, Any], key: str) -> list[InjectedResult]:
     """The injected known-wrong drafts of one mutation, if the artifact has an injection pass — else
     empty (a plain run reports the detection rates as no-data). When the pass IS present, the mutation
@@ -158,18 +199,25 @@ def build_scorecard(
 
     **This is the judge-INCLUSIVE scorecard** and requires the artifact to carry judge fields. A
     drafter-only run is scored by `score_drafter` directly (see `referent_injection_score`), not here —
-    a `.get()` default for the missing judge half would score an absent measurement as a present one."""
+    a `.get()` default for the missing judge half would score an absent measurement as a present one.
+
+    **⚠️ The judge half is scored PER FINDING here, declared rather than assumed.** This scorecard is the
+    held-out acceptance artifact — the drafter side is per case and the judge side per drafted finding,
+    which is what its frozen numbers and every gauge fed from them already mean. The paired routing
+    comparison scores the judge per case instead; it collapses with `judge_score.collapse_to_cases` and
+    records its own unit, and the two must not be published on one series."""
     drafter_scoring = score_drafter(_drafted_cases(artifact), technique_match=technique_match)
     injected = artifact.get("injected")
     judge = score_judge(
         _judged_drafts(artifact),
+        unit=CONFUSION_UNIT_FINDING,
         conformance_flip=_injected(artifact, "conformance_flip"),
         sc_swap=_injected(artifact, "sc_swap"),
         rationale_note=_require(injected, "rationale_note", "injected section") if injected is not None else "",
     )
     return OfflineEvalScorecard(
         drafter=drafter_scoring.score,
-        judge=judge,
+        judge=judge.confusion,
         noise_floor=noise_floor,
         tier_b=_tier_b(artifact),
         not_measured=NOT_MEASURED,

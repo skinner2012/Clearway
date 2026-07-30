@@ -818,14 +818,20 @@ rate is reported with its absolute count and interpreted honestly.
 
    **The frozen input record still records no `judge_version` at all, and that stays right** — it is a
    property of the judge, and the two configurations reading those bytes carry the same string only
-   while nothing configuration-specific enters the prompt. **⚠️ But one sentence inside that frozen
-   record is now stale and cannot be repaired**: `pins.no_judge_version_here_and_that_is_deliberate`
-   says the string is *"SCHEDULED TO MOVE — extending the rubric hash … is an open decision"*. It moved.
-   The record's conclusion is unchanged and still correct; only its reason is dated. It is left as it
-   is **on purpose**: the text is written by `judge_finding_input.build_record`, which the freeze test
-   re-derives over the frozen rows, so editing the sentence means rebuilding the file — and rebuilding
-   needs a live scan and a live retrieval, which would replace the very bytes Control 2 exists to
-   freeze. A stale sentence in a dated record is the cheaper error.
+   while nothing configuration-specific enters the prompt. **⚠️ One sentence inside that frozen record
+   went stale and has been repaired**: `pins.no_judge_version_here_and_that_is_deliberate` said the
+   string was *"SCHEDULED TO MOVE — extending the rubric hash … is an open decision"*. It moved, so the
+   reason is rewritten — the string now tracks *more* of the prompt and therefore moves *more* often
+   while these bytes stay put, which strengthens the conclusion rather than settling it.
+   **⚠️ An earlier reading filed this as unrepairable, and that was wrong.** It reasoned that editing the
+   sentence means rebuilding the file, and that rebuilding needs a live scan and a live retrieval which
+   would replace the very bytes Control 2 exists to freeze. The first half is true and the second does
+   not follow: `build_record` is **pure given `rows`** — the freeze test re-derives the whole record
+   from the frozen rows for exactly that reason — so the repair is a re-derivation from the rows already
+   on disk, with **no scan, no retrieval and no model call**. Measured on the rebuild: `pins` and
+   `reproducible_digest` moved and **`rows` is byte-identical**, so every `finding_block` and its sha256
+   are the bytes that were frozen. The record's literal digest moves with it
+   (`8979e1a1…` → `bd12b2c8…`, re-pinned in the test and in the dry receipt's provenance).
 5. **Iterate the rubric on the dev set, never on the frozen set.** The same overfitting risk M7 faced
    with prompts. Freeze, then touch ACT once, and record how many times it was touched. **The drafter's
    cite-nothing-when-clean convention must be in the rubric before that freeze** — see *what code
@@ -1210,9 +1216,18 @@ cases and the power statement gets tighter, not looser**, which is the honest di
 to move.
 
 `threshold()` returns both halves and names the **binding** one, so the written read can say whether a
-result was limited by the evidence or by the judge's own jitter. When no `b` clears α at the realized `n`,
-the verdict is **uncertifiable at that n** — a finding to record, never a reason to loosen α, drop the
-one-sided direction, or re-cut the unit.
+result was limited by the evidence, by the judge's own jitter, or by the count itself.
+
+**⚠️ Either bar can put a result out of reach, and both cases are `required_wins = None`.** `b` cannot
+exceed `n`. The statistical bar is chosen from `range(n + 1)` and so never can; **the floor bar is fixed
+from the same-configuration passes without reference to `n` at all, and under T1's prior it sits above
+the cheapest statistically-attainable counts** — at n = 5 and n = 6 the statistical bar admits a result
+and the combined rule does not. So `smallest_attainable_n` takes the floor as a **required** argument:
+the answer is **7** here, not the 5 the statistical bar alone gives. Below it the verdict is
+**uncertifiable at that n** — a finding to record, and **a different outcome from a bar the evidence
+missed**: reporting a clean sweep of six pairs as "required 7, observed 6" would file an uncertifiable
+comparison as a failed effect. Neither is a reason to loosen α, drop the one-sided direction, or re-cut
+the unit.
 
 - **Settled — zero model calls, and nothing here waits on anything.** Seven pieces:
   - **The confusion path is per case, and the unit rides out with the cells.** `judge_score` gains
@@ -1371,8 +1386,10 @@ one-sided direction, or re-cut the unit.
   already made once.
 - **⚠️ Acceptance:** the sign test is run at the bar `judge_threshold.threshold(n, null_wins=…)` returns,
   and the **binding bar is reported** — a result limited by the judge's own jitter reads differently from
-  one limited by the evidence, and an `n` too small for any `b` to clear α is reported as
-  **uncertifiable at that n**. If injected detection rises while real detection does not, the verdict is
+  one limited by the evidence, and an `n` at which `required_wins` comes back **None** is reported as
+  **uncertifiable at that n**. **⚠️ That covers two cases, not one:** too few pairs for any `b` to clear
+  α, *and* a floor bar above the pairs there are — the second is the likely one under T1's prior, which
+  puts the smallest attainable `n` at **7**. Neither may be written up as a bar the evidence missed. If injected detection rises while real detection does not, the verdict is
   **effective only on clean signal** — success may not be claimed. **The guard is read on anchored
   only**; blind's injected numbers are arithmetic and are not eligible to trip it. Degenerate endpoints
   on the disagreement rate are read in prose.
@@ -1472,9 +1489,12 @@ milestones; the first anchored pass is where the real figure appears, and it is 
 still pins `_DEFAULT_MODEL = "gpt-5.6-luna"`, overridable via `CLEARWAY_JUDGE_MODEL`; the judge module
 is intact and **was not removed**. `judge.py` raises at construction if the judge model equals the
 drafter model, so the "use a different family" half of the standard advice **is already done**.
-`judge_version` is the first 8 hex of the rubric text's sha256 plus reasoning effort, so any **rubric**
+~~`judge_version` is the first 8 hex of the rubric text's sha256 plus reasoning effort, so any **rubric**
 edit is tracked automatically — **and no edit to the user-prompt template is, which T2 established the
-hard way; see Control 4.** `_JudgeVerdict` uses `extra="forbid"`, required for the cloud Responses
+hard way; see Control 4.**~~ — **true at spec time, closed at T3a:** the hash covers the **whole
+prompt** — the system rubric plus the user template rendered over four fixed sentinels — so a
+finding-side edit moves the string too, and the value became `prompt=afadca26; effort=medium`. A
+`rubric=…` value is historical and cannot date the finding-side input it was taken under. `_JudgeVerdict` uses `extra="forbid"`, required for the cloud Responses
 API's strict json-schema mode. ~~`_judge_user_prompt` passes only `finding.rule_id`, `help`, `target`,
 `html`, plus the draft's conformance and cited SCs — **it does not pass `Finding.referent`**, which
 exists post-M7 and which the drafter does use.~~ — **true at spec time, closed at T2:** it passes the

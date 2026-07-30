@@ -300,6 +300,18 @@ def test_the_recorded_cost_says_it_is_a_price_table_rather_than_a_bill() -> None
     assert unpriced["cost_usd"]["n"] == 0
 
 
+def test_the_confounded_correlation_says_it_settles_neither_reading() -> None:
+    """A proxy whose prompt and drafts moved together cannot rule the negative case in or out.
+
+    The guard it looks like it discharges — *a per-case collapse would be costing power* — needs two
+    configurations' judge output over the same drafts, which no artifact carries yet.
+    """
+    block = _frozen()["between_configuration_difference"]
+    assert "confounded" in block
+    assert "DISCHARGES NEITHER" in block["reading"]
+    assert "NOT YET MEASURED" in block["reading"]
+
+
 def test_the_ledger_block_names_the_run_that_paid_and_survives_a_re_derivation() -> None:
     """A block carried across verbatim would keep describing a process that no longer wrote the file.
 
@@ -348,7 +360,7 @@ def test_two_configurations_are_refused_when_their_finding_orders_differ() -> No
 # The frozen record's digest over everything a re-derivation reproduces. Moving it means the
 # measurement moved: re-record it by running the builder (`--rederive` for a computation change, the
 # paid entry point for anything that moves an ask), never by retyping this string.
-_FROZEN_DIGEST = "dfb7acd4a1ff534388ad49727e0bda197b379548e3e71490e5f9614c1ec1efd9"
+_FROZEN_DIGEST = "41473aee75e2a6bc819b89c1611a29cef4776b3eb3ee46669b66ddcdf036f590"
 
 
 def _frozen() -> dict[str, Any]:

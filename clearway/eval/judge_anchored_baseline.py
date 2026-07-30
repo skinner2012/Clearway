@@ -706,7 +706,11 @@ def between_configuration_difference(
         "A positive within-case correlation of the DIFFERENCE means discordant findings arrive "
         "together on the same page, which is what the case collapse is paid to absorb. A materially "
         "negative one would mean the collapse cancels differences against each other and costs power "
-        "rather than buying honesty."
+        "rather than buying honesty. ⚠️ THIS FIGURE DISCHARGES NEITHER READING. It is measured on the "
+        "confounded contrast described above — a different prompt over different drafts — so a "
+        "positive value here is not evidence that the contrast a paired comparison consumes is also "
+        "positive, and the negative case is NOT ruled out but simply NOT YET MEASURED. Only two "
+        "configurations' judge output over these same drafts can settle it."
     )
     return block
 

@@ -618,9 +618,11 @@ milestone actually runs moves **less** than the earlier passes did: 3, 4 and 7 d
 same-configuration pass-pair against the prior's 9, 7 and 8, and a largest one-way movement of **4**
 against the prior's 6. The nearest available real difference — this run against the earlier judged
 passes, where **the prompt and the drafts moved together** and nothing is attributable — carries a
-within-case correlation of **+0.330**, positive, so the case collapse absorbs discordance rather than
-cancelling it. **The contrast the sign test consumes still does not exist**; it needs a second
-configuration's judge output over these same drafts, which is T4's.
+within-case correlation of **+0.330**. **⚠️ That number discharges nothing.** A confounded proxy cannot
+establish the sign of the contrast a paired comparison consumes, so whether the case collapse absorbs
+discordance or cancels it is **not yet measured**, rather than answered. **The contrast the sign test
+consumes still does not exist**; it needs a second configuration's judge output over these same drafts,
+which is T4's, and T4's ticket now asks for it.
 
 **Power is this milestone's chief hope, and it is not yet a fact.**
 
@@ -1461,10 +1463,13 @@ the unit.
     the acceptance builder's own rule.
   - **The between-configuration correlation, as near as it can be had.** This run against the earlier
     judged passes: **11 of 54 findings and 10 of 40 cases route differently, within-case correlation
-    +0.330**. Positive, so the case collapse absorbs discordance rather than cancelling it — the
-    negative result that would have said the collapse costs power did not occur. **⚠️ Confounded and
-    labelled as such in the artifact: the prompt and the drafts moved together**, so it is a real
-    difference attributable to nothing. The contrast the sign test consumes still does not exist.
+    +0.330**. **⚠️ Confounded and labelled as such in the artifact: the prompt and the drafts moved
+    together**, so it is a real difference attributable to nothing. **⚠️ It therefore discharges neither
+    reading of the guard this ticket asks for.** A positive proxy is not evidence that the contrast a
+    paired comparison consumes is positive, so *the case collapse costs power* is **not yet measured**
+    rather than ruled out — an outcome recorded as a gap, not as a result. **The ticket's "measured here,
+    and only here" could not be met**: the real contrast needs two configurations' judge output over
+    these same drafts, and T4's ticket now carries the requirement.
   - **The threshold.** Floor bar **5** from a largest one-way case movement of **4**; smallest attainable
     `n` = **5**. The full table and the correction to T1's prior are under *the threshold rule*.
   - **⚠️ Turned up and not asked for: 54 findings are only 45 distinct asks, and the duplication crosses

@@ -1107,7 +1107,7 @@
       "homogeneous_clusters": 4,
       "distinct_values": 2
     },
-    "reading": "A positive within-case correlation of the DIFFERENCE means discordant findings arrive together on the same page, which is what the case collapse is paid to absorb. A materially negative one would mean the collapse cancels differences against each other and costs power rather than buying honesty."
+    "reading": "A positive within-case correlation of the DIFFERENCE means discordant findings arrive together on the same page, which is what the case collapse is paid to absorb. A materially negative one would mean the collapse cancels differences against each other and costs power rather than buying honesty. ⚠️ THIS FIGURE DISCHARGES NEITHER READING. It is measured on the confounded contrast described above — a different prompt over different drafts — so a positive value here is not evidence that the contrast a paired comparison consumes is also positive, and the negative case is NOT ruled out but simply NOT YET MEASURED. Only two configurations' judge output over these same drafts can settle it."
   },
   "cost": {
     "transport_calls": 441,
@@ -9998,5 +9998,5 @@
       "latency_ms": 2563.368208007887
     }
   ],
-  "reproducible_digest": "dfb7acd4a1ff534388ad49727e0bda197b379548e3e71490e5f9614c1ec1efd9"
+  "reproducible_digest": "41473aee75e2a6bc819b89c1611a29cef4776b3eb3ee46669b66ddcdf036f590"
 }

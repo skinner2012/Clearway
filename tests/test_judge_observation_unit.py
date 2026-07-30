@@ -32,6 +32,7 @@ from clearway.eval.judge_observation_unit import (
     assert_same_clusters,
     build_record,
     drafter_streams,
+    fixture_duplication_profile,
     judge_routing_streams,
     majority_stream,
     manifest_rows,
@@ -199,6 +200,28 @@ def test_a_case_outside_the_manifest_is_refused_rather_than_skipped() -> None:
     case = replace(minting_cases(_load(_REPLAY))[0], act_testcase_id="0" * 40)
     with pytest.raises(DegenerateClustering, match="not in the gold manifest"):
         assert_distinct_case_bytes([case])
+
+
+def test_byte_duplication_is_routine_in_this_corpus_not_a_one_off() -> None:
+    """The scale that makes the distinctness check structural. A third of the vendored fixtures sit in a
+    duplicate pair, every pair is one link rule against its sibling on the same page, and NO pair keeps
+    two manifest rows — which is the only thing that would threaten the clusters."""
+    profile = fixture_duplication_profile()
+    assert (profile["fixture_files"], profile["distinct_digests"]) == (67, 55)
+    assert profile["duplicate_groups"] == 12
+    assert profile["files_in_a_duplicate_group"] == 24
+    assert profile["largest_duplicate_group"] == 2
+    assert profile["duplicate_groups_spanning_one_rule"] == 0
+    assert profile["duplicate_groups_by_rule_pair"] == {"Link in context is descriptive + Link is descriptive": 12}
+    assert profile["duplicate_groups_by_manifest_rows_retained"] == {"0": 3, "1": 9}
+    assert profile["duplicate_groups_with_differing_outcomes"] == 2
+
+
+def test_no_two_rows_of_the_gold_share_bytes() -> None:
+    """The reassuring half, and the one that actually carries the claim: duplication in the tree cannot
+    reach the clusters unless two MANIFEST ROWS collide, and none do."""
+    checked = assert_distinct_case_bytes(minting_cases(_load(_REPLAY)))
+    assert checked["manifest_rows"] == checked["distinct_digests_among_manifest_rows"] == 44
 
 
 def test_the_hazard_the_twin_helper_cannot_see_is_live_in_this_tree() -> None:

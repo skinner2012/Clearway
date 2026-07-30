@@ -65,8 +65,27 @@
     "one_cluster_is_one_page": {
       "cases_hashed": 40,
       "distinct_fixture_digests": 40,
+      "manifest_rows": 44,
+      "distinct_digests_among_manifest_rows": 44,
       "source": "sha256 over each case's own vendored fixture file",
-      "note": "Checked directly rather than inferred from the contradictory-twin helper, which only surfaces byte-identical groups carrying DIFFERENT gold outcomes — a same-gold twin would not appear in it, so its emptiness is not evidence for this claim."
+      "corpus_duplication": {
+        "fixture_files": 67,
+        "distinct_digests": 55,
+        "duplicate_groups": 12,
+        "files_in_a_duplicate_group": 24,
+        "largest_duplicate_group": 2,
+        "duplicate_groups_by_rule_pair": {
+          "Link in context is descriptive + Link is descriptive": 12
+        },
+        "duplicate_groups_spanning_one_rule": 0,
+        "duplicate_groups_by_manifest_rows_retained": {
+          "0": 3,
+          "1": 9
+        },
+        "duplicate_groups_with_differing_outcomes": 2,
+        "note": "Byte-duplication is COMMON in this corpus, not a one-off, and every group is one link rule against its sibling on the same page. The contradictory-twin helper sees none of it because it looks only at manifest rows — and the AAA-only link rule is out of scope, so no group retains two rows — and because it then keeps only groups whose ACT outcomes differ. That is why the distinctness of the clusters is hashed here rather than inferred from that helper."
+      },
+      "note": "Checked directly rather than inferred from the contradictory-twin helper, which only surfaces byte-identical groups carrying DIFFERENT gold outcomes — a same-gold twin would not appear in it, so its emptiness is not evidence for this claim. The reassuring half is `distinct_digests_among_manifest_rows`: no two rows of the gold share bytes, which is what would actually threaten the clusters' distinctness. `corpus_duplication` is the unreassuring half — the tree itself is full of duplicate pages."
     },
     "per_class": [
       {

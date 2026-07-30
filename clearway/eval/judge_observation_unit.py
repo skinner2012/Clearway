@@ -342,6 +342,55 @@ def manifest_rows(artifact: dict[str, Any]) -> int:
     return sum(len(group) for group in _grouped(artifact).values())
 
 
+def fixture_duplication_profile() -> dict[str, Any]:
+    """How much byte-duplication the vendored corpus contains, and the shape of it.
+
+    Recorded so the distinctness check above reads as **structural rather than incidental**: the tree
+    routinely holds the same page twice. Every duplicate pair is one ACT rule against its sibling — a
+    link rule and its sibling assign their own outcome to the same fixture — which is also why the
+    contradictory-twin helper never surfaces any of it. Two filters remove it from that helper's view:
+    it iterates only manifest rows, and the AAA-only link rule is outside the gold's scope, so one side
+    of each pair is not a row at all; and it then keeps only groups whose outcomes *differ*.
+
+    Pure: hashes files and reads the vendored export. No manifest membership is assumed — the counts
+    are over the tree, and the manifest-side count is reported separately because that is the one that
+    could actually threaten the clusters' distinctness.
+    """
+    export = json.loads((_ACT_GOLD / "testcases.json").read_text())
+    rule_of = {t["testcaseId"]: t["ruleName"] for t in export["testcases"]}
+    outcome_of = {t["testcaseId"]: t["expected"] for t in export["testcases"]}
+    manifest = json.loads(_MANIFEST.read_text())
+    rows = {c["act_testcase_id"] for c in [*manifest["cases"], *manifest["honest_misses"]]}
+
+    groups: dict[str, list[str]] = {}
+    for path in sorted((_ACT_GOLD / "html").glob("*.html")):
+        groups.setdefault(hashlib.sha256(path.read_bytes()).hexdigest(), []).append(path.stem)
+    duplicated = [ids for ids in groups.values() if len(ids) > 1]
+    rule_pairs = Counter(" + ".join(sorted({rule_of.get(i, "?") for i in ids})) for ids in duplicated)
+    return {
+        "fixture_files": sum(len(ids) for ids in groups.values()),
+        "distinct_digests": len(groups),
+        "duplicate_groups": len(duplicated),
+        "files_in_a_duplicate_group": sum(len(ids) for ids in duplicated),
+        "largest_duplicate_group": max((len(ids) for ids in duplicated), default=0),
+        "duplicate_groups_by_rule_pair": dict(rule_pairs),
+        "duplicate_groups_spanning_one_rule": sum(1 for ids in duplicated if len({rule_of.get(i) for i in ids}) == 1),
+        "duplicate_groups_by_manifest_rows_retained": {
+            str(k): v for k, v in sorted(Counter(sum(1 for i in ids if i in rows) for ids in duplicated).items())
+        },
+        "duplicate_groups_with_differing_outcomes": sum(
+            1 for ids in duplicated if len({outcome_of.get(i) for i in ids}) > 1
+        ),
+        "note": (
+            "Byte-duplication is COMMON in this corpus, not a one-off, and every group is one link rule "
+            "against its sibling on the same page. The contradictory-twin helper sees none of it because "
+            "it looks only at manifest rows — and the AAA-only link rule is out of scope, so no group "
+            "retains two rows — and because it then keeps only groups whose ACT outcomes differ. That is "
+            "why the distinctness of the clusters is hashed here rather than inferred from that helper."
+        ),
+    }
+
+
 def assert_distinct_case_bytes(cases: Sequence[DraftedCase]) -> dict[str, Any]:
     """One cluster is one page: refuse if any two of these cases' fixture files share bytes.
 
@@ -350,6 +399,11 @@ def assert_distinct_case_bytes(cases: Sequence[DraftedCase]) -> dict[str, Any]:
     outcomes *differ* — a same-gold twin is invisible to it — so its emptiness cannot support this
     claim at all, however true the claim happens to be. Two clusters over one page would be two
     clusters with perfectly correlated input, which is the thing the whole unit argument turns on.
+
+    **And the thing it guards against is something the corpus routinely contains** — see
+    `fixture_duplication_profile`, which counts the duplication over the whole vendored tree. What
+    keeps the clusters distinct is not scarcity of duplicates but which side of each pair the scope
+    admitted.
 
     Raises rather than reporting, so a future scope change that admits a twin fails here instead of
     quietly weakening a pin nobody re-reads.
@@ -373,14 +427,21 @@ def assert_distinct_case_bytes(cases: Sequence[DraftedCase]) -> dict[str, Any]:
             "over one page carry perfectly correlated input, and the observation unit was pinned on the "
             "premise that a cluster is a page. Re-derive the unit before proceeding."
         )
+    manifest_digests = {hashlib.sha256((_ACT_GOLD / path).read_bytes()).hexdigest() for path in sorted(paths.values())}
     return {
         "cases_hashed": len(cases),
         "distinct_fixture_digests": len(digests),
+        "manifest_rows": len(paths),
+        "distinct_digests_among_manifest_rows": len(manifest_digests),
         "source": "sha256 over each case's own vendored fixture file",
+        "corpus_duplication": fixture_duplication_profile(),
         "note": (
             "Checked directly rather than inferred from the contradictory-twin helper, which only "
             "surfaces byte-identical groups carrying DIFFERENT gold outcomes — a same-gold twin would "
-            "not appear in it, so its emptiness is not evidence for this claim."
+            "not appear in it, so its emptiness is not evidence for this claim. The reassuring half is "
+            "`distinct_digests_among_manifest_rows`: no two rows of the gold share bytes, which is what "
+            "would actually threaten the clusters' distinctness. `corpus_duplication` is the unreassuring "
+            "half — the tree itself is full of duplicate pages."
         ),
     }
 

@@ -3,7 +3,8 @@
 Offline and model-free. The record itself cannot be rebuilt here — building it needs a live scan and
 live retrieval — so these tests do the two things a reader of the file needs done for it:
 
-* **the file is the file it says it is** — its own digest, and every block against its own hash;
+* **the file is the file it says it is** — a literal digest, a full re-derivation of every field the
+  builder computes from the frozen rows, and every block against its own hash;
 * **the finding side is byte-identical across the two configurations, asserted against the file** —
   the configuration that grades a draft sends these bytes plus a draft presentation, the configuration
   that never sees the draft sends these bytes alone, and no second rendering is involved in either.
@@ -28,6 +29,7 @@ from clearway.eval.judge_finding_input import (
     _row,
     assert_matches_replay_pass,
     assert_single_bucket,
+    build_record,
     drafted_citations_inside_the_candidates,
     gold_sc_reachability,
     load_record,
@@ -100,9 +102,43 @@ def replay() -> dict[str, Any]:
 # --- the file is what it says it is -------------------------------------------------------------
 
 
+# The frozen record's digest, as a literal — layer 1 of the freeze.
+#
+# ⚠️ Self-consistency is not a freeze: `record_digest` is computed from the file's own bytes, so any
+# edit that also recomputes the digest passes that check. This literal is what makes a wholesale
+# rewrite fail. It moves only when a deliberate rebuild moves it, and a rebuild needs the live scanner
+# and the live embedder — so a failure here means either the input genuinely changed (in which case the
+# blocks any judge configuration would send have changed, and nothing measured under the old ones
+# describes the new ones) or the file was edited by hand.
+_FROZEN_DIGEST = "8979e1a1638f07aa9aa804f0d268a72f60e3b4b20a2ed0c0d1ea0442384b62f3"
+
+
 def test_the_record_reproduces_its_own_digest(record: dict[str, Any]) -> None:
-    """The freeze check. A rebuild needs live services, so the digest is what stands in for one."""
+    """Layer 3's arithmetic: the digest matches the content it is computed over."""
     assert record_digest(record) == record["reproducible_digest"]
+
+
+def test_the_digest_is_pinned_to_a_literal(record: dict[str, Any]) -> None:
+    """Layer 1: without this, a rewrite that recomputes its own digest is indistinguishable from a build."""
+    assert record["reproducible_digest"] == _FROZEN_DIGEST
+
+
+def test_every_derived_field_re_derives_from_the_frozen_rows(record: dict[str, Any]) -> None:
+    """Layer 2, and it is the one with reach: rebuild the WHOLE record from the frozen rows.
+
+    `build_record` is pure given `rows`, so everything the file carries beyond the rows themselves — the
+    corroboration arithmetic, the citation ranks, the gold-reachability counts, `per_class`, the parity
+    block, every line of provenance prose — is re-derived here and compared against what is on disk. The
+    live scan and the live retrieval that produced the rows are the only things this cannot check, which
+    is why the rows are also hashed individually.
+    """
+    rebuilt = build_record(
+        rows=record["rows"],
+        replay_path=_REPLAY,
+        corpus_version=record["pins"]["corpus_version"],
+    )
+    assert rebuilt == record, "a derived field on disk is not what the builder produces from these rows"
+    assert rebuilt["reproducible_digest"] == _FROZEN_DIGEST
 
 
 def test_every_block_matches_the_digest_recorded_beside_it(record: dict[str, Any]) -> None:

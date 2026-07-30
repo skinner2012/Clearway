@@ -37,10 +37,21 @@ comparison this milestone tests: the two configurations demonstrably read the sa
 Freeze convention
 -----------------
 `created_at` is READ off the replay pass rather than generated, so the record is a deterministic
-function of its sources and a rebuild on the same corpus and fixtures is byte-identical. Because that
-rebuild needs live services, no test can perform it — so the record also carries a
-`reproducible_digest` over itself, and the test pins that digest and re-checks every block against
-its own hash.
+function of its sources and a rebuild on the same corpus and fixtures is byte-identical (verified: the
+committed file was reproduced by a second live build).
+
+A test cannot perform that rebuild — it needs a browser and a database — so the freeze is pinned in
+three layers, each covering what the one before it cannot:
+
+1. **a literal digest** in the test, so a wholesale rewrite that recomputes its own digest still fails;
+2. **`build_record` re-run over the frozen rows**, which is possible because that function is pure
+   given `rows` — so every derived field (the corroboration arithmetic, the ranks, the adequacy counts,
+   `per_class`, all the provenance prose) is re-derived and compared against the file, and the only
+   things outside the check are the live scan and the live retrieval that produced the rows;
+3. **every block against its own recorded sha256**, which `load_record` enforces on each read.
+
+`reproducible_digest` on its own proves nothing — it is computed from the file's own bytes — which is
+exactly why layers 1 and 2 exist beside it.
 
 Judge calls: **zero**. The scanner and the embedder are live; the judge is not called here at all, and
 no judge object is even constructed — `judge_version` is deliberately not recorded (see `pins`).

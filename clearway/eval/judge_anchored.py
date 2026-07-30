@@ -76,6 +76,15 @@ CONFORMANCE_FLIP = "conformance_flip"
 # declared vocabulary rather than to strings spelled at three call sites.
 MUTATIONS: tuple[str, ...] = (NATURAL, SC_SWAP, CONFORMANCE_FLIP)
 
+# Which of the judge's two booleans can detect each mutation — **the mutation is only visible on the
+# axis it moved.** An SC swap edits the CITATION and leaves the verdict exactly as drafted, so
+# `conformance_correct` says nothing whatever about it: reading that axis would report how often the
+# judge disputed an untouched verdict and publish the answer as citation-catching. A conformance flip
+# is the mirror image. Keyed here rather than spelled at the call site, and taken from the acceptance
+# builder's own rule (`offline_build`: `not swapped.citation_correct`, `not flipped.conformance_correct`)
+# so the two paths cannot answer the same question differently.
+DETECTION_AXIS: dict[str, str] = {SC_SWAP: "citation_correct", CONFORMANCE_FLIP: "conformance_correct"}
+
 # ACT's gold outcome for a case that genuinely fails its rule.
 _GOLD_FAILED = "failed"
 
@@ -188,12 +197,18 @@ def injected_results(
     ⚠️ Per mutated DRAFT, and it stays there whatever unit the confusion is on: a mutation is applied to
     a draft, not to a case, so collapsing these would need an aggregation rule for a quantity that is not
     a routing decision.
+
+    ⚠️ Read on the mutation's OWN axis — see `DETECTION_AXIS`. The two mutations move different fields,
+    and a detection rate taken off the other field is a well-formed number describing nothing.
     """
+    if mutation not in DETECTION_AXIS:
+        raise ValueError(f"{mutation!r} has no detection axis — only a mutated draft can be caught or missed")
+    axis = DETECTION_AXIS[mutation]
     mutated = [a for a in asks if a.mutation == mutation]
     if not mutated:
         return []
     per_pass = [
-        [[_by_key(asks, results)[(a.finding_id, mutation)].conformance_correct] for a in mutated] for results in passes
+        [[getattr(_by_key(asks, results)[(a.finding_id, mutation)], axis)] for a in mutated] for results in passes
     ]
     winners = majority_stream(per_pass)
     return [

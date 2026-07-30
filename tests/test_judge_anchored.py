@@ -16,6 +16,7 @@ import pytest
 
 from clearway.eval.judge_anchored import (
     CONFORMANCE_FLIP,
+    DETECTION_AXIS,
     NATURAL,
     SC_SWAP,
     STUB_DISCLAIMER,
@@ -23,6 +24,7 @@ from clearway.eval.judge_anchored import (
     anchored_asks,
     draft_row,
     dry_run,
+    injected_results,
     judged_cases_from,
     report_path,
     run_pass,
@@ -31,8 +33,8 @@ from clearway.eval.judge_anchored import (
 from clearway.eval.judge_finding_input import load_record, prepared_inputs
 from clearway.eval.judge_preflight import conformance_correct
 from clearway.eval.stats import is_flag
-from clearway.judge import FindingInput, Judge
-from clearway.schemas.models import Conformance
+from clearway.judge import FindingInput, Judge, verdict_from
+from clearway.schemas.models import Conformance, JudgeResult
 
 _REPO = Path(__file__).resolve().parent.parent
 _REPLAY = _REPO / "benchmark" / "runs" / "citation_grounding_run_1.json"
@@ -139,6 +141,47 @@ def test_scoring_records_the_unit_at_both_denominators() -> None:
     for scored in (scoring.per_case, scoring.per_finding):
         assert scored.confusion.injected_conformance_flip.n == flip_n
         assert scored.confusion.injected_sc_swap.n == swap_n
+
+
+def test_each_mutation_is_detected_on_the_axis_it_moved() -> None:
+    """An SC swap edits the citation and leaves the verdict alone, so only the citation axis sees it.
+
+    Pinned against the acceptance builder's own rule rather than restated: that path records
+    `caught = not swapped.citation_correct` and `caught = not flipped.conformance_correct`, and two
+    paths answering the same question off different fields is how a detection rate comes to describe
+    something nobody asked about.
+    """
+    builder = (_REPO / "clearway" / "eval" / "offline_build.py").read_text()
+    assert '"caught": not swapped.citation_correct' in builder
+    assert '"caught": not flipped.conformance_correct' in builder
+    assert DETECTION_AXIS == {SC_SWAP: "citation_correct", CONFORMANCE_FLIP: "conformance_correct"}
+
+    artifact = _artifact()
+    asks = anchored_asks(artifact)
+    # one pass in which the judge disputes every citation and endorses every verdict: the swap is
+    # caught everywhere, the flip nowhere.
+    disputes_citation = [
+        JudgeResult(
+            finding_id=a.finding_id,
+            run_id="r",
+            judge_model="m",
+            judge_version="v",
+            verdict=verdict_from(False, True),
+            citation_correct=False,
+            conformance_correct=True,
+            rationale="",
+        )
+        for a in asks
+    ]
+    swaps = injected_results(asks, [disputes_citation], SC_SWAP)
+    flips = injected_results(asks, [disputes_citation], CONFORMANCE_FLIP)
+    assert swaps and all(r.caught for r in swaps)
+    assert flips and not any(r.caught for r in flips)
+
+
+def test_a_natural_draft_has_no_detection_axis_because_it_is_not_a_mutation() -> None:
+    with pytest.raises(ValueError, match="no detection axis"):
+        injected_results(anchored_asks(_artifact()), [[]], NATURAL)
 
 
 def test_a_frozen_draft_record_round_trips_into_the_row_the_judge_is_shown() -> None:

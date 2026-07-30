@@ -300,6 +300,29 @@ def test_the_recorded_cost_says_it_is_a_price_table_rather_than_a_bill() -> None
     assert unpriced["cost_usd"]["n"] == 0
 
 
+def test_the_ledger_block_names_the_run_that_paid_and_survives_a_re_derivation() -> None:
+    """A block carried across verbatim would keep describing a process that no longer wrote the file.
+
+    `--rederive` makes no call at all, so a count named for "this process" is false the moment it runs;
+    the block is reassembled from the two integers instead, which also keeps its own note current.
+    """
+    from clearway.eval.judge_anchored_baseline import PAID_CALLS, REPLAYED_CALLS, ledger_block
+
+    block = ledger_block(paid=441, replayed=0)
+    assert block[PAID_CALLS] == 441
+    assert block[REPLAYED_CALLS] == 0
+    assert "this process" not in block["note"]
+    assert "BOUGHT" in block["note"]
+    # the frozen record carries the same shape, and re-derivation regenerates rather than copies it
+    frozen = _frozen()
+    assert set(frozen["ledger"]) == set(block)
+    assert rederive_frozen_record()["ledger"] == frozen["ledger"]
+    # a hand-edited note is caught even though `ledger` sits outside the digest
+    tampered = {**frozen, "ledger": {**frozen["ledger"], "note": "nothing to see"}}
+    assert record_digest(tampered) == frozen["reproducible_digest"]
+    assert rederive_frozen_record()["ledger"] != tampered["ledger"]
+
+
 def test_two_configurations_are_refused_when_their_finding_orders_differ() -> None:
     """The earlier passes are ordered by the scoped cluster map and this run by the artifact's cases.
 

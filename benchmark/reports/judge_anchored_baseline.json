@@ -1152,9 +1152,9 @@
   },
   "ledger": {
     "path": "judge_anchored_baseline.partial.jsonl",
-    "calls_made_in_this_process": 441,
-    "calls_replayed_from_the_ledger": 0,
-    "note": "A run resumed from the ledger spends only what the ledger had not reached. `calls_made_in_this_process` is therefore this invocation's spend, not the measurement's — the measurement's is `cost.transport_calls`, itself a floor."
+    "calls_that_bought_these_responses": 441,
+    "calls_replayed_from_an_earlier_attempt": 0,
+    "note": "⚠️ Both counts describe the invocation that BOUGHT the responses in this record, and neither ever describes the process that last wrote the file: a re-derivation (`--rederive`) recomputes every field from those same responses, makes no call at all, and reproduces these two unchanged. A run resumed from the ledger spends only what the ledger had not reached, so the two split the measurement between paid and replayed and their sum is `cost.transport_calls` — itself a floor."
   },
   "pass_results": [
     {

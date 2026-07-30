@@ -903,6 +903,33 @@ def report_path() -> Path:
     return _REPORTS_DIR / "judge_anchored_baseline.json"
 
 
+PAID_CALLS = "calls_that_bought_these_responses"
+REPLAYED_CALLS = "calls_replayed_from_an_earlier_attempt"
+
+
+def ledger_block(*, paid: int, replayed: int) -> dict[str, Any]:
+    """How the responses in this record were obtained — assembled here, never carried through verbatim.
+
+    ⚠️ **Both counts describe the invocation that BOUGHT the responses, not the process that last wrote
+    the file.** A re-derivation recomputes every field from those same responses and makes no call, so a
+    block copied across unchanged would eventually describe a run nobody made. It is rebuilt from the
+    two integers instead, which is also what keeps this note true when the note itself is edited.
+    """
+    return {
+        "path": ledger_path().name,
+        PAID_CALLS: paid,
+        REPLAYED_CALLS: replayed,
+        "note": (
+            "⚠️ Both counts describe the invocation that BOUGHT the responses in this record, and "
+            "neither ever describes the process that last wrote the file: a re-derivation "
+            "(`--rederive`) recomputes every field from those same responses, makes no call at all, "
+            "and reproduces these two unchanged. A run resumed from the ledger spends only what the "
+            "ledger had not reached, so the two split the measurement between paid and replayed and "
+            "their sum is `cost.transport_calls` — itself a floor."
+        ),
+    }
+
+
 def ledger_path() -> Path:
     """The append-only call ledger — transient working state, deliberately outside `reports/`.
 
@@ -965,16 +992,7 @@ def live_run(passes: int = 3) -> dict[str, Any]:
         judged_paths=acceptance_pass_paths(),
         created_at=datetime.now(UTC).isoformat(),
         wall_clock_seconds=time.perf_counter() - started,
-        ledger={
-            "path": ledger_path().name,
-            "calls_made_in_this_process": spent,
-            "calls_replayed_from_the_ledger": replayed,
-            "note": (
-                "A run resumed from the ledger spends only what the ledger had not reached. "
-                "`calls_made_in_this_process` is therefore this invocation's spend, not the "
-                "measurement's — the measurement's is `cost.transport_calls`, itself a floor."
-            ),
-        },
+        ledger=ledger_block(paid=spent, replayed=replayed),
     )
 
 
@@ -983,9 +1001,11 @@ def rederive_frozen_record() -> dict[str, Any]:
 
     Every derived field in the record is a function of the judge's frozen responses, so a change to
     how something is *computed* must never be a reason to buy the responses again. Three facts are not
-    derivable and are carried through from the file rather than re-observed: when the calls were made,
-    how long they took, and what this process spent — re-observing them would date a re-computation as
-    if it were the measurement.
+    derivable and are read back from the file rather than re-observed: when the calls were made, how
+    long they took, and how many of them were paid for — re-observing them would date a re-computation
+    as if it were the measurement. **⚠️ The last of those is read as two integers and its block is
+    reassembled**, never copied across: a block carried through verbatim keeps whatever it said about
+    the process that produced it, and after a re-derivation that is no longer this one.
 
     It is also what the freeze rests on: the same function the test re-derives the file with, so a
     record edited by hand and a record rebuilt by its own builder are distinguishable.
@@ -1005,7 +1025,7 @@ def rederive_frozen_record() -> dict[str, Any]:
         judged_paths=acceptance_pass_paths(),
         created_at=frozen["created_at"],
         wall_clock_seconds=frozen["wall_clock_seconds"],
-        ledger=frozen["ledger"],
+        ledger=ledger_block(paid=frozen["ledger"][PAID_CALLS], replayed=frozen["ledger"][REPLAYED_CALLS]),
     )
 
 

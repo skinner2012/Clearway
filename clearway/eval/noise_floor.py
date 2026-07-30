@@ -14,6 +14,14 @@ Two honesty refinements the spec demands are built in:
     PAIRED comparison on the same cases (McNemar), and the two harms stay separate: TP→miss flips and
     TN→FP flips are counted PER STRATUM, never pooled (pooling lets a fix in one cancel a regression in
     the other). A real A/B change must exceed this same-config discordance, not zero.
+
+⚠️ Two units live in this module and neither figure names its own
+------------------------------------------------------------------
+`per_metric_sd` carries `judge_kappa` and `judge_miss_rate` lifted straight off the scorecard, and those
+are per drafted FINDING. `case_outcomes` — and therefore the paired discordance note — is per ACT CASE,
+over the DRAFTER's case stream, which carries the non-minting rows the judge can never hold. So the
+judge's spread and the paired floor beside it are counted on different denominators, and neither may be
+substituted for the other: a threshold for a test scored per case has to be measured per case.
 """
 
 from __future__ import annotations
@@ -33,7 +41,10 @@ _HEADLINE = ("recall", "false_positive_rate")
 
 def run_headline_metrics(run: dict[str, Any]) -> dict[str, float]:
     """The scalar metrics of one run, via the same scorer the report uses — so the variance is over the
-    exact headline numbers, never a re-derivation that could drift from them."""
+    exact headline numbers, never a re-derivation that could drift from them.
+
+    The two drafter rates are per ACT case and the two judge figures are per drafted FINDING, inherited
+    from the scorecard each is lifted off. The dict cannot say so, which is why the callers print it."""
     sc = build_report(run).scorecard
     return {
         "recall": sc.drafter.recall.value,
@@ -45,7 +56,11 @@ def run_headline_metrics(run: dict[str, Any]) -> dict[str, float]:
 
 def case_outcomes(run: dict[str, Any]) -> dict[str, tuple[str, bool]]:
     """Per-case `(expected, flagged)` — flag-if-any over the case's drafts, honest-misses flagged=False.
-    The unit the paired McNemar discordance is counted on."""
+    The unit the paired McNemar discordance is counted on.
+
+    ⚠️ This is the DRAFTER's case stream: the honest-misses are in it, so its denominator is larger than
+    the judge-visible one. A judge-side floor counted here would be counted over rows the judge was never
+    shown."""
     outcomes: dict[str, tuple[str, bool]] = {}
     for c in run["cases"]:
         flagged = any(is_flag(Conformance(d["conformance"])) for d in c["drafts"])

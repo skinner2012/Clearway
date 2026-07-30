@@ -10,6 +10,10 @@ fails loud if a future sweep ever breaks that (a drifted drafter must not be sil
 The judge is the noisy component; its run_1 numbers are frozen as-is and the embedded noise floor
 discloses their run-to-run SD, rather than inventing an averaging the schema does not model.
 
+⚠️ The two subjects are frozen on DIFFERENT units and the artifact cannot say so: the drafter's rates are
+per ACT case and the judge's confusion is per drafted finding. The summary prints the judge's unit for
+that reason; the paired routing comparison scores the judge per case and publishes under its own names.
+
 Pure and offline: it replays the frozen run artifacts + the frozen noise floor into the report, never
 re-invoking a model. Invoke: `uv run python -m clearway.eval.offline_freeze`.
 """
@@ -20,6 +24,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from clearway.eval.judge_score import CONFUSION_UNIT_FINDING as _JUDGE_UNIT
 from clearway.eval.offline import build_report
 from clearway.eval.offline_build import _REPORTS_DIR, _RUNS_DIR
 from clearway.schemas.models import NoiseFloor, OfflineEvalReport
@@ -72,7 +77,7 @@ def main() -> None:
     recall, fp = d.recall, d.false_positive_rate
     print(f"froze {len(runs)} run(s) → {_SCORECARD.relative_to(Path.cwd())}")
     print(f"drafter: recall {recall.value:.3f} (n={recall.n}), FP {fp.value:.3f} (n={fp.n})")
-    print(f"judge:   κ {j.kappa:.3f}, miss {j.miss_rate.value:.3f} (n={j.miss_rate.n})")
+    print(f"judge:   κ {j.kappa:.3f}, miss {j.miss_rate.value:.3f} (n={j.miss_rate.n}) [per {_JUDGE_UNIT}]")
     if nf is not None:
         print(f"noise floor: MDI {nf.min_detectable_improvement:.3f} pp, dominant source {nf.dominant_source}")
 

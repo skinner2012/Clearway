@@ -59,7 +59,10 @@ def main() -> None:
     print("\nper-run headline metrics:")
     for i, r in enumerate(runs, start=1):
         m = run_headline_metrics(r)
-        print(f"  run {i}: recall {m['recall']:.3f}  FP {m['false_positive_rate']:.3f}  judge κ {m['judge_kappa']:.3f}")
+        print(
+            f"  run {i}: recall {m['recall']:.3f} [per case]  FP {m['false_positive_rate']:.3f} [per case]"
+            f"  judge κ {m['judge_kappa']:.3f} [per finding]"
+        )
 
     floor = build_noise_floor(runs)
     _NOISE_FLOOR.write_text(floor.model_dump_json(indent=2) + "\n")

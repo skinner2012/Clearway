@@ -1149,7 +1149,7 @@
     {
       "id": 38,
       "type": "stat",
-      "title": "judge κ (vs W3C gold)",
+      "title": "judge κ (vs W3C gold · per finding)",
       "description": "Judge-vs-ACT-gold Cohen's κ on independent W3C expert gold — harder and more independent than M4's self-built-gold κ. Unstable run-to-run (see the κ SD panel), so read a single value with that jitter.",
       "gridPos": {
         "h": 6,
@@ -1211,7 +1211,7 @@
     {
       "id": 39,
       "type": "stat",
-      "title": "miss rate — DANGEROUS",
+      "title": "miss rate — DANGEROUS (per finding)",
       "description": "Judge passed a wrong draft: a bad draft rubber-stamped 'verified' reaches the specialist. The dangerous half of the confusion — never merged with the false-alarm half. CI-exempt (too few naturally-wrong drafts); the injected-flip detection is the trustworthy upper bound.",
       "gridPos": {
         "h": 6,
@@ -1273,7 +1273,7 @@
     {
       "id": 40,
       "type": "stat",
-      "title": "false-alarm — annoying",
+      "title": "false-alarm — annoying (per finding)",
       "description": "Judge blocked a correct draft: the merely-annoying half (the specialist will notice it was fine).",
       "gridPos": {
         "h": 6,
@@ -1335,7 +1335,7 @@
     {
       "id": 41,
       "type": "stat",
-      "title": "injected flip detection ↑bound",
+      "title": "injected flip detection ↑bound (per mutated draft)",
       "description": "Detection on conformance-flipped injected drafts — an UPPER BOUND on real miss-catching (controlled errors, not natural ones). Compare against the natural miss rate to see the gap.",
       "gridPos": {
         "h": 6,
@@ -1393,7 +1393,7 @@
     {
       "id": 42,
       "type": "stat",
-      "title": "injected swap detection ↑bound",
+      "title": "injected swap detection ↑bound (per mutated draft · list-answerable)",
       "description": "Detection on SC-swapped injected drafts — citation-catching only, a secondary axis; also an upper bound.",
       "gridPos": {
         "h": 6,
@@ -1509,7 +1509,7 @@
     {
       "id": 44,
       "type": "stat",
-      "title": "judge κ SD (run-to-run)",
+      "title": "judge κ SD (run-to-run · per finding)",
       "description": "Judge κ standard deviation across the repeat runs. The judge is not just low-agreement but run-to-run UNSTABLE (κ swung negative across runs) — single-run judge numbers must be read with this jitter.",
       "gridPos": {
         "h": 6,
@@ -1580,7 +1580,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "**Frozen regression baseline** — the yardstick every later change is measured against.\n\n- **Nothing here is scored by an LLM.** Every number is a deterministic comparison against W3C ACT expert gold. The judge is a *subject*, not the ruler.\n- **FP-rate is the headline** — flagging clean content inverts the product's value.\n- **CIs are asymmetric Wilson.** Cases cluster in ~5 rules → *effective n ≈ #rules*; the intervals understate the true width. The verdict is *works / broken*, not a fine number.\n- **Drafter deterministic (SD 0); judge unstable** (κ SD ≈ 0.16). Trust the drafter numbers as rock-solid; average the judge over runs.\n- **Tier B (n=2) is an illustrative smoke test** — it is NOT charted here and enters no headline number."
+        "content": "**Frozen regression baseline** — the yardstick every later change is measured against.\n\n- **Nothing here is scored by an LLM.** Every number is a deterministic comparison against W3C ACT expert gold. The judge is a *subject*, not the ruler.\n- **FP-rate is the headline** — flagging clean content inverts the product's value.\n- **CIs are asymmetric Wilson.** Cases cluster in ~5 rules → *effective n ≈ #rules*; the intervals understate the true width. The verdict is *works / broken*, not a fine number.\n- **Drafter deterministic (SD 0); judge unstable** (κ SD ≈ 0.16). Trust the drafter numbers as rock-solid; average the judge over runs.\n- **Tier B (n=2) is an illustrative smoke test** — it is NOT charted here and enters no headline number.\n- **The two subjects are on different units, and no metric name says so.** The drafter's rates are per ACT **case**; the judge's confusion (κ, miss rate, false-alarm) is per drafted **finding**, and the injected-detection bounds are per **mutated draft**. Panel titles carry the unit because the series names cannot. A judge confusion tallied per case publishes under its own `benchmark_judge_per_case_*` names and never re-scales these — the swap bound also became answerable by candidate-list membership once the judge started seeing the retrieved list, so it carries less about the judge than it used to."
       }
     },
     {

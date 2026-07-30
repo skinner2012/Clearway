@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from clearway.eval.judge_score import CONFUSION_UNIT_FINDING
 from clearway.schemas.models import OfflineEvalReport
 
 _SCORECARD = Path(__file__).resolve().parents[2] / "benchmark" / "reports" / "scorecard.json"
@@ -32,7 +33,7 @@ def _print_summary(report: OfflineEvalReport) -> None:
     )
     print(
         f"  judge:   κ {j.kappa:.3f}, miss {j.miss_rate.value:.3f} (n={j.miss_rate.n}), "
-        f"false-alarm {j.false_alarm_rate.value:.3f}"
+        f"false-alarm {j.false_alarm_rate.value:.3f}  [per {CONFUSION_UNIT_FINDING}]"
     )
     if sc.noise_floor is not None:
         nf = sc.noise_floor
@@ -50,7 +51,10 @@ def main() -> None:
 
     metrics.setup_metrics()
     try:
-        metrics.record_benchmark(report)
+        # The frozen acceptance scorecard's judge half is tallied per drafted FINDING (`eval/offline.py`
+        # scores it that way, declared there too). Named at the push rather than assumed by it: the six
+        # gauge names carry no unit, so a case-level confusion pushed here would re-scale them in place.
+        metrics.record_benchmark(report, judge_confusion_unit=CONFUSION_UNIT_FINDING)
     finally:
         metrics.shutdown()
     print("pushed benchmark scorecard to the OTLP collector")

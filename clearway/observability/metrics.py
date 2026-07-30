@@ -69,15 +69,43 @@ _BENCH_METRICS: dict[str, str] = {
     "benchmark_drafter_ece": "Expected calibration error — CI-exempt (single bin at this n); read with the gap.",
     "benchmark_drafter_overconfidence_gap": "Signed confidence − correctness; positive = over-confident.",
     # Subject #2 — judge, measured AGAINST ACT gold (a subject, not the ruler).
-    "benchmark_judge_kappa": "Judge-vs-ACT-gold Cohen's κ on independent W3C gold (harder than M4's κ).",
-    "benchmark_judge_miss_rate": "Judge passed a wrong draft — the DANGEROUS half; CI-exempt.",
-    "benchmark_judge_false_alarm_rate": "Judge blocked a correct draft — the merely-annoying half.",
-    "benchmark_judge_injected_flip_detection": "Detection on conformance-flipped drafts — an UPPER BOUND.",
-    "benchmark_judge_injected_swap_detection": "Detection on SC-swapped drafts — upper bound, secondary.",
+    # ⚠️ Every series here is PER DRAFTED FINDING. The unit is in the description because it is not in
+    # the name, and a confusion matrix over findings and one over cases are the same four integers with
+    # the same field names — see `judge_confusion_unit` on the publisher below.
+    "benchmark_judge_kappa": "PER FINDING. Judge-vs-ACT-gold Cohen's κ on independent W3C gold.",
+    "benchmark_judge_miss_rate": "PER FINDING. Judge passed a wrong draft — the DANGEROUS half; CI-exempt.",
+    "benchmark_judge_false_alarm_rate": "PER FINDING. Judge blocked a correct draft — the merely-annoying half.",
+    "benchmark_judge_injected_flip_detection": (
+        "PER MUTATED DRAFT. Detection on conformance-flipped drafts — an UPPER BOUND. Stays per draft at "
+        "any confusion unit: a mutation is applied to a draft, never to a case."
+    ),
+    "benchmark_judge_injected_swap_detection": (
+        "PER MUTATED DRAFT. Detection on SC-swapped drafts — upper bound, secondary. ⚠️ Read it knowing "
+        "the judge is now shown the retrieved candidate list and no decoy criterion appears in it, so a "
+        "swap is answerable by list membership with no WCAG judgment involved: a high value here carries "
+        "LESS about the judge than the same value did before the candidates were added to its prompt."
+    ),
     # Overall — the noise floor, the regression yardstick's smallest gradation.
     "benchmark_min_detectable_improvement": "Smallest claimable improvement (pp) — below this is jitter.",
-    "benchmark_noise_floor_judge_kappa_sd": "Judge κ SD across repeat runs — run-to-run unstable.",
+    "benchmark_noise_floor_judge_kappa_sd": (
+        "PER FINDING. Judge κ SD across repeat runs — run-to-run unstable. A spread over whichever κ it "
+        "was computed from, so it inherits that κ's unit."
+    ),
 }
+
+# The unit the six judge series above were minted for. A confusion tallied on any other unit publishes
+# under its own names rather than re-scaling these in place: a gauge whose meaning changes while its name
+# does not gives a dashboard no way to show that it moved, and no gap in the series to notice.
+JUDGE_CONFUSION_UNIT = "finding"
+
+# Reserved for a judge confusion tallied per ACT case. Declared here — as the names a case-level publish
+# must use — rather than created as gauges nothing feeds, so the refusal below can name them and a later
+# stage cannot quietly re-base the series above instead.
+RESERVED_PER_CASE_BENCH_METRICS: tuple[str, ...] = (
+    "benchmark_judge_per_case_kappa",
+    "benchmark_judge_per_case_miss_rate",
+    "benchmark_judge_per_case_false_alarm_rate",
+)
 
 _provider: MeterProvider | None = None
 _rate_gauge: Gauge | None = None
@@ -207,14 +235,28 @@ def record_calibration(
         _cal_gauges["confidence_bin_n"].set(b.n, bin_labels)
 
 
-def benchmark_gauge_values(report: OfflineEvalReport) -> dict[str, float]:
+def benchmark_gauge_values(report: OfflineEvalReport, *, judge_confusion_unit: str) -> dict[str, float]:
     """The frozen scorecard → {gauge_name: value}: the single, pure source of what each benchmark gauge
     holds. Kept off the OTLP path so it can be tested against a frozen artifact with no collector, and
     so `record_benchmark` cannot silently skip a declared metric (the keys must equal `_BENCH_METRICS`).
 
     The snapshot is only meaningful for the FROZEN baseline, which carries the noise floor — a scorecard
     without one means a single run was passed in by mistake, so we fail loudly rather than push a 0.
+
+    ⚠️ `judge_confusion_unit` is required and has no default. `JudgeConfusion` carries no unit field, so
+    a matrix tallied per case and one tallied per finding arrive here as the same shape with the same
+    field names; pushing the first onto these names would re-scale three live series in place, with no
+    version marker and no gap in the data to notice. The caller declares which it holds, and anything
+    other than the unit these names were minted for is refused rather than published.
     """
+    if judge_confusion_unit != JUDGE_CONFUSION_UNIT:
+        raise ValueError(
+            f"the benchmark judge series are per {JUDGE_CONFUSION_UNIT} and this scorecard's confusion is "
+            f"per {judge_confusion_unit}. Pushing it here would silently redefine "
+            f"benchmark_judge_kappa, benchmark_judge_miss_rate and benchmark_judge_false_alarm_rate — the "
+            "same names holding a different measurement. Publish a case-level confusion under its own "
+            f"names instead: {', '.join(RESERVED_PER_CASE_BENCH_METRICS)}."
+        )
     sc = report.scorecard
     d, j, nf = sc.drafter, sc.judge, sc.noise_floor
     if nf is None:
@@ -241,16 +283,19 @@ def benchmark_gauge_values(report: OfflineEvalReport) -> dict[str, float]:
     }
 
 
-def record_benchmark(report: OfflineEvalReport) -> None:
+def record_benchmark(report: OfflineEvalReport, *, judge_confusion_unit: str) -> None:
     """Push the frozen benchmark scorecard: the drafter's ACT-gold rates (with their Wilson bounds + n),
     the judge's two error rates and injected-detection upper bounds, and the noise floor. A point-in-time
     milestone emit like `record_calibration` — the frozen baseline is an artifact, not a per-run series,
     so its gauges hold the last snapshot. Labels are the pinned (eval_set_id, config_id): both constant,
-    so cardinality stays at one series per metric."""
+    so cardinality stays at one series per metric.
+
+    `judge_confusion_unit` is declared by the caller and checked before anything is pushed — see
+    `benchmark_gauge_values`."""
     if not _bench_gauges:
         setup_metrics()
     labels = {"eval_set_id": report.eval_set_id, "config_id": report.config_id}
-    for name, value in benchmark_gauge_values(report).items():
+    for name, value in benchmark_gauge_values(report, judge_confusion_unit=judge_confusion_unit).items():
         _bench_gauges[name].set(value, labels)
 
 

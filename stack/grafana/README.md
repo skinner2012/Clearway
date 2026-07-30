@@ -58,9 +58,27 @@ over-confident.
 The frozen acceptance scorecard (`benchmark_*` series), pushed point-in-time by the acceptance
 snapshot from [`benchmark/reports/scorecard.json`](../../benchmark/reports/scorecard.json): the
 drafter's recall and false-positive rate (with Wilson bounds + n), the judge's confusion against
-**external** expert gold (κ, the dangerous miss-rate, false-alarm, injected-detection upper bounds),
-and the noise floor. Nothing on this row is scored by an LLM. The honest headline lives here — the
-full diagnosis is the [acceptance-benchmark failure analysis](../../docs/acceptance-analysis.md).
+**external** expert gold, and the noise floor. Nothing on this row is scored by an LLM. The honest
+headline lives here — the full diagnosis is the
+[acceptance-benchmark failure analysis](../../docs/acceptance-analysis.md).
+
+**⚠️ Three units share this row and none of the metric names carries one**, so the panel titles do
+instead:
+
+| Series | Unit | Reading |
+|---|---|---|
+| `benchmark_drafter_*` | one ACT **case** | flag-if-any over the case's findings, honest-misses carried in |
+| `benchmark_judge_kappa` / `_miss_rate` / `_false_alarm_rate`, `benchmark_noise_floor_judge_kappa_sd` | one drafted **finding** | the judge's confusion against ACT gold, tallied per draft it graded |
+| `benchmark_judge_injected_flip_detection` / `_swap_detection` | one **mutated draft** | upper bounds; a mutation is applied to a draft, so these stay per draft at any confusion unit |
+
+Two consequences worth stating rather than leaving to be discovered. A judge confusion tallied **per
+ACT case** — the unit the paired routing comparison is scored on — publishes under its own
+`benchmark_judge_per_case_*` names and never re-scales the per-finding series above; the acceptance
+snapshot declares its unit at the push and the emitter refuses anything else, because a gauge whose
+meaning changes while its name does not leaves no gap in the data to notice. And the **swap**
+detection bound now means less than it used to: the judge is shown the retrieved candidate list, no
+decoy criterion appears in it, so "is this citation wrong" is answerable by list membership with no
+WCAG judgment involved.
 
 ## Labels
 

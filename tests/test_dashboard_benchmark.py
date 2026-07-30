@@ -62,3 +62,46 @@ def test_headline_fp_panel_charts_the_false_positive_rate() -> None:
     so the headline can never be silently dropped from the dashboard."""
     by_id = {p["id"]: p for p in _panels()}
     assert "benchmark_drafter_false_positive_rate" in _exprs(by_id[_HEADLINE_FP_PANEL_ID])
+
+
+# --- the unit, which no metric name carries ------------------------------------------------------
+
+_README = _DASHBOARD.parent.parent / "README.md"
+
+# Every judge panel and the unit its title must state. The gauge names are unit-free, so the title is
+# the only place on the screen a viewer can read what a cell counts — and three of these sit adjacent to
+# two that count something else entirely.
+_JUDGE_PANEL_UNITS = {
+    38: "per finding",  # judge κ vs W3C gold
+    39: "per finding",  # miss rate
+    40: "per finding",  # false-alarm
+    41: "per mutated draft",  # injected flip detection
+    42: "per mutated draft",  # injected swap detection
+    44: "per finding",  # judge κ SD
+}
+
+
+def test_every_judge_panel_states_the_unit_its_series_name_cannot() -> None:
+    by_id = {p["id"]: p for p in _panels()}
+    for panel_id, unit in _JUDGE_PANEL_UNITS.items():
+        title = by_id[panel_id]["title"]
+        assert unit in title, f"panel {panel_id} ({title!r}) does not say it is {unit}"
+
+
+def test_the_reading_note_says_the_row_holds_more_than_one_unit() -> None:
+    """Adjacent panels on one row count cases, findings and mutated drafts. Unlabelled they read alike."""
+    note = {p["id"]: p for p in _panels()}[_READING_NOTE_ID]["options"]["content"]
+    assert "different units" in note
+    assert "benchmark_judge_per_case_" in note  # where a case-level confusion goes instead
+
+
+def test_the_dashboard_readme_splits_the_judge_family_by_unit() -> None:
+    """The README described the six judge series as one thing; they are three units in a trench coat."""
+    readme = _README.read_text()
+    for name in (
+        "benchmark_judge_kappa",
+        "benchmark_judge_injected_flip_detection",
+        "benchmark_judge_per_case_",
+    ):
+        assert name in readme
+    assert "one drafted **finding**" in readme and "one **mutated draft**" in readme

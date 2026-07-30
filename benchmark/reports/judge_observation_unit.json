@@ -1,0 +1,288 @@
+{
+  "unit": {
+    "observation_unit": "case",
+    "unit_key": "act_testcase_id",
+    "within_case_aggregation": "flag-if-any",
+    "aggregation_order": "majority verdict across the configuration's passes, per finding; then flag-if-any across the findings within the case",
+    "disagreement_rate_unit": "finding",
+    "preregistration": "Pinned before any judge call is spent, from the clustering measured over the frozen replay pass and the earlier judged passes on the same case set. The paired routing test is scored PER CASE, keyed by act_testcase_id, on discordant pairs — the same unit every other paired test in this repo is already pre-registered on. Three grounds, and the first is arithmetic rather than preference: (1) at the measured within-case correlation of the judge's own majority routing decision the per-finding effective n falls to the cluster count, so a per-finding unit buys no observations while costing an independence assumption the data does not support; (2) the repo's frozen per-class drafter kappa is a per-case number keyed by act_testcase_id, so the side-by-side comparison against it is only like-for-like at the case; (3) the gold label is a property of the case, so every finding inside one is scored against the same answer key. What would have decided the other way: a within-case correlation at or below zero — the drafter's own verdicts measure there — which would have left the per-finding effective n near the raw finding count and made the extra observations real. Declared costs: the case collapse needs flag-if-any, which hides within-case disagreement, so the per-finding table is reported beside the test rather than replaced by it; and the disagreement rate stays per-finding because it counts people-visits, so every reported figure names its unit."
+  },
+  "sources": {
+    "replay_pass": {
+      "path": "citation_grounding_run_1.json",
+      "sha256": "191e40e5efa83bb82799d1c83579b54246f9ff56781e615f459999df6bb52141",
+      "config_id": "m1-single@1",
+      "eval_set_id": "act-acceptance@1",
+      "drafter_model": "gemma4:31b",
+      "created_at": "2026-07-25T02:41:41.406015+00:00"
+    },
+    "judged_passes": [
+      {
+        "path": "run_1.json",
+        "sha256": "bc07f6641715096468170ef1cab9ef0e01ead497d161e8f7172b22f10616c4d9",
+        "judge_model": "gpt-5.6-luna",
+        "judge_version": "rubric=e396f37f; effort=medium",
+        "created_at": "2026-07-15T01:55:47.047521+00:00"
+      },
+      {
+        "path": "run_2.json",
+        "sha256": "09c7b2309251e629dca4f7ddca3eb917249a0391b6b46412040ca880b3bbd4b9",
+        "judge_model": "gpt-5.6-luna",
+        "judge_version": "rubric=e396f37f; effort=medium",
+        "created_at": "2026-07-15T04:16:36.867992+00:00"
+      },
+      {
+        "path": "run_3.json",
+        "sha256": "4fdb465c5b5426621120e4c514d1cb5243b8cfa893970bc30a744a50885a7364",
+        "judge_model": "gpt-5.6-luna",
+        "judge_version": "rubric=e396f37f; effort=medium",
+        "created_at": "2026-07-15T06:03:41.204807+00:00"
+      }
+    ],
+    "judged_pass_caveat": "The judged passes carry the same 40 clusters and the same per-case finding ids as the replay pass (asserted, not assumed), but they graded a DIFFERENT draft set under referent-free input. Their correlation is a prior on the pinned unit, measured over the right structure by the wrong instrument; the noise-floor stage re-measures it live."
+  },
+  "structure": {
+    "observations": 54,
+    "clusters": 40,
+    "manifest_rows": 44,
+    "non_minting_rows": 4,
+    "observations_per_cluster": 1.35,
+    "observations_per_manifest_row": 1.2273,
+    "manifest_row_divisor_understates_cluster_size_by": 0.1227,
+    "kish_mean_cluster_size": 1.8519,
+    "singleton_clusters": 33,
+    "multi_observation_clusters": 7,
+    "observations_in_multi_observation_clusters": 21,
+    "share_in_multi_observation_clusters": 0.3889,
+    "largest_cluster": 4,
+    "cluster_size_histogram": {
+      "1": 33,
+      "2": 2,
+      "3": 3,
+      "4": 2
+    },
+    "per_class": [
+      {
+        "axe_rule": "document-title",
+        "clusters": 5,
+        "observations": 5,
+        "multi_observation_clusters": 0,
+        "cluster_size_histogram": {
+          "1": 5
+        },
+        "unit_choice_changes_this_class": false
+      },
+      {
+        "axe_rule": "empty-heading",
+        "clusters": 11,
+        "observations": 11,
+        "multi_observation_clusters": 0,
+        "cluster_size_histogram": {
+          "1": 11
+        },
+        "unit_choice_changes_this_class": false
+      },
+      {
+        "axe_rule": "label",
+        "clusters": 11,
+        "observations": 17,
+        "multi_observation_clusters": 2,
+        "cluster_size_histogram": {
+          "1": 9,
+          "4": 2
+        },
+        "unit_choice_changes_this_class": true
+      },
+      {
+        "axe_rule": "link-name",
+        "clusters": 13,
+        "observations": 21,
+        "multi_observation_clusters": 5,
+        "cluster_size_histogram": {
+          "1": 8,
+          "2": 2,
+          "3": 3
+        },
+        "unit_choice_changes_this_class": true
+      }
+    ]
+  },
+  "homogeneity": {
+    "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+    "drafter_on_the_replay_pass": {
+      "conformance_four_value": {
+        "observations": 54,
+        "within_cluster_pairs": 23,
+        "agreeing_pairs": 8,
+        "observed_agreement": 0.3478,
+        "chance_agreement": 0.4287,
+        "icc": -0.1415,
+        "multi_observation_clusters": 7,
+        "homogeneous_clusters": 1,
+        "distinct_values": 3
+      },
+      "conformance_flag_collapse": {
+        "observations": 54,
+        "within_cluster_pairs": 23,
+        "agreeing_pairs": 12,
+        "observed_agreement": 0.5217,
+        "chance_agreement": 0.5007,
+        "icc": 0.0422,
+        "multi_observation_clusters": 7,
+        "homogeneous_clusters": 2,
+        "distinct_values": 2
+      },
+      "cited_sc_set": {
+        "observations": 54,
+        "within_cluster_pairs": 23,
+        "agreeing_pairs": 12,
+        "observed_agreement": 0.5217,
+        "chance_agreement": 0.2497,
+        "icc": 0.3626,
+        "multi_observation_clusters": 7,
+        "homogeneous_clusters": 2,
+        "distinct_values": 5
+      },
+      "conformance_and_sc": {
+        "observations": 54,
+        "within_cluster_pairs": 23,
+        "agreeing_pairs": 8,
+        "observed_agreement": 0.3478,
+        "chance_agreement": 0.2078,
+        "icc": 0.1767,
+        "multi_observation_clusters": 7,
+        "homogeneous_clusters": 1,
+        "distinct_values": 9
+      }
+    },
+    "judge_routing_per_pass": [
+      {
+        "observations": 54,
+        "within_cluster_pairs": 23,
+        "agreeing_pairs": 16,
+        "observed_agreement": 0.6957,
+        "chance_agreement": 0.6344,
+        "icc": 0.1675,
+        "multi_observation_clusters": 7,
+        "homogeneous_clusters": 3,
+        "distinct_values": 2
+      },
+      {
+        "observations": 54,
+        "within_cluster_pairs": 23,
+        "agreeing_pairs": 19,
+        "observed_agreement": 0.8261,
+        "chance_agreement": 0.6756,
+        "icc": 0.4639,
+        "multi_observation_clusters": 7,
+        "homogeneous_clusters": 5,
+        "distinct_values": 2
+      },
+      {
+        "observations": 54,
+        "within_cluster_pairs": 23,
+        "agreeing_pairs": 19,
+        "observed_agreement": 0.8261,
+        "chance_agreement": 0.6344,
+        "icc": 0.5243,
+        "multi_observation_clusters": 7,
+        "homogeneous_clusters": 5,
+        "distinct_values": 2
+      }
+    ],
+    "judge_routing_majority_across_passes": {
+      "observations": 54,
+      "within_cluster_pairs": 23,
+      "agreeing_pairs": 19,
+      "observed_agreement": 0.8261,
+      "chance_agreement": 0.6982,
+      "icc": 0.4237,
+      "multi_observation_clusters": 7,
+      "homogeneous_clusters": 5,
+      "distinct_values": 2
+    },
+    "judge_routing_within_rule": {
+      "observations": 54,
+      "within_cluster_pairs": 411,
+      "agreeing_pairs": 281,
+      "observed_agreement": 0.6837,
+      "chance_agreement": 0.6982,
+      "icc": -0.0481,
+      "multi_observation_clusters": 4,
+      "homogeneous_clusters": 1,
+      "distinct_values": 2,
+      "note": "The coarser layer, over the four scored rules. Reported as context and NOT as a candidate unit: a paired contrast gives both configurations the same rule framing, so a shared per-rule effect cancels rather than inflating the test. Measured here it is absent anyway — the routing correlation lives at the case, not at the rule."
+    },
+    "judge_pass_to_pass": {
+      "passes": 3,
+      "observations": 54,
+      "non_unanimous": 15,
+      "rate": 0.2778
+    },
+    "case_collapse_cost": {
+      "clusters": 40,
+      "multi_observation_clusters": 7,
+      "heterogeneous_clusters": 2,
+      "observations_inside_heterogeneous_clusters": 6,
+      "clusters_where_flag_if_any_differs_from_within_case_majority": 2,
+      "note": "The count of divergent clusters is what flag-if-any decides differently from a within-case majority, and the heterogeneous count is the within-case disagreement the collapse makes invisible. Flag-if-any is kept because it is the product reading — one raised hand on a page sends the specialist — and because it matches the drafter scorer's own collapse; the cost is recorded here so the per-finding table is read beside the test rather than instead of it."
+    }
+  },
+  "effective_n": {
+    "formula": "design_effect = 1 + (kish_mean_cluster_size - 1) * icc; effective_n = observations / design_effect",
+    "reading": "The rows to decide on are the judge's, because the judge is the rater the test scores. A row with a NEGATIVE icc returns an effective n above the observation count: that is the correct arithmetic for anti-clustering — a cluster whose members disagree more than random draws — and it is not extra data, so it is never read as a power gain. The icc = 1 row is the bound, and it lands BELOW the cluster count because unequal cluster sizes weight the larger clusters more heavily than a per-cluster analysis would.",
+    "kish_mean_cluster_size": 1.8519,
+    "per_case_units": 40,
+    "per_finding_at": [
+      {
+        "icc_source": "judge routing, pass 1",
+        "icc": 0.1675,
+        "design_effect": 1.1427,
+        "effective_n": 47.26,
+        "beats_per_case": true
+      },
+      {
+        "icc_source": "judge routing, pass 2",
+        "icc": 0.4639,
+        "design_effect": 1.3952,
+        "effective_n": 38.7,
+        "beats_per_case": false
+      },
+      {
+        "icc_source": "judge routing, pass 3",
+        "icc": 0.5243,
+        "design_effect": 1.4466,
+        "effective_n": 37.33,
+        "beats_per_case": false
+      },
+      {
+        "icc_source": "judge routing, majority across passes",
+        "icc": 0.4237,
+        "design_effect": 1.3609,
+        "effective_n": 39.68,
+        "beats_per_case": false
+      },
+      {
+        "icc_source": "drafter four-value conformance on the replay pass",
+        "icc": -0.1415,
+        "design_effect": 0.8795,
+        "effective_n": 61.4,
+        "beats_per_case": true
+      },
+      {
+        "icc_source": "independence, for reference",
+        "icc": 0.0,
+        "design_effect": 1.0,
+        "effective_n": 54.0,
+        "beats_per_case": true
+      },
+      {
+        "icc_source": "total within-case agreement, the bound",
+        "icc": 1.0,
+        "design_effect": 1.8519,
+        "effective_n": 29.16,
+        "beats_per_case": false
+      }
+    ]
+  }
+}

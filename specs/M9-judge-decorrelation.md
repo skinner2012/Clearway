@@ -475,14 +475,27 @@ is one of the three the pin rests on.** What survives:
    | `eval/noise_floor.py` | lifts `judge_kappa` and `judge_miss_rate` into `per_metric_sd`; **its own `case_outcomes` is already per-case over 44** — the drafter's denominator, not the judge's 40 |
    | `eval/noise_floor_build.py` | prints `judge κ` per run |
    | `eval/acceptance_snapshot.py` | **pushes the frozen scorecard to the OTLP collector** |
-   | `observability/metrics.py` | owns `benchmark_judge_kappa`, `benchmark_judge_miss_rate`, `benchmark_judge_false_alarm_rate`, `benchmark_noise_floor_judge_kappa_sd` — **gauge names carrying no unit**, so a unit change silently redefines a live series |
+   | `observability/metrics.py` | owns the six benchmark judge gauges — `benchmark_judge_kappa`, `benchmark_judge_miss_rate`, `benchmark_judge_false_alarm_rate`, **`benchmark_judge_injected_flip_detection`**, **`benchmark_judge_injected_swap_detection`**, `benchmark_noise_floor_judge_kappa_sd` — **all names carrying no unit**, so a unit change silently redefines a live series |
+   | **`stack/grafana/dashboards/citation_hallucination.json`** | **a checked-in, provisioned dashboard that queries all six by name**, one `stat` panel each: *judge κ (vs W3C gold)*, *miss rate — DANGEROUS*, *false-alarm — annoying*, *injected flip detection ↑bound*, *injected swap detection ↑bound*, *judge κ SD (run-to-run)*. No panel title carries a unit |
+   | **`stack/grafana/README.md`** | documents the family as one thing — "the judge's confusion against **external** expert gold (κ, the dangerous miss-rate, false-alarm, injected-detection upper bounds), and the noise floor" — a sentence that goes stale the moment the family splits across two units |
    | `schemas/models.py` | `JudgeConfusion` (no unit field) and `OnlineEvalMetrics.judge_kappa` |
+
+   **⚠️ The consequence is concrete, and it lands on one screen.** Three of those panels — κ, miss rate,
+   false-alarm — re-scale to **40 cases** the moment the cells are frozen per case. The two
+   injected-detection panels **stay per finding** (54 mutated drafts and 39), because a mutation is
+   applied to a draft; and the κ SD panel is a spread over whichever κ it was computed from. So the
+   dashboard would display **per-case confusion figures beside per-finding detection rates, adjacent, with
+   nothing on the screen saying so** — and the panels would simply re-scale in place, with no version
+   marker and no gap in the series to notice.
 
    **A gauge whose meaning changes while its name does not is the failure this note exists to prevent.**
    Either the case-level figures publish under **new** names, or the existing series are re-based
-   deliberately and the re-basing is recorded. *(Not in scope: `calibration_snapshot.py` and
-   `metrics.py`'s bare `judge_kappa` — that is the judge-vs-human κ on the self-built gold, a different
-   measurement that must not be "fixed" to match.)*
+   deliberately, the dashboard panels and the README sentence are updated in the same change, and the
+   re-basing is recorded. **This is a scope handoff, not a redesign: nothing about the dashboard is fixed
+   here.** *(Not in scope either: `calibration_snapshot.py` and `metrics.py`'s bare `judge_kappa`, plus
+   the four panels reading it, `judge_trusted`, `judge_agreement_rate` and `judgment_correctness_rate` —
+   those are the judge-vs-human κ on the self-built gold, already marked *superseded* on the dashboard,
+   a different measurement that must not be "fixed" to match.)*
 
 #### ⚠️ What the collapse erases from the test's currency — and it is not a design effect
 
@@ -1213,14 +1226,24 @@ and the freeze is pinned by file comparison rather than by a self-digest).
    `JudgeConfusion` has no field that says so, `judge_score.score_judge` builds them per finding, and
    four **unit-free gauge names** publish rates derived from them. The full site list is in *the
    observation unit*.
-7. **One cluster is one page — established by hashing, not inferred.** The 40 in-scope minting cases
-   yield **40 distinct fixture digests**, checked at freeze time and raised on collision.
+7. **One cluster is one page — established by hashing, not inferred, and it is guarding against
+   something the corpus contains by the dozen.** The 40 in-scope minting cases yield **40 distinct
+   fixture digests**, checked at freeze time and raised on collision; and the reassuring half that
+   actually carries the claim: **all 44 manifest rows yield 44 distinct digests — no two rows of the gold
+   share bytes.** But the tree around them is full of duplicates: **67 fixture files, 55 distinct
+   digests, 12 duplicate groups** (all of size 2), so **24 files — better than a third of the corpus —
+   sit in a duplicate pair.** The pattern is perfectly regular: **all 12 pairs are
+   `Link is descriptive` against `Link in context is descriptive`**, the two sibling link rules assigning
+   their own outcome to the same page; **not one group lies within a single rule.**
    **⚠️ An earlier draft rested this on `act_gold.contradictory_gold_twins()` being empty, which cannot
-   support it:** that helper keeps only byte-identical groups whose ACT outcomes *differ*, so a same-gold
-   twin is invisible to it. The hazard is live rather than hypothetical — the in-scope case
-   `6566c139…` **is byte-identical** to `48cbc84f…`, the AAA-link fixture the scoping dropped, and the
-   helper reports nothing because the dropped side is no longer in the manifest at all. A scope change
-   re-admitting that rule would put two clusters on one page.
+   support it — and now the reason is quantified.** Two filters hide all 12 groups from that helper:
+   it iterates only **manifest rows**, and the AAA-only link rule is outside `RULE_TO_AXE`, so **9 of the
+   12 groups retain exactly one row and 3 retain none** (those 3 are `inapplicable` on both sides, which
+   the manifest builder skips) — **no group retains two**; and it then keeps only groups whose ACT
+   outcomes *differ*, which is **2 of the 12**. So its emptiness is doubly uninformative. What keeps the
+   clusters distinct is not scarcity of duplicates but **which side of each pair the scope admitted** — a
+   scope change re-admitting that rule would put two clusters on one page, which is why the check raises
+   rather than reports.
 8. **The repairable ceiling and the null floor** — `7/40` cases against a mean `8.0/40` per pass-pair,
    with the full tables and the b/c split in *the observation unit*. Both were measurable here; the power
    table previously deferred all of the first to T3.

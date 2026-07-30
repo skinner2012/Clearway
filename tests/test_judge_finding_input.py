@@ -27,6 +27,7 @@ from clearway.eval.judge_finding_input import (
     _row,
     assert_matches_replay_pass,
     drafted_citations_inside_the_candidates,
+    gold_sc_reachability,
     load_record,
     prepared_inputs,
     record_digest,
@@ -337,6 +338,75 @@ def test_a_citation_outside_todays_candidates_is_named_rather_than_counted_as_ag
         {"finding_id": "f2", "sc_ids_not_in_todays_candidates": "3.3.2"}
     ]
     assert out["drafts_citing_nothing"] == 0
+
+
+def test_the_rank_of_each_cited_criterion_is_recorded_because_it_is_checkable() -> None:
+    """Order evidence exists and must not be filed as impossible.
+
+    Membership is the set half; the rank of a cited criterion inside today's ORDERED list is the order
+    half, and it is strictly stronger. Both are weak — that is what `cannot_establish` is for — but an
+    available check recorded as unavailable is the inverse of declining one deliberately.
+    """
+    rows = [{"finding_id": "f1", "candidate_sc_ids": ["1.1.1", "2.4.4", "3.3.2"]}]
+    replay = {"cases": [{"drafts": [{"finding_id": "f1", "cited_sc_ids": ["3.3.2", "1.1.1"]}]}]}
+    out = drafted_citations_inside_the_candidates(rows, replay)
+    assert out["rank_of_each_cited_sc_in_todays_ordered_list"] == {"1": 1, "3": 1}
+    assert out["cited_sc_instances_ranked"] == 2
+
+
+def test_a_citation_outside_the_list_is_not_given_a_rank() -> None:
+    """A rank for a criterion that is not in the list would be an invented position."""
+    rows = [{"finding_id": "f1", "candidate_sc_ids": ["1.1.1"]}]
+    replay = {"cases": [{"drafts": [{"finding_id": "f1", "cited_sc_ids": ["9.9.9"]}]}]}
+    out = drafted_citations_inside_the_candidates(rows, replay)
+    assert out["cited_sc_instances_ranked"] == 0
+    assert out["rank_of_each_cited_sc_in_todays_ordered_list"] == {}
+
+
+def test_the_frozen_ranks_and_membership_agree_with_each_other(record: dict[str, Any]) -> None:
+    """Re-derived from the file, not copied from the record's own totals: one SC per citing draft, so
+    the ranked instances must equal the citing drafts, and every rank must be a real position."""
+    cited = record["candidate_list_provenance"]["corroboration"]["drafted_citations"]
+    ranks = {int(k): v for k, v in cited["rank_of_each_cited_sc_in_todays_ordered_list"].items()}
+    widths = {len(row["candidate_sc_ids"]) for row in record["rows"]}
+    assert sum(ranks.values()) == cited["cited_sc_instances_ranked"]
+    assert cited["drafts_citing_at_least_one_sc"] + cited["drafts_citing_nothing"] == len(record["rows"])
+    assert max(ranks) <= min(widths), "a rank cannot exceed the shortest candidate list it was read from"
+
+
+def test_gold_reachability_is_counted_on_both_denominators_and_kept_out_of_the_corroboration() -> None:
+    """Adequacy, not provenance — so it must not sit where a reader takes it for identity evidence."""
+    rows = [
+        {"act_testcase_id": "c1", "finding_id": "f1", "candidate_sc_ids": ["1.1.1", "2.4.4"]},
+        {"act_testcase_id": "c2", "finding_id": "f2", "candidate_sc_ids": ["1.1.1"]},
+    ]
+    replay = {
+        "cases": [
+            {"act_testcase_id": "c1", "gold_success_criteria": ["1.1.1", "2.4.4"]},
+            {"act_testcase_id": "c2", "gold_success_criteria": ["2.4.6"]},
+        ]
+    }
+    out = gold_sc_reachability(rows, replay)
+    assert (out["findings"], out["findings_whose_candidate_list_covers_their_whole_gold_set"]) == (2, 1)
+    assert (out["gold_sc_instances"], out["gold_sc_instances_inside_the_candidate_list"]) == (3, 2)
+    assert out["findings_with_an_unreachable_gold_criterion"] == [
+        {"finding_id": "f2", "gold_sc_ids_not_retrieved": "2.4.6"}
+    ]
+
+
+def test_the_frozen_set_has_no_finding_whose_gold_criterion_was_unreachable(
+    record: dict[str, Any], replay: dict[str, Any]
+) -> None:
+    """Re-derived here from the file plus the replay pass, rather than read off the record's own counts:
+    a gold criterion outside the candidate list would put the SC axis on that finding on the retriever
+    rather than on either rater."""
+    recomputed = gold_sc_reachability(record["rows"], replay)
+    assert recomputed == record["retrieval_adequacy"]
+    assert recomputed["findings_with_an_unreachable_gold_criterion"] == []
+    assert recomputed["findings_whose_candidate_list_covers_their_whole_gold_set"] == len(record["rows"])
+    assert recomputed["gold_sc_instances_inside_the_candidate_list"] == recomputed["gold_sc_instances"]
+    assert "retrieval_adequacy" not in record["candidate_list_provenance"]
+    assert "adequacy" not in json.dumps(record["candidate_list_provenance"]["corroboration"])
 
 
 def test_a_clean_draft_that_cites_nothing_carries_no_corroboration_either_way() -> None:

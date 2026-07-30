@@ -52,10 +52,23 @@
         "drafts_whose_every_cited_sc_is_in_todays_candidate_list": 33,
         "drafts_citing_outside_todays_candidate_list": [],
         "drafts_citing_nothing": 21,
-        "reading": "A citation inside the rebuilt list is consistent with the list being the one the drafter answered; a citation outside it would be either a moved list or a drafter that ignored its candidates, and nothing on disk separates those two. This corroborates and cannot verify."
+        "cited_sc_instances_ranked": 33,
+        "rank_of_each_cited_sc_in_todays_ordered_list": {
+          "1": 14,
+          "2": 19
+        },
+        "reading": "A citation inside the rebuilt list is consistent with the list being the one the drafter answered; a citation outside it would be either a moved list or a drafter that ignored its candidates, and nothing on disk separates those two. This corroborates and cannot verify. The rank histogram is the ORDER half of the same weak evidence, recorded because it exists rather than because it settles anything: the drafter was told to cite the single most applicable candidate, so citations clustered at the head of today's ordering are consistent with today's ordering being the one it read, and a citation at the tail would have been the interesting result. It says nothing about how the criteria the drafter did NOT cite were arranged — see `cannot_establish`."
       }
     },
-    "cannot_establish": "What no check here can establish: (1) that the embedder returned the same vector then as now — the model is pinned by tag and the corpus_version welds the model and dimension to the stored vectors, but no per-query vector was retained; (2) that the ORDER of the candidates is the order the drafter saw, since only the set's membership can be cross-checked against what the drafter cited; (3) that a drafted citation appearing in today's list proves the list is unchanged — a different list containing the same criterion would look identical on that check; (4) anything about the drafter's own prompt, which was never frozen either. The honest status is the spec's: corroborated at best, never asserted as verified."
+    "cannot_establish": "What no check here can establish: (1) that the embedder returned the same vector then as now — the model is pinned by tag and the corpus_version welds the model and dimension to the stored vectors, but no per-query vector was retained; (2) the ordering among the criteria the drafter did NOT cite — the rank of each criterion it DID cite is recorded below, which is the whole of the order evidence that exists, and it says nothing about how the unchosen candidates were arranged around them; (3) that a drafted citation appearing in today's list, at whatever rank, proves the list is unchanged — a different list containing the same criterion at the same position would look identical on both checks; (4) anything about the drafter's own prompt, which was never frozen either. The honest status is the spec's: corroborated at best, never asserted as verified."
+  },
+  "retrieval_adequacy": {
+    "findings": 54,
+    "findings_whose_candidate_list_covers_their_whole_gold_set": 54,
+    "gold_sc_instances": 75,
+    "gold_sc_instances_inside_the_candidate_list": 75,
+    "findings_with_an_unreachable_gold_criterion": [],
+    "reading": "A gold criterion outside the candidate list would mean the criterion the case turns on was unreachable for BOTH readers, and the SC axis on that finding would be measuring the retriever rather than either rater. Full coverage is what makes a candidate list that is constant within a class a shared prior rather than a shared blind spot. Adequacy only: it says nothing about whether this list is the one the drafter saw."
   },
   "per_class": [
     {
@@ -1263,5 +1276,5 @@
       "finding_block_sha256": "23ab6c82954dca2a0668ea3b74a3d77365f5187c1e7fe286d7899863a90d8732"
     }
   ],
-  "reproducible_digest": "31b67f4f7789734496c6f14c79e2ffb9e9a7f635354989853c871c08d348c6a9"
+  "reproducible_digest": "685879dc32ab988262786f5c11c3b3cae653c4b0e78c63ed04c51375a37b2eda"
 }

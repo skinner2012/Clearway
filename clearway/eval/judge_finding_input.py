@@ -81,12 +81,13 @@ REBUILT_NOT_RECOVERED = (
 CANNOT_ESTABLISH = (
     "What no check here can establish: (1) that the embedder returned the same vector then as now — the "
     "model is pinned by tag and the corpus_version welds the model and dimension to the stored vectors, "
-    "but no per-query vector was retained; (2) that the ORDER of the candidates is the order the drafter "
-    "saw, since only the set's membership can be cross-checked against what the drafter cited; (3) that "
-    "a drafted citation appearing in today's list proves the list is unchanged — a different list "
-    "containing the same criterion would look identical on that check; (4) anything about the drafter's "
-    "own prompt, which was never frozen either. The honest status is the spec's: corroborated at best, "
-    "never asserted as verified."
+    "but no per-query vector was retained; (2) the ordering among the criteria the drafter did NOT cite — "
+    "the rank of each criterion it DID cite is recorded below, which is the whole of the order evidence "
+    "that exists, and it says nothing about how the unchosen candidates were arranged around them; "
+    "(3) that a drafted citation appearing in today's list, at whatever rank, proves the list is "
+    "unchanged — a different list containing the same criterion at the same position would look "
+    "identical on both checks; (4) anything about the drafter's own prompt, which was never frozen "
+    "either. The honest status is the spec's: corroborated at best, never asserted as verified."
 )
 
 BOTH_CONFIGURATIONS_READ_THIS_FILE = (
@@ -219,33 +220,96 @@ def drafted_citations_inside_the_candidates(rows: Sequence[dict[str, Any]], repl
     consistent with the list being the one it answered. **That asymmetry is the whole strength of this
     check, and it is weaker than identity.** Rows that cite nothing carry no information either way and
     are counted separately rather than folded in.
+
+    The **rank** of each cited criterion in today's ordered list is counted here too, for the reason the
+    spec applies to itself elsewhere: an available check recorded as impossible is the inverse of
+    declining one deliberately. Membership is the set half of the evidence and rank is the order half —
+    both weak, and the second strictly stronger than the first.
     """
-    candidates = {row["finding_id"]: set(row["candidate_sc_ids"]) for row in rows}
+    ordered = {row["finding_id"]: list(row["candidate_sc_ids"]) for row in rows}
     citing = 0
     inside = 0
     outside: list[dict[str, str]] = []
+    ranks: Counter[int] = Counter()
     for case in replay["cases"]:
         for draft in case["drafts"]:
             cited = list(draft["cited_sc_ids"])
             if not cited:
                 continue
             citing += 1
-            missing = sorted(set(cited) - candidates[draft["finding_id"]])
+            candidates = ordered[draft["finding_id"]]
+            missing = sorted(set(cited) - set(candidates))
             if missing:
                 outside.append(
                     {"finding_id": draft["finding_id"], "sc_ids_not_in_todays_candidates": ",".join(missing)}
                 )
             else:
                 inside += 1
+            ranks.update(candidates.index(sc) + 1 for sc in cited if sc in candidates)
     return {
         "drafts_citing_at_least_one_sc": citing,
         "drafts_whose_every_cited_sc_is_in_todays_candidate_list": inside,
         "drafts_citing_outside_todays_candidate_list": outside,
         "drafts_citing_nothing": sum(len(c["drafts"]) for c in replay["cases"]) - citing,
+        "cited_sc_instances_ranked": sum(ranks.values()),
+        "rank_of_each_cited_sc_in_todays_ordered_list": {str(k): v for k, v in sorted(ranks.items())},
         "reading": (
             "A citation inside the rebuilt list is consistent with the list being the one the drafter "
             "answered; a citation outside it would be either a moved list or a drafter that ignored its "
-            "candidates, and nothing on disk separates those two. This corroborates and cannot verify."
+            "candidates, and nothing on disk separates those two. This corroborates and cannot verify. "
+            "The rank histogram is the ORDER half of the same weak evidence, recorded because it exists "
+            "rather than because it settles anything: the drafter was told to cite the single most "
+            "applicable candidate, so citations clustered at the head of today's ordering are consistent "
+            "with today's ordering being the one it read, and a citation at the tail would have been the "
+            "interesting result. It says nothing about how the criteria the drafter did NOT cite were "
+            "arranged — see `cannot_establish`."
+        ),
+    }
+
+
+def gold_sc_reachability(rows: Sequence[dict[str, Any]], replay: dict[str, Any]) -> dict[str, Any]:
+    """Is each case's ACT gold criterion inside the candidate list its findings were shown?
+
+    **⚠️ Retrieval ADEQUACY, not provenance — which is why it sits outside the corroboration block.** It
+    says the shared prior is not degenerate: both readers can reach the criterion the gold names, so the
+    SC axis is measuring raters rather than a retriever that never surfaced the answer. It is no evidence
+    at all that today's list is the drafter's — a list rebuilt from a different corpus could contain the
+    gold criterion too, and this check would look identical.
+
+    Counted on two denominators because they answer differently: per **finding** (does this finding's list
+    cover its case's whole gold set) and per **gold-SC instance** (one count per finding-criterion pair,
+    which is the denominator that notices a case whose gold names more than one criterion).
+    """
+    gold_of = {case["act_testcase_id"]: list(case["gold_success_criteria"]) for case in replay["cases"]}
+    findings_covered = 0
+    instances = covered_instances = 0
+    gaps: list[dict[str, str]] = []
+    for row in rows:
+        gold = gold_of[row["act_testcase_id"]]
+        candidates = set(row["candidate_sc_ids"])
+        instances += len(gold)
+        covered_instances += sum(1 for sc in gold if sc in candidates)
+        if set(gold) <= candidates:
+            findings_covered += 1
+        else:
+            gaps.append(
+                {
+                    "finding_id": row["finding_id"],
+                    "gold_sc_ids_not_retrieved": ",".join(sorted(set(gold) - candidates)),
+                }
+            )
+    return {
+        "findings": len(rows),
+        "findings_whose_candidate_list_covers_their_whole_gold_set": findings_covered,
+        "gold_sc_instances": instances,
+        "gold_sc_instances_inside_the_candidate_list": covered_instances,
+        "findings_with_an_unreachable_gold_criterion": gaps,
+        "reading": (
+            "A gold criterion outside the candidate list would mean the criterion the case turns on was "
+            "unreachable for BOTH readers, and the SC axis on that finding would be measuring the "
+            "retriever rather than either rater. Full coverage is what makes a candidate list that is "
+            "constant within a class a shared prior rather than a shared blind spot. Adequacy only: it "
+            "says nothing about whether this list is the one the drafter saw."
         ),
     }
 
@@ -349,6 +413,7 @@ def build_record(
             },
             "cannot_establish": CANNOT_ESTABLISH,
         },
+        "retrieval_adequacy": gold_sc_reachability(rows, replay),
         "per_class": _per_class(rows),
         "rows": list(rows),
     }

@@ -413,14 +413,16 @@ def judge_routing_streams(passes: Sequence[dict[str, Any]], replay: dict[str, An
 def majority_stream(per_pass: Sequence[Sequence[Sequence[Hashable]]]) -> list[list[Hashable]]:
     """The per-finding majority verdict across passes — the quantity the paired test consumes.
 
-    An even number of passes is refused: a tie has no majority, and breaking it by convention would
-    put a coin flip inside the number the whole comparison rests on.
+    **A STRICT majority is required at every observation, and anything less is refused.** An odd pass
+    count is not enough on its own: three passes returning three different values have no majority
+    either, and `Counter.most_common` would resolve that by insertion order — a coin flip inside the
+    decision the whole comparison is scored on, decided by which pass happened to be read first. The
+    routing stream is boolean and cannot split three ways, but the judge's own conformance is
+    four-valued and *Direction of disagreement* needs a majority over exactly that, so the guard is
+    written for the general case rather than for the caller that exists today.
     """
-    if len(per_pass) % 2 == 0:
-        raise DegenerateClustering(
-            f"{len(per_pass)} passes cannot produce a majority verdict without a tie-break, and a "
-            "tie-break convention is a coin flip inside the decision the test is scored on"
-        )
+    if not per_pass:
+        raise DegenerateClustering("no passes to take a majority over")
     shapes = {tuple(len(stream) for stream in streams) for streams in per_pass}
     if len(shapes) != 1:
         raise DegenerateClustering(f"the passes disagree about the cluster shape: {sorted(shapes)}")
@@ -429,7 +431,16 @@ def majority_stream(per_pass: Sequence[Sequence[Sequence[Hashable]]]) -> list[li
         row: list[Hashable] = []
         for position in range(len(first)):
             votes = [streams[cluster_index][position] for streams in per_pass]
-            row.append(Counter(votes).most_common(1)[0][0])
+            winner, count = Counter(votes).most_common(1)[0]
+            if count * 2 <= len(votes):
+                raise DegenerateClustering(
+                    f"no strict majority over {len(votes)} passes at cluster {cluster_index}, position "
+                    f"{position}: the votes were {votes!r}, and the leading value {winner!r} carries only "
+                    f"{count} of them. Resolving that would break the tie by vote order — a coin flip "
+                    "inside the decision the paired test is scored on. Add passes or report the "
+                    "observation as undecided; do not let insertion order decide it."
+                )
+            row.append(winner)
         majority.append(row)
     return majority
 

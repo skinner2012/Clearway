@@ -213,13 +213,31 @@ def test_the_judge_routing_streams_follow_the_replay_passs_cluster_order() -> No
         assert [len(cluster) for cluster in stream] == expected
 
 
-def test_an_even_pass_count_cannot_produce_a_majority() -> None:
-    with pytest.raises(DegenerateClustering, match="tie-break"):
+def test_an_even_split_across_passes_has_no_majority() -> None:
+    with pytest.raises(DegenerateClustering, match="no strict majority"):
         majority_stream([[[True]], [[False]]])
+
+
+def test_a_three_way_split_is_refused_rather_than_broken_by_vote_order() -> None:
+    """An odd pass count is not sufficient. Three passes answering three different values have no
+    majority, and resolving it would let whichever pass was read first decide the observation — the
+    exact coin flip the even-count refusal was written to prevent."""
+    with pytest.raises(DegenerateClustering, match="no strict majority"):
+        majority_stream([[["supports"]], [["partially_supports"]], [["does_not_support"]]])
+
+
+def test_an_even_pass_count_with_a_strict_majority_is_allowed() -> None:
+    """The guard is about the majority, not about parity: four passes at 3–1 have a real winner."""
+    assert majority_stream([[["a"]], [["a"]], [["a"]], [["b"]]]) == [["a"]]
 
 
 def test_the_majority_verdict_is_taken_per_observation() -> None:
     assert majority_stream([[[True, False]], [[True, True]], [[False, False]]]) == [[True, False]]
+
+
+def test_a_four_valued_majority_resolves_when_one_value_leads_outright() -> None:
+    votes = [[["supports"]], [["supports"]], [["does_not_support"]]]
+    assert majority_stream(votes) == [["supports"]]
 
 
 def test_passes_that_disagree_about_the_cluster_shape_are_refused() -> None:

@@ -1529,8 +1529,16 @@ the unit.
   and the **binding bar is reported** — a result limited by the judge's own jitter reads differently from
   one limited by the evidence, and an `n` at which `required_wins` comes back **None** is reported as
   **uncertifiable at that n**. **⚠️ That covers two cases, not one:** too few pairs for any `b` to clear
-  α, *and* a floor bar above the pairs there are — the second is the likely one under T1's prior, which
-  puts the smallest attainable `n` at **7**. Neither may be written up as a bar the evidence missed. If injected detection rises while real detection does not, the verdict is
+  α, *and* a floor bar above the pairs there are. Neither may be written up as a bar the evidence missed.
+  **⚠️ Run at T3b's MEASURED floor, not T1's prior.** The bar is **`b ≥ 5` over `n ≥ 5`** — floor bar 5
+  from a largest one-way null movement of 4, frozen in
+  `benchmark/reports/judge_anchored_baseline.json` (`threshold.floor_bar`,
+  `threshold.smallest_attainable_n`, and the `required_wins` table out to `n` = 14). T1's prior of
+  `b ≥ 7` over `n ≥ 7` was taken on a different instrument and is superseded; see *the realized floor*.
+  **One consequence of the smaller floor:** at `n` = 5 the two bars coincide and from `n` = 6 the
+  statistical bar binds, so the floor bar never sits above an otherwise-attainable `n` — the two
+  unattainable cases above **collapse into one** here, and every `required_wins = None` is simply too
+  few pairs. Read `threshold()`'s `binding_bar` rather than re-deriving that. If injected detection rises while real detection does not, the verdict is
   **effective only on clean signal** — success may not be claimed. **The guard is read on anchored
   only**; blind's injected numbers are arithmetic and are not eligible to trip it. Degenerate endpoints
   on the disagreement rate are read in prose.

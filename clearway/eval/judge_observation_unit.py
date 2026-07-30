@@ -1,10 +1,15 @@
 """The judge's observation structure, and the unit its paired comparison is scored on.
 
-A judge call is made once per minted finding, so a replay produces one observation per finding — but
+A replay produces one **observation** per minted finding — the natural judgment of that finding — but
 the findings are not scattered independently. They arrive in **ACT cases**: one fixture page, one
 gold outcome, one rule, and between one and four elements the rule mints a finding on. A paired test
 that treats those as independent units pseudo-replicates, and the fix is not free either: collapsing
 to the case needs an aggregation rule, and an aggregation rule hides whatever it aggregates over.
+
+**⚠️ An observation is not a call.** A configuration that also judges mutated drafts spends two or
+three calls on one finding, and those extra calls feed a separate diagnostic rather than the routing
+comparison. Counting calls here would inflate the structure by a factor that has nothing to do with
+clustering, so every count below is a natural judgment.
 
 So the unit is measured before it is pinned, and this module is that measurement. Pure — no model, no
 network, no clock. Every number replays from frozen artifacts, and `created_at` is READ off the

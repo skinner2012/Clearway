@@ -355,8 +355,12 @@ first — zero model calls, over the frozen replay pass and the earlier judged p
 `benchmark/reports/judge_observation_unit.json` (rebuild:
 `uv run python -m clearway.eval.judge_observation_unit`).
 
-**The structure.** 54 observations — one judge call per minted finding — in **40 clusters**, one per
-minting ACT case. **The manifest carries 44 rows**: the other 4 mint no finding, are never judged, and
+**The structure.** 54 observations — one **natural judgment** per minted finding — in **40 clusters**,
+one per minting ACT case. **⚠️ An observation is not a call:** the anchored side spends 147 calls per
+pass on these same 54 findings, because each mutation is its own call, and those extra calls feed the
+injected-gap diagnostic rather than the routing comparison. Counting calls would inflate the structure
+by 2.7× for reasons that have nothing to do with clustering. **The manifest carries 44 rows**: the other
+4 mint no finding, are never judged, and
 are therefore not clusters at all. Dividing by them gives 54/44 = 1.23 findings per row against the
 true 54/40 = **1.35 per cluster**, which is why the observations are counted and the manifest rows are
 not. 33 clusters are singletons; **7 hold more than one finding (sizes 2, 2, 3, 3, 3, 4, 4) and carry
@@ -412,6 +416,22 @@ rests on: **the two raters cluster differently, and only one of them is the subj
    finding's* draft), so collapsing it would report fewer people-visits than the queue holds. **Two
    units live in this milestone and every figure names which one it is on**, with the count of distinct
    cases the disagreements touch quoted beside the per-finding count.
+
+**⚠️ Three numbers the pin does NOT reach, so they stay per-finding and say so.**
+
+1. **The two injected-detection rates.** A mutation is applied to a *draft*, and M5's comparator
+   (`injected_sc_swap` n = 63, `injected_conformance_flip` n = 39) is per-draft. Collapsing them to the
+   case would break the only like-for-like available and would need an aggregation rule for a quantity
+   that is not a routing decision. **Denominators: 54 and 39, per mutated draft.**
+2. **The call budget.** `judge_preflight.json`'s 54 / 39 / ≥603 are call counts off per-finding
+   denominators and are unaffected by the pin. Nothing in the budget is an observation count.
+3. **⚠️ The confusion matrix changes unit, and its shape cannot say so.** M5's 31/16/8/8 summed to 63
+   *findings*; the rebuilt cells sum to **40 cases**. `JudgeConfusion` carries no unit field, so two
+   matrices at two units are indistinguishable on disk — and `judge_score.score_judge` builds its cells
+   from one `JudgedDraft` per finding, so **it cannot be reused unchanged at the pinned unit**: the rows
+   have to be collapsed to the case before they reach it, or the run will freeze a per-finding matrix
+   that reads as a per-case one. Whichever path is taken, the unit goes in the run artifact beside the
+   cells.
 
 **⚠️ What this does not settle.** The correlation is measured on *levels* — each configuration's own
 routing decision — and the sign test consumes a *difference* between two configurations. Nothing on
@@ -766,6 +786,12 @@ see the pre-flight block in the evidence ledger.
   test scored per case. Two figures are reported, not one: the **per-case** discordant count that fixes
   the threshold, and the **per-finding** count beside it, so the flag-if-any collapse's cost stays
   visible.
+- **⚠️ The scorer it would be natural to reuse is on the wrong unit.** `judge_score.score_judge` tallies
+  the four cells from one `JudgedDraft` per **finding**, and `JudgeConfusion` has no field that records
+  which unit its cells are on. So the judged rows must be collapsed to the case *before* they reach the
+  scorer, and the unit must be written into the run artifact beside the cells — otherwise this stage
+  freezes a per-finding matrix that a later reader takes for a per-case one, and the two are
+  indistinguishable on disk. See *the observation unit*.
 - **⚠️ Also measured here, and only here:** the within-case correlation of the **difference** between two
   passes of one configuration. T1 could measure the correlation of each configuration's routing *levels*
   but not of the contrast the sign test consumes — no artifact carried two configurations' judge output.
@@ -1052,6 +1078,13 @@ and the freeze is pinned by file comparison rather than by a self-digest).
 5. **Context, not part of the pin: the judge disagreed with itself on 15 of 54 findings** across three
    passes of one fixed configuration (27.8%) — a prior on why the repeat-pass collapse exists at all, and
    on why T3 measures the floor before T5 fixes a threshold.
+6. **What the pin does not reach, stated so it is not assumed to:** the two injected-detection rates
+   (per mutated draft, n = 54 and 39), the call budget (call counts, not observations), and — the one
+   with a code consequence — the confusion matrix, whose cells now sum to 40 rather than 63 while
+   `JudgeConfusion` has no field that says so and `judge_score.score_judge` builds them per finding. And
+   the structural check behind treating a case as one page: under the current scope
+   `act_gold.contradictory_gold_twins()` is **empty**, so no two in-scope cases share fixture bytes and
+   every cluster is a distinct page.
 
 **A partial judge noise floor already exists, on the wrong input.** `benchmark/reports/noise_floor.json`
 records a 3-pass SD of **0.158 on judge κ** and **0.105 on the judge miss rate**, and the four routing

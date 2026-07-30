@@ -12,6 +12,7 @@ flips it fails here instead of quietly changing what the test is scored on.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,7 @@ from clearway.eval.judge_observation_unit import (
     DegenerateClustering,
     aggregation_divergence,
     anova_icc,
+    assert_distinct_case_bytes,
     assert_same_clusters,
     build_record,
     drafter_streams,
@@ -173,6 +175,46 @@ def test_the_clustering_lives_in_two_of_the_four_classes() -> None:
     assert by_rule["empty-heading"]["unit_choice_changes_this_class"] is False
     assert by_rule["label"]["multi_observation_clusters"] == 2
     assert by_rule["link-name"]["multi_observation_clusters"] == 5
+
+
+def test_every_cluster_is_a_distinct_page() -> None:
+    """The premise the unit rests on, checked over the cases' own bytes. It must not be inferred from
+    `contradictory_gold_twins()`, which only surfaces byte-identical groups whose gold DIFFERS — so a
+    same-gold twin is invisible there and its emptiness proves nothing about this."""
+    cases = minting_cases(_load(_REPLAY))
+    checked = assert_distinct_case_bytes(cases)
+    assert checked["cases_hashed"] == checked["distinct_fixture_digests"] == len(cases) == 40
+
+
+def test_two_clusters_over_one_page_are_refused() -> None:
+    cases = minting_cases(_load(_REPLAY))
+    with pytest.raises(DegenerateClustering, match="not distinct pages"):
+        assert_distinct_case_bytes([cases[0], cases[0]])
+
+
+def test_a_case_outside_the_manifest_is_refused_rather_than_skipped() -> None:
+    case = replace(minting_cases(_load(_REPLAY))[0], act_testcase_id="0" * 40)
+    with pytest.raises(DegenerateClustering, match="not in the gold manifest"):
+        assert_distinct_case_bytes([case])
+
+
+def test_the_hazard_the_twin_helper_cannot_see_is_live_in_this_tree() -> None:
+    """An in-scope minting case IS byte-identical to a fixture the scoping dropped, and
+    `contradictory_gold_twins()` reports nothing — because the pair's gold outcomes are what it filters
+    on and the dropped side is no longer in the manifest at all. So the distinctness of the 40 clusters
+    has to be hashed, and a scope change that re-admitted that rule would put two clusters on one page."""
+    import hashlib
+
+    from clearway.eval.act_gold import _ACT_GOLD, contradictory_gold_twins
+
+    in_scope = "6566c139dc811b5a566a8e58c85d1f7f3c550d04"
+    dropped = "48cbc84f4c020393cfb56fd53337827278b2d528"
+    digests = {
+        hashlib.sha256((_ACT_GOLD / "html" / f"{tid}.html").read_bytes()).hexdigest() for tid in (in_scope, dropped)
+    }
+    assert len(digests) == 1, "the pair is no longer byte-identical — re-read the hazard before trusting this"
+    assert contradictory_gold_twins() == {}, "the helper is empty, which is exactly why it cannot carry the claim"
+    assert in_scope in {c.act_testcase_id for c in minting_cases(_load(_REPLAY))}
 
 
 def test_the_drafters_own_verdicts_disagree_within_a_case_more_than_chance() -> None:

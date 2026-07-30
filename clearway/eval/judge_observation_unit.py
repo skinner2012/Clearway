@@ -51,7 +51,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from clearway.eval.act_gold import RULE_TO_AXE
+from clearway.eval.act_gold import _ACT_GOLD, _MANIFEST, RULE_TO_AXE
 from clearway.eval.drafter_kappa import _grouped
 from clearway.eval.drafter_score import DraftedCase
 from clearway.eval.stats import COLLAPSE_RULE, is_flag
@@ -339,6 +339,49 @@ def manifest_rows(artifact: dict[str, Any]) -> int:
     return sum(len(group) for group in _grouped(artifact).values())
 
 
+def assert_distinct_case_bytes(cases: Sequence[DraftedCase]) -> dict[str, Any]:
+    """One cluster is one page: refuse if any two of these cases' fixture files share bytes.
+
+    **Established directly, over these cases' own bytes, and NOT from
+    `act_gold.contradictory_gold_twins()`.** That helper keeps only byte-identical groups whose ACT
+    outcomes *differ* — a same-gold twin is invisible to it — so its emptiness cannot support this
+    claim at all, however true the claim happens to be. Two clusters over one page would be two
+    clusters with perfectly correlated input, which is the thing the whole unit argument turns on.
+
+    Raises rather than reporting, so a future scope change that admits a twin fails here instead of
+    quietly weakening a pin nobody re-reads.
+    """
+    manifest = json.loads(_MANIFEST.read_text())
+    paths = {case["act_testcase_id"]: case["path"] for case in [*manifest["cases"], *manifest["honest_misses"]]}
+    digests: dict[str, list[str]] = {}
+    for case in cases:
+        if case.act_testcase_id not in paths:
+            raise DegenerateClustering(
+                f"case {case.act_testcase_id} is not in the gold manifest, so its fixture cannot be "
+                "hashed. Skipping it would let an unchecked page into the cluster set, which is the one "
+                "thing this check exists to prevent."
+            )
+        digest = hashlib.sha256((_ACT_GOLD / paths[case.act_testcase_id]).read_bytes()).hexdigest()
+        digests.setdefault(digest, []).append(case.act_testcase_id)
+    shared = {digest: ids for digest, ids in digests.items() if len(ids) > 1}
+    if shared:
+        raise DegenerateClustering(
+            f"these cases share fixture bytes, so they are not distinct pages: {shared}. Two clusters "
+            "over one page carry perfectly correlated input, and the observation unit was pinned on the "
+            "premise that a cluster is a page. Re-derive the unit before proceeding."
+        )
+    return {
+        "cases_hashed": len(cases),
+        "distinct_fixture_digests": len(digests),
+        "source": "sha256 over each case's own vendored fixture file",
+        "note": (
+            "Checked directly rather than inferred from the contradictory-twin helper, which only "
+            "surfaces byte-identical groups carrying DIFFERENT gold outcomes — a same-gold twin would "
+            "not appear in it, so its emptiness is not evidence for this claim."
+        ),
+    }
+
+
 def drafter_streams(artifact: dict[str, Any]) -> dict[str, list[list[Hashable]]]:
     """The drafter's per-case value streams, one entry per axis a comparison would run on.
 
@@ -538,6 +581,7 @@ def _structure(artifact: dict[str, Any]) -> dict[str, Any]:
         ),
         "largest_cluster": max(clustering.sizes),
         "cluster_size_histogram": {str(k): v for k, v in clustering.histogram.items()},
+        "one_cluster_is_one_page": assert_distinct_case_bytes(minting_cases(artifact)),
         "per_class": _per_class(artifact),
     }
 

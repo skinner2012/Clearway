@@ -61,6 +61,12 @@
       "3": 3,
       "4": 2
     },
+    "one_cluster_is_one_page": {
+      "cases_hashed": 40,
+      "distinct_fixture_digests": 40,
+      "source": "sha256 over each case's own vendored fixture file",
+      "note": "Checked directly rather than inferred from the contradictory-twin helper, which only surfaces byte-identical groups carrying DIFFERENT gold outcomes — a same-gold twin would not appear in it, so its emptiness is not evidence for this claim."
+    },
     "per_class": [
       {
         "axe_rule": "document-title",

@@ -463,11 +463,20 @@ is one of the three the pin rests on.** What survives:
    denominators and are unaffected by the pin. Nothing in the budget is an observation count.
 3. **⚠️ The confusion matrix changes unit, and its shape cannot say so.** M5's 31/16/8/8 summed to 63
    *findings*; the rebuilt cells sum to **40 cases**. `JudgeConfusion` carries no unit field, so two
-   matrices at two units are indistinguishable on disk — and `judge_score.score_judge` builds its cells
-   from one `JudgedDraft` per finding, so **it cannot be reused unchanged at the pinned unit**: the rows
-   have to be collapsed to the case before they reach it, or the run will freeze a per-finding matrix
-   that reads as a per-case one. Whichever path is taken, the unit goes in the run artifact beside the
-   cells.
+   matrices at two units are indistinguishable on disk — and `judge_score.score_judge` built its cells
+   from one `JudgedDraft` per finding, so it could not be reused unchanged at the pinned unit.
+   **⚠️ Fitted at T3a, with no `CONTRACTS.md` change:** `judge_score.collapse_to_cases` turns per-finding
+   judge decisions into one `JudgedDraft` per case (flag-if-any), `score_judge` takes a **required**
+   `unit=` and returns `JudgeScoring` — the confusion plus its unit and its n — and the unit goes into the
+   run artifact beside the cells. The size of the change, measured on the only passes that carry
+   per-finding judge output rather than argued: the earlier acceptance passes read **31/16/8/8 over 63
+   findings** and **24/9/7/7 over 47 minting cases**, κ 0.137 against 0.218, miss rate 0.667 against
+   0.563 — same judge, same drafts, two matrices with the same field names.
+   **⚠️ The case-level `act_correct` is the case's own predicate** (flag-if-any over its drafts against
+   the gold outcome) and is never rolled up from the per-finding ones: a case can be right while most of
+   its findings are wrong, which is the same fact as *the collapse absorbs 8 of the 15 wrong findings*.
+   `collapse_to_cases` therefore takes the gold side from the caller and **refuses a case that minted no
+   finding** rather than reading it as a release.
 
    **⚠️ And the change does not stop at the scorer — it reaches published series.** Every site that
    reads those cells or a rate derived from them, swept rather than assumed:
@@ -495,10 +504,19 @@ is one of the three the pin rests on.** What survives:
    marker and no gap in the series to notice.
 
    **A gauge whose meaning changes while its name does not is the failure this note exists to prevent.**
-   Either the case-level figures publish under **new** names, or the existing series are re-based
-   deliberately, the dashboard panels and the README sentence are updated in the same change, and the
-   re-basing is recorded. **This is a scope handoff, not a redesign: nothing about the dashboard is fixed
-   here — it lands in T3a, which spends no calls, so it is settled before the anchored run starts.** *(Not in scope either: `calibration_snapshot.py` and `metrics.py`'s bare `judge_kappa`, plus
+   **⚠️ Settled at T3a: NEW NAMES, and the existing series are not re-based.** The six `benchmark_judge_*`
+   gauges keep meaning exactly what they meant — per drafted finding for the confusion, per mutated draft
+   for the two detection bounds — their descriptions and their dashboard panel titles now carry that unit,
+   the README splits the family into a three-row table, and a case-level confusion publishes under the
+   reserved `benchmark_judge_per_case_*` names. The reservation is enforced rather than requested:
+   `benchmark_gauge_values` takes a required `judge_confusion_unit` and **refuses** anything but the unit
+   its names were minted for, naming the reserved series in the refusal. Blast radius of that refusal over
+   the whole repo: **one publisher** (`acceptance_snapshot`, which declares `finding` and does not trip),
+   **zero trips as shipped**, and one adversarial trip — a case-level scorecard pushed at the old names,
+   which is the failure it exists to stop. Re-basing was rejected: the only producer reads the frozen M5
+   scorecard, so re-basing would mean **re-freezing a published number** this milestone does not touch,
+   and the three re-scaled panels would sit beside two that stayed per-draft with nothing on the screen
+   saying so. *(Not in scope either: `calibration_snapshot.py` and `metrics.py`'s bare `judge_kappa`, plus
    the four panels reading it, `judge_trusted`, `judge_agreement_rate` and `judgment_correctness_rate` —
    those are the judge-vs-human κ on the self-built gold, already marked *superseded* on the dashboard,
    a different measurement that must not be "fixed" to match.)*
@@ -746,34 +764,62 @@ rate is reported with its absolute count and interpreted honestly.
    are not bit-reproducible even at temperature 0. **Re-run the anchored configuration N times and
    measure its own variance.** Without this, any improvement could be cloud jitter. This is what M5 did
    for the drafter, applied to the judge.
-4. **⚠️ `judge_version` does NOT track the finding-side prompt — corrected at T2.** The row that used to
-   sit here claimed the rubric text's sha256 makes the configurations carry distinct version strings by
-   construction. It does not: `_RUBRIC_HASH` covers `_RUBRIC_SYSTEM` alone, so the whole finding-side
-   template — its wording, its field selection, the referent and the candidate list T2 added — is
-   **outside** the hash. The consequences are concrete and none of them is hypothetical:
-   - the M9 anchored configuration and M5's are **indistinguishable by `judge_version`** while reading
-     materially different input (T0 already noted the string could not tell them apart; T2 is the edit
-     that makes them genuinely different instruments);
-   - the pre-flight's tripwire test (`test_the_rubric_hash_the_budget_was_counted_under_is_a_deliberate_tripwire`)
-     stays **green** across T2, because it watches the rubric it names;
+4. **⚠️ `judge_version` DOES track the finding-side prompt — false at T2, repaired at T3a.** The row
+   that used to sit here claimed the rubric text's sha256 makes the configurations carry distinct
+   version strings by construction. It did not: `_RUBRIC_HASH` covered `_RUBRIC_SYSTEM` alone, so the
+   whole finding-side template — its wording, its field selection, the referent and the candidate list
+   T2 added — sat **outside** the hash. **T3a extended it**: the string is now a sha256 over the
+   judge's whole prompt (`judge.version_prompts` — the system text plus the user prompt rendered over
+   four fixed sentinels), and it moved from `rubric=e396f37f; effort=medium` to
+   `prompt=afadca26; effort=medium`. The consequences below were the reason, and they are now closed
+   rather than carried:
+   - the M9 anchored configuration and M5's were **indistinguishable by `judge_version`** while reading
+     materially different input — they are now distinguishable, because only the M9 side carries the
+     new string;
+   - the pre-flight's tripwire stayed **green** across T2, because it watched the rubric it named — it
+     now watches the whole prompt
+     (`test_the_prompt_hash_the_budget_was_counted_under_is_a_deliberate_tripwire`), and it moved once,
+     deliberately, when the hash widened;
    - the calibration record's rater provenance (`docs/M4-calibration-report.md`, κ 0.791 `judge_trusted`)
-     names a `judge_version` that the judge still reports, on input the calibration never saw.
+     names a `judge_version` the judge no longer reports. That is the repair working: the string is now
+     visibly historical instead of silently current. The report is left dated, as the other dated
+     reports are.
 
    **⚠️ And it was not discovered here.** `docs/fable5-review-codebase.md` §2.4 had already documented
    exactly this defect, with exactly the one-line fix (hash the rubric plus the template applied to a
    fixed sentinel). T2 did not find it; T2 made it **load-bearing** — before T2 the unhashed half of the
    prompt was four field labels, and after it the unhashed half carries the referent and the whole
-   candidate list. A known recommendation that nothing depended on now has a measurement resting on it.
+   candidate list. A known recommendation that nothing depended on acquired a measurement resting on it,
+   and T3a implemented it. That review entry is left dated rather than edited.
 
-   **What T2 did instead of moving the string:** the whole finding-side prompt is pinned as a literal in
-   the judge's tests (a template edit fails there), and every frozen block carries its own sha256 in the
-   artifact. **The frozen input record deliberately records no `judge_version` at all** — a field
-   scheduled to move for reasons unrelated to that record's content would make a rebuild
-   indistinguishable from an edit, which is the defect T3a already has to repair once. **What is still open, and it is T3a's:** either extend the hash to cover the template and
-   **re-record** the pre-flight (the tripwire's own instruction is to re-record rather than retype), or
-   decide deliberately that the run artifact's block digests are the provenance and say so where
-   `judge_version` is published. Not decided at T2, because moving the string invalidates a frozen
-   record whose stabilisation is already T3a's work.
+   **The whole-prompt literal T2 pinned in the judge's tests stays.** It is not made redundant by the
+   version string: the string says *that* the prompt moved, the literal says *what* moved, and only the
+   second is readable in a diff.
+
+   **⚠️ Four sentinels, not one, and the reason is structural.** The referent block is gated by CLASS —
+   `label`, `document-title` and `link-name` each have their own builder and a finding carries one rule
+   id — so a single sentinel would leave two of the three builders outside the hash and a reword there
+   would move the prompt invisibly all over again. The set covers the three referent classes, a class
+   with no referent block, a candidate with normative text, one without, an empty candidate list, and a
+   draft presentation with and without citations. **The coverage is asserted on the surfaces, not on the
+   digest** — a pin on the hash alone stays green if a sentinel silently stops rendering a block.
+
+   **⚠️ One consequence is deliberate and has to be stated:** the sentinels render through the
+   **drafter's** own `referent_blocks` / `candidate_lines`, so a drafter-side reword now moves the
+   *judge's* version string. That is true rather than surprising — it moves the judge's prompt — but it
+   means the `judge/` → `drafter/` edge now carries reproducibility as well as phrasing
+   (`ARCHITECTURE.md` 0.14; the schema descriptions and the old string form are `CONTRACTS.md` 0.30).
+
+   **The frozen input record still records no `judge_version` at all, and that stays right** — it is a
+   property of the judge, and the two configurations reading those bytes carry the same string only
+   while nothing configuration-specific enters the prompt. **⚠️ But one sentence inside that frozen
+   record is now stale and cannot be repaired**: `pins.no_judge_version_here_and_that_is_deliberate`
+   says the string is *"SCHEDULED TO MOVE — extending the rubric hash … is an open decision"*. It moved.
+   The record's conclusion is unchanged and still correct; only its reason is dated. It is left as it
+   is **on purpose**: the text is written by `judge_finding_input.build_record`, which the freeze test
+   re-derives over the frozen rows, so editing the sentence means rebuilding the file — and rebuilding
+   needs a live scan and a live retrieval, which would replace the very bytes Control 2 exists to
+   freeze. A stale sentence in a dated record is the cheaper error.
 5. **Iterate the rubric on the dev set, never on the frozen set.** The same overfitting risk M7 faced
    with prompts. Freeze, then touch ACT once, and record how many times it was touched. **The drafter's
    cite-nothing-when-clean convention must be in the rubric before that freeze** — see *what code
@@ -865,7 +911,9 @@ check on how the number was arrived at, not the thing being delivered.
 7. **The observation unit pinned before any run**, with measured clustering behind it. **Settled: per
    case, keyed by `act_testcase_id`, flag-if-any within the case, applied after the per-finding majority
    across passes.** The disagreement rate stays per-finding and says so wherever it is quoted.
-8. **All runs frozen**, carrying `judge_model`, `judge_version` and full provenance.
+8. **All runs frozen**, carrying `judge_model`, `judge_version` and full provenance. **`judge_version`
+   dates the input as well as the rubric since T3a** — it hashes the whole prompt — so a frozen run is
+   attributable to the template it was taken under, and a `rubric=…` value marks a historical one.
 9. **The stale M6 scaffold references clarified** — the composite-metric and reflection-counter fields
    were documented as "filled by M9's reflection loop"; M9 is not that milestone. **Correct the
    description in this milestone's written read; do not edit M6.**
@@ -1042,10 +1090,10 @@ see the pre-flight block in the evidence ledger.
     must not see the draft reads whole rows from it, so the answer cannot live beside the question. The
     drafted citations are touched only in the provenance block, never on a row.
   - **Turned up and not asked for, all written into this spec above rather than only reported:**
-    Control 4 was **false** — `judge_version` cannot see this template move, so the M9 anchored judge and
-    M5's are indistinguishable by version string and the pre-flight tripwire stays green across the
-    change (T3a now owns the decision, and the template is pinned by a whole-prompt literal in the
-    meantime); the **SC-swap mutation is now answerable by list membership**, because no decoy criterion
+    Control 4 was **false** — `judge_version` could not see this template move, so the M9 anchored judge
+    and M5's were indistinguishable by version string and the pre-flight tripwire stayed green across the
+    change (**closed at T3a**: the hash now covers the whole prompt, and the whole-prompt literal in the
+    judge's tests stays beside it as the readable half); the **SC-swap mutation is now answerable by list membership**, because no decoy criterion
     appears in any class's candidate list, so a rebuilt 1.00 is *less* informative than M5's; and the
     shared retrieval prior is **constant within a class** — four candidate lists over 54 findings.
     Two consequences outside this milestone are recorded and not acted on: a rebuild of the M4
@@ -1091,12 +1139,17 @@ see the pre-flight block in the evidence ledger.
   - **Dry-run the whole anchored path** on stubbed or recorded judge responses, so the harness is proven
     before a call is spent. The `dry_gate` pattern exists for exactly this.
   - **⚠️ Decide what records the finding-side prompt, since `judge_version` does not — written back here
-    by T2.** The rubric hash covers `_RUBRIC_SYSTEM` alone, so T2's template change moved the judge's
-    input while every `JudgeResult` kept reporting `rubric=e396f37f; effort=medium`. Either extend
-    `_RUBRIC_HASH` to cover the finding-side template applied to a fixed sentinel — which moves the string
-    and therefore obliges **re-recording** `judge_preflight.json` and the tripwire test in the same change,
-    the tripwire's own instruction — or decide that the frozen blocks' digests
-    (`judge_finding_input.json`) are the provenance and say so wherever `judge_version` is published.
+    by T2. Decided: EXTEND THE HASH.** The rubric hash covered `_RUBRIC_SYSTEM` alone, so T2's template
+    change moved the judge's input while every `JudgeResult` kept reporting `rubric=e396f37f; effort=medium`.
+    The two options were: extend `_RUBRIC_HASH` to cover the finding-side template applied to a fixed
+    sentinel — which moves the string and therefore obliges **re-recording** `judge_preflight.json` and
+    the tripwire test in the same change, the tripwire's own instruction — or decide that the frozen
+    blocks' digests (`judge_finding_input.json`) are the provenance and say so wherever `judge_version`
+    is published. **The second was rejected**: those digests cover the finding side only, so the draft
+    presentation would have had no provenance at all and the blind configuration's own instruction
+    template would have had none either; and a `JudgeResult` persisted on the production path carries
+    `judge_version` and nothing else, so the field would have had to be documented as *not* prompt
+    provenance rather than made into it.
     Zero calls either way, and it has to be settled before a baseline is frozen under a version string
     that cannot date it. **⚠️ `CONTRACTS.md` is part of the same decision, and it is TWO sites, not one:**
     `JudgeResult.judge_version` (§3, `CONTRACTS.md:766`) and the offline report's field of the same name
@@ -1115,12 +1168,91 @@ see the pre-flight block in the evidence ledger.
   only; every surface in the publisher table is updated or explicitly deferred **with its reason**; the
   threshold rule is in the spec; the dry run passes end to end; the pre-flight record rebuilds to a stable
   digest.
+
+#### The threshold rule — pre-registered here, before the floor exists
+
+Fixed as arithmetic at T3a and implemented in `eval/judge_threshold.py`; **T3b measures the two inputs and
+plugs them in, and neither of them was known when this was written.**
+
+Let `n` be the realized discordant **case**-pairs (anchored ↔ blind, after both collapses in their pinned
+order) and `b` the wins pointing the pre-registered way. A result requires
+
+> **`b ≥ max( statistical bar, floor bar + 1 )`**
+>
+> - **statistical bar** = `min{ b' ≤ n : sign_test_p(b', n − b') ≤ 0.05 }`, one-sided, the closed form the
+>   repo already owns. Below **n = 5** no `b'` exists at all, and at that n the bar is all five.
+> - **floor bar** = the largest one-way win count any **same-configuration** pass-pair produces at the
+>   same unit when nothing has changed — the `max` across pairs, matching the paired convention the noise
+>   floor already states (*a change at or below the same-config discordance is jitter*), not the mean.
+
+**Two bars and not one, and T1's measurement is the reason.** `sign_test_p(5, 0) = 0.031` clears α, and the
+null already produces `b = 5` on its own — pass 2 vs 3 runs b/c = 5/3 — so **"five discordant pairs
+certifies" is demonstrably not the rule**: the statistical bar alone would certify jitter. Under T1's prior
+the floor bar is 6, which no `n = 5` can supply, so a result needs **n ≥ 6** as well as `b ≥ 6`.
+
+`threshold()` returns both halves and names the **binding** one, so the written read can say whether a
+result was limited by the evidence or by the judge's own jitter. When no `b` clears α at the realized `n`,
+the verdict is **uncertifiable at that n** — a finding to record, never a reason to loosen α, drop the
+one-sided direction, or re-cut the unit.
+
+- **Settled — zero model calls, and nothing here waits on anything.** Seven pieces:
+  - **The confusion path is per case, and the unit rides out with the cells.** `judge_score` gains
+    `JudgedCase`, `collapse_to_cases`, a required `unit=` on `score_judge` and a `JudgeScoring` return
+    (confusion + unit + n) — the `DrafterScoring` pattern, for the same reason: `JudgeConfusion` is
+    `extra="forbid"` and the unit is eval-only, so **no `CONTRACTS.md` §3 change was needed** and none was
+    made. `eval/offline.py` declares `finding` explicitly (the frozen acceptance scorecard is per drafted
+    finding) and gains `judged_cases` beside `_judged_drafts`. The measured size of the change is in the
+    confusion-matrix note under *the observation unit*.
+  - **Group B's drafter comparator is recomputed, not read off the frozen baseline.**
+    `eval/judge_drafter_comparator.py` → `benchmark/reports/judge_drafter_comparator.json`, from the replay
+    pass, through the baseline's own `class_kappas` — new source, not new arithmetic. Per class, both
+    denominators on every row, and the gap named to its case ids. **Re-derived independently, and it
+    reproduces the figures this spec already carried:** κ `document-title` **1.0000**, `empty-heading`
+    **0.6750**, `label` **0.8197**, `link-name` **0.2105**, against the frozen baseline's
+    **0.0000 / 0.6750 / 0.1270 / 0.2105** — two classes moved, and they are the two the referent work
+    repaired. n drafter 5 / 13 / 11 / 15 = **44**, judge-visible 5 / 11 / 11 / 13 = **40**, gap 0 / 2 / 0 / 2
+    = **4**, of which **2** carry gold `failed`. The record **does not choose the denominator** — that is
+    T5's, as *what ground (2) can bear* says — it makes both derivable and neither accidental.
+    `drafter_kappa_baseline.py` now opens with the pre-referent warning; the frozen file itself is
+    untouched, because it is a correct record of the run it was built from and other work legitimately
+    reads it as that run's baseline.
+  - **The published surfaces are reconciled under NEW names.** The decision, its enforcement and its
+    measured blast radius are in the settled note in *the observation unit*.
+  - **The threshold rule is the block immediately above**, in code at `eval/judge_threshold.py`, with the
+    sign-test tail re-derived in its test by enumerating coin flips rather than by importing the closed
+    form, and the null read out of the frozen observation-unit record rather than quoted.
+  - **The whole anchored path is proven on stubbed responses.** `eval/judge_anchored.py` +
+    `benchmark/reports/judge_anchored_dry_receipt.json`: **147 asks per pass — 54 natural + 54 SC-swap + 39
+    conformance-flip — 441 over three passes, 0 model calls, 441 stubbed**, every ask assembled from the
+    frozen finding side through `judge_prepared`, every response parsed, both collapses applied in their
+    pinned order, and the confusion emitted at **both** units (40 cases / 54 findings) with each unit
+    recorded beside its cells. The flip gate is re-counted in the test through the pre-flight's own
+    correctness predicate rather than through the function under test. **Every number in that receipt
+    describes the HARNESS and none describes the judge**, and the record says so in its own text.
+    ⚠️ The dry run turned up one real harness defect: an **even** pass count has no strict majority, and the
+    pinned collapse raised deep inside itself rather than at the door — `dry_run` now refuses it up front,
+    which is a constraint T3b and T4 inherit (N must be odd, not merely ≥ 3).
+  - **`judge_version` records the finding-side prompt.** The decision and every consequence are in
+    Control 4.
+  - **The pre-flight's freeze check is stable.** `record_digest` now prunes declared volatile **paths**
+    rather than top-level keys, and `judge_snapshot.listed_model_count` is one of them: it is read live
+    from the provider, so it moved whenever the catalogue moved and a rebuild could not be told apart from
+    an edit. **Out of the digest, kept in the record** — the count is evidence (*absent from a list of 126*
+    and *absent from a list of 0* are different claims) and the answer rests on `available`, which stays
+    inside the digest. Asserted both ways: a grown catalogue does not move the digest, a retired snapshot
+    does. The record was **re-recorded** twice (once for the digest change, once for the version string),
+    each time by running the builder — the tripwire's own instruction — never by retyping.
 - **Depends on:** T2
 
 ### T3b — Rebuild the anchored baseline + the judge noise floor *(the 441 calls)*
 - **Produces:** the current rubric's performance on **referent-carrying** input, and its own variance.
 - **Detail:** replay the judge over M7's frozen drafts, **running the same configuration N times**
-  (N ≥ 3), through the scoring path T3a fitted to the pinned unit. Compute the full Group A and Group B
+  (N ≥ 3 and **ODD** — the per-finding collapse is a strict majority and an even count can tie; the
+  pinned implementation refuses the tie rather than letting pass order settle it, and `judge_anchored.dry_run`
+  refuses an even N at the door), through the scoring path T3a fitted to the pinned unit. **The harness
+  exists: `eval/judge_anchored.py` builds the 147 asks, sends them through `Judge.judge_prepared` over the
+  frozen finding side, applies both collapses in their pinned order and scores at both units.** Swap the
+  stub client for the real one; do not re-implement the loop. Compute the full Group A and Group B
   metric set. **⚠️ The per-call cost and latency of the cloud judge are recorded here** — no earlier
   stage can observe them without making a call, so this is the first honest place.
 - **Rationale:** cloud models are not bit-reproducible even at temperature 0. **Without a noise floor,
@@ -1128,14 +1260,29 @@ see the pre-flight block in the evidence ledger.
 - **Acceptance:** the baseline is frozen with per-run variance; M5's figures are retained **as
   historical context only**, never as the paired comparator. **⚠️ The discordant count required by T5's
   sign test is derived from this floor and written into the spec here — before T4 makes its first
-  call.** **⚠️ The floor is measured at the unit T1 pinned** — a case-level discordant count, taken
+  call. The RULE is already fixed** (see *the threshold rule*, pre-registered at T3a and implemented in
+  `eval/judge_threshold.py`): what this stage supplies is the **floor bar** — the largest one-way win
+  count a same-configuration pass-pair produces at the pinned unit — and it plugs into
+  `threshold(n, null_wins=…)`. **Do not invent a second rule here**; if the arithmetic is uncomfortable,
+  that is the finding, and it is recorded rather than worked around. **⚠️ The floor is measured at the unit T1 pinned** — a case-level discordant count, taken
   after both collapses in their pinned order — because a threshold counted per finding cannot govern a
   test scored per case. Two figures are reported, not one: the **per-case** discordant count that fixes
   the threshold, and the **per-finding** count beside it, so the flag-if-any collapse's cost stays
   visible.
 - **⚠️ Do not re-fit the scorer here.** The judged rows are collapsed to the case, and the unit written
   into the artifact beside the cells, **by T3a** — because that work costs nothing and this stage costs
-  441 calls. If the collapse is still open when this stage starts, the stage is not ready to start.
+  441 calls. **Discharged: `judge_score.collapse_to_cases` + a required `unit=` on `score_judge`, proven
+  end to end on stubbed responses.** Two things this stage inherits rather than decides: `score_judge`
+  will not run without a declared unit, and the two injected rates stay **per mutated draft** at either
+  unit — `score_judge` never re-bases them.
+- **⚠️ Where the numbers may be published.** A case-level confusion does **not** go on
+  `benchmark_judge_kappa` / `_miss_rate` / `_false_alarm_rate`: those are per drafted finding and
+  `benchmark_gauge_values` refuses a case-level push, naming the reserved `benchmark_judge_per_case_*`
+  series instead. Adding those gauges means adding their dashboard panels in the same change — the
+  dashboard test pins the two sets equal in both directions.
+- **⚠️ Group B's drafter side is already frozen** at `benchmark/reports/judge_drafter_comparator.json`,
+  recomputed from the replay pass. Read it from there; do not recompute it, and do not read
+  `DrafterKappaBaseline`.
 - **⚠️ Also measured here, and only here:** the within-case correlation of a **real**
   between-configuration difference. T1 measured the correlation of each configuration's routing *levels*,
   and it measured the *null* difference between passes of one configuration — but the contrast the sign
@@ -1172,6 +1319,16 @@ see the pre-flight block in the evidence ledger.
 - **⚠️ Acceptance:** the model's output contains **no** assessment of the draft; agreement is decided
   entirely in code and reproducible from the frozen artifact; run-to-run variance is read against T3b's
   noise floor.
+- **⚠️ Two constraints inherited from T3a, neither of them optional.** `score_judge` takes a **required**
+  `unit=` and returns `JudgeScoring`, so this configuration's artifact records its unit beside its cells
+  exactly as the anchored one does — and the configuration marker this ticket already asks for is a
+  *second* field, not a substitute for it: one says *what a cell counts*, the other says *what
+  `citation_correct` means*. And **N must be odd**, because the per-finding collapse is a strict majority.
+- **⚠️ Changing the judge's response schema moves `judge_version`.** It is now a hash over the whole
+  prompt, so dropping the two grading booleans and asking for the judge's own answer re-dates every
+  result — which is correct and is the point, but it means the blind configuration's rows are **not**
+  comparable to the anchored ones by version string, and the pre-flight tripwire will fail. **Re-record
+  the pre-flight; do not retype the hash.**
 - **Depends on:** T3b
 
 ### T5 — Comparison and diagnostic decomposition
@@ -1183,12 +1340,18 @@ see the pre-flight block in the evidence ledger.
   and run the **one-sided exact sign test (α = 0.05)** on that per-case unit, at the discordant
   threshold pinned in T3b. Report the full Group A and Group B metric sets, the two raters' per-class κ
   against gold side by side under the four declared conditions, and the injected-versus-real gap
-  **on the anchored configuration**.
+  **on the anchored configuration**. **The drafter's side of that side-by-side is
+  `benchmark/reports/judge_drafter_comparator.json`** — recomputed at T3a from the replay pass, with both
+  denominators on every row; **this ticket declares which denominator each rater is quoted on**, which
+  T3a deliberately left open, and prints both n on every row either way.
 - **⚠️ The per-finding table is reported beside the test, never instead of it.** The case collapse
   disagrees with a within-case majority on 2 of 40 cases and hides an internal split in 2 of the 7
   multi-finding cases; a case-level figure that is false one level below it is a mistake this project has
   already made once.
-- **⚠️ Acceptance:** if injected detection rises while real detection does not, the verdict is
+- **⚠️ Acceptance:** the sign test is run at the bar `judge_threshold.threshold(n, null_wins=…)` returns,
+  and the **binding bar is reported** — a result limited by the judge's own jitter reads differently from
+  one limited by the evidence, and an `n` too small for any `b` to clear α is reported as
+  **uncertifiable at that n**. If injected detection rises while real detection does not, the verdict is
   **effective only on clean signal** — success may not be claimed. **The guard is read on anchored
   only**; blind's injected numbers are arithmetic and are not eligible to trip it. Degenerate endpoints
   on the disagreement rate are read in prose.
@@ -1359,11 +1522,12 @@ cannot demonstrate it, and the 21 clean drafts that cite nothing contribute noth
    cloud client uses also honours, and the record states that **no override was in force** when this
    answer was taken. A check against a hardcoded host could otherwise confirm a snapshot on a provider
    the judge never calls. **⚠️ No id count is quoted here, deliberately.** The record's
-   `listed_model_count` is read live and has already moved since this paragraph was first written, and it
-   sits **inside** `reproducible_digest` — so the pre-flight's freeze check drifts whenever the provider
-   adds a model, and a genuine edit becomes indistinguishable from a catalogue change. **T3a stabilises
-   it.** What the answer rests on is that the id is *present*, which a count neither strengthens nor
-   dates.
+   `listed_model_count` is read live and had already moved since this paragraph was first written, and it
+   sat **inside** `reproducible_digest` — so the pre-flight's freeze check drifted whenever the provider
+   added a model, and a genuine edit became indistinguishable from a catalogue change. **T3a stabilised
+   it:** the field is a declared volatile path now — out of the digest, still in the record — while
+   `available` stays inside it. What the answer rests on is that the id is *present*, which a count
+   neither strengthens nor dates.
 2. **M5's per-finding judge results were retained in full — but they are on the wrong drafts.** All
    three M5 passes (`benchmark/runs/run_{1,2,3}.json`) carry `judge_conformance_correct`,
    `judge_citation_correct` and `judge_verdict` on **63/63 rows each**, and run_1 re-derives the frozen
@@ -1374,7 +1538,9 @@ cannot demonstrate it, and the 21 clean drafts that cite nothing contribute noth
    context, exactly as the exit criterion already requires. **A second reason the M5 rows are not a
    baseline:** their injected results are keyed by `rule_name` and `caught` alone, with no
    `finding_id`, so they cannot be joined back to a finding or re-partitioned per class.
-3. **`reasoning_effort` is `medium`, and `judge_version` is `rubric=e396f37f; effort=medium`.**
+3. **`reasoning_effort` is `medium`, and `judge_version` was `rubric=e396f37f; effort=medium`** — it is
+   `prompt=afadca26; effort=medium` since T3a widened the hash, and the record was re-recorded to match.
+   What follows describes what was true at pre-flight time and is kept as that.
    Resolution order is `CLEARWAY_JUDGE_EFFORT` → `_DEFAULT_EFFORT` (`clearway/llm/cloud.py:32`); the
    checked-in `.env` does **not** set the variable (`env.example` does, to the same value), so the
    effective value comes from the code default either way. **⚠️ The rubric hash is unchanged since M5**
@@ -1442,9 +1608,12 @@ and the freeze is pinned by file comparison rather than by a self-digest).
 6. **What the pin does not reach, stated so it is not assumed to:** the two injected-detection rates
    (per mutated draft, n = 54 and 39), the call budget (call counts, not observations), and — the one
    with a code consequence — the confusion matrix, whose cells now sum to 40 rather than 63 while
-   `JudgeConfusion` has no field that says so, `judge_score.score_judge` builds them per finding, and
+   `JudgeConfusion` has no field that says so, `judge_score.score_judge` built them per finding, and
    four **unit-free gauge names** publish rates derived from them. The full site list is in *the
-   observation unit*.
+   observation unit*. **⚠️ Closed at T3a and the shape is unchanged:** the collapse and a required `unit=`
+   live in `judge_score`, the unit goes in the run artifact, the gauge names keep their per-finding
+   meaning with the unit stated on every description and panel title, and a case-level confusion publishes
+   under reserved `benchmark_judge_per_case_*` names that the emitter refuses to let anything else take.
 7. **One cluster is one page — established by hashing, not inferred, and it is guarding against
    something the corpus contains by the dozen.** The 40 in-scope minting cases yield **40 distinct
    fixture digests**, checked at freeze time and raised on collision; and the reassuring half that
@@ -1512,9 +1681,9 @@ sha256** on every read).
    candidates), which is framing, is unreachable to fix while the drafter's referent follows an
    instruction line the judge's finding side cannot carry, and is recorded as a limitation.
 6. **⚠️ Not asked for, and each one changes a statement elsewhere in this spec:** Control 4 was **false**
-   (`judge_version` hashes the system rubric only, so this change is invisible to it and to the pre-flight
-   tripwire — T3a now owns the decision, and a whole-prompt literal in the judge's tests is the interim
-   tripwire); **the SC-swap mutation became answerable by list membership**, because none of the three
+   (`judge_version` hashed the system rubric only, so this change was invisible to it and to the pre-flight
+   tripwire — **closed at T3a**, which widened the hash to the whole prompt and re-recorded the pre-flight;
+   the whole-prompt literal in the judge's tests stays beside it as the readable half); **the SC-swap mutation became answerable by list membership**, because none of the three
    decoy criteria appears in any class's candidate list, so a rebuilt injected-swap detection of 1.00
    carries *less* judge behaviour than M5's did; and the shared retrieval prior is **constant within a
    class** — four candidate lists across the whole set. Outside the milestone: a rebuild of the M4

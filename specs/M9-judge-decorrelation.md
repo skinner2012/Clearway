@@ -565,6 +565,12 @@ honest power statement this milestone owes T3b:**
   null already produces **b = 5** on its own — pass 2 vs 3 improves 5 cases and fails to clear α only
   because it also regresses 3. The three null pairs run b/c = 3/6, 3/4, 5/3 at p = 0.91, 0.77, 0.36.
 
+**⚠️ Corrected at T3a: `b = 5` is the largest `improved` column, not the largest one-way movement.** The
+pass ordering inside a same-configuration pair is arbitrary — 3/6 is 6/3 relabelled — so the order-invariant
+figure is **6** (the three pairs read 6, 4, 5 that way). The b/c rows above are exactly what the artifact
+holds and are kept as recorded; what changes is which of the two columns a threshold must be set against.
+See *the threshold rule*.
+
 **Read plainly: the judge's own jitter moves about as many case-level routing decisions as there are
 wrong drafts to repair in total.** For Comparison 1 to certify, blind would have to convert nearly the
 entire ceiling one-way while jitter scatters ~8 flips at random. That does not invalidate the design —
@@ -1186,9 +1192,22 @@ order) and `b` the wins pointing the pre-registered way. A result requires
 >   floor already states (*a change at or below the same-config discordance is jitter*), not the mean.
 
 **Two bars and not one, and T1's measurement is the reason.** `sign_test_p(5, 0) = 0.031` clears α, and the
-null already produces `b = 5` on its own — pass 2 vs 3 runs b/c = 5/3 — so **"five discordant pairs
-certifies" is demonstrably not the rule**: the statistical bar alone would certify jitter. Under T1's prior
-the floor bar is 6, which no `n = 5` can supply, so a result needs **n ≥ 6** as well as `b ≥ 6`.
+null already produces at least that many one-way wins on its own, so **"five discordant pairs certifies" is
+demonstrably not the rule**: the statistical bar alone would certify jitter.
+
+**⚠️ Re-derived at T3a, and it disagrees with T1's prose in the conservative direction.** T1 records the
+null as producing `b = 5` (pass 2 vs 3, b/c = 5/3). **That is the largest number in the `improved`
+column, and which pass of a same-configuration pair is called "before" is arbitrary** — under the null
+neither pass precedes the other, so a pair recorded 3/6 is the same event as 6/3 with the labels swapped.
+The order-invariant statistic — `max(improved, regressed)` per pair, then `max` across pairs — reads
+**6, 4, 5 → 6**, not 5. T1's figures are correct as recorded; the reading of them was one relabelling
+short, and `judge_threshold` uses the order-invariant one.
+
+**So under T1's prior the floor bar is 7, and a result needs `n ≥ 7` with `b ≥ 7`** — seven discordant
+case-pairs, every one pointing blind's way, zero pointing back. At `n` = 7 and 8 the two bars coincide;
+from `n` = 9 the statistical bar binds again. **Set that beside the repairable ceiling of 7 act-wrong
+cases and the power statement gets tighter, not looser**, which is the honest direction for a correction
+to move.
 
 `threshold()` returns both halves and names the **binding** one, so the written read can say whether a
 result was limited by the evidence or by the judge's own jitter. When no `b` clears α at the realized `n`,
@@ -1290,11 +1309,13 @@ one-sided direction, or re-cut the unit.
   beside the threshold; if it comes out materially **negative**, say so, because a per-case collapse would
   then be costing power rather than buying honesty.
 - **⚠️ The threshold is set against a ceiling of 7.** T1 measured 7 of the 40 case-level units act-wrong,
-  against a mean null movement of 8.0 cases per pass-pair, with a null `b` reaching 5 — the exact bar
-  `sign_test_p(5, 0)` clears. **So five discordant pairs is demonstrably not a safe threshold**, and
-  whatever is fixed here must be justified against those two figures rather than against α alone. If the
-  arithmetic says no attainable effect can clear the floor, that is a finding to record here, not a
-  reason to loosen the test.
+  against a mean null movement of 8.0 cases per pass-pair, with the null's largest one-way movement
+  reaching **6** (T1's `b = 5` is the largest `improved` column; the pass ordering inside a null pair is
+  arbitrary, so the order-invariant figure is 6 — corrected at T3a). **So five discordant pairs is
+  demonstrably not a safe threshold**, and under T1's prior the rule fixed at T3a puts the bar at
+  **b ≥ 7 over n ≥ 7**. Whatever this stage measures must be justified against those figures rather than
+  against α alone. If the arithmetic says no attainable effect can clear the floor, that is a finding to
+  record here, not a reason to loosen the test.
 - **Depends on:** T3a
 
 ### T4 — The blind configuration

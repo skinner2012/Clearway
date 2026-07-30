@@ -521,6 +521,32 @@ is one of the three the pin rests on.** What survives:
    those are the judge-vs-human κ on the self-built gold, already marked *superseded* on the dashboard,
    a different measurement that must not be "fixed" to match.)*
 
+#### ⚠️ A correlation the case unit cannot reach: two cases can be sent the identical question
+
+**Found at T3b, by re-rendering every ask against the digests the paid calls were made under.** The
+clustering above is measured between findings *inside* a case. But the judge is not shown a page — it
+is shown the finding side, and **the 54 findings render only 45 distinct finding-side blocks.** 17 of
+them sit in **8 duplicate groups, and not one group lies inside a single case**: every group spans two
+or three different `act_testcase_id`s. **So a pair of clusters can receive a byte-identical ask**, and
+their answers are correlated by a route no within-case statistic can see and the case collapse cannot
+absorb.
+
+| class | findings in a duplicate group | of the class |
+|---|---|---|
+| `document-title` | **3** (one group of three) | **3 of 5** |
+| `label` | 6 (three pairs) | 6 of 17 |
+| `link-name` | 4 (two pairs) | 4 of 21 |
+| `empty-heading` | 4 (two pairs) | 4 of 11 |
+
+**This is a property of the frozen finding side, so it applies to both configurations identically** —
+the blind ask is that block alone, so its duplication cannot be lower. It does not move any published
+number and it is not a defect in the freeze; what it bounds is how independent the 40 units are, and
+**it lands hardest on the smallest class**, where three of five observations are the same question
+asked three times. **Any `document-title` figure — including a disagreement rate of zero — carries
+this caveat.** It does not disturb T1's *one cluster is one page*: those are 40 distinct fixture files,
+and what collapses is the judge's **view** of them, since the block renders the target element, its
+referent and the candidate list rather than the page.
+
 #### ⚠️ What the collapse erases from the test's currency — and it is not a design effect
 
 **Effective n describes the precision of a proportion; the sign test's currency is discordant pairs, and
@@ -1441,6 +1467,11 @@ the unit.
     difference attributable to nothing. The contrast the sign test consumes still does not exist.
   - **The threshold.** Floor bar **5** from a largest one-way case movement of **4**; smallest attainable
     `n` = **5**. The full table and the correction to T1's prior are under *the threshold rule*.
+  - **⚠️ Turned up and not asked for: 54 findings are only 45 distinct asks, and the duplication crosses
+    cases.** Found by the freeze test's re-render, written up under *a correlation the case unit cannot
+    reach*. It bounds how independent the 40 units are, it is a property of the shared frozen finding
+    side so **T4 inherits it unchanged**, and it lands hardest on `document-title` — 3 of that class's 5
+    observations are the same question asked three times.
 - **Depends on:** T3a
 
 ### T4 — The blind configuration

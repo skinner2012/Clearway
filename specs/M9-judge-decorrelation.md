@@ -447,6 +447,14 @@ is one of the three the pin rests on.** What survives:
    flag-if-any lands on a different answer from a within-case majority on **2 of 40** cases. This
    project has already been burnt by a case-level figure that was false one level below it, so **the
    per-finding table is reported beside the test, never instead of it.**
+   **⚠️ Those two figures are the EARLIER JUDGED PASSES', not this milestone's configurations'** —
+   `benchmark/reports/judge_observation_unit.json` `homogeneity.case_collapse_cost`, taken off
+   `run_1.json`, the anchored rubric on referent-free input over a different draft set. They are correct
+   as recorded and they are a **prior**, not a prediction of what the collapse would cost here. **The
+   configurations this milestone ran cost more:** anchored **4 of 7** split (11 findings) and **3 of 40**
+   divergent, blind **6 of 7** split (19 findings) and **4 of 40** divergent, both frozen in
+   `benchmark/reports/judge_comparison.json` (`comparison_1_judge_vs_judge.aggregation_divergence`). The
+   sentence above is left as the prior it was; quote the measured pair.
 2. **⚠️ The disagreement rate keeps the FINDING as its denominator** — it is a queue-volume number and
    disagreement is per-finding by construction (code compares the judge's answer against *that
    finding's* draft), so collapsing it would report fewer people-visits than the queue holds. **Two
@@ -1694,7 +1702,10 @@ the unit.
 - **⚠️ The per-finding table is reported beside the test, never instead of it.** The case collapse
   disagrees with a within-case majority on 2 of 40 cases and hides an internal split in 2 of the 7
   multi-finding cases; a case-level figure that is false one level below it is a mistake this project has
-  already made once.
+  already made once. **⚠️ That 2 and 2 is the EARLIER judged passes' figure — a prior, taken on a
+  different instrument over a different draft set, not what this stage was expected to find.** Measure it
+  on each configuration that actually ran; the measured pair is in the settled block below and it is
+  larger on both sides.
 - **⚠️ Acceptance:** the sign test is run at the bar `judge_threshold.threshold(n, null_wins=…)` returns,
   and the **binding bar is reported** — a result limited by the judge's own jitter reads differently from
   one limited by the evidence, and an `n` at which `required_wins` comes back **None** is reported as

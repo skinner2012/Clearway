@@ -820,11 +820,35 @@ class JudgeResult(BaseModel):
         "the finding-side input the result was taken under",
     )
     verdict: JudgeVerdict = Field(
-        ..., description="correct | incorrect | partial (partial = one dimension right, the other wrong)"
+        ...,
+        description="correct | incorrect | partial, derived in code from the two booleans below by one "
+        "rule for both configurations (partial = exactly one of them True). ⚠️ It therefore inherits "
+        "their configuration dependence: under ANCHORED a dimension being True means the draft was "
+        "graded right, under BLIND it means the two raters agreed, so the three-way distribution is not "
+        "comparable across configurations",
     )
-    citation_correct: bool = Field(..., description="drafted SC(s) judged correct for the finding")
-    conformance_correct: bool = Field(..., description="drafted conformance judged correct for the finding")
-    rationale: str = Field(..., description="the judge's justification (rubric-based absolute scoring)")
+    citation_correct: bool = Field(
+        ...,
+        description="the citation axis, and WHAT IT ASSERTS DEPENDS ON THE JUDGE CONFIGURATION — an "
+        "eval-only distinction the field cannot carry, so any artifact holding these results states its "
+        "configuration beside them. ANCHORED (the production path): the judge was shown the draft and "
+        "graded it — the drafted SC(s) are correct for the finding. BLIND: the judge never saw the "
+        "draft; code compared the judge's own cited set against the drafted one, so this is AGREEMENT "
+        "BETWEEN TWO INDEPENDENT RATERS and is True whenever both named the same wrong criterion",
+    )
+    conformance_correct: bool = Field(
+        ...,
+        description="the conformance axis, same configuration dependence as `citation_correct`. "
+        "ANCHORED: the drafted conformance verdict is correct for the finding. BLIND: the judge's own "
+        "verdict equals the drafted one under raw four-value equality — agreement, not correctness, and "
+        "True whenever both raters are wrong the same way",
+    )
+    rationale: str = Field(
+        ...,
+        description="the judge's justification, never compared and never scored — prose is not a "
+        "compared field. ANCHORED: why it graded the draft as it did (rubric-based absolute scoring). "
+        "BLIND: why it reached its own verdict, which is the only thing it was asked for",
+    )
 
 
 class ConfidenceBin(BaseModel):

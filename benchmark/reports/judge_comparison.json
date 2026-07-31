@@ -2,7 +2,9 @@
   "artifact": "both judge comparisons, computed off the frozen runs and kept apart",
   "version": 1,
   "model_calls_spent": 0,
-  "created_at": "2026-07-25T02:41:41.406015+00:00",
+  "created_at": "2026-07-31T15:05:26.759852+00:00",
+  "replay_pass_created_at": "2026-07-25T02:41:41.406015+00:00",
+  "two_timestamps_and_they_answer_different_questions": "`created_at` is when THIS RECORD WAS BUILT — a wall-clock reading, so it moves on every rebuild and sits OUTSIDE `reproducible_digest`, which is what lets a re-run and a genuine edit stay distinguishable. `replay_pass_created_at` is when the DRAFTS were produced, read off the frozen replay pass; it is inside the digest, because if it ever moved this record would be describing a different run.",
   "read_in_this_order": "COMPARISON 2 FIRST. It is the one that decides whether the signal is worth having, and it carries no p-value; Comparison 1 is a check on how the disagreement rate was arrived at. A report that opens on a significance verdict has buried its own result.",
   "units": {
     "observation_unit": "case",
@@ -759,5 +761,6 @@
       },
       "note": "Re-derived here from the blind configuration's frozen answers rather than copied, so the record's own arithmetic is checkable end to end. It is the ROUTING confusion and belongs to Comparison 1; it sits here only because Comparison 2's reader needs the same numbers in front of them."
     }
-  }
+  },
+  "reproducible_digest": "38005299405c34e894584e74e8d1597080cc3e99a391d4cc87ed207d41b77f9b"
 }

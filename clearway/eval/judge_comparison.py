@@ -12,12 +12,17 @@ They share one run and several metric names, and blurring them is the easiest mi
 **The less useful comparison is the testable one.** Comparison 2 is what says whether the signal is
 worth wiring into anything, and it carries no significance verdict whatsoever.
 
-Zero model calls, zero network, no clock
-----------------------------------------
-Everything is read from files that already exist: the frozen replay drafts, both configurations'
-measured baselines, and the drafter comparator. `created_at` is taken off the replay pass, so the record
-is a deterministic function of its four sources and a rebuild is byte-identical — which is what lets the
-freeze be pinned by comparison rather than by a digest computed from the file's own bytes.
+Zero model calls, zero network — and two timestamps, which is one more than it looks
+-------------------------------------------------------------------------------------
+Everything is read from files that already exist: the frozen replay drafts, both configurations' measured
+baselines, and the drafter comparator. Every computed field is a deterministic function of those four,
+so the freeze is pinned by rebuilding rather than by a digest taken over the file's own bytes.
+
+`created_at` is when **this record** was built and `replay_pass_created_at` is when the **drafts** were
+produced. They are different facts and only the second belongs to the measurement, so the first sits
+outside `reproducible_digest` — a wall-clock reading inside the freeze check would move on every rebuild
+and make a re-run indistinguishable from an edit. The second stays inside it: if it ever moved, this
+record would be describing a different run and must fail.
 
 What is reused rather than re-implemented, and why it matters here
 -----------------------------------------------------------------
@@ -48,6 +53,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -750,14 +756,56 @@ def _provenance(path: Path, record: dict[str, Any], *, fields: tuple[str, ...]) 
     return {"path": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), **known}
 
 
+# ⚠️ What a rebuild is allowed to move without that reading as an edit. `created_at` says WHEN THIS RECORD
+# WAS BUILT — a wall-clock reading, so it moves on every rebuild and cannot sit inside the check that
+# answers *did this record change?*. The replay pass's own timestamp is a different fact and stays inside:
+# it dates the DRAFTS, it is read off a frozen file, and if it ever moved the record would be describing a
+# different run and must fail. Naming both `created_at` was the confusion this split removes.
+_VOLATILE_PATHS: tuple[tuple[str, ...], ...] = (("created_at",), ("reproducible_digest",))
+
+
+def _without_volatile(record: dict[str, Any]) -> dict[str, Any]:
+    """The record with every declared volatile path removed — the part a rebuild must reproduce."""
+    stable: dict[str, Any] = json.loads(json.dumps(record, ensure_ascii=False))
+    for path in _VOLATILE_PATHS:
+        node: Any = stable
+        for key in path[:-1]:
+            node = node.get(key) if isinstance(node, dict) else None
+            if not isinstance(node, dict):
+                break
+        else:
+            node.pop(path[-1], None)
+    return stable
+
+
+def record_digest(record: dict[str, Any]) -> str:
+    """sha256 over the record minus the volatile paths — the part a rebuild must reproduce.
+
+    This is what the freeze test pins. A plain byte comparison would break on every rebuild the moment the
+    record carries a real clock, so a genuine edit and a re-run would look alike — which is the same
+    argument that took the provider's live catalogue size out of the pre-flight's digest. Everything that
+    describes the MEASUREMENT stays inside: the four source digests, both comparisons, and the replay
+    pass's own timestamp.
+    """
+    return hashlib.sha256(
+        json.dumps(_without_volatile(record), sort_keys=True, ensure_ascii=False).encode()
+    ).hexdigest()
+
+
 def build_record(
     *,
     replay_path: Path,
     anchored_path: Path,
     blind_path: Path,
     comparator_path: Path,
+    created_at: str,
 ) -> dict[str, Any]:
-    """Assemble both comparisons. Pure given the four files, so the whole shape is testable."""
+    """Assemble both comparisons. Pure given the four files and the clock reading, so it stays testable.
+
+    `created_at` is passed in rather than read here for the usual reason: a builder that reads a clock
+    cannot be checked against anything, and a freeze test needs to rebuild with a *different* value and
+    still recognise the result as the same record.
+    """
     artifact = json.loads(replay_path.read_text())
     anchored_frozen = json.loads(anchored_path.read_text())
     blind_frozen = json.loads(blind_path.read_text())
@@ -779,11 +827,19 @@ def build_record(
 
     blind_scoring = score_blind(artifact, blind_asks(artifact), passes)
 
-    return {
+    record = {
         "artifact": "both judge comparisons, computed off the frozen runs and kept apart",
         "version": 1,
         "model_calls_spent": 0,
-        "created_at": artifact["created_at"],
+        "created_at": created_at,
+        "replay_pass_created_at": artifact["created_at"],
+        "two_timestamps_and_they_answer_different_questions": (
+            "`created_at` is when THIS RECORD WAS BUILT — a wall-clock reading, so it moves on every "
+            "rebuild and sits OUTSIDE `reproducible_digest`, which is what lets a re-run and a genuine "
+            "edit stay distinguishable. `replay_pass_created_at` is when the DRAFTS were produced, read "
+            "off the frozen replay pass; it is inside the digest, because if it ever moved this record "
+            "would be describing a different run."
+        ),
         "read_in_this_order": (
             "COMPARISON 2 FIRST. It is the one that decides whether the signal is worth having, and it "
             "carries no p-value; Comparison 1 is a check on how the disagreement rate was arrived at. A "
@@ -886,6 +942,7 @@ def build_record(
             },
         },
     }
+    return {**record, "reproducible_digest": record_digest(record)}
 
 
 def report_path() -> Path:
@@ -894,8 +951,12 @@ def report_path() -> Path:
     return _REPORTS_DIR / "judge_comparison.json"
 
 
-def build_from_frozen() -> dict[str, Any]:
-    """The record over the checked-in artifacts — the one form anything outside this module needs."""
+def build_from_frozen(created_at: str | None = None) -> dict[str, Any]:
+    """The record over the checked-in artifacts — the one form anything outside this module needs.
+
+    The clock is read here rather than in the builder, and `created_at` is overridable so a test can pin
+    one build against another without the reading itself being the difference.
+    """
     from clearway.eval.run_artifacts import CITATION_GROUNDING, run_path
 
     return build_record(
@@ -903,6 +964,7 @@ def build_from_frozen() -> dict[str, Any]:
         anchored_path=anchored_report_path(),
         blind_path=blind_report_path(),
         comparator_path=comparator_report_path(),
+        created_at=created_at or datetime.now(UTC).isoformat(),
     )
 
 

@@ -23,11 +23,13 @@ from clearway.eval.judge_comparison import (
     VERDICT_NO_MOVEMENT,
     VERDICT_SUPPORTED,
     VERDICT_UNCERTIFIABLE_AT_N,
+    _without_volatile,
     blind_passes,
     build_from_frozen,
     build_record,
     drafter_judge_kappa,
     judge_rater_flags,
+    record_digest,
     report_path,
     verdict_for,
 )
@@ -48,8 +50,15 @@ def _artifact() -> dict:
     return json.loads(_REPLAY.read_text())
 
 
-def _record() -> dict:
-    return build_record(replay_path=_REPLAY, anchored_path=_ANCHORED, blind_path=_BLIND, comparator_path=_COMPARATOR)
+def _record(created_at: str = "2026-01-01T00:00:00+00:00") -> dict:
+    """The record at a fixed clock reading, so two builds never differ by the timestamp alone."""
+    return build_record(
+        replay_path=_REPLAY,
+        anchored_path=_ANCHORED,
+        blind_path=_BLIND,
+        comparator_path=_COMPARATOR,
+        created_at=created_at,
+    )
 
 
 def _majority_release(frozen: dict, *, natural_only: bool) -> dict[str, bool]:
@@ -400,11 +409,37 @@ def test_the_sc_only_disagreements_are_reported_as_a_set_identity_not_a_count_ma
 # ---------------------------------------------------------------------------------------------
 
 
-def test_the_record_carries_no_clock_and_rebuilds_byte_identical() -> None:
-    first, second = _record(), _record()
-    assert first == second
-    assert first["created_at"] == _artifact()["created_at"]
+def test_the_two_timestamps_are_different_facts_and_only_one_is_volatile() -> None:
+    """`created_at` dates the RECORD and moves; `replay_pass_created_at` dates the DRAFTS and must not."""
+    first = _record("2026-01-01T00:00:00+00:00")
+    second = _record("2027-12-31T23:59:59+00:00")
+
+    assert first["created_at"] != second["created_at"]
+    assert first["replay_pass_created_at"] == second["replay_pass_created_at"] == _artifact()["created_at"]
     assert first["model_calls_spent"] == 0
+    # A rebuild at another moment is the same record: everything but the clock and its own digest matches.
+    assert _without_volatile(first) == _without_volatile(second)
+    assert record_digest(first) == record_digest(second) == first["reproducible_digest"]
+
+
+def test_the_freeze_check_tells_a_rebuild_apart_from_an_edit_in_both_directions() -> None:
+    """Both halves, because either one alone is useless.
+
+    A check that moved on a fresh clock would call every rebuild an edit; a check that ignored too much
+    would call every edit a rebuild. So the same digest is asserted to survive a changed timestamp AND to
+    move on a changed measurement — including one buried inside the record rather than at the top level.
+    """
+    record = _record("2026-01-01T00:00:00+00:00")
+    assert record_digest(record) == record_digest({**record, "created_at": "2030-06-06T06:06:06+00:00"})
+
+    edited = json.loads(json.dumps(record))
+    edited["comparison_1_judge_vs_judge"]["sign_test"]["per_case"]["blind_wins"] += 1
+    assert record_digest(edited) != record_digest(record), "a changed result must move the digest"
+
+    # And the replay pass's own timestamp stays INSIDE the check: if it moved, this record would be
+    # describing a different run, which is an edit and not a rebuild.
+    moved = {**record, "replay_pass_created_at": "1999-01-01T00:00:00+00:00"}
+    assert record_digest(moved) != record_digest(record)
 
 
 def test_rows_that_are_not_these_asks_are_refused_rather_than_re_aligned(tmp_path: Path) -> None:
@@ -416,7 +451,13 @@ def test_rows_that_are_not_these_asks_are_refused_rather_than_re_aligned(tmp_pat
     path = tmp_path / "blind.json"
     path.write_text(json.dumps(frozen))
     with pytest.raises(LedgerMismatch):
-        build_record(replay_path=_REPLAY, anchored_path=_ANCHORED, blind_path=path, comparator_path=_COMPARATOR)
+        build_record(
+            replay_path=_REPLAY,
+            anchored_path=_ANCHORED,
+            blind_path=path,
+            comparator_path=_COMPARATOR,
+            created_at="2026-01-01T00:00:00+00:00",
+        )
 
 
 def test_the_two_comparisons_are_named_and_kept_apart() -> None:
@@ -431,6 +472,14 @@ def test_the_two_comparisons_are_named_and_kept_apart() -> None:
 
 
 def test_the_committed_record_is_the_one_a_rebuild_produces() -> None:
-    """Deterministic given its four sources, so the freeze is pinned by comparison rather than by a
-    digest computed from the file's own bytes — which any edit that recomputes it would pass."""
-    assert json.loads(report_path().read_text()) == build_from_frozen()
+    """Pinned by rebuilding from the four sources rather than by a digest over the file's own bytes.
+
+    The comparison is *byte-identical except the declared volatile path* — the record now carries a real
+    clock, so demanding literal equality would fail on every rebuild and the freeze would be abandoned
+    rather than honoured. What a rebuild must reproduce is every computed field, which is what
+    `record_digest` covers.
+    """
+    on_disk = json.loads(report_path().read_text())
+    rebuilt = build_from_frozen()
+    assert _without_volatile(on_disk) == _without_volatile(rebuilt)
+    assert on_disk["reproducible_digest"] == record_digest(rebuilt) == record_digest(on_disk)

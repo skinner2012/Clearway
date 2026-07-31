@@ -1725,10 +1725,15 @@ the unit.
   on the disagreement rate are read in prose.
 - **Settled — zero model calls.** Both comparisons computed off the frozen runs and frozen at
   `benchmark/reports/judge_comparison.json` (`clearway/eval/judge_comparison.py`; rebuild:
-  `uv run python -m clearway.eval.judge_comparison`). Deterministic — `created_at` is read off the replay
-  pass — so the freeze is pinned by full rebuild rather than by a self-digest, and every κ and the
-  sign-test tail are re-derived in the test from the cells and by enumerating coin flips rather than by
-  calling the functions that produced them. Both configurations' routing decisions are replayed through
+  `uv run python -m clearway.eval.judge_comparison`). **Every computed field is a deterministic function
+  of its four sources**, so the freeze is pinned by rebuilding rather than by a digest over the file's own
+  bytes, and every κ and the sign-test tail are re-derived in the test from the cells and by enumerating
+  coin flips rather than by calling the functions that produced them. **⚠️ The record carries TWO
+  timestamps and they answer different questions:** `created_at` is when the record was built — a
+  wall-clock reading, so it sits **outside** `reproducible_digest`, which is what keeps a re-run and a
+  genuine edit distinguishable — and `replay_pass_created_at` is when the drafts were produced, read off
+  the frozen replay pass and **inside** the digest, because if it moved the record would be describing a
+  different run. Asserted both ways: a changed clock does not move the digest, a changed result does. Both configurations' routing decisions are replayed through
   their own harnesses, which refuse if the frozen rows are not those asks; nothing is lifted from a
   summary field and none of the four sources is written to.
 

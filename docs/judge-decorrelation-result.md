@@ -79,6 +79,21 @@ the convention. On the graded side the citation-only count (21) and the cite-not
 equal **and the sets still differ by one swap**, so no graded row is written off on the strength of a
 total.
 
+**The full split of each queue across the two axes.** A finding can disagree on the conformance
+verdict, on the cited criteria, or on both, so the three shares below sum to that configuration's
+headline; the two axis totals overlap on the *both* column and therefore do not:
+
+| Comparison 2, per finding (54) | conformance only | citation only | both | = headline | conformance axis in total | citation axis in total |
+|---|---|---|---|---|---|---|
+| **independent** | 1 | 7 | **13** | 21 | **14** | 20 |
+| graded | 6 | 21 | 1 | 28 | 7 | 22 |
+
+**These are not three independent channels**, and the shapes differ because the two configurations
+answer different questions. The independent judge disagrees on *both* axes at once on 13 of its 21 —
+it answers for itself, so a different verdict usually comes with a different citation. The graded
+configuration's queue is 21 of 28 citation-only, which is the drafter's citation habit rather than a
+difference of opinion.
+
 ### What those visits find
 
 *This answers: **is a visit worth making, and what does the queue miss?*** These two are a pair and are

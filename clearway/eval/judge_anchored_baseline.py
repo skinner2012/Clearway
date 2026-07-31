@@ -56,6 +56,8 @@ from typing import Any
 from pydantic import BaseModel
 
 from clearway.eval.judge_anchored import (
+    CONFIGURATION,
+    CONFIGURATION_MEANING,
     CONFORMANCE_FLIP,
     MUTATIONS,
     NATURAL,
@@ -86,20 +88,6 @@ from clearway.eval.stats import is_flag
 from clearway.judge import Judge, verdict_from
 from clearway.llm import Completion, ImagePart, LLMClient, LLMRequest, LLMUsage
 from clearway.schemas.models import Conformance, JudgeResult
-
-# The configuration this module runs. Named so the artifact says which of the comparison's two sides
-# it holds: `citation_correct` and `conformance_correct` mean "the drafted answer is right" here and
-# would mean "the judge named the same answer" under a blinded configuration, and two artifacts with
-# the same field names and different questions are indistinguishable on disk without this.
-CONFIGURATION = "anchored"
-
-CONFIGURATION_MEANING = (
-    "ANCHORED: the judge is shown the finding side AND the draft written for it, and grades that "
-    "draft. So `conformance_correct` is the judge's opinion of the DRAFTER's verdict, not a verdict "
-    "of its own, and the judge raises its hand exactly when that opinion is negative. A blinded "
-    "configuration reuses both field names for a different question — its booleans are computed in "
-    "code from the judge's own answer — so neither artifact may be read without this marker."
-)
 
 # The ceiling every gold-scored figure here is bounded by, and it is not the judge's to move.
 NOT_A_MEASUREMENT_OF_THE_DRAFTER = (

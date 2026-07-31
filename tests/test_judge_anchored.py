@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from clearway.eval.judge_anchored import (
+    CONFIGURATION,
     CONFORMANCE_FLIP,
     DETECTION_AXIS,
     NATURAL,
@@ -205,6 +206,14 @@ def test_an_even_pass_count_is_refused_at_the_door_rather_than_inside_the_collap
     """A strict majority across an even number of passes can tie, and a tie has no majority to take."""
     with pytest.raises(ValueError, match="ODD number of passes"):
         dry_run(passes=2)
+
+
+def test_the_receipt_names_its_configuration() -> None:
+    """Two dry receipts now sit side by side and their booleans answer different questions, so each
+    has to say which one it holds — a marker on only the newer file leaves the pair ambiguous."""
+    receipt = json.loads(report_path().read_text())
+    assert receipt["configuration"] == CONFIGURATION == "anchored"
+    assert "grades that draft" in receipt["configuration_meaning"]
 
 
 def test_the_committed_receipt_is_what_a_rerun_produces() -> None:

@@ -1,6 +1,8 @@
 {
   "artifact": "a dry run of the anchored judging path over stubbed responses",
   "version": 1,
+  "configuration": "anchored",
+  "configuration_meaning": "ANCHORED: the judge is shown the finding side AND the draft written for it, and grades that draft. So `conformance_correct` is the judge's opinion of the DRAFTER's verdict, not a verdict of its own, and the judge raises its hand exactly when that opinion is negative. A blinded configuration reuses both field names for a different question — its booleans are computed in code from the judge's own answer — so neither artifact may be read without this marker.",
   "model_calls_spent": 0,
   "stubbed": true,
   "stub_disclaimer": "Every judge response in this record came from a DETERMINISTIC STUB, not from a model: the two booleans are read off the sha256 of the ask. Zero model calls were made and zero tokens were spent. So every rate, cell and kappa below describes the HARNESS — that the asks assemble from the frozen finding side, that each one parses, that the two collapses apply in their pinned order, and that the scorer records the unit its cells are on. None of them describes the judge, and none may be quoted as a baseline, a floor or a result.",

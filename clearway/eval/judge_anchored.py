@@ -68,6 +68,19 @@ from clearway.judge import FindingInput, Judge
 from clearway.llm import Completion, ImagePart, LLMUsage
 from clearway.schemas.models import Citation, Conformance, DraftRow, JudgeResult
 
+# The configuration this path runs. It lives here rather than beside the live runner because BOTH
+# records it produces — the dry receipt and the frozen baseline — have to carry it: two dry receipts
+# sitting side by side, one self-describing and one not, is the same failure at one remove.
+CONFIGURATION = "anchored"
+
+CONFIGURATION_MEANING = (
+    "ANCHORED: the judge is shown the finding side AND the draft written for it, and grades that "
+    "draft. So `conformance_correct` is the judge's opinion of the DRAFTER's verdict, not a verdict "
+    "of its own, and the judge raises its hand exactly when that opinion is negative. A blinded "
+    "configuration reuses both field names for a different question — its booleans are computed in "
+    "code from the judge's own answer — so neither artifact may be read without this marker."
+)
+
 NATURAL = "natural"
 SC_SWAP = "sc_swap"
 CONFORMANCE_FLIP = "conformance_flip"
@@ -372,6 +385,8 @@ def build_receipt(
     return {
         "artifact": "a dry run of the anchored judging path over stubbed responses",
         "version": 1,
+        "configuration": CONFIGURATION,
+        "configuration_meaning": CONFIGURATION_MEANING,
         "model_calls_spent": 0,
         "stubbed": True,
         "stub_disclaimer": STUB_DISCLAIMER,

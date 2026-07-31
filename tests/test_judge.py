@@ -14,9 +14,21 @@ import os
 import pytest
 
 from clearway.drafter.llm import candidate_lines, referent_blocks
-from clearway.judge import CANDIDATE_HEADING, FindingInput, Judge, JudgeError, finding_input, verdict_from
+from clearway.judge import (
+    CANDIDATE_HEADING,
+    BlindAnswer,
+    BlindJudge,
+    FindingInput,
+    Judge,
+    JudgeError,
+    blind_user_prompt,
+    citations_agree,
+    conformance_agrees,
+    finding_input,
+    verdict_from,
+)
 from clearway.judge import judge as judge_module
-from clearway.judge.judge import _RUBRIC_SYSTEM, version_prompts
+from clearway.judge.judge import _BLIND_SYSTEM, _RUBRIC_SYSTEM, blind_version_prompts, version_prompts
 from clearway.llm import CloudLLMClient, FakeLLMClient
 from clearway.schemas.models import (
     Citation,
@@ -321,6 +333,211 @@ def test_an_empty_candidate_list_is_rendered_rather_than_omitted() -> None:
     """A caller that retrieved nothing has to be visible in the prompt, not silently equal to one that
     retrieved something — which is also why `citations` has no default."""
     assert "- (none retrieved)" in finding_input(_finding(), []).block
+
+
+# --- the blind configuration: it answers, and code compares -------------------
+
+
+def _blind_resp(conformance: str, *sc_ids: str, rationale: str = "because") -> str:
+    cited = ", ".join(f'"{s}"' for s in sc_ids)
+    return f'{{"conformance":"{conformance}","cited_sc_ids":[{cited}],"rationale":"{rationale}"}}'
+
+
+def _blind(*responses: str) -> tuple[BlindJudge, FakeLLMClient]:
+    client = FakeLLMClient(*responses, model=_JUDGE_MODEL)
+    return BlindJudge(client, drafter_model=_DRAFTER_MODEL), client
+
+
+def _answer(conformance: Conformance, *sc_ids: str) -> BlindAnswer:
+    return BlindAnswer(finding_id="f", conformance=conformance, cited_sc_ids=sc_ids, rationale="r")
+
+
+def test_the_blind_ask_is_the_frozen_finding_side_alone() -> None:
+    """The whole of the blinding, asserted on the bytes: nothing is appended to the frozen block."""
+    prepared = FindingInput(finding_id="frozen-1", block="FROZEN FINDING SIDE")
+    judge, client = _blind(_blind_resp("supports"))
+    judge.answer(prepared)
+    assert client.requests[0].user == "FROZEN FINDING SIDE"
+    assert blind_user_prompt(prepared) == prepared.block
+
+
+def test_the_blind_judge_is_never_shown_the_draft() -> None:
+    """The draft's verdict and its citation appear in neither half of the ask.
+
+    Structural rather than incidental — `answer` takes no draft at all, so there is nothing in scope
+    to leak — and asserted anyway on the recorded request, because a rubric could name a draft in
+    prose without any caller passing one.
+    """
+    prepared = FindingInput(finding_id="frozen-1", block="FROZEN FINDING SIDE")
+    judge, client = _blind(_blind_resp("does_not_support", "1.1.1"))
+    answer = judge.answer(prepared)
+    judge.compare(answer, _draft(_finding(), Conformance.PARTIALLY_SUPPORTS, "9.9.9"), "r")
+    sent = client.requests[0].system + client.requests[0].user
+    assert "9.9.9" not in sent  # the drafted citation
+    assert "- conformance: partially_supports" not in sent  # the drafted verdict, as it would be shown
+    assert "DRAFTED ROW" not in sent
+    assert "- cited WCAG SC(s):" not in sent
+    assert len(client.requests) == 1, "comparing a draft must not cost a second call"
+
+
+@pytest.mark.parametrize(
+    "judge_conformance,draft_conformance,agree",
+    [
+        (Conformance.SUPPORTS, Conformance.SUPPORTS, True),
+        (Conformance.PARTIALLY_SUPPORTS, Conformance.DOES_NOT_SUPPORT, False),
+        (Conformance.DOES_NOT_SUPPORT, Conformance.PARTIALLY_SUPPORTS, False),
+        (Conformance.NOT_APPLICABLE, Conformance.SUPPORTS, False),
+    ],
+)
+def test_conformance_is_compared_raw_and_four_valued(
+    judge_conformance: Conformance, draft_conformance: Conformance, agree: bool
+) -> None:
+    """`partially_supports` != `does_not_support`. The FLAG/CLEAN collapse governs scoring against
+    gold, never the comparison of two raters' answers — both emit the same enum, so both are read."""
+    finding = _finding()
+    assert conformance_agrees(_answer(judge_conformance), _draft(finding, draft_conformance)) is agree
+
+
+@pytest.mark.parametrize(
+    "judge_ids,draft_ids,agree",
+    [
+        ((), (), True),  # both silent on a clean row — the drafter's own convention
+        (("1.1.1",), ("1.1.1",), True),
+        (("1.1.1", "1.3.1"), ("1.3.1", "1.1.1"), True),  # a set, so order is not a difference
+        ((), ("1.1.1",), False),  # the judge named nothing where the drafter named one
+        (("1.1.1",), (), False),  # and the mirror, which is the artefact the spec warns about
+        (("1.1.1",), ("1.1.1", "1.3.1"), False),  # a subset is not a match
+    ],
+)
+def test_citations_are_compared_as_exact_sets(
+    judge_ids: tuple[str, ...], draft_ids: tuple[str, ...], agree: bool
+) -> None:
+    finding = _finding()
+    answer = _answer(Conformance.SUPPORTS, *judge_ids)
+    assert citations_agree(answer, _draft(finding, Conformance.SUPPORTS, *draft_ids)) is agree
+
+
+def test_the_result_carries_code_derived_booleans_and_this_configurations_provenance() -> None:
+    finding = _finding()
+    judge, client = _blind(_blind_resp("does_not_support", "1.1.1", rationale="the alt is a filename"))
+    result = judge.compare(
+        judge.answer(FindingInput(finding_id=finding.id, block="B")),
+        _draft(finding, Conformance.DOES_NOT_SUPPORT, "1.1.1"),
+        "blind-1",
+    )
+    assert result.verdict is JudgeVerdict.CORRECT  # both axes agree → the same derivation as anchored
+    assert result.citation_correct is True
+    assert result.conformance_correct is True
+    assert result.finding_id == finding.id
+    assert result.run_id == "blind-1"
+    assert result.judge_model == _JUDGE_MODEL
+    assert result.judge_version.startswith("prompt=")
+    assert result.rationale == "the alt is a filename"
+    assert len(client.requests) == 1
+
+
+def test_one_axis_agreeing_is_a_partial_verdict_here_too() -> None:
+    finding = _finding()
+    judge, _ = _blind(_blind_resp("supports", "1.1.1"))
+    result = judge.compare(
+        judge.answer(FindingInput(finding_id=finding.id, block="B")),
+        _draft(finding, Conformance.DOES_NOT_SUPPORT, "1.1.1"),
+        "r",
+    )
+    assert result.verdict is JudgeVerdict.PARTIAL
+    assert (result.citation_correct, result.conformance_correct) == (True, False)
+
+
+def test_blind_raises_rather_than_fabricating_an_answer() -> None:
+    judge, _ = _blind("not json", "still not json")
+    with pytest.raises(JudgeError):
+        judge.answer(FindingInput(finding_id="f", block="B"))
+
+
+def test_blind_judge_must_differ_from_the_drafter_model() -> None:
+    with pytest.raises(ValueError, match="must differ from the drafter model"):
+        BlindJudge(FakeLLMClient(model=_DRAFTER_MODEL), drafter_model=_DRAFTER_MODEL)
+
+
+def test_the_rubric_carries_the_drafters_citation_convention_and_its_quality_review_stance() -> None:
+    """Both are frozen before the run, and neither may be repaired afterwards.
+
+    The convention is the drafter's unwritten habit — cite the criterion you decided against, cite
+    nothing when there is no failure — which nobody had ever told a judge; the quality-review stance is
+    the framing sentence the drafter's own prompt carries, without which a present-but-inadequate value
+    reads as conformant.
+    """
+    assert "Name NOTHING when you find no failure." in _BLIND_SYSTEM
+    assert "the SINGLE most applicable one" in _BLIND_SYSTEM
+    assert "present-but-inadequate value is does_not_support or partially_supports, never supports" in _BLIND_SYSTEM
+    assert "No other rater's answer is shown to you" in _BLIND_SYSTEM
+
+
+def test_the_blind_version_hash_reaches_every_finding_side_surface_and_no_draft() -> None:
+    """The same surface assertion the anchored configuration carries, minus the half it does not send.
+
+    The draft presentation must be absent: if it reached this hash, a reworded draft block would
+    re-date a configuration whose asks it cannot enter.
+    """
+    surfaces = blind_version_prompts()
+    assert surfaces[0] == _BLIND_SYSTEM
+    joined = "\n".join(surfaces)
+    for rule in ("label", "document-title", "link-name", "empty-heading"):
+        assert f"- axe rule: {rule}\n" in joined, f"no sentinel renders {rule}"
+    for marker in (
+        'Resolved accessible name: "',
+        "Nearest section heading: ",
+        'Resolved page title: "',
+        "Page topic signal (source: ",
+        "Surrounding context (ancestor depth ",
+        CANDIDATE_HEADING,
+        "  What it requires: ",
+        "- (none retrieved)",
+        "(normative text truncated at ",
+    ):
+        assert marker in joined, f"the blind version hash does not reach {marker!r}"
+    assert "DRAFTED ROW (grade this)" not in joined
+
+
+def test_the_two_configurations_carry_different_version_strings() -> None:
+    """Two prompts, two strings. One string over both would date neither run to what it was sent."""
+    client = FakeLLMClient(model=_JUDGE_MODEL)
+    anchored = Judge(client, drafter_model=_DRAFTER_MODEL).judge_version
+    blind = BlindJudge(client, drafter_model=_DRAFTER_MODEL).judge_version
+    assert anchored != blind
+    assert anchored.startswith("prompt=") and blind.startswith("prompt=")
+
+
+def test_the_anchored_string_cannot_be_moved_by_the_blind_rubric(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The other half of the decision, and the one that protects an already-frozen measurement.
+
+    An edit to the blind rubric must move the blind string and leave the anchored one exactly where it
+    was, because the anchored ask it cannot reach is byte-identical either way. The converse is
+    already asserted above for the shared finding side, which moves both.
+    """
+    client = FakeLLMClient(model=_JUDGE_MODEL)
+    anchored_before = Judge(client, drafter_model=_DRAFTER_MODEL).judge_version
+    blind_before = BlindJudge(client, drafter_model=_DRAFTER_MODEL).judge_version
+    monkeypatch.setattr(judge_module, "_BLIND_SYSTEM", "a different blind rubric")
+    assert Judge(client, drafter_model=_DRAFTER_MODEL).judge_version == anchored_before
+    assert BlindJudge(client, drafter_model=_DRAFTER_MODEL).judge_version != blind_before
+
+
+def test_the_shared_finding_side_moves_both_configurations(monkeypatch: pytest.MonkeyPatch) -> None:
+    """One file feeds both asks, so a reworded line there re-dates both — which is what makes the two
+    strings comparable as provenance rather than merely different."""
+    client = FakeLLMClient(model=_JUDGE_MODEL)
+    before = (
+        Judge(client, drafter_model=_DRAFTER_MODEL).judge_version,
+        BlindJudge(client, drafter_model=_DRAFTER_MODEL).judge_version,
+    )
+    monkeypatch.setattr(judge_module, "CANDIDATE_HEADING", "Some other heading:")
+    after = (
+        Judge(client, drafter_model=_DRAFTER_MODEL).judge_version,
+        BlindJudge(client, drafter_model=_DRAFTER_MODEL).judge_version,
+    )
+    assert after[0] != before[0]
+    assert after[1] != before[1]
 
 
 # --- gated integration: the real cloud judge ---------------------------------

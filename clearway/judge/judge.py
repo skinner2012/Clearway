@@ -55,6 +55,22 @@ One wording difference from the drafter survives deliberately and is recorded he
 report: the drafter heads its candidates *"you may cite"*, an instruction to a rater that cites, while
 this block heads them *"retrieved for this finding"*. The same block serves a configuration that
 grades a citation and one that makes its own, so the heading has to be true of both.
+
+Two configurations, and only the second half of the prompt tells them apart
+---------------------------------------------------------------------------
+`Judge` is the **anchored** configuration: it is shown the draft and grades it. `BlindJudge` is the
+**blind** one: it is shown the finding side alone, answers for itself, and never learns that a draft
+exists. Agreement is then decided by CODE — raw four-value equality on `conformance`, exact set match
+on the cited criteria — which is what makes the judge an independent rater and κ mean what κ claims to
+measure. Neither model call can leak the other configuration's material, because the blind entry point
+takes no draft at all: the withholding is a property of the signature rather than a promise in prose.
+
+**Each configuration carries its OWN `judge_version`, and that is deliberate.** The string is a hash
+over the prompt a result was taken under, so two configurations that send different prompts must not
+report one string — a run frozen under either has to be datable to the prompt it actually saw. The
+converse matters just as much: adding the blind rubric leaves the anchored prompt byte-identical, so
+the anchored string does **not** move, and a measurement already frozen under it stays current rather
+than being falsely re-dated by an edit that could not have reached it.
 """
 
 from __future__ import annotations
@@ -153,6 +169,31 @@ def finding_input(finding: Finding, citations: Sequence[Citation]) -> FindingInp
     return FindingInput(finding_id=finding.id, block=_finding_block(finding, citations))
 
 
+def require_distinct_models(client: LLMClient, drafter_model: str) -> None:
+    """Refuse a judge that is the drafter. Shared by both configurations, because the discipline is
+    the judge's rather than any one configuration's — a blind second reader drawn from the drafter's
+    own family is not a second reader at all."""
+    if client.model == drafter_model:
+        raise ValueError(
+            f"judge model {client.model!r} must differ from the drafter model — a model grading "
+            "its own output self-preferences"
+        )
+
+
+def version_string(client: LLMClient, prompt_digest: str) -> str:
+    """`prompt=<digest>; effort=<effort>` — the provenance a result carries, assembled in one place.
+
+    The digest is the CONFIGURATION's own, never a shared one: see the module docstring. The effort is
+    read off the client because it is not a constant (it resolves from the environment first), and a
+    client that reports none contributes no term rather than an empty one.
+    """
+    effort = getattr(client, "reasoning_effort", None)
+    parts = [f"prompt={prompt_digest}"]
+    if effort:
+        parts.append(f"effort={effort}")
+    return "; ".join(parts)
+
+
 class Judge:
     """Grades drafted judgment items with a cloud reference model on a fixed rubric.
 
@@ -160,18 +201,10 @@ class Judge:
     """
 
     def __init__(self, client: LLMClient, drafter_model: str, retries: int = 1) -> None:
-        if client.model == drafter_model:
-            raise ValueError(
-                f"judge model {client.model!r} must differ from the drafter model — a model grading "
-                "its own output self-preferences"
-            )
+        require_distinct_models(client, drafter_model)
         self._client = client
         self._retries = retries
-        effort = getattr(client, "reasoning_effort", None)
-        parts = [f"prompt={prompt_hash()}"]
-        if effort:
-            parts.append(f"effort={effort}")
-        self._judge_version = "; ".join(parts)
+        self._judge_version = version_string(client, prompt_hash())
 
     @property
     def judge_version(self) -> str:
@@ -216,6 +249,153 @@ class Judge:
         raise JudgeError(
             f"judge {self._client.model!r} returned no parseable verdict for finding "
             f"{prepared.finding_id!r} after {self._retries + 1} attempts"
+        )
+
+
+_BLIND_SYSTEM = (
+    "You are a WCAG 2.2 accessibility expert drafting ONE conformance row for a VPAT/ACR. You are "
+    "given ONE accessibility finding and the WCAG success criteria retrieved for it, and you decide "
+    "the verdict yourself. No other rater's answer is shown to you: there is nothing here to agree "
+    "with, to grade, or to defer to.\n"
+    "For a QUALITY-REVIEW finding (axe confirmed a name/attribute is PRESENT but did not judge its "
+    "quality), a present-but-inadequate value is does_not_support or partially_supports, never "
+    "supports.\n"
+    "Rules:\n"
+    "- conformance: EXACTLY one of supports | partially_supports | does_not_support | not_applicable\n"
+    "- cited_sc_ids: name the criterion you decided against — only WCAG SC ids from the candidates "
+    "shown, the SINGLE most applicable one, adding a second only if the finding independently fails "
+    "that one too. Name NOTHING when you find no failure.\n"
+    "Do NOT judge severity and do NOT write remediation. Output ONLY the JSON object with "
+    "conformance, cited_sc_ids, and a one-sentence rationale."
+)
+
+
+class _BlindAnswer(BaseModel):
+    """The judge's OWN answer — the drafter's two semantic fields, asked of a second reader.
+
+    Deliberately the same shape the drafter answers under (`drafter.llm._LLMDraft`'s `conformance` and
+    `cited_sc_ids`), because two readers can only be compared field-for-field if they were asked for
+    the same fields. `remediation` and `confidence` are not asked for: prose is never compared and the
+    schema already declares confidence decorative, so asking would spend tokens on fields no
+    comparison may read. `extra="forbid"` → `additionalProperties:false`, the cloud Responses API's
+    strict json-schema mode.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    conformance: Conformance
+    cited_sc_ids: list[str]
+    rationale: str
+
+
+@dataclass(frozen=True)
+class BlindAnswer:
+    """One blind judge's own answer to one finding, before any comparison has happened.
+
+    It is kept as its own value rather than folded straight into a `JudgeResult` because the two are
+    different facts: this is what the judge said, and a `JudgeResult` is what code concluded by
+    setting that beside a draft. Only the first survives a configuration change; only the second fits
+    the production shape. The run artifact carries both, and `Direction of disagreement` can be
+    answered from this one alone.
+    """
+
+    finding_id: str
+    conformance: Conformance
+    cited_sc_ids: tuple[str, ...]
+    rationale: str
+
+
+def conformance_agrees(answer: BlindAnswer, draft: DraftRow) -> bool:
+    """RAW four-value equality — `partially_supports` and `does_not_support` are a disagreement.
+
+    The FLAG/CLEAN collapse exists because ACT gold is binary and four drafted verdicts have to reach
+    it; that constraint governs scoring against gold, not the comparison of two raters' answers. Both
+    readers emit the same four-value enum, so they are compared directly, and a difference of degree is
+    a real difference of opinion worth a human's attention.
+    """
+    return answer.conformance is draft.conformance
+
+
+def citations_agree(answer: BlindAnswer, draft: DraftRow) -> bool:
+    """EXACT set match on the cited ids, with no normalisation of any kind.
+
+    Nothing is stripped, case-folded or canonicalised on the way in: every looser rule is a tunable,
+    and a tunable settled after seeing results is the failure this comparison exists to avoid. The
+    drafter's ids are already canonical dotted form, and a judge that answers in some other form is
+    disagreeing about what it was asked for, which the artifact shows as prose beside the count.
+    """
+    return set(answer.cited_sc_ids) == {c.sc_id for c in draft.citations}
+
+
+class BlindJudge:
+    """Answers for itself, and never learns that a draft exists.
+
+    The blinding is structural: `answer` takes a finding side and nothing else, so there is no draft
+    in scope at the point the model is called. `compare` is pure — it makes no call — and turns an
+    answer plus the frozen draft into the same `JudgeResult` the anchored configuration produces, with
+    both booleans derived here rather than emitted by the model.
+
+    ⚠️ `citation_correct` and `conformance_correct` therefore mean something different on this
+    configuration: *the judge named the same criteria* and *the judge reached the same verdict*, not
+    *the drafted answer is right*. The field names are the anchored ones because the production shape
+    is fixed, so any artifact holding these results states its configuration beside them.
+    """
+
+    def __init__(self, client: LLMClient, drafter_model: str, retries: int = 1) -> None:
+        require_distinct_models(client, drafter_model)
+        self._client = client
+        self._retries = retries
+        self._judge_version = version_string(client, blind_prompt_hash())
+
+    @property
+    def judge_version(self) -> str:
+        return self._judge_version
+
+    @property
+    def judge_model(self) -> str:
+        return self._client.model
+
+    def answer(self, prepared: FindingInput) -> BlindAnswer:
+        """Ask the judge for its own verdict on one finding. **No draft is in scope here.**
+
+        Raises rather than fabricating, exactly as the anchored path does: an instrument that invents
+        an answer when the model drifts off-schema corrupts every number computed from it.
+        """
+        user = blind_user_prompt(prepared)
+        for _ in range(self._retries + 1):
+            completion = self._client.complete_json(_BLIND_SYSTEM, user, _BlindAnswer)
+            try:
+                out = _BlindAnswer.model_validate_json(completion.content)
+            except ValidationError:
+                continue  # model drifted off-schema; retry, then raise — never fabricate
+            return BlindAnswer(
+                finding_id=prepared.finding_id,
+                conformance=out.conformance,
+                cited_sc_ids=tuple(out.cited_sc_ids),
+                rationale=out.rationale,
+            )
+        raise JudgeError(
+            f"blind judge {self._client.model!r} returned no parseable answer for finding "
+            f"{prepared.finding_id!r} after {self._retries + 1} attempts"
+        )
+
+    def compare(self, answer: BlindAnswer, draft: DraftRow, run_id: str) -> JudgeResult:
+        """The judge's answer beside the frozen draft — **pure, and it makes no call.**
+
+        This is the whole of "agreement is decided by code": two comparisons, both spelled out above,
+        and a `verdict` derived by the same rule the anchored configuration derives it under.
+        """
+        citation_correct = citations_agree(answer, draft)
+        conformance_correct = conformance_agrees(answer, draft)
+        return JudgeResult(
+            finding_id=answer.finding_id,
+            run_id=run_id,
+            judge_model=self._client.model,
+            judge_version=self._judge_version,
+            verdict=verdict_from(citation_correct, conformance_correct),
+            citation_correct=citation_correct,
+            conformance_correct=conformance_correct,
+            rationale=answer.rationale,
         )
 
 
@@ -266,6 +446,21 @@ def _drafted_row_block(draft: DraftRow) -> str:
 def _judge_user_prompt(prepared: FindingInput, draft: DraftRow) -> str:
     """The anchored configuration's user prompt: the frozen finding side, then the draft to grade."""
     return prepared.block + _drafted_row_block(draft)
+
+
+def blind_user_prompt(prepared: FindingInput) -> str:
+    """The blind configuration's user prompt: **the frozen finding side, alone.**
+
+    It appends nothing — not even an instruction line — so the bytes sent are exactly the bytes
+    frozen, and "the two configurations were asked the same question" is a property of one file rather
+    than a claim about two code paths. Everything the blind configuration adds lives in its system
+    rubric, where a draft cannot reach it.
+
+    Public because a measurement of how many DISTINCT asks the configuration makes has to render them
+    through the path that sends them; a count taken over the frozen rows instead would go on agreeing
+    with reality only until this function stopped being the identity.
+    """
+    return prepared.block
 
 
 # ---------------------------------------------------------------------------------------------
@@ -360,6 +555,35 @@ def version_prompts() -> tuple[str, ...]:
     return (_RUBRIC_SYSTEM, *asks)
 
 
+def blind_version_prompts() -> tuple[str, ...]:
+    """Every prompt surface the BLIND configuration can produce — its rubric, then one ask per sentinel.
+
+    The same sentinels, because the finding side is the same file and its per-class builders are the
+    same builders; what differs is that a blind ask ends where the finding side ends. The sentinels'
+    drafts are unused here, and deliberately not removed from the set: they exist to cover the
+    ANCHORED half, and one shared sentinel set is what keeps a reworded referent line moving both
+    configurations' strings.
+    """
+    asks = [blind_user_prompt(finding_input(f, c)) for f, c, _ in _version_sentinels()]
+    return (_BLIND_SYSTEM, *asks)
+
+
+def _digest_of(prompts: tuple[str, ...]) -> str:
+    return hashlib.sha256("\x00".join(prompts).encode()).hexdigest()[:8]
+
+
 def prompt_hash() -> str:
     """The first 8 hex of the sha256 over every prompt surface a judged finding can produce."""
-    return hashlib.sha256("\x00".join(version_prompts()).encode()).hexdigest()[:8]
+    return _digest_of(version_prompts())
+
+
+def blind_prompt_hash() -> str:
+    """The same, for the blind configuration — **a separate digest, on purpose.**
+
+    Two configurations send two different prompts, so one string could not date either. Computing them
+    apart also means adding this configuration did not move the anchored one: an anchored measurement
+    frozen before the blind rubric existed was taken under a prompt this module still produces
+    byte-for-byte, and re-dating it would be a false positive in the one field that exists to say when
+    a prompt moved.
+    """
+    return _digest_of(blind_version_prompts())

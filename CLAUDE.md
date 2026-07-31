@@ -65,3 +65,13 @@ A ticket is done when code + tests pass, it matches the `CONTRACTS.md` shapes it
 ## Dispatching an agent for a ticket
 
 State the repo's conventions in the dispatch prompt rather than assuming the agent inherits them — tell it to read `CLAUDE.md` and `CONTRACTS.md` explicitly. **A subagent cannot see `MEMORY.md`** (it lives outside the repo), so anything it needs from there must be pasted in — and anything it must *not* see, such as a measurement's expected answer, is safe there by default.
+
+**Every implementation dispatch carries these, verbatim. A prompt missing them is itself the defect — the agent cannot follow a rule it was never given.**
+
+- **Commit as you go.** Never hold more than one finished item uncommitted. An agent that dies mid-task costs its successor the whole diff.
+- **Report after each item** — one line: what landed, what is next. Silence is indistinguishable from death.
+- **State a time budget up front, and stop and report if it is exceeded** rather than continuing quietly.
+- **Do no unrequested work** — no extra artifacts, no re-verification of what is already green, no numbers the ticket did not ask for.
+- **Never run the suite with `--env-file .env`.** That un-skips the real-cloud tests, which spend money. Plain `uv run pytest` only. "Make no model calls" does not imply this — the paid path opens via a flag on the *gate*, not by writing a call.
+
+**Dispatch in the background, not blocking**, so questions can still be answered while it runs — and **check liveness by process and file mtime, never by silence**. A long-running agent and a dead one look identical from the outside, and a wait condition that assumes a clean finish will wait forever on a task that died dirty.

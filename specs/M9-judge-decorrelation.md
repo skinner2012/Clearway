@@ -1595,8 +1595,11 @@ the unit.
   ambiguous even once its comparison is named.
 - **⚠️ Required: reconcile the two judge κ figures the repo now publishes at different values.**
   `README.md` and `docs/acceptance-analysis.md` say this project's judge grades **external ACT gold at
-  κ ≈ 0** — 0.137 in `benchmark/reports/scorecard.json`, mean ≈ 0.005 across the three runs and negative
-  in one of them, SD 0.158 in `benchmark/reports/noise_floor.json`. The anchored baseline frozen at
+  κ ≈ 0** — 0.137 in `benchmark/reports/scorecard.json` and SD 0.158 in
+  `benchmark/reports/noise_floor.json`. **The mean ≈ 0.005 across the three runs, and the two other
+  per-run κ it averages — one of them negative — are in neither JSON:** they live in
+  `docs/acceptance-analysis.md`'s per-run table, beside the per-run confusion cells the mean is computed
+  from, and the first of the three is the 0.137 the scorecard holds. The anchored baseline frozen at
   `benchmark/reports/judge_anchored_baseline.json` reports **κ 0.227 per finding and 0.3578 per case**,
   and both sides score against the **same** gold set (`act-acceptance@1`), so a reader who finds both
   will conclude one of them is wrong. **They do not conflict, and the written read must say so in prose,

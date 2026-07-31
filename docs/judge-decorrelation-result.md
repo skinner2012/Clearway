@@ -437,7 +437,10 @@ of them is the explanation:**
 2. **What the judge is shown.** The rubric text is *unchanged*. What moved is the finding-side input,
    which now carries the resolved referent and the retrieved candidate criteria. The judge's old version
    string could not date that input at all; it can now, because the string was widened to hash the whole
-   prompt (`rubric=e396f37f…` then, `prompt=afadca26; effort=medium` here).
+   prompt (`rubric=e396f37f…` then, `prompt=afadca26; effort=medium` here). **Both configurations of
+   this run carry their own such string, and both are provenance:** the graded one above, and the
+   independent one — whose prompt omits the draft entirely — at `prompt=a74474d5; effort=medium`. The
+   two hashes differing *is* the manipulation this milestone performed.
 3. **The unit.** 0.3578 is per case (40), 0.227 per finding (54), the earlier 0.137 per drafted finding
    (63). **No two of the three share a denominator.**
 4. **The estimator.** The earlier figures are single-pass κ, one per run. The headline here is the

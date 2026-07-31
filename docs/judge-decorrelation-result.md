@@ -196,6 +196,17 @@ is defined to measure. Withholding the draft restores the definition. That is a 
 correction, not an experimental result, and it is why the graded configuration has no column here at
 all: a judge that grades a draft emits no verdict of its own to score.
 
+**Two streams of the judge's answers exist, and this section reads a different one from §1 and §3.**
+The **routing** stream — what those sections count — is raw four-value equality with the draft: the
+judge's answer is not the drafted answer. The **rater** stream, scored here, is the judge's *own*
+verdict put through the project's standard FLAG/CLEAN collapse and then flag-if-any within the page —
+the same two collapses the drafter's side runs through — and it says nothing about whether the draft
+agreed. Over the 54 findings the two part company on exactly **one**: a `label` finding whose draft
+said `partially_supports` and whose judge verdict is `does_not_support`. Routing counts it, because
+the four values differ; both verdicts collapse to FLAG, so the rater stream sees no difference at all.
+That single row is why the routing tally is **14** conformance disagreements where the same 54 rows
+compared after collapsing read **13**.
+
 **The four conditions this comparison is read under, stated here rather than in a footnote:**
 
 1. **The two raters do not carry the same variance.** The drafter's frozen passes are bit-identical, so

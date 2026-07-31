@@ -73,6 +73,15 @@ citation habit — of its 28 clean rows, **21 cite nothing and 7 cite anyway** �
 judge which. The second column keeps only findings carrying a **conformance-axis**
 disagreement: the visits that can find a real disagreement rather than a citation-formatting mismatch.
 
+**And the artefact was left in place by choice, which is a stronger statement than "nothing could be
+done".** No single instruction agrees with the drafter on all 54 rows — one class both cites and does
+not — but a **per-rule** instruction (cite on `document-title` and `empty-heading`, stay silent on
+`label` and `link-name`) would agree on **52 of 54**, so the wording problem is very nearly solvable.
+It was rejected, not attempted and failed: fixing it that way means **telling a supposedly blind judge
+what the drafter's per-class habits are**, which leaks exactly what blinding withholds and moves one
+rater toward the other. Impermissible, not impossible — so the citation axis is reported uncleaned and
+the second column above exists instead.
+
 **On the independent side that subtraction is licensed by a set identity, not by a matching count.** Its
 7 citation-only disagreements *are exactly* the 7 clean rows the drafter cites on — every one forced by
 the convention. On the graded side the citation-only count (21) and the cite-nothing count (21) are

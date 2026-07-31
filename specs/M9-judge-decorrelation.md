@@ -855,7 +855,12 @@ rate is reported with its absolute count and interpreted honestly.
 
    **The frozen input record still records no `judge_version` at all, and that stays right** — it is a
    property of the judge, and the two configurations reading those bytes carry the same string only
-   while nothing configuration-specific enters the prompt. **⚠️ One sentence inside that frozen record
+   while nothing configuration-specific enters the prompt. **⚠️ That condition failed at T4, exactly as
+   the sentence anticipated it could:** the blind rubric and the absent draft block are
+   configuration-specific, so the digest is taken **per configuration** and the two strings differ —
+   `prompt=afadca26` anchored, `prompt=a74474d5` blind, same model and same effort. The frozen input
+   record is unaffected: it still records neither, which is what lets one file serve two strings.
+   **⚠️ One sentence inside that frozen record
    went stale and has been repaired**: `pins.no_judge_version_here_and_that_is_deliberate` said the
    string was *"SCHEDULED TO MOVE — extending the rubric hash … is an open decision"*. It moved, so the
    reason is rewritten — the string now tracks *more* of the prompt and therefore moves *more* often
@@ -1524,6 +1529,24 @@ the unit.
   result — which is correct and is the point, but it means the blind configuration's rows are **not**
   comparable to the anchored ones by version string, and the pre-flight tripwire will fail. **Re-record
   the pre-flight; do not retype the hash.**
+
+  **⚠️ Half of that is right and half was wrong, and the correction is the build's, not a preference.**
+  The blind rows do carry a different string — `prompt=a74474d5` against the anchored
+  `prompt=afadca26`, same model, same effort — because **the digest is computed PER CONFIGURATION**
+  (`judge.blind_prompt_hash` over `blind_version_prompts`, the blind rubric plus the blind ask over the
+  same four sentinels). What does **not** happen is the tripwire failing: the anchored prompt is
+  byte-identical before and after this ticket, so `judge_pins()["judge_version"]` still reads
+  `prompt=afadca26`, the pre-flight record stays true and **was not re-recorded**. The alternative — one
+  digest over both configurations' surfaces — was rejected for two reasons that both cut against it:
+  it would make two materially different prompts report one string, so neither run could be dated to
+  what it was sent; and it would re-date `judge_anchored_baseline.json` as *historical* on the strength
+  of an edit that provably cannot reach an anchored ask, which is a false positive in the one field
+  that exists to say when a prompt moved. The shared finding side still moves **both** strings, which is
+  what keeps them comparable as provenance; asserted in the judge's tests in both directions.
+  **⚠️ One thing the pre-flight now under-records and this ticket did not fix:** `judge_pins` builds the
+  anchored `Judge` alone, so the record names one of the two version strings the milestone runs under.
+  Nothing in it is false and its budget already covers both configurations; re-recording needs the
+  provider listing, so it is left for whoever spends the calls.
 - **⚠️ Two things T3b hands this ticket, both of them measurements this stage must actually make.**
   1. **The duplicate-ask correlation, and it is WORSE here than it was there.** T3b measured 54 findings
      rendering only **45 distinct** finding-side blocks, in 8 duplicate groups **none of which lies
@@ -1533,6 +1556,20 @@ the unit.
      removing the draft can only merge more asks together, never fewer. **45 is an upper bound on
      blind's distinct-ask count, not its value — measure it and report it**, per class, beside the
      per-class figures. Assuming 45 would be assuming the draft presentation contributed nothing.
+
+     **⚠️ Measured, and the bound turns out to be tight: 45 of 54, in 8 duplicate groups, all 8
+     spanning more than one case.** Per class (distinct asks / findings): `document-title` **3/5**,
+     `empty-heading` **9/11**, `label` **14/17**, `link-name` **19/21**. Counted through
+     `judge_blind.distinct_ask_profile`, which renders each ask with `judge.blind_user_prompt` — the
+     function that produces what is sent — rather than over the frozen rows, and frozen in
+     `benchmark/reports/judge_blind_dry_receipt.json` (`distinct_asks`). **It equals the upper bound
+     because the blind prompt appends nothing to the block, and that identity is itself measured**
+     (`distinct_frozen_blocks`, the same count taken over the frozen finding side, reported beside it)
+     rather than assumed. So the blind ask duplication is not merely *no better* than the anchored
+     figure — it is the same 17 findings, and it still lands hardest on `document-title`, where 3 of 5
+     observations are one question asked three times. **Every `document-title` figure this
+     configuration produces carries that caveat**, a zero included. *(Zero model calls: this is a pure
+     function of frozen bytes.)*
   2. **The within-case correlation of the REAL between-configuration difference.** T3b's ticket asks for
      it "here, and only here", and T3b **could not deliver it**: only one configuration had judge output,
      so what it reported is a confounded proxy (this run against the earlier judged passes, where the
@@ -1541,6 +1578,52 @@ the unit.
      side, one variable. Compute it on the difference stream, report it beside the threshold, and **if it
      comes out materially negative, say so**: the per-case collapse would then be costing power rather
      than buying honesty, and nothing measured so far can rule that out.
+
+     **⚠️ NOT measured, and it cannot be at zero calls — the code path for it is built and exercised.**
+     `judge_blind.between_configuration_difference` takes the blind stream and the anchored one, the
+     latter rebuilt from `judge_anchored_baseline.json` through the anchored harness' own
+     `results_from_rows` + `natural_majority` (which refuse outright if the frozen rows are not those
+     asks), and reports the differing findings, the differing cases and the within-case correlation of
+     the difference. The dry run exercises it against the **real** anchored decisions and **stubbed**
+     blind ones, so the figure in the receipt is a harness number and nothing else. **The real contrast
+     still does not exist**: it needs a blind pass, and that is the paid half.
+- **Settled so far — the whole zero-call half, and the calls are NOT spent.** What landed:
+  - **The blind path itself.** `judge.BlindJudge` — `answer(prepared)` takes **no draft**, so the
+    withholding is a property of the signature rather than a promise in prose, and `compare(answer,
+    draft, run_id)` is pure and makes no call. The two booleans are derived there: raw four-value
+    equality (`conformance_agrees`) and exact set match with **no normalisation of any kind**
+    (`citations_agree`) — every looser rule is a tunable, and a tunable settled after seeing results is
+    the failure this comparison exists to avoid. `JudgeResult` is unchanged, `CONTRACTS.md` untouched,
+    and the judge's own conformance and cited SC ride in the run artifact where every other eval-only
+    field lives. The rubric was frozen carrying the drafter's citation convention verbatim — *name the
+    criterion you decided against, name nothing when you find no failure* — and its quality-review
+    stance, both before any frozen row was read (Control 5).
+  - **The harness, reusing the anchored one and saying where it could not.** `eval/judge_blind.py`:
+    54 asks per pass and **no mutation at all** (`NO_MUTATIONS_HERE`, recorded in the artifact — both
+    injected rates are **n = 0, empty rather than zero-valued**). It reuses the frozen finding side,
+    `majority_stream`, `collapse_to_cases`, `score_judge`, the anchored per-case and per-finding streams
+    and the odd-pass guard (now single-sourced as `judge_anchored.require_odd_passes`). Three things
+    could not be reused and each is a place a one-configuration runner fails silently on the second: the
+    ask type, the stub, and the disagreement profile. **The stub reuse is verified rather than assumed
+    — the anchored stub handed to the blind judge raises `JudgeError`, pinned by test.**
+  - **The dry receipt.** `benchmark/reports/judge_blind_dry_receipt.json`, **0 model calls, 162 stubbed**
+    (54 × 3), carrying the configuration marker, its meaning, the unit beside the cells at **both**
+    units, the distinct-ask profile, the disagreement profile with its direction block, and the
+    between-configuration contrast. Deterministic: the committed file is what a re-run produces.
+    **Every number in it describes the HARNESS**, and the record says so in its own text.
+  - **The direction of disagreement gets an undecided state, and it is not a loosening of the pin.** The
+    judge's own verdict is four-valued, so three passes can return three distinct values and have no
+    strict majority. `majority_stream` refuses that — correctly, for a routing decision a paired test is
+    scored on — so the descriptive quantity uses `conformance_majorities`, which reports `None` and
+    counts those rows as *off the strictness axis* rather than inventing a direction. `not_applicable`
+    is off that axis too: it is a claim that the criterion does not apply, not a point on the
+    supports → does_not_support line.
+  - **`judge_version` moved for blind and NOT for anchored**, and the pre-flight was not re-recorded —
+    see the corrected bullet above.
+  **What is NOT done:** the 162 paid calls, and therefore every number this ticket's acceptance turns
+  on — the blind disagreement rate, the confusion at either unit, the run-to-run variance read against
+  T3b's noise floor, and the real between-configuration correlation. Nothing here may be quoted as any
+  of them.
 - **Depends on:** T3b
 
 ### T5 — Comparison and diagnostic decomposition

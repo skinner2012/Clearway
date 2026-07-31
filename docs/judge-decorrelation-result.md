@@ -473,7 +473,7 @@ each other.
 
 ---
 
-## 8. Two scaffold fields, and what actually fills them
+## 8. Five scaffold fields, and what actually fills them
 
 Five inert fields were added to the internal evaluation metrics some time ago. **The stale claim is
 narrower than "all five", and it lives in two places rather than one.** It attaches to the three

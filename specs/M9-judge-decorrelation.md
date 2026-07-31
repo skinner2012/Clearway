@@ -1941,6 +1941,31 @@ the unit.
   1.000 swap figure is devalued in place, the κ SD of 0.0006 is named as a trap beside 7 of 40 moved
   decisions, the majority collapse's cost to the headline κ is stated, and the between-configuration
   correlation of **−0.0957** is reported as pointing the wrong way.
+  - **Nine omissions closed after the first audit, all additive — the numbers already in the read did
+    not move.** §1 now reconciles its two queue sizes: the walked queue is 21 findings over 17 cases
+    while the confusion cells flag **14 over 10**, because `judge_score.py` scores on the **conformance
+    axis alone** by design (its docstring's reason — the drafter is steered to cite against gold, so
+    folding citation in would pollute the miss rate), which makes the flagged set exactly the substantive
+    column. The **three composition shares and both axis totals are reported for both configurations**
+    (blind 1 / 7 / 13 = 21, conformance axis 14, SC axis 20; anchored 6 / 21 / 1 = 28, conformance axis 7,
+    SC axis 22) rather than presented as three independent channels. The SC axis is stated as left
+    uncleaned **by choice**: a per-rule instruction would agree on **52 of 54** and is rejected because it
+    leaks the drafter's per-class habits to a blind judge — impermissible, not impossible. The **routing
+    stream** (raw four-value equality with the draft) and the **rater stream** (the judge's own verdict
+    through FLAG/CLEAN, then flag-if-any) are separated, and they part company on **exactly one finding of
+    54** — a `label` row drafted `partially_supports` and judged `does_not_support`, which routing counts
+    and the collapse does not (14 vs 13). **Both `judge_version` strings** are now provenance in §7
+    (`prompt=afadca26` anchored, **`prompt=a74474d5`** blind, both `effort=medium`). §9.2 carries
+    **Control 2's limitation**: the frozen finding-side input makes byte-identity a property of one file,
+    but nothing on disk records the candidate list the drafter answered, so *the judge's input equals the
+    drafter's* is **corroborated, never verified**. The per-class table gains the **anchored side's
+    artefact-free column** (0 / 1 / 0 / 6) beside the blind one, and **`empty-heading`'s inconsistent-row
+    count (4 of 11)** is quoted beside its SC-axis figures (5 of 11 blind, 2 of 11 anchored), as the
+    per-class SC rule requires. The substantive column's denominator is disambiguated — **0.2593 is
+    14/54, never 14/21**. And the scaffold correction is narrowed to the **three composite fields**, whose
+    stale "this work fills them" lives in the `CONTRACTS.md` changelog entry (2026-07-23, schema 0.19) as
+    well as in the ticket; the two reflection counters were recorded **inert**, so their correction is
+    only that an independent dual read is not a reflection loop.
   - **⚠️ Turned up and not asked for — one figure in T4's settled block is mis-attributed.** Its
     "433.2 s of wall clock" for the blind half is the **sum of the per-call latencies**
     (`cost.latency_ms.total` = 433160.5 ms); the record's own `wall_clock_seconds` is **434.3**. The

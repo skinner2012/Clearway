@@ -291,6 +291,59 @@ def _findings_citing_nothing(artifact: dict[str, Any]) -> set[str]:
     return {d["finding_id"] for case in artifact["cases"] for d in case["drafts"] if not d["cited_sc_ids"]}
 
 
+def sc_axis_coupling(artifact: dict[str, Any]) -> dict[str, Any]:
+    """⚠️ How much of the SC axis is a RESTATEMENT of the conformance axis, counted by row.
+
+    The rubric was frozen carrying the drafter's convention — *name the criterion you decided against,
+    name nothing when you find no failure* — and that convention, set against the shape of the drafter's
+    own rows, makes the two derived booleans non-independent on most of the set. Three groups, and only
+    the third carries an SC judgment that is free of the verdict:
+
+    * **a clean draft citing nothing.** A judge that follows the convention names nothing exactly when
+      it agrees, so both axes agree together and disagree together. The SC comparison adds nothing the
+      conformance comparison did not already say — except where the judge answers a verdict the
+      convention does not clearly cover.
+    * **a clean draft that cites anyway.** A judge that AGREES on the verdict is *guaranteed* to
+      mismatch on SC, because agreeing means naming nothing and the draft named something. Perfectly
+      anti-correlated, by construction rather than by opinion.
+    * **a flagging draft.** Both readers are expected to name a criterion, so the sets can differ or
+      coincide independently of the verdict.
+
+    Recorded here rather than left to a reader because two consequences follow that a later stage
+    cannot see from the counts alone. **The anchored configuration's SC count is not the same kind of
+    quantity**: there the judge was GRADING a citation it was shown, which is a separate question from
+    whether its own answer names the same ids, so the two counts may be reported side by side but never
+    differenced. And **`verdict_from` inherits the coupling**: `partial` is manufactured on the second
+    group and near-unreachable on the first, so the three-way verdict distribution differs between the
+    configurations for reasons that are not judge behaviour.
+
+    ⚠️ The convention is NOT repaired and the comparison rule is NOT loosened. Both were pre-registered
+    before the frozen set was touched; the honest handling is to state the coupling and read the axis
+    knowing it, which is what this block is for.
+    """
+    from clearway.eval.stats import is_flag
+
+    rows = [d for case in artifact["cases"] for d in case["drafts"]]
+    clean = [d for d in rows if not is_flag(Conformance(d["conformance"]))]
+    return {
+        "findings": len(rows),
+        "clean_draft_citing_nothing": sum(1 for d in clean if not d["cited_sc_ids"]),
+        "clean_draft_citing_anyway": sum(1 for d in clean if d["cited_sc_ids"]),
+        "flagging_draft_carrying_an_sc_judgment_free_of_the_verdict": len(rows) - len(clean),
+        "note": (
+            "⚠️ THE TWO AXES ARE NOT INDEPENDENT ON THIS CONFIGURATION, and the coupling is a property "
+            "of the frozen rubric meeting the drafter's row shape, not of the judge. On a clean draft "
+            "citing nothing the SC axis moves WITH the conformance axis and adds no information beyond "
+            "it; on a clean draft that cites anyway, agreement on the verdict FORCES an SC mismatch; "
+            "only a flagging draft carries an SC judgment free of the verdict. So the three composition "
+            "shares are not three independent channels, the SC count here and the anchored one answer "
+            "DIFFERENT QUESTIONS (grading a shown citation against naming one's own) and must never be "
+            "differenced, and the three-way `verdict` distribution differs between the configurations "
+            "for a reason that is not judge behaviour."
+        ),
+    }
+
+
 def _shares(subset: list[dict[str, Any]]) -> dict[str, Any]:
     disagreeing = [r for r in subset if r["conformance_disagreement"] or r["sc_disagreement"]]
     both = [r for r in disagreeing if r["conformance_disagreement"] and r["sc_disagreement"]]
@@ -392,6 +445,7 @@ def disagreement_profile(
             "the one that matches the routing decision."
         ),
         "overall": _shares(rows),
+        "sc_axis_coupling": sc_axis_coupling(artifact),
         "per_class": [
             {
                 "axe_rule": rule,

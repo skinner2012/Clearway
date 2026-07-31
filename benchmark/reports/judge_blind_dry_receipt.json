@@ -127,6 +127,13 @@
         "both": 44
       }
     },
+    "sc_axis_coupling": {
+      "findings": 54,
+      "clean_draft_citing_nothing": 21,
+      "clean_draft_citing_anyway": 7,
+      "flagging_draft_carrying_an_sc_judgment_free_of_the_verdict": 26,
+      "note": "⚠️ THE TWO AXES ARE NOT INDEPENDENT ON THIS CONFIGURATION, and the coupling is a property of the frozen rubric meeting the drafter's row shape, not of the judge. On a clean draft citing nothing the SC axis moves WITH the conformance axis and adds no information beyond it; on a clean draft that cites anyway, agreement on the verdict FORCES an SC mismatch; only a flagging draft carries an SC judgment free of the verdict. So the three composition shares are not three independent channels, the SC count here and the anchored one answer DIFFERENT QUESTIONS (grading a shown citation against naming one's own) and must never be differenced, and the three-way `verdict` distribution differs between the configurations for a reason that is not judge behaviour."
+    },
     "per_class": [
       {
         "axe_rule": "document-title",

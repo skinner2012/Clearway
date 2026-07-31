@@ -37,6 +37,7 @@ from clearway.eval.judge_blind import (
     releases,
     report_path,
     run_pass,
+    sc_axis_coupling,
     score_blind,
 )
 from clearway.eval.judge_finding_input import load_record, prepared_inputs
@@ -230,6 +231,36 @@ def test_the_disagreement_rate_is_per_finding_and_carries_its_absolute_counts() 
 
 
 # --- the distinct-ask count, measured rather than inherited -------------------
+
+
+def test_the_two_axes_are_coupled_and_the_artifact_counts_the_rows_it_happens_on() -> None:
+    """The SC axis is largely a restatement of the conformance axis, and a reader must not treat the
+    three composition shares as three independent channels.
+
+    The three groups partition the set, and the third group's premise is checked rather than asserted:
+    a flagging draft that cited nothing would carry the same forced mismatch as the second group and
+    would not belong in the free-of-the-verdict count.
+    """
+    from clearway.eval.stats import is_flag
+
+    artifact = _artifact()
+    block = sc_axis_coupling(artifact)
+    rows = [d for c in artifact["cases"] for d in c["drafts"]]
+    assert block["findings"] == len(rows)
+    assert (
+        block["clean_draft_citing_nothing"]
+        + block["clean_draft_citing_anyway"]
+        + block["flagging_draft_carrying_an_sc_judgment_free_of_the_verdict"]
+        == block["findings"]
+    )
+    assert not [d for d in rows if is_flag(Conformance(d["conformance"])) and not d["cited_sc_ids"]]
+    assert "must never be" in block["note"] and "DIFFERENT QUESTIONS" in block["note"]
+
+
+def test_the_coupling_block_rides_with_the_disagreement_profile() -> None:
+    """It has to sit where the SC counts are read, not in a module docstring nobody opens."""
+    receipt = json.loads(report_path().read_text())
+    assert receipt["disagreement"]["sc_axis_coupling"]["findings"] == receipt["disagreement"]["overall"]["findings"]
 
 
 def test_the_distinct_ask_count_is_measured_through_the_path_that_sends_it() -> None:

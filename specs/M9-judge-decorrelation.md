@@ -1611,6 +1611,23 @@ the unit.
     units, the distinct-ask profile, the disagreement profile with its direction block, and the
     between-configuration contrast. Deterministic: the committed file is what a re-run produces.
     **Every number in it describes the HARNESS**, and the record says so in its own text.
+  - **⚠️ Turned up and not asked for: under blind the SC axis is COUPLED to the conformance axis on 28
+    of the 54 rows, and the three composition shares are therefore not three independent channels.**
+    The frozen rubric's convention meets the drafter's row shape, and the set splits three ways
+    (counted in `judge_blind.sc_axis_coupling`, frozen in the receipt beside `overall`): on the **21**
+    clean drafts citing nothing, a judge following the convention names nothing exactly when it agrees,
+    so both axes move together and the SC comparison adds nothing the conformance comparison did not
+    already say; on the **7** clean drafts that cite anyway, agreeing on the verdict *forces* an SC
+    mismatch — perfectly anti-correlated, by construction; only the **26** flagging drafts carry an SC
+    judgment free of the verdict (all 26 cite, checked rather than assumed). **Two consequences T5 must
+    carry.** (1) The anchored SC count (22/54) and blind's answer **different questions** — there the
+    judge graded a citation it was shown, here code compares the judge's own set — so they may sit side
+    by side and must never be differenced. (2) `verdict_from` inherits the coupling: `partial` is
+    manufactured on the 7 and near-unreachable on the 21, so the three-way `JudgeResult.verdict`
+    distribution differs between the configurations **for a reason that is not judge behaviour**.
+    ⚠️ Neither the rubric nor the comparison rule is touched — both were pre-registered before the
+    frozen set was read, and Control 5 forbids repairing them afterwards. The axis is stated, not
+    cleaned.
   - **The direction of disagreement gets an undecided state, and it is not a loosening of the pin.** The
     judge's own verdict is four-valued, so three passes can return three distinct values and have no
     strict majority. `majority_stream` refuses that — correctly, for a routing decision a paired test is

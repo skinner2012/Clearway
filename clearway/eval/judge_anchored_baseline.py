@@ -62,6 +62,7 @@ from clearway.eval.judge_anchored import (
     SC_SWAP,
     AnchoredAsk,
     anchored_asks,
+    require_odd_passes,
     run_pass,
     score_anchored,
 )
@@ -960,11 +961,7 @@ def live_run(passes: int = 3) -> dict[str, Any]:
     from clearway.eval.run_artifacts import CITATION_GROUNDING, acceptance_pass_paths, run_path
     from clearway.llm import CloudLLMClient, LocalLLMClient
 
-    if passes < 1 or passes % 2 == 0:
-        raise ValueError(
-            f"a configuration runs an ODD number of passes, not {passes}: the per-finding collapse is a "
-            "strict majority across passes, and an even count can tie."
-        )
+    require_odd_passes(passes)
 
     replay_path = run_path(CITATION_GROUNDING, 1)
     artifact = json.loads(replay_path.read_text())

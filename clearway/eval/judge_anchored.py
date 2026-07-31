@@ -421,6 +421,24 @@ def build_receipt(
     }
 
 
+def require_odd_passes(passes: int) -> None:
+    """Refuse an EVEN pass count at the door, for either configuration.
+
+    The per-finding collapse is a strict majority across passes, which an even count can tie; the
+    pinned implementation raises on the tie rather than letting pass order settle it, so a two-pass
+    configuration would otherwise fail deep inside the collapse instead of before the first call. Kept
+    in one place because it is a property of the pinned aggregation, not of any one configuration —
+    two copies of it are two chances for one of them to drift into permitting four passes.
+    """
+    if passes < 1 or passes % 2 == 0:
+        raise ValueError(
+            f"a configuration runs an ODD number of passes, not {passes}: the per-finding collapse is a "
+            "strict majority across passes, and an even count can tie. A tie has no majority to take, "
+            "and resolving it by pass order would put a coin flip inside the decision the paired test "
+            "is scored on."
+        )
+
+
 def report_path() -> Path:
     from clearway.eval.offline_build import _REPORTS_DIR
 
@@ -438,13 +456,7 @@ def dry_run(passes: int = 3) -> dict[str, Any]:
     from clearway.eval.run_artifacts import CITATION_GROUNDING, run_path
     from clearway.llm import LocalLLMClient
 
-    if passes < 1 or passes % 2 == 0:
-        raise ValueError(
-            f"a configuration runs an ODD number of passes, not {passes}: the per-finding collapse is a "
-            "strict majority across passes, and an even count can tie. A tie has no majority to take, "
-            "and resolving it by pass order would put a coin flip inside the decision the paired test "
-            "is scored on."
-        )
+    require_odd_passes(passes)
 
     replay_path = run_path(CITATION_GROUNDING, 1)
     artifact = json.loads(replay_path.read_text())

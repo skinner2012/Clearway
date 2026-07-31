@@ -687,6 +687,50 @@ class StubBlindJudgeClient:
         return Completion(json.dumps(payload), LLMUsage())
 
 
+def blind_attempts_per_call() -> int:
+    """How many times ONE blind ask may reach the model, read from `BlindJudge`'s declared default.
+
+    Derived rather than restated, and derived from **`BlindJudge`** rather than from the pre-flight's
+    `judge_attempts_per_call`, which inspects the anchored `Judge`: the two happen to share a default
+    today, and a number copied from the other configuration would stay right only until one of them
+    changed. No harness passes `retries`, so the constructor default IS the effective value.
+    """
+    import inspect
+
+    return int(inspect.signature(BlindJudge.__init__).parameters["retries"].default) + 1
+
+
+def paid_call_budget(*, asks: int, passes: int) -> dict[str, Any]:
+    """⚠️ What a LIVE run of this configuration would cost — as a FLOOR and a ceiling, never a value.
+
+    A judge call retries on an unparseable response and **a retry leaves nothing on disk**: the run
+    artifact holds one row whether the verdict came back first try or second. So the ask count is what
+    the configuration costs if no response is ever off-schema, and the ceiling is that times the
+    attempts one call is allowed. The true figure sits between them and is only recoverable by counting
+    at the client seam — which is what a recording client below the judge is for, and this
+    configuration does not have one yet.
+
+    ⚠️ **The dry run's own count is exact, and that is a different fact.** The stub cannot fail, so it
+    served exactly one response per ask; nothing about that bounds what a real model will cost.
+    """
+    attempts = blind_attempts_per_call()
+    floor = asks * passes
+    return {
+        "asks": floor,
+        "floor": floor,
+        "max_attempts_per_call": attempts,
+        "ceiling": floor * attempts,
+        "arithmetic": f"{asks} asks × {passes} passes = {floor} floor; × {attempts} attempts = {floor * attempts}",
+        "note": (
+            "⚠️ NEVER quote the floor as the spend. A retried call leaves no trace in a run artifact — "
+            "one row is written whether the answer parsed on the first attempt or a later one — so the "
+            "amount between floor and ceiling cannot be recovered afterwards and has to be counted at "
+            "the client seam or read off the provider. The stubbed count in this receipt is exact "
+            "instead, and only because a stub cannot return an unparseable answer."
+        ),
+    }
+
+
 def _confusion_block(scoring: JudgeScoring) -> dict[str, Any]:
     c = scoring.confusion
     return {
@@ -753,6 +797,12 @@ def build_receipt(
         },
         "passes": len(passes),
         "asks_over_the_whole_configuration": len(asks) * len(passes),
+        "stubbed_calls_are_exact": (
+            "`stub_responses_served` is the exact number of responses served, because a stub cannot "
+            "return an unparseable answer and therefore never triggers a retry. That is a property of "
+            "the stub and says nothing about a paid run — see `paid_call_budget_if_run_live`."
+        ),
+        "paid_call_budget_if_run_live": paid_call_budget(asks=len(asks), passes=len(passes)),
         "ask_digest": ask_digest,
         "distinct_asks": distinct_ask_profile(asks, prepared),
         "collapse": {

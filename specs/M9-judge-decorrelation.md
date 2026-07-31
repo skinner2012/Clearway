@@ -1637,8 +1637,14 @@ the unit.
     supports → does_not_support line.
   - **`judge_version` moved for blind and NOT for anchored**, and the pre-flight was not re-recorded —
     see the corrected bullet above.
-  **What is NOT done:** the 162 paid calls, and therefore every number this ticket's acceptance turns
-  on — the blind disagreement rate, the confusion at either unit, the run-to-run variance read against
+  **What is NOT done:** the paid calls — **162 is the FLOOR and 324 the ceiling** (54 asks × 3 passes,
+  × the 2 attempts one call is allowed; `judge_blind.paid_call_budget`, derived from `BlindJudge`'s own
+  `retries` default and frozen in the receipt as `paid_call_budget_if_run_live`). A retry leaves no
+  trace in a run artifact, so the spend between the two is recoverable only by counting at the client
+  seam. **The dry run's own 162 is exact, and that is a different fact** — a stub cannot return an
+  unparseable answer. The floor is what the pre-flight's `blind_total` counts, and the milestone's
+  ceiling arithmetic already assumes the doubling. Not done therefore includes every number this
+  ticket's acceptance turns on — the blind disagreement rate, the confusion at either unit, the run-to-run variance read against
   T3b's noise floor, and the real between-configuration correlation. Nothing here may be quoted as any
   of them.
 - **Depends on:** T3b

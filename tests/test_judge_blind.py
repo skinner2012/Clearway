@@ -29,6 +29,7 @@ from clearway.eval.judge_blind import (
     axis_majorities,
     between_configuration_difference,
     blind_asks,
+    blind_attempts_per_call,
     conformance_majorities,
     direction_block,
     disagreement_profile,
@@ -334,6 +335,21 @@ def test_the_dry_run_spends_nothing_and_says_so_in_its_own_text() -> None:
     assert receipt["stub_disclaimer"] == STUB_DISCLAIMER
     assert receipt["stub_responses_served"] == receipt["asks_over_the_whole_configuration"]
     assert receipt["asks_over_the_whole_configuration"] == receipt["asks_per_pass"]["total"]
+
+
+def test_the_paid_figure_is_declared_as_a_floor_with_its_ceiling() -> None:
+    """A retry leaves no trace on disk, so the ask count is what a live run costs at best.
+
+    The stubbed count in the same receipt is exact and is labelled separately: a stub cannot return an
+    unparseable answer, which is a fact about the stub and not a bound on a paid run.
+    """
+    receipt = json.loads(report_path().read_text())
+    budget = receipt["paid_call_budget_if_run_live"]
+    assert budget["floor"] == receipt["asks_over_the_whole_configuration"]
+    assert budget["ceiling"] == budget["floor"] * budget["max_attempts_per_call"]
+    assert budget["max_attempts_per_call"] == blind_attempts_per_call() > 1
+    assert "NEVER quote the floor as the spend" in budget["note"]
+    assert receipt["stub_responses_served"] == budget["floor"]  # exact here, and only because of the stub
 
 
 def test_the_receipt_names_its_configuration_and_the_unit_of_every_cell() -> None:

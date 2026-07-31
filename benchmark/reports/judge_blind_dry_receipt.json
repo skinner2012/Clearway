@@ -31,6 +31,15 @@
   },
   "passes": 3,
   "asks_over_the_whole_configuration": 162,
+  "stubbed_calls_are_exact": "`stub_responses_served` is the exact number of responses served, because a stub cannot return an unparseable answer and therefore never triggers a retry. That is a property of the stub and says nothing about a paid run — see `paid_call_budget_if_run_live`.",
+  "paid_call_budget_if_run_live": {
+    "asks": 162,
+    "floor": 162,
+    "max_attempts_per_call": 2,
+    "ceiling": 324,
+    "arithmetic": "54 asks × 3 passes = 162 floor; × 2 attempts = 324",
+    "note": "⚠️ NEVER quote the floor as the spend. A retried call leaves no trace in a run artifact — one row is written whether the answer parsed on the first attempt or a later one — so the amount between floor and ceiling cannot be recovered afterwards and has to be counted at the client seam or read off the provider. The stubbed count in this receipt is exact instead, and only because a stub cannot return an unparseable answer."
+  },
   "ask_digest": "a208535d3b90eb583771582699d6fb746642fdf6abedb69dcc942a2dd44a5b51",
   "distinct_asks": {
     "asks": 54,

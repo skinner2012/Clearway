@@ -1270,10 +1270,15 @@ here as the ones the rule is applied at.**
 **So T5 runs at `b ≥ 5` over `n ≥ 5`**, frozen in `benchmark/reports/judge_anchored_baseline.json`
 (`threshold.floor_bar`, `threshold.smallest_attainable_n`, and the full `required_wins` table out to
 `n` = 14). At `n` = 5 the two bars coincide at all five; from `n` = 6 the statistical bar binds, and the
-floor bar never binds again. **The uncomfortable arithmetic did not go away, it moved:** five one-way
-wins with none pointing back is still most of a repairable ceiling of 7, and the same-configuration
-pairs already reach 7 discordant cases on their own — so a clean sweep of five is the smallest thing
-that can count, and it is not a low bar. **Nothing here was chosen after seeing a result**; the rule was
+floor bar never binds again. **The uncomfortable arithmetic did not go away, it moved:** a win is a case
+the blind configuration gets right and the anchored one gets wrong, so the five have to come out of the
+**anchored configuration's error set — 7 cases, 4 missed errors + 3 false alarms** — and five one-way
+wins with none pointing back is still most of that set. **⚠️ That is not the drafter-side repairable
+ceiling**, which is also 7, overlaps it in the 4 misses only and unions with it to 10 (*Evidence
+ledger*, the DIFFERENT SETS note): the 3 false alarms are cases whose draft was right, so they are not
+act-wrong and not in the ceiling, and blind can still win on them. **And the 7 discordant cases a
+same-configuration pass-pair already reaches is a third quantity — jitter, not an error set at all.**
+So a clean sweep of five is the smallest thing that can count, and it is not a low bar. **Nothing here was chosen after seeing a result**; the rule was
 pre-registered at T3a and this stage supplied the one number it was waiting for.
 
 **⚠️ The per-finding figure is reported beside it and does not govern.** The same pass-pairs move 5, 5

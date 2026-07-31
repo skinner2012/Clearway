@@ -1596,6 +1596,13 @@ the unit.
      blind ones, so the figure in the receipt is a harness number and nothing else. **The real contrast
      still does not exist**: it needs a blind pass, and that is the paid half.
 - **Settled so far — the whole zero-call half, and the calls are NOT spent.** What landed:
+  - **⚠️ TRUE WHEN WRITTEN, SUPERSEDED BY THE FROZEN RUN. THE CALLS WERE SPENT.** This block was last
+    edited before the blind configuration was run; `benchmark/reports/judge_blind_baseline.json` now
+    holds the measurement — **162 transport calls, zero retries at the client seam, $0.269071** on a
+    local price table applied to the provider's token counts. Every sentence below describing the paid
+    half as outstanding is kept as the record of where the ticket stood, and is **not** the current
+    state. **Read the measured numbers off that file**, and the comparisons built on it off
+    `benchmark/reports/judge_comparison.json`.
   - **The blind path itself.** `judge.BlindJudge` — `answer(prepared)` takes **no draft**, so the
     withholding is a property of the signature rather than a promise in prose, and `compare(answer,
     draft, run_id)` is pure and makes no call. The two booleans are derived there: raw four-value
@@ -1663,6 +1670,10 @@ the unit.
   - **⚠️ `benchmark/reports/judge_blind_baseline.json` does not exist, and a test pins that it does
     not.** A stubbed record and a measured one are indistinguishable on shape, so nothing writes that
     path until the calls are spent.
+    **⚠️ True when written; superseded. The file EXISTS** — the calls were spent and the measured record
+    was frozen there, so the guard that pinned its absence had done its job and is gone with it. The
+    reason it existed still holds and is why the path was never written to earlier: a stubbed record and
+    a measured one are the same shape, and only one of them is a measurement.
   - **⚠️ The record carries the run-time hazard, because the reader who needs it is starting a long run
     in another terminal:** `no_suite_while_this_runs`. Several test files call the real model, and a
     suite run during a live pass shares provider cache slots with the measurement and contaminates it —
@@ -1684,6 +1695,17 @@ the unit.
   ticket's acceptance turns on — the blind disagreement rate, the confusion at either unit, the run-to-run variance read against
   T3b's noise floor, and the real between-configuration correlation. Nothing here may be quoted as any
   of them.
+
+  **⚠️ TRUE WHEN WRITTEN, SUPERSEDED — the paid half was run and every number above was measured.**
+  `benchmark/reports/judge_blind_baseline.json`: **162 transport calls for 162 asks, zero beyond one per
+  ask**, so the ×2 ceiling of 324 was not approached but **retired by direct measurement**, exactly as the
+  anchored side's 441 was. Cost **$0.269071** total (mean $0.001661), latency mean 2674 ms, 433.2 s of
+  wall clock. The four quantities this paragraph listed as unavailable now exist: disagreement **21 of 54
+  findings (0.3889) over 17 cases** per finding, confusion **28/2/5/5 κ 0.4815** per case and
+  **33/7/6/8 κ 0.3874** per finding, a 3-pass per-case κ spread of **0.3774 / 0.4815 / 0.5331**, and the
+  real anchored ↔ blind correlation at **−0.0957** over 9 differing findings and 6 differing cases.
+  **⚠️ 162 is still a floor for the SPEND**: the seam count rules out a retry inside `BlindJudge`, and a
+  retry inside the provider client sits below it and is a separate, unbounded uncertainty.
 - **Depends on:** T3b
 
 ### T5 — Comparison and diagnostic decomposition
@@ -1940,8 +1962,13 @@ image-channel work reported a call total that was a floor for the same reason. *
 **⚠️ The judge-level half of that ceiling is now measured away for the anchored side, and the number is
 765, not 1206.** T3b's recording client sits **below** the judge, so a judge-level retry appends its own
 row: **441 rows for 441 asks means the anchored side retried zero times**, and its contribution to the
-ceiling collapses from 882 to its measured 441. Blind's 162 are unspent, so they still carry the ×2.
-**Judge-level ceiling = 441 + 2 × 162 = 765.**
+ceiling collapses from 882 to its measured 441. ~~Blind's 162 are unspent, so they still carry the ×2.
+**Judge-level ceiling = 441 + 2 × 162 = 765.**~~ — **true when written, superseded at T4: blind was run
+and its 162 realized their floor too** (162 transport calls for 162 asks). The ×2 it carried is gone the
+same way the anchored ×2 went, so **there is no judge-level ceiling left — both halves are measured at
+441 + 162 = 603 transport calls, and 765 is superseded rather than unreached.** The paragraph below is
+what still stands: 603 is a **floor for the spend**, because a provider-internal retry sits below the seam
+that counts and is a separate, unbounded uncertainty.
 
 **⚠️ That retirement is specific, and it must not be read as retiring the uncertainty.** What 441 rows
 rule out is a retry *inside `Judge`*. A retry inside the **provider client**, below the seam that
@@ -1984,9 +2011,21 @@ milestones.
 
 **⚠️ The anchored half realized its floor exactly: 441 transport calls for 441 asks, zero retries at the
 client seam.** So the anchored side did not approach its ceiling of 882 — it **retired** it, by direct
-measurement. **Blind's 162 remain unspent**, so the milestone total is quoted as
-*≥ 603 calls, judge-level ceiling 765* — and still a floor, for the provider-internal reason above,
-which is a separate and unbounded uncertainty rather than a survival of the 1206.
+measurement. ~~**Blind's 162 remain unspent**, so the milestone total is quoted as
+*≥ 603 calls, judge-level ceiling 765*~~ — **true when written, superseded: the blind half was run too,
+and its 162 realized their floor exactly for the same reason** (162 transport calls for 162 asks, zero
+beyond one per ask, `judge_blind_baseline.json`). **So there is no judge-level ceiling left to quote: both
+halves are measured at 441 + 162 = 603 transport calls, and 765 is superseded rather than merely
+unreached.** Cost, on the same local price table applied to the provider's token counts: anchored
+$0.999812 + blind $0.269071 = **$1.268883**, which is not a billed amount and does not become one by
+being added up.
+
+**⚠️ 603 is still a FLOOR and must never be restated as exact.** What the seam count retires is a retry
+inside `Judge` or `BlindJudge`. A retry inside the **provider client** sits below that seam, is invisible
+to every count in this milestone, and is a **separate and unbounded** uncertainty — so the spend is still
+read off the provider, and the total is quoted as *≥ 603 calls, both halves measured at the seam*. Letting
+the provider-internal caveat resurrect a judge-level ceiling would be backfilling a retired number with an
+unrelated one.
 
 **This is the cheapest and best-powered milestone in the project.**
 
@@ -2099,8 +2138,11 @@ cannot demonstrate it, and the 21 clean drafts that cite nothing contribute noth
    **`judge_version` therefore cannot tell the two anchored measurements apart**; only a T2 or T4 rubric
    edit moves it, and until one lands the version string is not the thing that distinguishes runs.
 4. **The call budget is ≥ 603 judge calls, ceiling 1206 as estimated here — measured down to a
-   judge-level 765 at T3b**, once the anchored side's 441 rows showed zero judge-level retries; the
-   record below is left as the pre-measurement estimate it was. Anchored 3 × 147 = 441, blind 3 × 54 = 162 —
+   judge-level 765 at T3b**, once the anchored side's 441 rows showed zero judge-level retries; **and
+   down to no judge-level ceiling at all at T4**, once blind's 162 did the same — **both halves realized
+   their floor, 441 + 162 = 603 transport calls, still a floor for the SPEND** because a
+   provider-internal retry sits below the seam that counts. The record below is left as the
+   pre-measurement estimate it was, and `judge_preflight.json` keeps its 1206 for the same reason. Anchored 3 × 147 = 441, blind 3 × 54 = 162 —
    counted from 54 natural drafts of which 39 (0.722) are conformance-correct under
    `stats.COLLAPSE_RULE`. Full arithmetic in *Runs and cost*. The correctness predicate is pinned by test
    to the acceptance scorer's own `act_correct`, so the budget is counted under the rule the run will be
@@ -2262,9 +2304,14 @@ different quantities, and only the second is what the floor bar is made of.
 configuration **on referent-carrying input** (T3b). **The real unit cost and latency of cloud judge
 calls — ⚠️ not settleable at T0:** no frozen artifact records judge token usage, so observing them
 requires a call, and the first anchored pass is the earliest honest place to record them.~~ — **both
-settled at T3b**, in `benchmark/reports/judge_anchored_baseline.json`. What
+settled at T3b**, in `benchmark/reports/judge_anchored_baseline.json`. ~~What
 disagreement rate the blind configuration actually produces, and therefore what human workload it
-implies.
+implies.~~ — **settled at T4**, in `benchmark/reports/judge_blind_baseline.json` (162 transport calls,
+$0.269071): **21 of 54 findings (0.3889) over 17 distinct cases**, per finding. **⚠️ And the workload it
+implies is smaller than that rate**: 7 of the 21 are SC-only mismatches forced by the drafter's citation
+convention, so **14 (0.2593) over 10 cases** is the number of visits that can carry a difference of
+opinion — both figures in `benchmark/reports/judge_comparison.json`, neither replacing the other.
+**Nothing is left unverified in this list.**
 
 ---
 

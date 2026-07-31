@@ -23,9 +23,6 @@ import pytest
 
 from clearway.eval.judge_anchored import NATURAL, anchored_asks, run_pass
 from clearway.eval.judge_anchored_baseline import (
-    CallLedger,
-    LedgerMismatch,
-    RecordingJudgeClient,
     axis_majorities,
     between_configuration_difference,
     build_record,
@@ -40,6 +37,7 @@ from clearway.eval.judge_anchored_baseline import (
     routing_flag_streams,
 )
 from clearway.eval.judge_observation_unit import DegenerateClustering
+from clearway.eval.judge_transport import CallLedger, LedgerMismatch, RecordingJudgeClient
 from clearway.judge import Judge, verdict_from
 from clearway.llm import Completion, FakeLLMClient, ImagePart, LLMRequest, LLMUsage
 from clearway.schemas.models import JudgeResult
@@ -289,7 +287,7 @@ def test_the_two_halves_of_the_citation_habit_are_counted_separately() -> None:
 
 def test_the_recorded_cost_says_it_is_a_price_table_rather_than_a_bill() -> None:
     """The client prices each call from a local table; nothing here observed what was charged."""
-    from clearway.eval.judge_anchored_baseline import cost_block
+    from clearway.eval.judge_transport import cost_block
 
     block = cost_block([{"tokens_in": 10, "tokens_out": 2, "cost_usd": 0.01, "latency_ms": 100.0}], asks_made=1)
     assert "not " in block["pricing_source"] and "billed" in block["pricing_source"]
@@ -339,9 +337,10 @@ def test_the_ledger_block_names_the_run_that_paid_and_survives_a_re_derivation()
     `--rederive` makes no call at all, so a count named for "this process" is false the moment it runs;
     the block is reassembled from the two integers instead, which also keeps its own note current.
     """
-    from clearway.eval.judge_anchored_baseline import PAID_CALLS, REPLAYED_CALLS, ledger_block
+    from clearway.eval.judge_anchored_baseline import ledger_path
+    from clearway.eval.judge_transport import PAID_CALLS, REPLAYED_CALLS, ledger_block
 
-    block = ledger_block(paid=441, replayed=0)
+    block = ledger_block(path=ledger_path(), paid=441, replayed=0)
     assert block[PAID_CALLS] == 441
     assert block[REPLAYED_CALLS] == 0
     assert "this process" not in block["note"]

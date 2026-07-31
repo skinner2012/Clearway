@@ -1637,7 +1637,19 @@ the unit.
     supports → does_not_support line.
   - **`judge_version` moved for blind and NOT for anchored**, and the pre-flight was not re-recorded —
     see the corrected bullet above.
-  **What is NOT done:** the paid calls — **162 is the FLOOR and 324 the ceiling** (54 asks × 3 passes,
+  **⚠️ What is NOT done starts before the calls: THE LIVE RUNNER ITSELF IS UNWRITTEN.** `judge_blind.py`
+  is dry-only. It has no `live_run`, no `CloudLLMClient` wiring, no recording client below the judge, no
+  call ledger and no frozen-record builder — the anchored analogue of all of that is
+  `judge_anchored_baseline.py`, and none of it is reusable as-is because it is typed to the anchored ask
+  and reads the anchored response shape. So "the calls are not spent" is **not** a statement about an
+  executable runner that was left un-run: there is nothing to invoke. What a paid stage needs, named so
+  nobody discovers it mid-run: a client wrapper capturing usage **below** the judge (a `JudgeResult`
+  carries no tokens, cost or latency), an append-only ledger keyed by prompt digest so a killed run does
+  not re-spend, a `--rederive` path so a change to how something is *computed* never re-buys the
+  answers, the noise-floor block read against T3b's, and a record digest. **Scope for that is the user's
+  call, not this ticket's to assume.**
+
+  **What is NOT done after it:** the paid calls — **162 is the FLOOR and 324 the ceiling** (54 asks × 3 passes,
   × the 2 attempts one call is allowed; `judge_blind.paid_call_budget`, derived from `BlindJudge`'s own
   `retries` default and frozen in the receipt as `paid_call_budget_if_run_live`). A retry leaves no
   trace in a run artifact, so the spend between the two is recoverable only by counting at the client

@@ -158,7 +158,9 @@
           "both": 5
         },
         "drafter_cites_on_a_clean_row": 3,
-        "drafter_cites_nothing": 0
+        "drafter_cites_nothing": 0,
+        "distinct_asks": 3,
+        "findings_in_a_duplicate_group": 3
       },
       {
         "axe_rule": "empty-heading",
@@ -174,7 +176,9 @@
           "both": 10
         },
         "drafter_cites_on_a_clean_row": 4,
-        "drafter_cites_nothing": 2
+        "drafter_cites_nothing": 2,
+        "distinct_asks": 9,
+        "findings_in_a_duplicate_group": 4
       },
       {
         "axe_rule": "label",
@@ -190,7 +194,9 @@
           "both": 12
         },
         "drafter_cites_on_a_clean_row": 0,
-        "drafter_cites_nothing": 7
+        "drafter_cites_nothing": 7,
+        "distinct_asks": 14,
+        "findings_in_a_duplicate_group": 6
       },
       {
         "axe_rule": "link-name",
@@ -206,7 +212,9 @@
           "both": 17
         },
         "drafter_cites_on_a_clean_row": 0,
-        "drafter_cites_nothing": 12
+        "drafter_cites_nothing": 12,
+        "distinct_asks": 19,
+        "findings_in_a_duplicate_group": 4
       }
     ],
     "direction": {

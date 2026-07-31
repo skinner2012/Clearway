@@ -221,7 +221,7 @@ def test_the_direction_of_a_disagreement_needs_the_judges_own_verdict() -> None:
 def test_the_disagreement_rate_is_per_finding_and_carries_its_absolute_counts() -> None:
     artifact = _artifact()
     asks, passes = _passes(artifact)
-    profile = disagreement_profile(artifact, asks, passes)
+    profile = disagreement_profile(artifact, asks, passes, prepared_inputs(load_record()))
     assert profile["unit"] == "finding"
     overall = profile["overall"]
     assert overall["findings"] == len(asks)
@@ -256,6 +256,19 @@ def test_the_two_axes_are_coupled_and_the_artifact_counts_the_rows_it_happens_on
     )
     assert not [d for d in rows if is_flag(Conformance(d["conformance"])) and not d["cited_sc_ids"]]
     assert "must never be" in block["note"] and "DIFFERENT QUESTIONS" in block["note"]
+
+
+def test_every_per_class_row_carries_its_own_ask_duplication() -> None:
+    """The classes are not equally independent, and the caveat has to meet the reader of the table.
+
+    Taken from the distinct-ask profile rather than recomputed, so the two can never disagree.
+    """
+    receipt = json.loads(report_path().read_text())
+    duplication = {row["axe_rule"]: row for row in receipt["distinct_asks"]["per_class"]}
+    for row in receipt["disagreement"]["per_class"]:
+        assert row["distinct_asks"] == duplication[row["axe_rule"]]["distinct_asks"]
+        assert row["findings_in_a_duplicate_group"] == duplication[row["axe_rule"]]["findings_in_a_duplicate_group"]
+        assert row["distinct_asks"] <= row["findings"]
 
 
 def test_the_coupling_block_rides_with_the_disagreement_profile() -> None:

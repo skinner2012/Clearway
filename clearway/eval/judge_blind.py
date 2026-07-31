@@ -391,7 +391,10 @@ def direction_block(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
 
 
 def disagreement_profile(
-    artifact: dict[str, Any], asks: Sequence[BlindAsk], passes: Sequence[Sequence[BlindOutcome]]
+    artifact: dict[str, Any],
+    asks: Sequence[BlindAsk],
+    passes: Sequence[Sequence[BlindOutcome]],
+    prepared: dict[str, FindingInput],
 ) -> dict[str, Any]:
     """The milestone's primary deliverable on this side: how often the two answers differ, and where.
 
@@ -401,6 +404,11 @@ def disagreement_profile(
 
     ⚠️ The event is *the two answers differ on either axis*, which is NOT the routing predicate the
     confusion matrix scores: that one is the conformance axis alone. Both are reported, each named.
+
+    ⚠️ `prepared` is required so **every per-class row carries its own ask duplication**. The classes
+    are not equally independent — one of them is three observations of one question — and a caveat that
+    lives only in the distinct-ask block is a caveat a reader of a per-class table never meets. Taken
+    from `distinct_ask_profile`, so the two cannot disagree.
     """
     majorities = axis_majorities(asks, passes)
     verdicts = conformance_majorities(asks, passes)
@@ -431,6 +439,7 @@ def disagreement_profile(
     for row in rows:
         by_rule.setdefault(row["axe_rule"], []).append(row)
     sc_rows = [r for r in rows if r["sc_disagreement"]]
+    duplication = {row["axe_rule"]: row for row in distinct_ask_profile(asks, prepared)["per_class"]}
 
     return {
         "unit": DISAGREEMENT_RATE_UNIT,
@@ -452,6 +461,11 @@ def disagreement_profile(
                 **_shares(group),
                 "drafter_cites_on_a_clean_row": sum(1 for r in group if r["drafter_cites_on_a_clean_row"]),
                 "drafter_cites_nothing": sum(1 for r in group if r["drafter_cites_nothing"]),
+                # ⚠️ Carried onto the row rather than left in the distinct-ask block: this class's
+                # figures rest on this many genuinely different questions, and on the smallest class
+                # that is materially fewer than its finding count.
+                "distinct_asks": duplication[rule]["distinct_asks"],
+                "findings_in_a_duplicate_group": duplication[rule]["findings_in_a_duplicate_group"],
             }
             for rule, group in sorted(by_rule.items())
         ],
@@ -820,7 +834,7 @@ def build_receipt(
             "sc_swap_n": scoring.per_case.confusion.injected_sc_swap.n,
             "denominator": NO_MUTATIONS_HERE,
         },
-        "disagreement": disagreement_profile(artifact, asks, passes),
+        "disagreement": disagreement_profile(artifact, asks, passes, prepared),
     }
     if anchored is not None:
         receipt["between_configuration_difference"] = between_configuration_difference(artifact, asks, passes, anchored)

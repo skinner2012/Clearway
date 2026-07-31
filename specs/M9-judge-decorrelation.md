@@ -1917,6 +1917,36 @@ the unit.
   Absolute counts beside every rate; no metric name used without a plain-language gloss on first use;
   the four comparison conditions stated where the side-by-side table appears, not in a footnote. The
   existing reports in `docs/` are denser than this, and that is not the target here.
+- **Settled — zero model calls.** The read is `docs/judge-decorrelation-result.md`, written off the
+  frozen artifacts alone. **Every figure in it was re-derived from the artifact that owns it, never
+  taken from this spec's prose** — the disagreement counts and their case counts recounted off
+  `disagreement.rows` on both configurations, the SC-axis artefact checked as a **set membership** at
+  row level rather than by matching totals (independent: the 7 SC-only rows *are* the 7 clean-citing
+  rows; anchored: 21 against 21 and the sets differ by one swap, and all 21 cite-nothing rows carry an
+  SC-axis disagreement while the 7 clean-citing rows carry none), every κ recomputed from its own cells,
+  the pooled judge κ recomputed from the four per-class cell blocks, and the sign-test tail re-enumerated
+  (`b = 3, n = 6 → 42/64 = 0.6562`; statistical bar 6 because `p(5,1) = 0.109`). What the read discharges,
+  in the ticket's own terms: it opens on the disagreement rate and reaches the p-value in §3; every figure
+  carries **both** its comparison and its unit; `drafter–judge κ` is labelled descriptive-only; the
+  workload is stated in absolute visits (21 findings over 17 cases, of which 14 over 10 can carry a
+  difference of opinion, and what those visits find); **κ is stated as methodologically valid for the
+  first time under blind**, and as a methodological correction rather than a result; the two published
+  judge κ are reconciled **in prose**, naming 0.137 / SD 0.158 / mean ≈ 0.005 with `−0.171` and `0.049`
+  identified as living only in `docs/acceptance-analysis.md`, against 0.227 per finding and 0.3578 per
+  case here, with the four simultaneous differences and what the larger number does not license —
+  **`README.md` and `docs/acceptance-analysis.md` are untouched**; and the scaffold description is
+  corrected in the read (queue routing fills the composite fields, a drafter self-revision pass that does
+  not exist fills the reflection counters, and an independent dual read is not a step toward one)
+  **without editing M6**. The ugly numbers are reported as ugly: the pre-committed guard **trips**, the
+  1.000 swap figure is devalued in place, the κ SD of 0.0006 is named as a trap beside 7 of 40 moved
+  decisions, the majority collapse's cost to the headline κ is stated, and the between-configuration
+  correlation of **−0.0957** is reported as pointing the wrong way.
+  - **⚠️ Turned up and not asked for — one figure in T4's settled block is mis-attributed.** Its
+    "433.2 s of wall clock" for the blind half is the **sum of the per-call latencies**
+    (`cost.latency_ms.total` = 433160.5 ms); the record's own `wall_clock_seconds` is **434.3**. The
+    anchored side's quoted 1580.8 s *is* `wall_clock_seconds` (its latency total is 1579.4 s), so the two
+    halves are quoted off different fields. Nothing downstream divides by either. The read quotes the
+    artifact; T4's block is left as recorded rather than silently corrected.
 - **Depends on:** T5
 
 ---

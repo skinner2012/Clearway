@@ -105,7 +105,11 @@ NOT_A_MEASUREMENT_OF_THE_DRAFTER = (
     "Every cell below scores the JUDGE's routing decision against ACT gold. The drafts are frozen and "
     "are never re-drafted, so the count of act-wrong units is a property of the drafter and fixes the "
     "ceiling on `correct_catch`; a judge that raised its hand on everything would still be bounded by "
-    "it. Nothing here is a measurement of the drafter."
+    "it. Nothing here is a measurement of the drafter. ⚠️ THE TWO WRONG-COUNTS ARE DIFFERENT SETS AND "
+    "CAN COME OUT NUMERICALLY EQUAL. The act-wrong units are `missed_error` + `correct_catch`; the "
+    "units the judge routes wrongly are `missed_error` + `false_alarm`. Only `missed_error` is in both, "
+    "and every `false_alarm` is a unit whose draft was RIGHT — so the judge's own error count set beside "
+    "the ceiling is two overlapping sets, never one, and their union is larger than either."
 )
 
 

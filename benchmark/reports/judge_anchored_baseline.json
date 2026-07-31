@@ -7,7 +7,7 @@
   "wall_clock_seconds": 1580.8,
   "judge_model": "gpt-5.6-luna",
   "judge_version": "prompt=afadca26; effort=medium",
-  "not_a_measurement_of_the_drafter": "Every cell below scores the JUDGE's routing decision against ACT gold. The drafts are frozen and are never re-drafted, so the count of act-wrong units is a property of the drafter and fixes the ceiling on `correct_catch`; a judge that raised its hand on everything would still be bounded by it. Nothing here is a measurement of the drafter.",
+  "not_a_measurement_of_the_drafter": "Every cell below scores the JUDGE's routing decision against ACT gold. The drafts are frozen and are never re-drafted, so the count of act-wrong units is a property of the drafter and fixes the ceiling on `correct_catch`; a judge that raised its hand on everything would still be bounded by it. Nothing here is a measurement of the drafter. ⚠️ THE TWO WRONG-COUNTS ARE DIFFERENT SETS AND CAN COME OUT NUMERICALLY EQUAL. The act-wrong units are `missed_error` + `correct_catch`; the units the judge routes wrongly are `missed_error` + `false_alarm`. Only `missed_error` is in both, and every `false_alarm` is a unit whose draft was RIGHT — so the judge's own error count set beside the ceiling is two overlapping sets, never one, and their union is larger than either.",
   "sources": {
     "frozen_drafts": {
       "path": "citation_grounding_run_1.json",
@@ -9998,5 +9998,5 @@
       "latency_ms": 2563.368208007887
     }
   ],
-  "reproducible_digest": "41473aee75e2a6bc819b89c1611a29cef4776b3eb3ee46669b66ddcdf036f590"
+  "reproducible_digest": "cfb56ae3b8f5585baadf2c3a1d18d8143f9449d19ed2b5c3b1fec5fba96277fa"
 }

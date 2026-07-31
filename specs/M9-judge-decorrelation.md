@@ -633,7 +633,7 @@ whether that helps are unknown at spec time:**
 | | status at spec time |
 |---|---|
 | **Observations** | **settled at T1: 40 cases** — the frozen M7 run's 54 findings collapsed to the pinned unit. **Not M5's 63**, which was a different and larger draft set, and not 54, which is the disagreement rate's denominator rather than the test's |
-| **The repairable ceiling** — how many routing decisions are currently wrong | **Settled at T1 for the drafter side: 7 of the 40 case-level units are act-wrong** (15 of 54 findings; 9 of the drafter's 44, 2 of them unreachable). M5's figures do not transfer — they were counted on M5's drafts. **Settled at T3b for the judge side: it routes 7 of the 40 cases wrongly** — 4 act-wrong cases released, 3 clean ones flagged — and catches **3 of the 7** act-wrong |
+| **The repairable ceiling** — how many routing decisions are currently wrong | **Settled at T1 for the drafter side: 7 of the 40 case-level units are act-wrong** (15 of 54 findings; 9 of the drafter's 44, 2 of them unreachable). M5's figures do not transfer — they were counted on M5's drafts. **Settled at T3b for the judge side: it routes 7 of the 40 cases wrongly** — 4 act-wrong cases released, 3 clean ones flagged — and catches **3 of the 7** act-wrong. **⚠️ The two 7s are different sets of the same size**, overlapping in the 4 misses only, union 10 of 40; see *the routing baseline* under T3b |
 | **Discordant pairs needed for α = 0.05** | **Settled at T3b from the measured floor: `b ≥ 5` over `n ≥ 5`**, the two bars coinciding at `n` = 5 and the statistical bar binding from `n` = 6. Five *does* suffice here, and only because the realized floor came in at 4 one-way case wins rather than T1's prior of 6; below `n` = 5 no split is attainable |
 | **⚠️ Effect against noise** | **measured at T1 as a ceiling of 7 against a mean null movement of 8.0 cases per pass-pair, and re-measured on the real instrument at T3b: mean 4.67 cases per pass-pair** (3, 4, 7). Still the same order as the ceiling — stated here rather than discovered at T5 |
 
@@ -1418,8 +1418,16 @@ the unit.
     0.0909 of 33. Per finding: **54 units, 36 / 11 / 3 / 4**, **κ 0.227**, miss rate 0.7333 of 15,
     false-alarm rate 0.0769 of 39. **The pair Group B insists on being read together:** of the flagged
     set, **3 of 6 are genuinely wrong** per case (4 of 7 per finding) — and of all real errors,
-    **3 of 7 are flagged** per case, **4 of 15** per finding. **⚠️ The judge routes 7 of 40 cases
-    wrongly against a repairable ceiling of 7**, which is the judge-side half T1 could not measure.
+    **3 of 7 are flagged** per case, **4 of 15** per finding. The judge routes **7 of 40 cases wrongly**,
+    which is the judge-side half T1 could not measure.
+    **⚠️ That 7 and the repairable ceiling's 7 are DIFFERENT SETS that happen to be the same size — do
+    not write the one "against" the other.** The ceiling's 7 is the act-wrong cases (miss 4 + catch 3);
+    the judge's 7 is the cases it decides wrongly (miss 4 + false alarm 3). **The overlap is the 4 misses
+    and nothing else**: the other 3 of the judge's errors are cases whose **draft was right** and the
+    judge flagged anyway, and the other 3 of the ceiling are cases the judge got right. **The union is
+    10 of 40**, not 7. Set the two bare figures side by side and a reader concludes the judge is wrong on
+    exactly the repairable set, which is false in both directions — it misses 4 of the 7 repairable cases
+    and spends 3 errors outside the ceiling entirely.
   - **The disagreement rate — the milestone's primary deliverable on this side.** **28 of 54 findings
     (0.5185), touching 19 distinct cases.** Per class: `document-title` 0/5, `empty-heading` 2/11,
     `label` 8/17, `link-name` 18/21. Composition: conformance only 6, SC only 21, both 1.
@@ -1686,6 +1694,14 @@ against — a wall-clock `created_at` would otherwise make a genuine edit and a 
 **⚠️ Read 39 carefully — three different quantities in this milestone are 39.** The conformance-flip
 denominator here (39 of 54 M7 drafts), M5's conformance-flip n (39 of 63 M5 drafts), and M5's
 false-alarm denominator (39) are numerically equal and mean different things over different draft sets.
+
+**⚠️ Read 7 carefully too — several quantities in this milestone are 7, and two of them are sets of
+cases that are NOT the same set.** The **repairable ceiling** (7 of 40 cases act-wrong, T1);
+the **cases the judge routes wrongly** (7 of 40, T3b — 4 misses + 3 false alarms), which overlaps the
+ceiling in the 4 misses only, for a union of 10; and the **largest same-configuration pass-pair
+movement** (7 of 40 case decisions, T3b's noise floor), which is jitter and is not a set of errors at
+all. Writing any two of them "against" each other without naming the overlap invites the reading that
+the judge's errors *are* the repairable set.
 
 For scale: M7's drafter passes took 2–3.5 hours each (a local thinking model at ~11 tok/s with no cap
 on its reasoning budget). **M9 makes no drafter calls at all** — every draft is reused from the frozen

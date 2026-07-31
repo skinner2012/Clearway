@@ -312,6 +312,27 @@ def test_the_confounded_correlation_says_it_settles_neither_reading() -> None:
     assert "NOT YET MEASURED" in block["reading"]
 
 
+def test_the_judges_wrong_count_and_the_repairable_ceiling_are_named_as_different_sets() -> None:
+    """The two come out the same size in this run, and reading them as one set is wrong twice over.
+
+    Act-wrong units are `missed_error` + `correct_catch`; the units the judge decides wrongly are
+    `missed_error` + `false_alarm`. Only the misses are in both, so the union is strictly larger than
+    either — the record has to say so, because equal sizes read as identity.
+    """
+    per_case = _frozen()["confusion"]["per_case"]
+    act_wrong = per_case["missed_error"] + per_case["correct_catch"]
+    judge_wrong = per_case["missed_error"] + per_case["false_alarm"]
+    overlap = per_case["missed_error"]
+    assert act_wrong == per_case["real_errors"]
+    assert overlap < act_wrong and overlap < judge_wrong
+    assert act_wrong + judge_wrong - overlap > max(act_wrong, judge_wrong)
+
+    note = _frozen()["not_a_measurement_of_the_drafter"]
+    assert "DIFFERENT SETS" in note
+    assert "`missed_error` + `correct_catch`" in note
+    assert "`missed_error` + `false_alarm`" in note
+
+
 def test_the_ledger_block_names_the_run_that_paid_and_survives_a_re_derivation() -> None:
     """A block carried across verbatim would keep describing a process that no longer wrote the file.
 
@@ -360,7 +381,7 @@ def test_two_configurations_are_refused_when_their_finding_orders_differ() -> No
 # The frozen record's digest over everything a re-derivation reproduces. Moving it means the
 # measurement moved: re-record it by running the builder (`--rederive` for a computation change, the
 # paid entry point for anything that moves an ask), never by retyping this string.
-_FROZEN_DIGEST = "41473aee75e2a6bc819b89c1611a29cef4776b3eb3ee46669b66ddcdf036f590"
+_FROZEN_DIGEST = "cfb56ae3b8f5585baadf2c3a1d18d8143f9449d19ed2b5c3b1fec5fba96277fa"
 
 
 def _frozen() -> dict[str, Any]:

@@ -84,6 +84,16 @@ total.
 *This answers: **is a visit worth making, and what does the queue miss?*** These two are a pair and are
 never quoted apart.
 
+**First, why the counts below are smaller than the queue above.** The queue is 21 findings over 17
+pages; the flagged set counted here is **14 findings over 10 pages** — the second column of the table
+above, exactly. The difference is not a discrepancy: the scorer that builds these confusion cells
+flags on the **conformance axis alone**, deliberately, and its own docstring says why. The drafter is
+steered to cite criteria that disagree with ACT gold — a framing choice of ours, not a capability —
+so folding the citation axis into the flag predicate would penalise the judge for our choice and
+pollute the one number that matters here, the miss rate. So the confusion cells describe the
+substantive column; the extra 7 visits in the headline queue are citation-only and appear in no cell
+below.
+
 At the page level (Comparison 1's confusion cells, per **case**, 40): the independent configuration
 raises its hand on **10 of 40 cases**, and **5 of those 10 hold a genuinely wrong draft** — a visit is
 worth making about half the time. Of all **7** cases whose draft is genuinely wrong, it flags **5**.

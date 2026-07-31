@@ -475,9 +475,14 @@ each other.
 
 ## 8. Two scaffold fields, and what actually fills them
 
-Five inert fields were added to the internal evaluation metrics some time ago, and the ticket that added
-them recorded that this work would fill them. **It does not, and the record is corrected here rather
-than by editing that ticket.**
+Five inert fields were added to the internal evaluation metrics some time ago. **The stale claim is
+narrower than "all five", and it lives in two places rather than one.** It attaches to the three
+composite hallucination fields, where the record does say this work would fill them: the schema
+changelog entry that added them (`CONTRACTS.md`, dated 2026-07-23, schema version 0.19) calls the queue
+side *structurally absent until* this work routes findings to the review queue, and the ticket that added
+them says the same. **It does not, and the record is corrected here rather than by editing either.** The
+two reflection counters were **recorded as inert until a reflection loop exists** — never as this work's
+to fill — so what follows for them is a clarification of what was built, not a retraction.
 
 - **`citation_hallucination_rate_composite`, `hallucinations_queued_total`, `citations_queued_total`** —
   the composite (shipped ⊕ queued) hallucination fields. **What fills them is review-queue routing in
@@ -492,8 +497,10 @@ than by editing that ticket.**
   is precisely what keeps optimisation pressure off the judge. The drafter was never called.
 
 The field descriptions in the schema already say the right thing (*"None until the review queue routes
-findings"*, *"None until a reflection loop runs"*); what was stale is the surrounding prose naming this
-work as the filler.
+findings"*, *"None until a reflection loop runs"*); what was stale is the surrounding prose — the
+changelog entry and the ticket — naming this work as the filler of the **composite** three. Nothing ever
+promised the reflection counters to this work; the correction there is only that an independent dual
+read is not a reflection loop and does not become one later.
 
 ---
 

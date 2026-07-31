@@ -488,7 +488,12 @@ work as the filler.
    deliberately — same question, independent answer — so a bad retrieval ordering misleads both and they
    agree for the wrong reason. The prior is stronger than "shared": there are **four candidate lists
    across all 54 findings**, one per class and constant inside it. The size of that residual is not
-   quantified.
+   quantified. **And the sharing itself is corroborated, never verified.** What is on disk is the
+   finding-side input the two judge configurations read, byte for byte, so *that* half is a property of
+   one file. **Nothing on disk records the candidate list the drafter actually answered** — retrieval is
+   deterministic over a frozen corpus, so today's list is very probably the one the drafter saw, but that
+   is an inference from determinism and not a record. The trade is deliberate on the judge's side and
+   only corroborated on the drafter's.
 3. **That the 40 pages are 40 independent questions.** The 54 findings render only **45 distinct** asks,
    in 8 duplicate groups, and **not one group lies inside a single page** — so two pages can be sent a
    byte-identical question. It lands hardest on the smallest class (`document-title`: 3 asks for 5

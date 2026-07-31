@@ -1,0 +1,715 @@
+{
+  "artifact": "both judge comparisons, computed off the frozen runs and kept apart",
+  "version": 1,
+  "model_calls_spent": 0,
+  "created_at": "2026-07-25T02:41:41.406015+00:00",
+  "read_in_this_order": "COMPARISON 2 FIRST. It is the one that decides whether the signal is worth having, and it carries no p-value; Comparison 1 is a check on how the disagreement rate was arrived at. A report that opens on a significance verdict has buried its own result.",
+  "units": {
+    "observation_unit": "case",
+    "aggregation_order": "majority verdict across the configuration's passes, per finding; then flag-if-any across the findings within the case",
+    "disagreement_rate_unit": "finding",
+    "conformance_collapse_rule": "FLAGS={does_not_support, partially_supports}; CLEAN={not_applicable, supports}",
+    "note": "⚠️ TWO UNITS LIVE HERE. The tested comparison is per CASE (40); the disagreement rate is per FINDING (54), because it is a queue-volume number and disagreement is per finding by construction. Every figure names which one it is on, and a bare count is ambiguous even once its comparison is named."
+  },
+  "sources": {
+    "frozen_drafts": {
+      "path": "citation_grounding_run_1.json",
+      "sha256": "191e40e5efa83bb82799d1c83579b54246f9ff56781e615f459999df6bb52141",
+      "run_ids": [
+        "citation-grounding-pass1-2026-07-25T02:41:41.406015+00:00"
+      ],
+      "config_id": "m1-single@1",
+      "eval_set_id": "act-acceptance@1",
+      "drafter_model": "gemma4:31b",
+      "created_at": "2026-07-25T02:41:41.406015+00:00"
+    },
+    "anchored_configuration": {
+      "path": "judge_anchored_baseline.json",
+      "sha256": "3af7408303cdee49b1620ff9602c67c7d117285f177902d58621d84dfeef0d0b",
+      "judge_model": "gpt-5.6-luna",
+      "judge_version": "prompt=afadca26; effort=medium",
+      "created_at": "2026-07-30T19:32:50.164589+00:00"
+    },
+    "blind_configuration": {
+      "path": "judge_blind_baseline.json",
+      "sha256": "01838f8fc448853da2df9f42708425e11aa191f3067ceb1471a0fe4067ed4c43",
+      "judge_model": "gpt-5.6-luna",
+      "judge_version": "prompt=a74474d5; effort=medium",
+      "created_at": "2026-07-31T02:29:28.053957+00:00"
+    },
+    "drafter_comparator": {
+      "path": "judge_drafter_comparator.json",
+      "sha256": "ad5189775bba93204ca2f5368e96124d7c014aaff397978d3659e2512e1f346e",
+      "created_at": "2026-07-25T02:41:41.406015+00:00"
+    },
+    "read_only": "Every source is read and replayed through its own harness, which refuses if the frozen rows are not those asks. Nothing here re-runs, re-judges or rewrites any of them."
+  },
+  "comparison_1_judge_vs_judge": {
+    "asks": "COMPARISON 1 — judge vs judge. Did removing the anchor make the ROUTING DECISION better? The two sides are the anchored configuration and the blind one; the oracle is ACT gold, scored into the four routing cells; the unit is the CASE (40); and this is the only comparison in the milestone that is statistically tested. ⚠️ It is also the LESS USEFUL of the two: at best it establishes that blind routes better than a mechanism this project had already judged broken.",
+    "confusion": {
+      "anchored": {
+        "per_case": {
+          "unit": "case",
+          "observations": 40,
+          "correct_release": 30,
+          "missed_error": 4,
+          "false_alarm": 3,
+          "correct_catch": 3,
+          "kappa": 0.3578,
+          "miss_rate": 0.5714,
+          "miss_rate_n": 7,
+          "false_alarm_rate": 0.0909,
+          "false_alarm_rate_n": 33,
+          "share_of_the_flagged_set_that_is_genuinely_wrong": 0.5,
+          "flagged_set_size": 6,
+          "share_of_all_real_errors_that_were_flagged": 0.4286,
+          "real_errors": 7
+        },
+        "per_finding": {
+          "unit": "finding",
+          "observations": 54,
+          "correct_release": 36,
+          "missed_error": 11,
+          "false_alarm": 3,
+          "correct_catch": 4,
+          "kappa": 0.227,
+          "miss_rate": 0.7333,
+          "miss_rate_n": 15,
+          "false_alarm_rate": 0.0769,
+          "false_alarm_rate_n": 39,
+          "share_of_the_flagged_set_that_is_genuinely_wrong": 0.5714,
+          "flagged_set_size": 7,
+          "share_of_all_real_errors_that_were_flagged": 0.2667,
+          "real_errors": 15
+        }
+      },
+      "blind": {
+        "per_case": {
+          "unit": "case",
+          "observations": 40,
+          "correct_release": 28,
+          "missed_error": 2,
+          "false_alarm": 5,
+          "correct_catch": 5,
+          "kappa": 0.4815,
+          "miss_rate": 0.2857,
+          "miss_rate_n": 7,
+          "false_alarm_rate": 0.1515,
+          "false_alarm_rate_n": 33,
+          "share_of_the_flagged_set_that_is_genuinely_wrong": 0.5,
+          "flagged_set_size": 10,
+          "share_of_all_real_errors_that_were_flagged": 0.7143,
+          "real_errors": 7
+        },
+        "per_finding": {
+          "unit": "finding",
+          "observations": 54,
+          "correct_release": 33,
+          "missed_error": 7,
+          "false_alarm": 6,
+          "correct_catch": 8,
+          "kappa": 0.3874,
+          "miss_rate": 0.4667,
+          "miss_rate_n": 15,
+          "false_alarm_rate": 0.1538,
+          "false_alarm_rate_n": 39,
+          "share_of_the_flagged_set_that_is_genuinely_wrong": 0.5714,
+          "flagged_set_size": 14,
+          "share_of_all_real_errors_that_were_flagged": 0.5333,
+          "real_errors": 15
+        }
+      },
+      "note": "The four routing cells at both units, per configuration. The two Group B rates that are read TOGETHER ride on each block: the share of the flagged set that is genuinely wrong (is a human visit worth making) and the share of all real errors that were flagged (the signal's recall). Quoting the first without the second hides the uglier number."
+    },
+    "sign_test": {
+      "per_case": {
+        "unit": "case",
+        "observations": 40,
+        "discordant_pairs": 6,
+        "blind_wins": 3,
+        "anchored_wins": 3,
+        "one_sided_p": 0.6562
+      },
+      "per_finding_does_not_govern": {
+        "unit": "finding",
+        "observations": 54,
+        "discordant_pairs": 9,
+        "blind_wins": 5,
+        "anchored_wins": 4,
+        "one_sided_p": 0.5,
+        "note": "Reported beside the test and never instead of it. A threshold counted per finding cannot govern a test scored per case, and the pinned unit was fixed before any run."
+      },
+      "direction": "One-sided, and the direction was pre-registered: `blind_wins` counts cases the blind configuration routes correctly and the anchored one does not. `anchored_wins` is the same event pointing back, and it is reported rather than folded into the p-value.",
+      "alpha": 0.05,
+      "threshold": {
+        "required_wins": 6,
+        "statistical_bar": 6,
+        "floor_bar": 5,
+        "binding_bar": "statistical — alpha at this discordant count sets the bar",
+        "null_wins": 4,
+        "source": "judge_anchored_baseline.json §threshold — the floor bar was frozen from the anchored configuration's own same-configuration pass-pairs before the blind configuration ran, and is not re-derived here."
+      },
+      "clears_the_bar": false
+    },
+    "discordant_cases": [
+      {
+        "act_testcase_id": "e419548ab0986f9d71f073253193a66178191536",
+        "axe_rule": "label",
+        "findings_on_the_case": 4,
+        "drafted_answer_is_act_wrong": true,
+        "anchored_raised_its_hand": false,
+        "blind_raised_its_hand": true,
+        "winner": "blind"
+      },
+      {
+        "act_testcase_id": "5d11716ba4bcb2c9804cbea517e2382b51d89217",
+        "axe_rule": "label",
+        "findings_on_the_case": 4,
+        "drafted_answer_is_act_wrong": false,
+        "anchored_raised_its_hand": false,
+        "blind_raised_its_hand": true,
+        "winner": "anchored"
+      },
+      {
+        "act_testcase_id": "925f5da9291c3ff7ee2c98cf43773ff6933be5a9",
+        "axe_rule": "label",
+        "findings_on_the_case": 1,
+        "drafted_answer_is_act_wrong": false,
+        "anchored_raised_its_hand": false,
+        "blind_raised_its_hand": true,
+        "winner": "anchored"
+      },
+      {
+        "act_testcase_id": "b81884710c18ce810cbed8a926188609aead5786",
+        "axe_rule": "empty-heading",
+        "findings_on_the_case": 1,
+        "drafted_answer_is_act_wrong": false,
+        "anchored_raised_its_hand": true,
+        "blind_raised_its_hand": false,
+        "winner": "blind"
+      },
+      {
+        "act_testcase_id": "b21c77db7674e58bccfe50adfe6ecd6bb715efd9",
+        "axe_rule": "empty-heading",
+        "findings_on_the_case": 1,
+        "drafted_answer_is_act_wrong": false,
+        "anchored_raised_its_hand": false,
+        "blind_raised_its_hand": true,
+        "winner": "anchored"
+      },
+      {
+        "act_testcase_id": "5e67cab9c6586318a6186eeca1ac536542e5e437",
+        "axe_rule": "link-name",
+        "findings_on_the_case": 1,
+        "drafted_answer_is_act_wrong": true,
+        "anchored_raised_its_hand": false,
+        "blind_raised_its_hand": true,
+        "winner": "blind"
+      }
+    ],
+    "aggregation_divergence": {
+      "anchored": {
+        "clusters": 40,
+        "multi_observation_clusters": 7,
+        "heterogeneous_clusters": 4,
+        "observations_inside_heterogeneous_clusters": 11,
+        "clusters_where_flag_if_any_differs_from_within_case_majority": 3,
+        "note": "The count of divergent clusters is what flag-if-any decides differently from a within-case majority, and the heterogeneous count is the within-case disagreement the collapse makes invisible. Flag-if-any is kept because it is the product reading — one raised hand on a page sends the specialist — and because it matches the drafter scorer's own collapse; the cost is recorded here so the per-finding table is read beside the test rather than instead of it."
+      },
+      "blind": {
+        "clusters": 40,
+        "multi_observation_clusters": 7,
+        "heterogeneous_clusters": 6,
+        "observations_inside_heterogeneous_clusters": 19,
+        "clusters_where_flag_if_any_differs_from_within_case_majority": 4,
+        "note": "The count of divergent clusters is what flag-if-any decides differently from a within-case majority, and the heterogeneous count is the within-case disagreement the collapse makes invisible. Flag-if-any is kept because it is the product reading — one raised hand on a page sends the specialist — and because it matches the drafter scorer's own collapse; the cost is recorded here so the per-finding table is read beside the test rather than instead of it."
+      },
+      "note": "What the flag-if-any case collapse hides, per configuration: the multi-finding cases that are internally split, and the cases where flag-if-any lands on a different answer from a within-case majority. Reported because a case-level figure that is false one level below it is a mistake this project has already made once."
+    },
+    "injected_versus_real": {
+      "configuration": "anchored",
+      "read_on_anchored_only": "Both mutations edit the DRAFT and a blind ask never contains one, so under blind an SC swap is caught 1.000 by construction and a conformance flip is caught exactly when the judge already agreed. Those are restatements of arithmetic, not measurements of a judge, and they are NOT eligible to trip the guard below.",
+      "measured": {
+        "injected_sc_swap_detection": 1.0,
+        "injected_sc_swap_n": 54,
+        "injected_conformance_flip_detection": 0.8974,
+        "injected_conformance_flip_n": 39,
+        "real_detection_per_finding": 0.2667,
+        "real_detection_per_case": 0.4286,
+        "denominators": "both injected rates are per mutated DRAFT and are never re-based by the confusion's unit; the two real-detection figures are the flagged share of the act-wrong units at the unit each is named for",
+        "read_the_swap_knowing_this": "The SC swap substitutes a decoy criterion, and no decoy appears in any class's retrieved candidate list — which this configuration now shows the judge. So 'is this citation wrong' is answerable by list membership, with no WCAG judgment involved, and a high swap-detection figure here carries LESS judge behaviour than the same figure did before the candidate list was shared. The conformance flip is unaffected: it changes a verdict, and no candidate list speaks to a verdict."
+      },
+      "historical_baseline": {
+        "injected_sc_swap_detection": 1.0,
+        "injected_sc_swap_n": 63,
+        "injected_conformance_flip_detection": 0.82,
+        "injected_conformance_flip_n": 39,
+        "real_detection": 0.33,
+        "real_detection_n": 24,
+        "real_detection_unit": "finding",
+        "gap": "threefold — injected detection at 1.00 and 0.82 against real detection at 0.33",
+        "⚠️": "MEASURED ON A DIFFERENT DRAFT SET — 63 drafted findings from the acceptance sweep, of which 24 were act-wrong. This milestone replays 54 findings over 40 cases with 15 act-wrong, so no figure here shares a denominator with anything below and a difference between the two is a difference of set as much as of judge. It is the only prior that exists, so it is quoted; it is not a paired comparator and nothing is subtracted from it."
+      },
+      "within_run_gap": {
+        "injected_over_real_per_finding_sc_swap": 3.75,
+        "injected_over_real_per_finding_conformance_flip": 3.36,
+        "injected_over_real_per_case_sc_swap": 2.33,
+        "injected_over_real_per_case_conformance_flip": 2.09,
+        "note": "The gap on this run's own drafts, needing no comparison to any other set. The historical gap was threefold; this one is of the same order at the finding and somewhat narrower at the case, which is the unit change and not the judge. IT HAS NOT CLOSED."
+      },
+      "guard_against_the_historical_baseline": {
+        "predicate": "The pre-committed guard reads: injected detection RISES while real detection DOES NOT. Evaluated at the historical figures' own unit — real detection per FINDING, because the 0.33 it is compared against was 8 catches over 24 act-wrong findings.",
+        "injected_detection_rose": true,
+        "sc_swap_moved": 0.0,
+        "conformance_flip_moved": 0.0774,
+        "real_detection_rose": false,
+        "real_detection_moved_per_finding": -0.0633,
+        "trips": true,
+        "consequence_if_it_trips": "EFFECTIVE ONLY ON CLEAN SIGNAL — DOES NOT TRANSFER. Success may not be claimed on the strength of an injected figure. ⚠️ Nothing in this milestone claims success in the first place unless Comparison 1's verdict is SUPPORTED, so read the two together rather than either alone.",
+        "⚠️": "THE COMPARISON CROSSES DRAFT SETS. The historical figures were measured on 63 drafted findings with 24 act-wrong; these are 54 findings with 15. Both movements are therefore movements of the set as much as of the judge, and the guard is evaluated because it was pre-committed, not because the two are like-for-like. The within-run gap above needs no such comparison and is the sturdier of the two readings."
+      }
+    },
+    "verdict": "ANCHORING WAS NOT THE DOMINANT CAUSE — blind did not win on more cases than it lost on. The milestone's own falsification condition, and a result rather than a failure: the remaining correlation lives somewhere this milestone did not touch",
+    "verdict_rule": "Pre-committed before the run. Clears the bar → SUPPORTED. Directional but short of it → worked but uncertifiable. No directional movement → anchoring was not the dominant cause. A bar unattainable at this n → uncertifiable at that n, which is NOT a bar the evidence missed. Separately, injected detection rising while real detection does not → effective only on clean signal, and success may not be claimed.",
+    "success_may_not_be_claimed": true
+  },
+  "comparison_2_judge_vs_drafter": {
+    "asks": "COMPARISON 2 — the blind judge vs the frozen drafter. What does the second reader actually look like, and is it worth having? The disagreement rate is per FINDING (54) and is the milestone's primary deliverable; *which of them is more often right* is per class, per case, against ACT gold. ⚠️ DESCRIPTIVE BY CONSTRUCTION — no p-value anywhere, because per-class n did not grow. It does not exist under the anchored configuration at all: a judge that grades a draft emits no verdict of its own to set beside the drafter's.",
+    "group_a_disagreement": {
+      "unit": "finding",
+      "why_this_is_the_deliverable": "It is the queue volume — how many people-visits the mechanism creates — and a rate alone hides the workload, so it never appears without its absolute count and the number of distinct cases it touches. Everything else either explains it or says whether following it pays.",
+      "never_averaged": "⚠️ The two configurations count DIFFERENT EVENTS. Anchored: the judge graded the draft incorrect. Blind: the judge's own answer differs from the draft, decided in code. They may sit side by side and must never be averaged, differenced or presented as one series — the SC axis especially, where anchored grades a citation it was shown and blind compares a set it made.",
+      "anchored": {
+        "source": "judge_anchored_baseline.json §disagreement",
+        "unit": "finding",
+        "event": "the judge graded the draft incorrect on EITHER axis — citation_correct or conformance_correct false, taken as each axis's own majority across the passes",
+        "overall": {
+          "findings": 54,
+          "disagreements": 28,
+          "disagreement_rate": 0.5185,
+          "distinct_cases_touched": 19,
+          "conformance_axis_disagreements": 7,
+          "sc_axis_disagreements": 22,
+          "composition": {
+            "conformance_only": 6,
+            "sc_only": 21,
+            "both": 1
+          }
+        },
+        "per_class": [
+          {
+            "axe_rule": "document-title",
+            "findings": 5,
+            "disagreements": 0,
+            "disagreement_rate": 0.0,
+            "distinct_cases_touched": 0,
+            "conformance_axis_disagreements": 0,
+            "sc_axis_disagreements": 0,
+            "composition": {
+              "conformance_only": 0,
+              "sc_only": 0,
+              "both": 0
+            },
+            "drafter_cites_on_a_clean_row": 3,
+            "drafter_cites_nothing": 0
+          },
+          {
+            "axe_rule": "empty-heading",
+            "findings": 11,
+            "disagreements": 2,
+            "disagreement_rate": 0.1818,
+            "distinct_cases_touched": 2,
+            "conformance_axis_disagreements": 1,
+            "sc_axis_disagreements": 2,
+            "composition": {
+              "conformance_only": 0,
+              "sc_only": 1,
+              "both": 1
+            },
+            "drafter_cites_on_a_clean_row": 4,
+            "drafter_cites_nothing": 2
+          },
+          {
+            "axe_rule": "label",
+            "findings": 17,
+            "disagreements": 8,
+            "disagreement_rate": 0.4706,
+            "distinct_cases_touched": 7,
+            "conformance_axis_disagreements": 0,
+            "sc_axis_disagreements": 8,
+            "composition": {
+              "conformance_only": 0,
+              "sc_only": 8,
+              "both": 0
+            },
+            "drafter_cites_on_a_clean_row": 0,
+            "drafter_cites_nothing": 7
+          },
+          {
+            "axe_rule": "link-name",
+            "findings": 21,
+            "disagreements": 18,
+            "disagreement_rate": 0.8571,
+            "distinct_cases_touched": 10,
+            "conformance_axis_disagreements": 6,
+            "sc_axis_disagreements": 12,
+            "composition": {
+              "conformance_only": 6,
+              "sc_only": 12,
+              "both": 0
+            },
+            "drafter_cites_on_a_clean_row": 0,
+            "drafter_cites_nothing": 12
+          }
+        ],
+        "sc_axis_artefact": {
+          "drafter_rows_that_cite_while_clean": 7,
+          "drafter_rows_that_cite_nothing": 21,
+          "sc_axis_disagreements": 22,
+          "sc_axis_disagreements_on_rows_that_cite_while_clean": 0,
+          "sc_axis_disagreements_on_rows_that_cite_nothing": 21,
+          "note": "The drafter's clean rows usually cite nothing and sometimes cite anyway, and nobody told the judge which. ⚠️ BOTH halves are counted, because the axis can be a formatting habit in either direction — a judge that disputes a citation it was shown, and a judge that disputes the ABSENCE of one — and a count of only the first makes an axis dominated by the second look clean. Read either count against its own denominator above before reading any SC-axis figure, overall or per class; a figure quoted on its own is not interpretable. ⚠️ On THIS configuration the judge is grading a citation rather than making one, so the artefact reaches it through the graded row's `(none)` and not through a set comparison; the counts are reported at the same denominator so the two configurations' SC axes can be read side by side."
+        }
+      },
+      "blind": {
+        "source": "judge_blind_baseline.json §disagreement",
+        "unit": "finding",
+        "event": "the judge's own answer differs from the draft on EITHER axis — raw four-value conformance or the exact set of cited SC ids, each taken as its own majority across the passes",
+        "overall": {
+          "findings": 54,
+          "disagreements": 21,
+          "disagreement_rate": 0.3889,
+          "distinct_cases_touched": 17,
+          "conformance_axis_disagreements": 14,
+          "sc_axis_disagreements": 20,
+          "composition": {
+            "conformance_only": 1,
+            "sc_only": 7,
+            "both": 13
+          }
+        },
+        "per_class": [
+          {
+            "axe_rule": "document-title",
+            "findings": 5,
+            "disagreements": 3,
+            "disagreement_rate": 0.6,
+            "distinct_cases_touched": 3,
+            "conformance_axis_disagreements": 0,
+            "sc_axis_disagreements": 3,
+            "composition": {
+              "conformance_only": 0,
+              "sc_only": 3,
+              "both": 0
+            },
+            "drafter_cites_on_a_clean_row": 3,
+            "drafter_cites_nothing": 0,
+            "distinct_asks": 3,
+            "findings_in_a_duplicate_group": 3
+          },
+          {
+            "axe_rule": "empty-heading",
+            "findings": 11,
+            "disagreements": 5,
+            "disagreement_rate": 0.4545,
+            "distinct_cases_touched": 5,
+            "conformance_axis_disagreements": 1,
+            "sc_axis_disagreements": 5,
+            "composition": {
+              "conformance_only": 0,
+              "sc_only": 4,
+              "both": 1
+            },
+            "drafter_cites_on_a_clean_row": 4,
+            "drafter_cites_nothing": 2,
+            "distinct_asks": 9,
+            "findings_in_a_duplicate_group": 4
+          },
+          {
+            "axe_rule": "label",
+            "findings": 17,
+            "disagreements": 6,
+            "disagreement_rate": 0.3529,
+            "distinct_cases_touched": 3,
+            "conformance_axis_disagreements": 6,
+            "sc_axis_disagreements": 5,
+            "composition": {
+              "conformance_only": 1,
+              "sc_only": 0,
+              "both": 5
+            },
+            "drafter_cites_on_a_clean_row": 0,
+            "drafter_cites_nothing": 7,
+            "distinct_asks": 14,
+            "findings_in_a_duplicate_group": 6
+          },
+          {
+            "axe_rule": "link-name",
+            "findings": 21,
+            "disagreements": 7,
+            "disagreement_rate": 0.3333,
+            "distinct_cases_touched": 6,
+            "conformance_axis_disagreements": 7,
+            "sc_axis_disagreements": 7,
+            "composition": {
+              "conformance_only": 0,
+              "sc_only": 0,
+              "both": 7
+            },
+            "drafter_cites_on_a_clean_row": 0,
+            "drafter_cites_nothing": 12,
+            "distinct_asks": 19,
+            "findings_in_a_duplicate_group": 4
+          }
+        ],
+        "sc_axis_artefact": {
+          "drafter_rows_that_cite_while_clean": 7,
+          "drafter_rows_that_cite_nothing": 21,
+          "sc_axis_disagreements": 20,
+          "sc_axis_disagreements_on_rows_that_cite_while_clean": 7,
+          "sc_axis_disagreements_on_rows_that_cite_nothing": 0,
+          "note": "The drafter's clean rows usually cite nothing and sometimes cite anyway, and nobody told the judge which. ⚠️ BOTH halves are counted, because the axis can be a formatting habit in either direction — a judge that names a criterion where the drafter named none, and a judge that names none where the drafter did — and a count of only the first makes an axis dominated by the second look clean. Read either count against its own denominator above before reading any SC-axis figure, overall or per class. ⚠️ On THIS configuration the artefact reaches the axis through a SET COMPARISON code made, not through a graded row, and the rubric was frozen instructing the majority shape — name the criterion you decided against, name nothing when you find no failure — so the 7 rows the drafter is inconsistent on mismatch by construction wherever the judge followed it."
+        }
+      },
+      "blind_direction": {
+        "conformance_disagreements": 14,
+        "judge_stricter": 1,
+        "drafter_stricter": 13,
+        "off_the_strictness_axis": 0,
+        "undecided_judge_verdict": 0,
+        "axis": "supports < partially_supports < does_not_support; not_applicable is off the axis",
+        "note": "⚠️ `off_the_strictness_axis` holds every disputed row where either verdict is not_applicable or the judge's own verdict has no strict majority across the passes — a four-valued field can return three distinct values over three passes. Those rows are a real disagreement and are counted in the rate; they simply have no direction, and folding them into either side would invent one."
+      },
+      "blind_sc_axis_coupling": {
+        "findings": 54,
+        "clean_draft_citing_nothing": 21,
+        "clean_draft_citing_anyway": 7,
+        "flagging_draft_carrying_an_sc_judgment_free_of_the_verdict": 26,
+        "note": "⚠️ THE TWO AXES ARE NOT INDEPENDENT ON THIS CONFIGURATION, and the coupling is a property of the frozen rubric meeting the drafter's row shape, not of the judge. On a clean draft citing nothing the SC axis moves WITH the conformance axis and adds no information beyond it; on a clean draft that cites anyway, agreement on the verdict FORCES an SC mismatch; only a flagging draft carries an SC judgment free of the verdict. So the three composition shares are not three independent channels, the SC count here and the anchored one answer DIFFERENT QUESTIONS (grading a shown citation against naming one's own) and must never be differenced, and the three-way `verdict` distribution differs between the configurations for a reason that is not judge behaviour."
+      },
+      "degenerate_endpoints": {
+        "declared_in_advance": "A very HIGH disagreement rate means the queue is not filtered and human cost returns to where it started; a very LOW one means almost nothing routes and the judge is effectively absent.",
+        "no_cutoff_is_pre_registered": "These are health checks read in prose, not thresholds. Inventing a numeric cut-off without evidence is the mistake this milestone is trying not to make, so the rates are reported with their absolute counts and the reading is left to the written analysis.",
+        "anchored_rate": 0.5185,
+        "anchored_count": 28,
+        "blind_rate": 0.3889,
+        "blind_count": 21,
+        "findings": 54
+      }
+    },
+    "group_a_drafter_judge_kappa": {
+      "unit": "finding",
+      "observations": 54,
+      "scale": "raw four-value conformance — the rule code compares the two answers on",
+      "kappa": 0.4943,
+      "raw_agreement": 0.7407,
+      "judge_verdict_counts": {
+        "does_not_support": 13,
+        "partially_supports": 0,
+        "supports": 41
+      },
+      "drafted_verdict_counts": {
+        "does_not_support": 21,
+        "partially_supports": 5,
+        "supports": 28
+      },
+      "descriptive_only": "⚠️ NEVER A TARGET. Raising it means moving the drafter toward the judge — optimising against the judge, which is the Goodhart failure this comparison exists to avoid. And no interval on it is read as tight: the measured within-case correlation puts its effective n near 40, not 54.",
+      "not_the_same_unit_as_the_gold_kappa": "This is per FINDING; the per-class kappa against gold is per CASE. Two kappas with the same word in their name on two denominators, and each is labelled wherever it appears."
+    },
+    "group_b_rater_side_by_side": {
+      "asks": "When the two readers disagree, which of them is more often right, and on which classes? Neither Group A metric can answer this, and without it the disagreement rate is a number with no consequence attached: you know how many people to send, not what they will find.",
+      "unit": "case",
+      "join_key": "act_testcase_id",
+      "denominator_declaration": "DECLARED HERE, because the two raters do not share a per-class n even at the pinned unit. THE JUDGE IS QUOTED OVER ITS OWN 40 JUDGE-VISIBLE CASES AND THE DRAFTER OVER ITS 44, both n printed on every row, and no arithmetic anywhere subtracts one from the other. The gap is the 4 cases that minted no finding: a case that mints nothing produces no finding to judge, while the drafter's stream carries it because a failed one is the automatic recall miss it is. The alternative — restricting the drafter to the 40 minting cases — buys one denominator at the price of dropping 2 real errors from the drafter's count, which flatters it, and it would mean republishing a frozen number. The gap is class-structured rather than spread (empty-heading 2, link-name 2, the other two classes 0), so a per-class kappa difference on either of those classes is PARTLY A DIFFERENCE OF DENOMINATOR and is never read as a difference of rater.",
+      "four_conditions": "1. VARIANCE IS NOT SHARED. The drafter's frozen passes are bit-identical, so its kappa is a point estimate; a cloud judge is not bit-reproducible even at a fixed effort, so its kappa is a draw. The judge's side is therefore the MAJORITY VERDICT across its passes, with the per-pass values and their SD printed beside it — never one pass placed beside a deterministic number. 2. MODEL AND ROLE ARE CONFOUNDED. The judge is a cloud reasoning model and the drafter a local one, so a kappa difference is a different model AND a different role. That is enough for the product question — is a second reader worth having — and is not enough for any statement about what either model can do. 3. FRAMING IS A LIVE CONFOUND. Both models follow prompt framing over page content. The judge's finding side reuses the drafter's own referent and candidate sentences, but two differences survive: the drafter states each finding's provenance bucket and the finding side does not, and the ORDER of the shared material differs (drafter: candidates then referent; finding side: referent then candidates). Position is framing, so a per-class difference may be the framing rather than the rater. 4. PER-CLASS N DID NOT GROW, so no per-class number is tested and every row carries BOTH n. The smallest class cannot be certified at any effect size, and 3 of its 5 observations are the same question asked three times — see the duplicate-ask caveat.",
+      "duplicate_ask_caveat": "⚠️ The 54 findings render only 45 distinct finding-side blocks, in 8 duplicate groups, and not one group lies inside a single case — so two clusters can be sent a byte-identical question and their answers are correlated by a route no within-case statistic sees and the case collapse cannot absorb. It lands hardest on the smallest class: 3 of document-title's 5 observations are one question asked three times, so EVERY document-title figure carries this caveat, a zero included. The blind ask is the block alone, so its duplication cannot be lower than the anchored side's; measured, it is the same 17 findings.",
+      "drafter_side_source": {
+        "path": "judge_drafter_comparator.json",
+        "why": "Recomputed from this same replay pass. The frozen per-class drafter baseline is the PRE-REFERENT drafter and would get *which of them is right* wrong on two classes."
+      },
+      "per_class": [
+        {
+          "axe_rule": "document-title",
+          "judge_units": 5,
+          "drafter_units": 5,
+          "judge_kappa": 1.0,
+          "drafter_kappa": 1.0,
+          "judge_raw_agreement": 1.0,
+          "drafter_raw_agreement": 1.0,
+          "judge_cells": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "tn": 3
+          },
+          "drafter_cells": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "tn": 3
+          },
+          "judge_kappa_per_pass": {
+            "values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sd": 0.0,
+            "min": 1.0,
+            "max": 1.0
+          },
+          "more_often_right": "tied",
+          "unit_gap": 0
+        },
+        {
+          "axe_rule": "empty-heading",
+          "judge_units": 11,
+          "drafter_units": 13,
+          "judge_kappa": 0.6071,
+          "drafter_kappa": 0.675,
+          "judge_raw_agreement": 0.8182,
+          "drafter_raw_agreement": 0.8462,
+          "judge_cells": {
+            "tp": 3,
+            "fp": 1,
+            "fn": 1,
+            "tn": 6
+          },
+          "drafter_cells": {
+            "tp": 4,
+            "fp": 1,
+            "fn": 1,
+            "tn": 7
+          },
+          "judge_kappa_per_pass": {
+            "values": [
+              0.6071,
+              0.6071,
+              0.8136
+            ],
+            "mean": 0.6759,
+            "sd": 0.1192,
+            "min": 0.6071,
+            "max": 0.8136
+          },
+          "more_often_right": "drafter",
+          "unit_gap": 2
+        },
+        {
+          "axe_rule": "label",
+          "judge_units": 11,
+          "drafter_units": 11,
+          "judge_kappa": 0.4407,
+          "drafter_kappa": 0.8197,
+          "judge_raw_agreement": 0.7273,
+          "drafter_raw_agreement": 0.9091,
+          "judge_cells": {
+            "tp": 3,
+            "fp": 1,
+            "fn": 2,
+            "tn": 5
+          },
+          "drafter_cells": {
+            "tp": 5,
+            "fp": 1,
+            "fn": 0,
+            "tn": 5
+          },
+          "judge_kappa_per_pass": {
+            "values": [
+              0.4407,
+              0.6333,
+              0.4407
+            ],
+            "mean": 0.5049,
+            "sd": 0.1112,
+            "min": 0.4407,
+            "max": 0.6333
+          },
+          "more_often_right": "drafter",
+          "unit_gap": 0
+        },
+        {
+          "axe_rule": "link-name",
+          "judge_units": 13,
+          "drafter_units": 15,
+          "judge_kappa": 0.4507,
+          "drafter_kappa": 0.2105,
+          "judge_raw_agreement": 0.7692,
+          "drafter_raw_agreement": 0.6,
+          "judge_cells": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 3,
+            "tn": 8
+          },
+          "drafter_cells": {
+            "tp": 4,
+            "fp": 4,
+            "fn": 2,
+            "tn": 5
+          },
+          "judge_kappa_per_pass": {
+            "values": [
+              0.2973,
+              0.4507,
+              0.4507
+            ],
+            "mean": 0.3996,
+            "sd": 0.0886,
+            "min": 0.2973,
+            "max": 0.4507
+          },
+          "more_often_right": "judge",
+          "unit_gap": 2
+        }
+      ],
+      "all_classes_pooled": {
+        "judge_units": 40,
+        "drafter_units": 44,
+        "judge_kappa": 0.5652,
+        "judge_raw_agreement": 0.8,
+        "note": "⚠️ Pooled across classes and NOT tested. It is quoted because a per-class table with no total invites a reader to add the rows up, and the drafter's pooled kappa is not recomputed here at all — the comparator freezes the drafter per class, and pooling two raters over different denominators is exactly the arithmetic the declaration forbids."
+      },
+      "judge_stream": "The judge's OWN four-value verdict, collapsed to FLAG/CLEAN by the project's standard rule and then flag-if-any within the case — the same two collapses the drafter's side runs through. It is NOT the routing decision, which is whether the judge agreed with the draft."
+    },
+    "blind_confusion_for_reference": {
+      "per_case": {
+        "unit": "case",
+        "observations": 40,
+        "correct_release": 28,
+        "missed_error": 2,
+        "false_alarm": 5,
+        "correct_catch": 5,
+        "kappa": 0.4815,
+        "miss_rate": 0.2857,
+        "miss_rate_n": 7,
+        "false_alarm_rate": 0.1515,
+        "false_alarm_rate_n": 33,
+        "share_of_the_flagged_set_that_is_genuinely_wrong": 0.5,
+        "flagged_set_size": 10,
+        "share_of_all_real_errors_that_were_flagged": 0.7143,
+        "real_errors": 7
+      },
+      "per_finding": {
+        "unit": "finding",
+        "observations": 54,
+        "correct_release": 33,
+        "missed_error": 7,
+        "false_alarm": 6,
+        "correct_catch": 8,
+        "kappa": 0.3874,
+        "miss_rate": 0.4667,
+        "miss_rate_n": 15,
+        "false_alarm_rate": 0.1538,
+        "false_alarm_rate_n": 39,
+        "share_of_the_flagged_set_that_is_genuinely_wrong": 0.5714,
+        "flagged_set_size": 14,
+        "share_of_all_real_errors_that_were_flagged": 0.5333,
+        "real_errors": 15
+      },
+      "note": "Re-derived here from the blind configuration's frozen answers rather than copied, so the record's own arithmetic is checkable end to end. It is the ROUTING confusion and belongs to Comparison 1; it sits here only because Comparison 2's reader needs the same numbers in front of them."
+    }
+  }
+}

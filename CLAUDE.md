@@ -49,7 +49,8 @@ Re-derive every number independently; never check the author's arithmetic agains
 
 ## Commit workflow
 
-- Before every commit: run `uv run ruff check .`, `uv run ruff format .`, `uv run mypy clearway`, and `uv run pytest`. All must pass green. Do not commit if any fail — fix and rerun instead.
+- Before every commit: run `uv run ruff check .`, `uv run ruff format .`, `uv run mypy clearway`, and the **affected** tests. All must pass green. Do not commit if any fail — fix and rerun instead. A commit touching only `.md` files needs no Python gate — say so instead of running one.
+- Before handing work back as complete: run the **full** `uv run pytest` **exactly once**, green. A task is not done without it — that single run is what catches cross-file guards the affected-file runs cannot see. Once per task, never once per commit; a second full run is waste, not diligence.
 - Commit only currently staged files. Never `git add` more to broaden a commit.
 - Each commit = exactly one small thing (one fix, one feature, one improvement). If staged files span more than one concern, stop and ask how to split them.
 - Propose the commit message before committing: Conventional Commits format, title only — `type(scope): concise description`. No body/description.

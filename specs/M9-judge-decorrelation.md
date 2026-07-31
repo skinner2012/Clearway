@@ -1699,8 +1699,13 @@ the unit.
   **⚠️ TRUE WHEN WRITTEN, SUPERSEDED — the paid half was run and every number above was measured.**
   `benchmark/reports/judge_blind_baseline.json`: **162 transport calls for 162 asks, zero beyond one per
   ask**, so the ×2 ceiling of 324 was not approached but **retired by direct measurement**, exactly as the
-  anchored side's 441 was. Cost **$0.269071** total (mean $0.001661), latency mean 2674 ms, 433.2 s of
-  wall clock. The four quantities this paragraph listed as unavailable now exist: disagreement **21 of 54
+  anchored side's 441 was. Cost **$0.269071** total (mean $0.001661), latency mean 2674 ms,
+  ~~433.2 s of wall clock~~ — **corrected at T6: 433.2 s is `cost.latency_ms.total`, the SUM OF THE
+  PER-CALL LATENCIES; this record's own `wall_clock_seconds` is 434.3.** The anchored side's quoted
+  1580.8 s *is* `wall_clock_seconds` (its latency total is 1579.4 s), so the two halves were being quoted
+  off different fields. The two agree here only because these calls ran near-serially — under a different
+  concurrency the two quantities diverge, so the defect was the reading habit, not the 1.1 s.
+  The four quantities this paragraph listed as unavailable now exist: disagreement **21 of 54
   findings (0.3889) over 17 cases** per finding, confusion **28/2/5/5 κ 0.4815** per case and
   **33/7/6/8 κ 0.3874** per finding, a 3-pass per-case κ spread of **0.3774 / 0.4815 / 0.5331**, and the
   real anchored ↔ blind correlation at **−0.0957** over 9 differing findings and 6 differing cases.
@@ -1970,8 +1975,11 @@ the unit.
     "433.2 s of wall clock" for the blind half is the **sum of the per-call latencies**
     (`cost.latency_ms.total` = 433160.5 ms); the record's own `wall_clock_seconds` is **434.3**. The
     anchored side's quoted 1580.8 s *is* `wall_clock_seconds` (its latency total is 1579.4 s), so the two
-    halves are quoted off different fields. Nothing downstream divides by either. The read quotes the
-    artifact; T4's block is left as recorded rather than silently corrected.
+    halves are quoted off different fields. Nothing downstream divides by either, and the two agree to
+    within 1.1 s only because these calls ran near-serially — the defect is the reading habit, not the
+    magnitude. The read quotes the artifact. **T4's block was annotated in place rather than left
+    standing** — struck and corrected inline, following this spec's own convention for superseded
+    statements, so a reader who stops at T4 is not taught to compare a wall clock against a latency sum.
 - **Depends on:** T5
 
 ---

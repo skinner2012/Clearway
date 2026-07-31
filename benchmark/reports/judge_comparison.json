@@ -278,6 +278,7 @@
     "group_a_disagreement": {
       "unit": "finding",
       "why_this_is_the_deliverable": "It is the queue volume — how many people-visits the mechanism creates — and a rate alone hides the workload, so it never appears without its absolute count and the number of distinct cases it touches. Everything else either explains it or says whether following it pays.",
+      "artefact_free_rule": "The ARTEFACT-FREE rate counts only findings carrying a CONFORMANCE-axis disagreement, and it is reported BESIDE the headline rather than instead of it — both numbers are true and each answers a different question. The headline is *how many findings the two answers differ on at all*, which is the queue as it would actually be walked. The artefact-free figure is *how many of those visits can carry a difference of opinion*, and it is the honest price in people-visits: a finding whose only disagreement is an SC mismatch forced by the citation convention is a guaranteed dead end. The rule is the conformance axis rather than a per-configuration subtraction because the axis is well-defined on both sides and needs no predicate chosen after seeing the rows — and `set_identity` below is what says whether dropping the SC-only rows is honest on that side or merely convenient.",
       "never_averaged": "⚠️ The two configurations count DIFFERENT EVENTS. Anchored: the judge graded the draft incorrect. Blind: the judge's own answer differs from the draft, decided in code. They may sit side by side and must never be averaged, differenced or presented as one series — the SC axis especially, where anchored grades a citation it was shown and blind compares a set it made.",
       "anchored": {
         "source": "judge_anchored_baseline.json §disagreement",
@@ -296,6 +297,20 @@
             "both": 1
           }
         },
+        "artefact_free_overall": {
+          "findings": 54,
+          "artefact_free_disagreements": 7,
+          "artefact_free_rate": 0.1296,
+          "distinct_cases_touched": 6
+        },
+        "set_identity": {
+          "sc_only_disagreements": 21,
+          "drafter_rows_that_cite_while_clean": 7,
+          "drafter_rows_that_cite_nothing": 21,
+          "sc_only_set_is_exactly_the_clean_citing_rows": false,
+          "sc_only_set_is_exactly_the_cite_nothing_rows": false,
+          "note": "⚠️ A SET IDENTITY, not a coincidence of counts. Where it holds, every SC-only disagreement on that side is a row the drafter's citation convention does not cover, so the mismatch is forced by the convention rather than reached by judgment — which is what makes the artefact-free rate a fair second figure. Where it does NOT hold, the counts may still match while the sets differ, and no row may be written off on the strength of the total alone."
+        },
         "per_class": [
           {
             "axe_rule": "document-title",
@@ -311,7 +326,9 @@
               "both": 0
             },
             "drafter_cites_on_a_clean_row": 3,
-            "drafter_cites_nothing": 0
+            "drafter_cites_nothing": 0,
+            "artefact_free_disagreements": 0,
+            "artefact_free_rate": 0.0
           },
           {
             "axe_rule": "empty-heading",
@@ -327,7 +344,9 @@
               "both": 1
             },
             "drafter_cites_on_a_clean_row": 4,
-            "drafter_cites_nothing": 2
+            "drafter_cites_nothing": 2,
+            "artefact_free_disagreements": 1,
+            "artefact_free_rate": 0.0909
           },
           {
             "axe_rule": "label",
@@ -343,7 +362,9 @@
               "both": 0
             },
             "drafter_cites_on_a_clean_row": 0,
-            "drafter_cites_nothing": 7
+            "drafter_cites_nothing": 7,
+            "artefact_free_disagreements": 0,
+            "artefact_free_rate": 0.0
           },
           {
             "axe_rule": "link-name",
@@ -359,7 +380,9 @@
               "both": 0
             },
             "drafter_cites_on_a_clean_row": 0,
-            "drafter_cites_nothing": 12
+            "drafter_cites_nothing": 12,
+            "artefact_free_disagreements": 6,
+            "artefact_free_rate": 0.2857
           }
         ],
         "sc_axis_artefact": {
@@ -388,6 +411,20 @@
             "both": 13
           }
         },
+        "artefact_free_overall": {
+          "findings": 54,
+          "artefact_free_disagreements": 14,
+          "artefact_free_rate": 0.2593,
+          "distinct_cases_touched": 10
+        },
+        "set_identity": {
+          "sc_only_disagreements": 7,
+          "drafter_rows_that_cite_while_clean": 7,
+          "drafter_rows_that_cite_nothing": 21,
+          "sc_only_set_is_exactly_the_clean_citing_rows": true,
+          "sc_only_set_is_exactly_the_cite_nothing_rows": false,
+          "note": "⚠️ A SET IDENTITY, not a coincidence of counts. Where it holds, every SC-only disagreement on that side is a row the drafter's citation convention does not cover, so the mismatch is forced by the convention rather than reached by judgment — which is what makes the artefact-free rate a fair second figure. Where it does NOT hold, the counts may still match while the sets differ, and no row may be written off on the strength of the total alone."
+        },
         "per_class": [
           {
             "axe_rule": "document-title",
@@ -405,7 +442,9 @@
             "drafter_cites_on_a_clean_row": 3,
             "drafter_cites_nothing": 0,
             "distinct_asks": 3,
-            "findings_in_a_duplicate_group": 3
+            "findings_in_a_duplicate_group": 3,
+            "artefact_free_disagreements": 0,
+            "artefact_free_rate": 0.0
           },
           {
             "axe_rule": "empty-heading",
@@ -423,7 +462,9 @@
             "drafter_cites_on_a_clean_row": 4,
             "drafter_cites_nothing": 2,
             "distinct_asks": 9,
-            "findings_in_a_duplicate_group": 4
+            "findings_in_a_duplicate_group": 4,
+            "artefact_free_disagreements": 1,
+            "artefact_free_rate": 0.0909
           },
           {
             "axe_rule": "label",
@@ -441,7 +482,9 @@
             "drafter_cites_on_a_clean_row": 0,
             "drafter_cites_nothing": 7,
             "distinct_asks": 14,
-            "findings_in_a_duplicate_group": 6
+            "findings_in_a_duplicate_group": 6,
+            "artefact_free_disagreements": 6,
+            "artefact_free_rate": 0.3529
           },
           {
             "axe_rule": "link-name",
@@ -459,7 +502,9 @@
             "drafter_cites_on_a_clean_row": 0,
             "drafter_cites_nothing": 12,
             "distinct_asks": 19,
-            "findings_in_a_duplicate_group": 4
+            "findings_in_a_duplicate_group": 4,
+            "artefact_free_disagreements": 7,
+            "artefact_free_rate": 0.3333
           }
         ],
         "sc_axis_artefact": {
@@ -494,7 +539,10 @@
         "anchored_count": 28,
         "blind_rate": 0.3889,
         "blind_count": 21,
-        "findings": 54
+        "findings": 54,
+        "anchored_artefact_free_count": 7,
+        "blind_artefact_free_count": 14,
+        "⚠️": "BOTH FORMS OF EACH RATE SIT HERE ON PURPOSE. An endpoint read on the headline alone would be read on a figure part of which is a citation habit; one read on the artefact-free figure alone would understate the queue a person actually walks. Neither is the endpoint on its own."
       }
     },
     "group_a_drafter_judge_kappa": {

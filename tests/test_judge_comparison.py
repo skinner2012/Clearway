@@ -328,9 +328,71 @@ def test_the_disagreement_rate_is_lifted_from_both_records_and_never_averaged() 
         assert block[side]["overall"]["distinct_cases_touched"] > 0, "a rate alone hides the workload"
     assert block["anchored"]["event"] != block["blind"]["event"], "the two count different events"
     assert "never be averaged" in block["never_averaged"]
+    assert block["anchored"]["overall"]["disagreements"] != block["blind"]["overall"]["disagreements"]
     endpoints = block["degenerate_endpoints"]
     assert endpoints["blind_count"] / endpoints["findings"] == pytest.approx(endpoints["blind_rate"], abs=5e-5)
     assert endpoints["anchored_count"] / endpoints["findings"] == pytest.approx(endpoints["anchored_rate"], abs=5e-5)
+    # An endpoint read on the headline alone would be read on a figure part of which is a citation habit.
+    assert (
+        endpoints["blind_artefact_free_count"] == block["blind"]["artefact_free_overall"]["artefact_free_disagreements"]
+    )
+    assert (
+        endpoints["anchored_artefact_free_count"]
+        == block["anchored"]["artefact_free_overall"]["artefact_free_disagreements"]
+    )
+
+
+def test_the_artefact_free_rate_sits_beside_the_headline_overall_and_per_class() -> None:
+    """A deliverable priced in people-visits owes the count of visits that can find anything.
+
+    Re-derived from each configuration's own frozen rows: an artefact-free disagreement is one carrying a
+    conformance-axis difference, because a mismatch that exists only on the SC axis can be forced by a
+    citation convention nobody told the judge about.
+    """
+    block = _record()["comparison_2_judge_vs_drafter"]["group_a_disagreement"]
+    for side, path in (("anchored", _ANCHORED), ("blind", _BLIND)):
+        rows = json.loads(path.read_text())["disagreement"]["rows"]
+        conformance = [r for r in rows if r["conformance_disagreement"]]
+        overall = block[side]["artefact_free_overall"]
+        assert overall["artefact_free_disagreements"] == len(conformance)
+        assert overall["artefact_free_rate"] == pytest.approx(len(conformance) / len(rows), abs=5e-5)
+        assert overall["distinct_cases_touched"] == len({r["act_testcase_id"] for r in conformance})
+        # Both forms survive: the headline is never removed or restated, only accompanied.
+        assert block[side]["overall"]["disagreements"] >= overall["artefact_free_disagreements"]
+
+        for row in block[side]["per_class"]:
+            group = [r for r in rows if r["axe_rule"] == row["axe_rule"]]
+            expected = sum(1 for r in group if r["conformance_disagreement"])
+            assert row["artefact_free_disagreements"] == expected, f"{side}/{row['axe_rule']}"
+            assert row["artefact_free_rate"] == pytest.approx(expected / len(group), abs=5e-5)
+        assert sum(r["artefact_free_disagreements"] for r in block[side]["per_class"]) == len(conformance)
+
+
+def test_the_sc_only_disagreements_are_reported_as_a_set_identity_not_a_count_match() -> None:
+    """Two counts that agree are not two sets that coincide, and only the second licenses writing rows off.
+
+    On the blind side the identity holds — every SC-only disagreement is one of the drafter's clean-citing
+    rows — so its artefact-free figure is exactly the headline minus a forced mismatch. On the anchored
+    side the SC-only count and the cite-nothing count are BOTH 21 and the sets still differ, which is the
+    case a count-based check would have got wrong.
+    """
+    block = _record()["comparison_2_judge_vs_drafter"]["group_a_disagreement"]
+    for side, path in (("anchored", _ANCHORED), ("blind", _BLIND)):
+        rows = json.loads(path.read_text())["disagreement"]["rows"]
+        sc_only = {r["finding_id"] for r in rows if r["sc_disagreement"] and not r["conformance_disagreement"]}
+        clean_citing = {r["finding_id"] for r in rows if r["drafter_cites_on_a_clean_row"]}
+        citing_nothing = {r["finding_id"] for r in rows if r["drafter_cites_nothing"]}
+        identity = block[side]["set_identity"]
+        assert identity["sc_only_disagreements"] == len(sc_only)
+        assert identity["sc_only_set_is_exactly_the_clean_citing_rows"] is (sc_only == clean_citing)
+        assert identity["sc_only_set_is_exactly_the_cite_nothing_rows"] is (sc_only == citing_nothing)
+
+    blind_identity = block["blind"]["set_identity"]
+    anchored_identity = block["anchored"]["set_identity"]
+    assert blind_identity["sc_only_set_is_exactly_the_clean_citing_rows"] is True
+    # The counts match on the anchored side and the sets do not — the whole reason this is a set check.
+    assert anchored_identity["sc_only_disagreements"] == anchored_identity["drafter_rows_that_cite_nothing"]
+    assert anchored_identity["sc_only_set_is_exactly_the_cite_nothing_rows"] is False
 
 
 # ---------------------------------------------------------------------------------------------

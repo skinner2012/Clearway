@@ -596,6 +596,58 @@ def drafter_judge_kappa(artifact: dict[str, Any], passes: Sequence[Sequence[Any]
     }
 
 
+ARTEFACT_FREE_RULE = (
+    "The ARTEFACT-FREE rate counts only findings carrying a CONFORMANCE-axis disagreement, and it is "
+    "reported BESIDE the headline rather than instead of it — both numbers are true and each answers a "
+    "different question. The headline is *how many findings the two answers differ on at all*, which is "
+    "the queue as it would actually be walked. The artefact-free figure is *how many of those visits can "
+    "carry a difference of opinion*, and it is the honest price in people-visits: a finding whose only "
+    "disagreement is an SC mismatch forced by the citation convention is a guaranteed dead end. The rule "
+    "is the conformance axis rather than a per-configuration subtraction because the axis is well-defined "
+    "on both sides and needs no predicate chosen after seeing the rows — and `set_identity` below is what "
+    "says whether dropping the SC-only rows is honest on that side or merely convenient."
+)
+
+
+def _artefact_free(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """The disagreements that can carry an opinion: the conformance-axis ones, with their case count."""
+    conformance = [row for row in rows if row["conformance_disagreement"]]
+    return {
+        "findings": len(rows),
+        "artefact_free_disagreements": len(conformance),
+        "artefact_free_rate": round(len(conformance) / len(rows), 4) if rows else 0.0,
+        "distinct_cases_touched": len({row["act_testcase_id"] for row in conformance}),
+    }
+
+
+def _set_identity(rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    """⚠️ Whether the SC-only disagreements ARE the drafter's inconsistent rows, as a set — not as a count.
+
+    Two counts that happen to be equal are not the same fact as two sets that coincide, and only the
+    second licenses reading an SC-only disagreement as a formatting artefact rather than as an opinion.
+    Both candidate predicates are tested on both configurations, because the artefact runs the opposite
+    way on the two sides and a symmetry assumed rather than measured is how one of them ends up
+    mislabelled.
+    """
+    sc_only = {row["finding_id"] for row in rows if row["sc_disagreement"] and not row["conformance_disagreement"]}
+    clean_citing = {row["finding_id"] for row in rows if row["drafter_cites_on_a_clean_row"]}
+    citing_nothing = {row["finding_id"] for row in rows if row["drafter_cites_nothing"]}
+    return {
+        "sc_only_disagreements": len(sc_only),
+        "drafter_rows_that_cite_while_clean": len(clean_citing),
+        "drafter_rows_that_cite_nothing": len(citing_nothing),
+        "sc_only_set_is_exactly_the_clean_citing_rows": sc_only == clean_citing,
+        "sc_only_set_is_exactly_the_cite_nothing_rows": sc_only == citing_nothing,
+        "note": (
+            "⚠️ A SET IDENTITY, not a coincidence of counts. Where it holds, every SC-only disagreement on "
+            "that side is a row the drafter's citation convention does not cover, so the mismatch is "
+            "forced by the convention rather than reached by judgment — which is what makes the "
+            "artefact-free rate a fair second figure. Where it does NOT hold, the counts may still match "
+            "while the sets differ, and no row may be written off on the strength of the total alone."
+        ),
+    }
+
+
 def disagreement_side_by_side(anchored_frozen: dict[str, Any], blind_frozen: dict[str, Any]) -> dict[str, Any]:
     """The milestone's primary deliverable, both configurations, read off the frozen records.
 
@@ -603,16 +655,36 @@ def disagreement_side_by_side(anchored_frozen: dict[str, Any], blind_frozen: dic
     judge graded the draft incorrect*, blind's is *the judge's own answer differs* — and the SC axis in
     particular answers two different questions on the two sides (grading a citation it was shown against
     naming its own). They sit beside each other and nothing arithmetic runs between them.
+
+    ⚠️ **And each rate is published in two forms.** The headline counts a disagreement on either axis; the
+    artefact-free figure counts only the conformance axis, because part of the SC axis is a citation habit
+    nobody told the judge about. A deliverable priced in people-visits has to say how many of those visits
+    can find anything — see `ARTEFACT_FREE_RULE`.
     """
 
     def _side(frozen: dict[str, Any], path: str) -> dict[str, Any]:
         block = frozen["disagreement"]
+        rows = block["rows"]
+        by_rule: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            by_rule.setdefault(row["axe_rule"], []).append(row)
         return {
             "source": f"{path} §disagreement",
             "unit": block["unit"],
             "event": block["event"],
             "overall": block["overall"],
-            "per_class": [{k: v for k, v in row.items() if k != "rows"} for row in block["per_class"]],
+            "artefact_free_overall": _artefact_free(rows),
+            "set_identity": _set_identity(rows),
+            "per_class": [
+                {
+                    **{k: v for k, v in row.items() if k != "rows"},
+                    "artefact_free_disagreements": _artefact_free(by_rule[row["axe_rule"]])[
+                        "artefact_free_disagreements"
+                    ],
+                    "artefact_free_rate": _artefact_free(by_rule[row["axe_rule"]])["artefact_free_rate"],
+                }
+                for row in block["per_class"]
+            ],
             "sc_axis_artefact": block["sc_axis_artefact"],
         }
 
@@ -624,6 +696,7 @@ def disagreement_side_by_side(anchored_frozen: dict[str, Any], blind_frozen: dic
             "distinct cases it touches. Everything else either explains it or says whether following it "
             "pays."
         ),
+        "artefact_free_rule": ARTEFACT_FREE_RULE,
         "never_averaged": (
             "⚠️ The two configurations count DIFFERENT EVENTS. Anchored: the judge graded the draft "
             "incorrect. Blind: the judge's own answer differs from the draft, decided in code. They may "
@@ -651,6 +724,18 @@ def disagreement_side_by_side(anchored_frozen: dict[str, Any], blind_frozen: dic
             "blind_rate": blind_frozen["disagreement"]["overall"]["disagreement_rate"],
             "blind_count": blind_frozen["disagreement"]["overall"]["disagreements"],
             "findings": blind_frozen["disagreement"]["overall"]["findings"],
+            "anchored_artefact_free_count": _artefact_free(anchored_frozen["disagreement"]["rows"])[
+                "artefact_free_disagreements"
+            ],
+            "blind_artefact_free_count": _artefact_free(blind_frozen["disagreement"]["rows"])[
+                "artefact_free_disagreements"
+            ],
+            "⚠️": (
+                "BOTH FORMS OF EACH RATE SIT HERE ON PURPOSE. An endpoint read on the headline alone would "
+                "be read on a figure part of which is a citation habit; one read on the artefact-free "
+                "figure alone would understate the queue a person actually walks. Neither is the endpoint "
+                "on its own."
+            ),
         },
     }
 

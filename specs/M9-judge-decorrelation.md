@@ -1726,6 +1726,20 @@ the unit.
     conformance-only 1, SC-only 7, both 13 (conformance axis 14, SC axis 20). Beside it, the anchored
     rate on the same 54: **28 (0.5185) over 19 cases** — **a different event** (*graded the draft
     incorrect* against *its own answer differs*), never averaged and never differenced.
+  - **⚠️ And each rate is published in two forms, because part of the SC axis is a citation habit.** The
+    **artefact-free** figure counts only findings carrying a conformance-axis difference — the visits that
+    can find a difference of opinion at all: **blind 14 of 54 (0.2593) over 10 cases**, **anchored 7 of 54
+    (0.1296) over 6 cases**. Per class, headline → artefact-free: blind `document-title` 0.600 → **0.000**
+    (its entire rate is artefact — conformance agrees on all 5), `empty-heading` 0.4545 → 0.0909, `label`
+    and `link-name` **unmoved** at 0.3529 and 0.3333; anchored `label` 0.4706 → **0.000** and `link-name`
+    0.8571 → 0.2857. **Neither figure replaces the other:** the headline is the queue as it would be
+    walked, the artefact-free figure is what those visits can carry, and a deliverable priced in
+    people-visits owes both.
+  - **The licence for that second figure is a SET IDENTITY, and it holds on one side only.** On blind the
+    7 SC-only disagreements **are exactly** the 7 clean-citing rows, so every one is forced by the
+    convention rather than reached by judgment. On anchored the SC-only count and the cite-nothing count
+    are **both 21 and the sets still differ** — the case a count-based check would have got wrong — so no
+    anchored row is written off on the strength of the total.
   - **Direction (blind only): the drafter is stricter on 13 of the 14 conformance disagreements**, the
     judge on 1, none off the axis and none undecided. **These are not peer raters** — the blind judge
     says `supports` 41 times against the drafter's 28, and emits `partially_supports` **zero** times

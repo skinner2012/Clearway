@@ -26,12 +26,17 @@ from clearway.eval.judge_blind_baseline import (
     live_run,
     outcomes_from_rows,
     record_digest,
+    rederive_frozen_record,
     report_path,
 )
 from clearway.eval.judge_finding_input import load_record
 from clearway.eval.judge_score import CONFUSION_UNIT_CASE, CONFUSION_UNIT_FINDING
 from clearway.eval.judge_transport import PAID_CALLS, REPLAYED_CALLS, LedgerMismatch
 from clearway.llm import LLMClient
+
+# The measured record's digest, pinned as a literal so a rebuild that changes the record cannot pass
+# by moving the file and its own self-check together.
+FROZEN_DIGEST = "7ec5bd01099bc24a2e6e4be95eb766fea33de5159c3ea434c0ecf02e544e8467"
 
 _REPO = Path(__file__).resolve().parent.parent
 _REPLAY = _REPO / "benchmark" / "runs" / "citation_grounding_run_1.json"
@@ -200,14 +205,19 @@ def test_it_reads_the_anchored_record_and_writes_nothing_back(tmp_path: Path) ->
     assert record["sources"]["anchored_configuration"]["path"] == anchored_report_path().name
 
 
-def test_no_frozen_blind_record_exists_until_the_calls_are_spent() -> None:
-    """⚠️ A stubbed record and a measured one are indistinguishable on shape. This pins that the
-    reports directory holds no blind baseline at all — so nobody can mistake one for the other."""
-    assert not report_path().exists(), (
-        "benchmark/reports/judge_blind_baseline.json exists. If the paid run has happened, delete this "
-        "test and add the freeze test that pins the frozen record; if it has not, a stubbed record has "
-        "been written where a measurement belongs."
-    )
+def test_the_frozen_measured_record_re_derives_from_the_answers_it_holds() -> None:
+    """⚠️ A stubbed record and a measured one are indistinguishable on shape, so the frozen file is
+    pinned by RE-DERIVATION rather than by its own bytes: every cell, rate and collapse is recomputed
+    from the answers the file carries and compared to what the file claims. A digest that only agrees
+    with itself would pass a record whose conclusions no longer follow from its own evidence.
+
+    The literal digest is pinned beside it so a rebuild that silently changes the record cannot pass by
+    moving both sides together.
+    """
+    on_disk = json.loads(report_path().read_text())
+    assert rederive_frozen_record() == on_disk
+    assert on_disk["reproducible_digest"] == FROZEN_DIGEST
+    assert on_disk["cost"]["transport_calls"] == 162
 
 
 def test_the_record_and_the_runner_both_warn_against_a_suite_run_mid_measurement(tmp_path: Path) -> None:

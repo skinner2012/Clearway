@@ -1637,19 +1637,36 @@ the unit.
     supports → does_not_support line.
   - **`judge_version` moved for blind and NOT for anchored**, and the pre-flight was not re-recorded —
     see the corrected bullet above.
-  **⚠️ What is NOT done starts before the calls: THE LIVE RUNNER ITSELF IS UNWRITTEN.** `judge_blind.py`
-  is dry-only. It has no `live_run`, no `CloudLLMClient` wiring, no recording client below the judge, no
-  call ledger and no frozen-record builder — the anchored analogue of all of that is
-  `judge_anchored_baseline.py`, and none of it is reusable as-is because it is typed to the anchored ask
-  and reads the anchored response shape. So "the calls are not spent" is **not** a statement about an
-  executable runner that was left un-run: there is nothing to invoke. What a paid stage needs, named so
-  nobody discovers it mid-run: a client wrapper capturing usage **below** the judge (a `JudgeResult`
-  carries no tokens, cost or latency), an append-only ledger keyed by prompt digest so a killed run does
-  not re-spend, a `--rederive` path so a change to how something is *computed* never re-buys the
-  answers, the noise-floor block read against T3b's, and a record digest. **Scope for that is the user's
-  call, not this ticket's to assume.**
+  - **The live runner exists and is proven on the stub — `eval/judge_blind_baseline.py`.** Spending the
+    162 is now one command (`uv run --env-file .env python -m clearway.eval.judge_blind_baseline`) and
+    nothing else. It reuses the paid seam rather than re-implementing it: `CallLedger`,
+    `RecordingJudgeClient` and `cost_block` moved into **`eval/judge_transport.py`** and both
+    configurations import them, so the recording client sits **below** the judge in one place — which is
+    what makes a transport count exact rather than a floor, retries included. Proven by driving
+    **`live_run`'s own code path** with the stub through an injected client factory, not merely the dry
+    shape: the ledger's ordering, the resume check, the usage capture and the record builder are all
+    exercised. **The ledger resumes rather than re-spending** — a second invocation over the same ledger
+    makes zero calls and reproduces the first record's answers and digest. `--rederive` rebuilds every
+    computed field from the answers already in the file; the freeze test re-derives the **whole** record
+    from the rows it holds, and `outcomes_from_rows` refuses a row whose stored booleans no longer follow
+    from its own stored answer. The clock, the elapsed time and the ledger block sit **outside** the
+    digest. It reads `judge_anchored_baseline.json` and never rewrites it — asserted on the bytes, and
+    that file re-derives byte-identical after the transport extraction.
+  - **⚠️ `benchmark/reports/judge_blind_baseline.json` does not exist, and a test pins that it does
+    not.** A stubbed record and a measured one are indistinguishable on shape, so nothing writes that
+    path until the calls are spent.
+  - **⚠️ The record carries the run-time hazard, because the reader who needs it is starting a long run
+    in another terminal:** `no_suite_while_this_runs`. Several test files call the real model, and a
+    suite run during a live pass shares provider cache slots with the measurement and contaminates it —
+    already paid for once in this project. **Do not run `uv run pytest` while the blind pass is in
+    flight.**
+  - **The real anchored ↔ blind correlation is wired and will be computed by that run.** One variable —
+    the judge's prompt — over the same drafts and the same frozen finding side, which is the contrast
+    T3b's confounded proxy could not supply. The record emits its **sign** and states plainly that a
+    negative value means the case collapse is costing power rather than buying honesty; no cutoff is
+    invented, and the finding does not license re-cutting the unit, which was pinned before any run.
 
-  **What is NOT done after it:** the paid calls — **162 is the FLOOR and 324 the ceiling** (54 asks × 3 passes,
+  **What is NOT done:** the paid calls — **162 is the FLOOR and 324 the ceiling** (54 asks × 3 passes,
   × the 2 attempts one call is allowed; `judge_blind.paid_call_budget`, derived from `BlindJudge`'s own
   `retries` default and frozen in the receipt as `paid_call_budget_if_run_live`). A retry leaves no
   trace in a run artifact, so the spend between the two is recoverable only by counting at the client

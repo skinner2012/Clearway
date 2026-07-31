@@ -328,6 +328,10 @@ def test_the_between_configuration_contrast_runs_against_the_frozen_anchored_dec
     assert 0 <= block["findings_whose_routing_decision_differs"] <= block["findings"]
     assert 0 <= block["cases_whose_collapsed_decision_differs"] <= block["cases"]
     assert block["icc"] is None or -1.0 <= block["icc"] <= 1.0
+    # The record has to SAY which case it is, without a reader knowing the sign convention — and it
+    # says it by reporting the sign rather than by grading itself against an invented cutoff.
+    assert block["sign"] == ("negative" if block["icc"] < 0 else "positive" if block["icc"] > 0 else "zero")
+    assert "COSTING POWER" in block["reading"] and block["sign"] in block["reading"]
 
 
 def test_a_missing_anchored_decision_is_refused_rather_than_paired_around() -> None:

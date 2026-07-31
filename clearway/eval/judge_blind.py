@@ -642,6 +642,22 @@ def between_configuration_difference(
         return block
     block["icc"] = round(agreement.icc, 4)
     block["icc_detail"] = agreement.to_dict()
+    # The sign is emitted rather than a verdict against some cutoff: "materially negative" has no
+    # pre-registered threshold, and inventing one after seeing the number is the move this project
+    # does not permit itself. What the record owes a reader is that a negative value is the bad case
+    # and that it is THIS case, in the file, without anyone having to know the sign convention.
+    block["sign"] = "negative" if agreement.icc < 0 else ("positive" if agreement.icc > 0 else "zero")
+    block["reading"] = (
+        "A POSITIVE within-case correlation of the DIFFERENCE means discordant findings arrive together "
+        "on the same page, which is what the case collapse is paid to absorb. A NEGATIVE one means the "
+        "collapse is cancelling differences against each other, so the pinned unit is COSTING POWER "
+        "rather than buying honesty — and this run's value is "
+        f"{block['sign']}. Unlike every earlier estimate in this milestone, nothing here is confounded: "
+        "the two sides differ in the judge's prompt alone, over the same drafts and the same frozen "
+        "finding side. ⚠️ It does not license re-cutting the unit — the unit was pinned before any run "
+        "and the threshold's floor bar before this configuration existed — it says what the pinned unit "
+        "cost, which is a finding to record rather than a knob to turn."
+    )
     return block
 
 

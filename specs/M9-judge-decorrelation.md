@@ -1712,6 +1712,102 @@ the unit.
   **effective only on clean signal** — success may not be claimed. **The guard is read on anchored
   only**; blind's injected numbers are arithmetic and are not eligible to trip it. Degenerate endpoints
   on the disagreement rate are read in prose.
+- **Settled — zero model calls.** Both comparisons computed off the frozen runs and frozen at
+  `benchmark/reports/judge_comparison.json` (`clearway/eval/judge_comparison.py`; rebuild:
+  `uv run python -m clearway.eval.judge_comparison`). Deterministic — `created_at` is read off the replay
+  pass — so the freeze is pinned by full rebuild rather than by a self-digest, and every κ and the
+  sign-test tail are re-derived in the test from the cells and by enumerating coin flips rather than by
+  calling the functions that produced them. Both configurations' routing decisions are replayed through
+  their own harnesses, which refuse if the frozen rows are not those asks; nothing is lifted from a
+  summary field and none of the four sources is written to.
+
+  **⚠️ Comparison 2 first — it is the deliverable. Per FINDING (54) unless a row says otherwise.**
+  - **The blind disagreement rate: 21 of 54 findings (0.3889), touching 17 distinct cases.** Composition
+    conformance-only 1, SC-only 7, both 13 (conformance axis 14, SC axis 20). Beside it, the anchored
+    rate on the same 54: **28 (0.5185) over 19 cases** — **a different event** (*graded the draft
+    incorrect* against *its own answer differs*), never averaged and never differenced.
+  - **Direction (blind only): the drafter is stricter on 13 of the 14 conformance disagreements**, the
+    judge on 1, none off the axis and none undecided. **These are not peer raters** — the blind judge
+    says `supports` 41 times against the drafter's 28, and emits `partially_supports` **zero** times
+    against the drafter's 5.
+  - **drafter–judge κ = 0.4943** (raw agreement 0.7407), per finding, raw four-value scale — the
+    chance-corrected form of the compared rule, not the FLAG/CLEAN collapse. **Descriptive; never a
+    target**, and no interval on it is tight (effective n ≈ 40, not 54).
+  - **Which of them is more often right — per class, per case, against gold.** Judge on its **40**,
+    drafter on its **44**, both n on every row, nothing subtracted (see the denominator declaration
+    below):
+
+    | class | judge κ (n) | drafter κ (n) | more often right | judge κ per pass (SD) |
+    |---|---|---|---|---|
+    | `document-title` | **1.0000** (5) | **1.0000** (5) | tied | 1.000 / 1.000 / 1.000 (0.000) |
+    | `empty-heading` | 0.6071 (11) | **0.6750** (13) | drafter | 0.6071 / 0.6071 / 0.8136 (0.119) |
+    | `label` | 0.4407 (11) | **0.8197** (11) | drafter | 0.4407 / 0.6333 / 0.4407 (0.111) |
+    | `link-name` | **0.4507** (13) | 0.2105 (15) | **judge** | 0.2973 / 0.4507 / 0.4507 (0.089) |
+
+    Pooled, the judge reads **κ 0.5652 over 40** (raw agreement 0.800); the drafter is **not** pooled
+    here, because pooling two raters over different denominators is the arithmetic the declaration
+    forbids. **The answer is class-shaped, not global:** the second reader is better exactly on
+    `link-name` — the class the referent work could not reach — and materially worse on `label`, where
+    it was repaired. Under the four declared conditions, none of these is tested.
+
+  **Comparison 1 — per CASE (40), and it is a check on the above, not the result.**
+  - **Both configurations get 33 of 40 cases right.** Anchored 30/4/3/3 (κ 0.3578), blind 28/2/5/5
+    (κ **0.4815**). **⚠️ The κ movement is a TRADE, not an improvement in accuracy:** blind converts 2
+    missed errors into catches and buys 2 net false alarms, and the share of each flagged set that is
+    genuinely wrong is **0.5 on both** (per finding, 0.5714 on both). What does move is recall — flagged
+    **3 of 7** real errors anchored against **5 of 7** blind (per finding **4 of 15** against **8 of
+    15**) — at a flagged-set size of 6 against 10.
+  - **The sign test: n = 6 discordant case-pairs, b = 3 blind wins, c = 3 anchored wins, one-sided
+    p = 0.6562.** The bar was **6** — statistical bar 6, floor bar 5, **binding bar: statistical** — so
+    the bar was set by α at this discordant count, not by the judge's jitter and not by the count itself
+    (`required_wins` is not `None`, so *uncertifiable at this n* does not apply). **It does not clear**,
+    and b is not even greater than c. **Verdict: ANCHORING WAS NOT THE DOMINANT CAUSE** — the
+    milestone's own falsification condition, reached as a result rather than as a failure.
+  - **The six discordant cases, named in the record.** Blind's 3 wins: two act-wrong cases it flags and
+    anchored releases (`label`, `link-name`) plus one clean case anchored flags and it releases
+    (`empty-heading`). Anchored's 3 wins are all the same event pointing back — clean cases blind flags
+    (`label` ×2, `empty-heading`). **⚠️ Six discordant cases sits inside the anchored configuration's own
+    same-configuration pass-pair movement of 3 / 4 / 7.**
+  - **Per finding, beside the test and not governing:** n = 9, b = 5, c = 4, p = 0.5. A threshold counted
+    per finding cannot govern a test scored per case.
+  - **What the case collapse hid, per configuration:** anchored 4 of its 7 multi-finding cases internally
+    split (11 observations), flag-if-any differing from a within-case majority on **3 of 40**; blind 6 of
+    7 split (19 observations), differing on **4 of 40**.
+  - **The injected-versus-real gap, anchored only.** SC swap **1.000** (n = 54), conformance flip
+    **0.8974** (n = 39), both per mutated draft, against real detection **0.4286 per case** / **0.2667
+    per finding**. **The within-run gap needs no cross-set comparison and has not closed: 3.75× and
+    3.36× at the finding, 2.33× and 2.09× at the case.**
+
+  **⚠️ The denominator declaration, which T3a deliberately left open — DECLARED HERE.** The judge is
+  quoted over its own **40** judge-visible cases and the drafter over its **44**, both n printed on every
+  row, and **no arithmetic anywhere subtracts one from the other**. The gap is the 4 cases that minted no
+  finding (`empty-heading` 2, `link-name` 2, the other two classes 0, of which 2 carry gold `failed`), so
+  a per-class κ difference on either of those two classes is **partly a difference of denominator** and is
+  never read as a difference of rater. Restricting the drafter to the 40 was rejected: it buys one
+  denominator at the price of dropping 2 real errors from the drafter's count, which flatters it, and it
+  means republishing a frozen number.
+
+  **⚠️ Turned up and not asked for.**
+  1. **The pre-committed injected guard TRIPS against the historical baseline, and the comparison crosses
+     draft sets.** Injected detection rose (conformance flip 0.82 → 0.8974; SC swap flat at 1.000) while
+     real detection did not (0.33 → 0.2667 per finding, the unit the 0.33 was measured on). Under the
+     pre-committed rule that reads **effective only on clean signal — success may not be claimed**. Two
+     things bound it: the historical figures are 63 drafted findings with 24 act-wrong against this run's
+     54 with 15, so both movements are movements of the *set* as much as of the judge; and **no success
+     is being claimed anyway**, because Comparison 1's verdict is not `SUPPORTED`. Both readings — the
+     cross-set guard and the within-run gap that needs no such comparison — are in the record, and the
+     second is the sturdier.
+  2. **The κ improvement and the routing improvement are not the same claim.** 0.3578 → 0.4815 with
+     identical case-level accuracy (33/40 both) and identical flagged-set precision (0.5 both) is κ
+     responding to a changed marginal, not to a better decision. **Quoting the κ movement without the
+     accuracy identity beside it would report a trade as a gain.**
+  3. **The judge's rater stream and its routing stream are different quantities and diverge on the data.**
+     Routing is raw four-value equality with the draft; the rater stream is the judge's own verdict
+     through FLAG/CLEAN. They disagree on exactly **1 of 54** findings — a `partially_supports` draft — so
+     the two are demonstrably not interchangeable, and scoring the judge against gold on the routing
+     stream would be scoring a measure of the drafter.
+  4. **A pooled drafter κ does not exist and was not invented.** The comparator freezes the drafter per
+     class only, so the pooled row carries the judge's number alone and says why.
 - **Depends on:** T4
 
 ### T6 — Freeze and write the honest read

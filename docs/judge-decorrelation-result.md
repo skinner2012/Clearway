@@ -58,10 +58,15 @@ visits is that?*** Comparison 2, per **finding** (54).
 That is the queue as it would actually be walked. But part of it is a formatting habit rather than a
 difference of opinion, so the honest price is quoted twice:
 
-| Comparison 2, per finding (54) | headline | of which can carry a real difference of opinion |
+| Comparison 2, per finding (54) | headline | the subset that can carry a real difference of opinion |
 |---|---|---|
 | **independent** | **21 (0.3889)**, over 17 cases | **14 (0.2593)**, over 10 cases |
 | graded | 28 (0.5185), over 19 cases | 7 (0.1296), over 6 cases |
+
+**Both columns are rates on the same 54 findings.** The right-hand count is a subset of the headline
+count, but its rate is *not* a share of it: 0.2593 is 14/54, never 14/21. The two columns are read down
+the same denominator, and dividing one column by the other produces a number this document does not
+report.
 
 **The two rows count different events and must never be averaged or subtracted.** "Graded" means *the
 judge marked the draft wrong*; "independent" means *the judge's own answer differs from the draft*. They

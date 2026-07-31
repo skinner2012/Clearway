@@ -142,17 +142,29 @@ findings and just under half the pages.
 *Does the disagreement concentrate where the drafter is weak, or is it uniform?* Comparison 2, per
 finding, headline → substantive:
 
-| class | findings | independent | graded | independent, substantive |
-|---|---|---|---|---|
-| `document-title` | 5 | 3 (0.600) | 0 (0.000) | **0 (0.000)** — the whole rate is the citation habit |
-| `empty-heading` | 11 | 5 (0.4545) | 2 (0.1818) | 1 (0.0909) |
-| `label` | 17 | 6 (0.3529) | 8 (0.4706) | 6 (0.3529) — unmoved |
-| `link-name` | 21 | 7 (0.3333) | 18 (0.8571) | 7 (0.3333) — unmoved |
+| class | findings | independent | independent, substantive | graded | graded, substantive |
+|---|---|---|---|---|---|
+| `document-title` | 5 | 3 (0.600) | **0 (0.000)** | 0 (0.000) | 0 (0.000) |
+| `empty-heading` | 11 | 5 (0.4545) | 1 (0.0909) | 2 (0.1818) | 1 (0.0909) |
+| `label` | 17 | 6 (0.3529) | 6 (0.3529) | 8 (0.4706) | 0 (0.000) |
+| `link-name` | 21 | 7 (0.3333) | 7 (0.3333) | 18 (0.8571) | 6 (0.2857) |
+
+Every rate is on the class's own finding count. On the independent side `label` and `link-name` are
+**unmoved** by the subtraction — none of their disagreement is the citation habit — while
+`document-title`'s whole rate is that habit. On the graded side the subtraction bites hardest:
+`label`'s entire queue and two thirds of `link-name`'s are citation-only.
 
 **`document-title` carries two caveats and neither is optional.** All three of its disagreements are
 citation-axis, on the three rows where the drafter cites while clean — the conformance verdicts agree on
 all five. And 3 of its 5 findings render a **byte-identical question**, so it is closer to three
 observations than five. Any `document-title` figure here, a zero included, is read with both.
+
+**`empty-heading` carries the first of those caveats at lower weight, and its count is quoted here
+because a per-class citation figure is never read without it.** **4 of its 11 findings** are rows where
+the drafter cites while clean, against citation-axis disagreements of **5 of 11** independent and **2 of
+11** graded — so as much as 4 of that 5 can be formatting alone. The 1 of 11 in the substantive columns
+is what survives. The other two classes have no such rows at all (`label` 0 of 17, `link-name` 0 of 21),
+which is why their independent figures do not move.
 
 **Expect the citation axis to be quiet, and it is.** All findings of one rule receive the same retrieved
 candidate criteria in the same order — four candidate lists across the whole set of 54 — so the two

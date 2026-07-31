@@ -1585,6 +1585,32 @@ the unit.
   unlabelled figure is ambiguous even to someone who read this spec. **And two units are in play** — the
   tested comparison is per case (40), the disagreement rate is per finding (54) — so a bare count is
   ambiguous even once its comparison is named.
+- **⚠️ Required: reconcile the two judge κ figures the repo now publishes at different values.**
+  `README.md` and `docs/acceptance-analysis.md` say this project's judge grades **external ACT gold at
+  κ ≈ 0** — 0.137 in `benchmark/reports/scorecard.json`, mean ≈ 0.005 across the three runs and negative
+  in one of them, SD 0.158 in `benchmark/reports/noise_floor.json`. The anchored baseline frozen at
+  `benchmark/reports/judge_anchored_baseline.json` reports **κ 0.227 per finding and 0.3578 per case**,
+  and both sides score against the **same** gold set (`act-acceptance@1`), so a reader who finds both
+  will conclude one of them is wrong. **They do not conflict, and the written read must say so in prose,
+  naming both figures and where each one lives.** Four things differ at once:
+  - **The drafts.** The earlier figure grades the acceptance run's 63 drafted findings; this one grades
+    the frozen replay drafts, **54 findings over 40 cases**, whose act-wrong marginals are their own. κ
+    against gold is a property of the graded set as much as of the grader.
+  - **What the judge is shown.** The rubric hash is *unchanged* (`e396f37f`, *Evidence ledger* item 3)
+    — what T2 moved is the finding side, which now carries the referent. The old
+    `rubric=…` string could not date that input; `judge_version` records it only because T3a widened the
+    hash to the whole prompt (`prompt=afadca26`).
+  - **The unit.** 0.3578 is per case (40), 0.227 per finding (54), the earlier 0.137 per drafted finding
+    (63). No two of the three share a denominator.
+  - **The estimator.** The earlier figures are single-pass κ, one per run. The headline here is the
+    majority-of-three collapse, which *costs* the judge cells against any single pass — this run's own
+    per-pass per-finding κ are **0.2994 / 0.2961 / 0.2270**.
+- **⚠️ And state what the larger number does not license.** Those four moved together, so nothing
+  attributes the difference to any one of them, least of all to the judge having improved. The earlier
+  read is **not retracted**: at the pinned unit this judge still releases **4 of the 7** act-wrong cases
+  and flags **3** clean ones. **Do not edit `README.md` or `docs/acceptance-analysis.md`** — they report
+  a frozen result correctly for the set they were measured on, and the reconciliation is this ticket's
+  written read to make, not a silent correction of theirs.
 - **⚠️ Rule: write it for someone who did not build it.** Three metric families land here and they
   answer three different questions — **how much human work the mechanism creates** (disagreement rate),
   **how alike the two readers are** (drafter–judge κ), and **which of them is more often right** (each
